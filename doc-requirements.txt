@@ -1,0 +1,8 @@
+commonmark
+mkdocs
+mkdocs-material
+mkdocs-material-extensions
+pymdown-extensions
+recommonmark
+Sphinx
+sphinx-markdown-tables
