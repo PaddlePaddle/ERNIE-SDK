@@ -1,0 +1,6 @@
+aiohttp
+bce-python-sdk
+colorlog
+numpy
+requests >= 2.20
+typing_extensions
