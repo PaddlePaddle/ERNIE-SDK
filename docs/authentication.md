@@ -37,21 +37,29 @@ erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 ```
 
-3) 使用初始化参数：
+3) 使用`config`参数：
 ``` {.py .copy}
 import erniebot
 
 # Take erniebot.ChatCompletion as an example
-resource = erniebot.ChatCompletion(api_type="<EB-API-TYPE>", ak="<EB-ACCESS-KEY>", sk="<EB-SECRET-KEY>")
-# The name of an instance method is the name of its equivalent class method plus a "_resource" suffix
-resource.create_resource(model="ernie-bot-3.5", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
+chat_completion = erniebot.ChatCompletion.create(
+    config=dict(
+        api_type="<EB-API-TYPE>",
+        ak="<EB-ACCESS-KEY>",
+        sk="<EB-SECRET-KEY>",
+    ),
+    model="ernie-bot-3.5",
+    messages=[{
+        "role": "user",
+        "content": "你好，请介绍下你自己",
+    }],
+)
 ```
 
 注意事项：
 
-* 三种鉴权信息设置方式的优先级从高到低依次为：使用初始化参数，使用全局变量，使用环境变量。
+* 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`config`参数，使用全局变量，使用环境变量。
 * 请准确设置模型对应后端平台的认证鉴权参数，否则无法通过认证鉴权。
-* 如果使用初始化参数设置鉴权信息，则需要对应调用初始化的对象的实例方法而非类方法。实例方法的名称为对应的类方法名称加上`_resource`后缀。例如，类方法`ChatCompletion.create`对应的实例方法为`ChatCompletion.create_resource`，二者接受相同的输入参数。
 
 ## 申请千帆大模型平台的AK/SK
 
