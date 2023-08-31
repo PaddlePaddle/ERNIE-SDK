@@ -37,7 +37,7 @@ erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 ```
 
-3) 使用类的初始化参数：
+3) 使用初始化参数：
 ``` {.py .copy}
 import erniebot
 
@@ -49,9 +49,9 @@ resource.create_resource(model="ernie-bot-3.5", messages=[{"role": "user", "cont
 
 注意事项：
 
-* 三种鉴权信息设置方式的优先级从高到低依次为：使用类的初始化参数，使用全局变量，使用环境变量。
+* 三种鉴权信息设置方式的优先级从高到低依次为：使用初始化参数，使用全局变量，使用环境变量。
 * 请准确设置模型对应后端平台的认证鉴权参数，否则无法通过认证鉴权。
-* 如果使用类的初始化参数设置鉴权信息，则需要对应调用初始化的对象的实例方法而非类方法。实例方法的名称为对应的类方法名称加上`_resource`后缀。例如，类方法`ChatCompletion.create`对应的实例方法为`ChatCompletion.create_resource`，二者接受相同的输入参数。
+* 如果使用初始化参数设置鉴权信息，则需要对应调用初始化的对象的实例方法而非类方法。实例方法的名称为对应的类方法名称加上`_resource`后缀。例如，类方法`ChatCompletion.create`对应的实例方法为`ChatCompletion.create_resource`，二者接受相同的输入参数。
 
 ## 申请千帆大模型平台的AK/SK
 
