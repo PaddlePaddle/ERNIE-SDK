@@ -132,7 +132,7 @@ erniebot.api_type = "yinian"
 
 response = erniebot.Image.create(
     model="ernie-vilg-v2",
-    prompt="画一个胸有成竹的男人",
+    prompt="雨后的桃花，8k，辛烷值渲染",
     width=512,
     height=512
 )
@@ -141,7 +141,7 @@ print(response)
 
 ```
 
-<img width="624" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-sdk/assets/1371212/cad754ed-ed9d-42d0-a0dc-9ac29f04f67b">
+<img width="624" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c">
 
 我们推荐两个撰写文生图Prompt提示词的文档，大家可以组合使用，创作出更加精美的图片。
 * [AI作画-基础版使用指南](https://ai.baidu.com/ai-doc/NLP/qlakgh129)
@@ -153,7 +153,7 @@ print(response)
 
 为了让开发者可以更全面更低门槛的了解ERNIE Bot SDK的全功能，我们基于Gradio实现了一个功能丰富的可视化界面，参阅[示例说明](../examples)可以快速本地测试ChatCompletion、Embedding和Image的可视化交互示例。
 
-<img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://github.com/PaddlePaddle/ERNIE-Bot-sdk/assets/1371212/17cfe2fa-efe0-4c06-8aad-3363d7b6cc40">
+<img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
 
 
 ## Acknowledgement

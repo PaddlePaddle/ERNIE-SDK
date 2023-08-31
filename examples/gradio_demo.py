@@ -93,6 +93,8 @@ def launch(args):
               access_key, secret_key):
         """Regenerate response."""
         context = state.setdefault("context", [])
+        if len(context) == 0:
+            raise gr.exceptions.Error("输入不能为空，清空后重试")
         context.pop()
         user_turn = context.pop()
         return infer(ernie_model, user_turn["content"], state, top_p,
@@ -111,6 +113,8 @@ def launch(args):
         content = content.strip().replace("<br>", "\n")
         context = state.setdefault("context", [])
         context.append({"role": "user", "content": content})
+        if len(context) == 0:
+            raise gr.exceptions.Error("输入不能为空，清空后重试")
         data = {
             "context": content,
             "top_p": top_p,

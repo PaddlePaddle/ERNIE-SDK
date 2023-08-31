@@ -164,8 +164,7 @@ print(response)
 
 为了让开发者可以更全面更低门槛的了解ERNIE Bot SDK的全功能，我们基于Gradio实现了一个功能丰富的可视化界面，参阅[示例说明](examples)可以快速本地测试ChatCompletion、Embedding和Image的可视化交互示例。
 
-<img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://github.com/PaddlePaddle/ERNIE-Bot-sdk/assets/1371212/17cfe2fa-efe0-4c06-8aad-3363d7b6cc40">
-
+<img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
 
 ## 完整教程文档
 
