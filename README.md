@@ -37,7 +37,7 @@ print(models)
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
 
-# Set ak/sk 
+# Set ak and sk
 erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 
@@ -53,21 +53,21 @@ print(chat_completion.result)
 # List supported models
 erniebot api model.list
 
-# Set api_type, ak, sk for chat_completion.create
+# Set api_type, ak, and sk for chat_completion.create
 export EB_API_TYPE="qianfan"
 export EB_AK="<EB-ACCESS-KEY>"
 export EB_SK="<EB-SECRET-KEY>"
 
 # Create a chat completion (ernie-bot-3.5, ernie-bot-turbo, etc.)
-erniebot api chat_completion.create --model ernie-bot-3.5 --message user '请介绍下你自己'
+erniebot api chat_completion.create --model ernie-bot-3.5 --message user "请介绍下你自己"
 
-# Set api_type, ak, sk for image.create
+# Set api_type, ak, and sk for image.create
 export EB_API_TYPE="yinian"
 export EB_AK="<EB-ACCESS-KEY>"
 export EB_SK="<EB-SECRET-KEY>"
 
 # Generate images via ERNIE-ViLG
-erniebot api image.create --model ernie-vilg-v2 --prompt '画一只驴肉火烧' --height 1024 --width 1024 --image-num 1
+erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
 ```
 
 ## 经典示例
@@ -86,7 +86,7 @@ erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 
 completion = erniebot.ChatCompletion.create(
-    model='ernie-bot-3.5',
+    model="ernie-bot-3.5",
     messages=[{
         "role": "user",
         "content": "请问你是谁？"
@@ -184,7 +184,7 @@ print(response)
 
 ## Acknowledgement
 
-我们借鉴了[OpenAI Python Library](https://github.com/openai/openai-python)部分API设计，在此对OpenAI Python Library作者及其开源社区表示感谢。
+我们借鉴了[OpenAI Python Library](https://github.com/openai/openai-python)部分API设计，在此对OpenAI Python Library作者及开源社区表示感谢。
 
 ## License
 

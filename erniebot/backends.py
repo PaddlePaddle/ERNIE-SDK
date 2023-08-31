@@ -157,9 +157,9 @@ class AIStudioBackend(EBBackend):
         return url, headers
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if 'errorCode' in resp and 'errorMsg' in resp:
-            ecode = resp['error_code']
-            emsg = resp['error_msg']
+        if resp['errorCode'] != 0:
+            ecode = resp['errorCode']
+            emsg = resp['errorMsg']
             if ecode == 2:
                 raise errors.ServiceUnavailableError(emsg)
             elif ecode == 6:
