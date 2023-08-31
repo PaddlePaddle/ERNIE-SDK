@@ -1,6 +1,15 @@
-# ERNIE Bot SDK
+<div align="center">
 
-ERNIE Bot SDK 提供一系列便捷易用的接口来调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等能力。
+<h1>ERNIE Bot SDK</h1>
+
+ERNIE Bot SDK 提供一系列便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
+
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+![python version](https://img.shields.io/badge/python-3.8+-orange.svg)
+![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+
+</div>
 
 ## 快速安装
 

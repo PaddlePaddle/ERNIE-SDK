@@ -72,7 +72,7 @@ class Logger(object):
         self.handler.setFormatter(self.format)
 
         self.logger.addHandler(self.handler)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.WARNING)
         self.logger.propagate = False
         self._is_enabled = True
 
