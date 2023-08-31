@@ -54,7 +54,7 @@ print(chat_completion.result)
 # List supported models
 erniebot api model.list
 
-# Set api_type, ak, sk for chat_completion.create
+# Set authentication params for chat_completion.create
 export EB_API_TYPE="qianfan"
 export EB_AK="<ak-for-qianfan>"
 export EB_SK="<sk-for-qianfan>"
