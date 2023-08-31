@@ -22,6 +22,15 @@ import time
 import numpy as np
 import erniebot as eb
 
+# python version need higher or equal than 3.8
+import sys
+major = sys.version_info.major
+minor = sys.version_info.minor
+if int(major) != 3 or int(minor) < 8:
+    raise Exception(
+        "The gradio demo requires python >= 3.8, now your python version is {}.{}.".
+        format(major, minor))
+
 
 def setup_args():
     """Setup arguments."""
