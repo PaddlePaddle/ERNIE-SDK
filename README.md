@@ -2,7 +2,7 @@
 
 <h1>ERNIE Bot SDK</h1>
 
-ERNIE Bot SDK 提供一系列便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
+ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
@@ -37,9 +37,10 @@ print(models)
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
 
-# Set ak/sk 
-erniebot.ak = "<EB-ACCESS-KEY>"
-erniebot.sk = "<EB-SECRET-KEY>"
+# Set authentication params
+erniebot.api_type = "qianfan"
+erniebot.ak = "<ak-for-qianfan>"
+erniebot.sk = "<sk-for-qianfan>"
 
 # Create a chat completion
 chat_completion = erniebot.ChatCompletion.create(model="ernie-bot-3.5", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
@@ -53,18 +54,18 @@ print(chat_completion.result)
 # List supported models
 erniebot api model.list
 
-# Set api_type, ak, sk for chat_completion.create
+# Set authentication params for chat_completion.create
 export EB_API_TYPE="qianfan"
-export EB_AK="<EB-ACCESS-KEY>"
-export EB_SK="<EB-SECRET-KEY>"
+export EB_AK="<ak-for-qianfan>"
+export EB_SK="<sk-for-qianfan>"
 
 # Create a chat completion (ernie-bot-3.5, ernie-bot-turbo, etc.)
 erniebot api chat_completion.create --model ernie-bot-3.5 --message user '请介绍下你自己'
 
-# Set api_type, ak, sk for image.create
+# Set authentication params for image.create
 export EB_API_TYPE="yinian"
-export EB_AK="<EB-ACCESS-KEY>"
-export EB_SK="<EB-SECRET-KEY>"
+export EB_AK="<ak-for-yinian>"
+export EB_SK="<sk-for-yinian>"
 
 # Generate images via ERNIE-ViLG
 erniebot api image.create --model ernie-vilg-v2 --prompt '画一只驴肉火烧' --height 1024 --width 1024 --image-num 1
@@ -82,8 +83,9 @@ ERNIE Bot SDK提供了对话补全能力的文心一言旗舰版模型`ernie-bot
 ```python
 import erniebot
 
-erniebot.ak = "<EB-ACCESS-KEY>"
-erniebot.sk = "<EB-SECRET-KEY>"
+erniebot.api_type = "qianfan"
+erniebot.ak = "<ak-for-qianfan>"
+erniebot.sk = "<sk-for-qianfan>"
 
 completion = erniebot.ChatCompletion.create(
     model='ernie-bot-3.5',
@@ -113,8 +115,9 @@ ERNIE Bot SDK提供了提取语义向量的Embedding模型。
 ```python
 import erniebot
 
-erniebot.ak = "<EB-ACCESS-KEY>"
-erniebot.sk = "<EB-SECRET-KEY>"
+erniebot.api_type = "qianfan"
+erniebot.ak = "<ak-for-qianfan>"
+erniebot.sk = "<sk-for-qianfan>"
 
 embedding = erniebot.Embedding.create(
     model="ernie-text-embedding",
@@ -136,9 +139,10 @@ ERNIE Bot SDK提供了文生图能力的ERNIE-ViLG大模型。
 ```python
 import erniebot
 
-erniebot.ak = "<EB-ACCESS-KEY>"
-erniebot.sk = "<EB-SECRET-KEY>"
 erniebot.api_type = "yinian"
+erniebot.ak = "<ak-for-yinian>"
+erniebot.sk = "<sk-for-yinian>"
+
 
 response = erniebot.Image.create(
     model="ernie-vilg-v2",
