@@ -38,6 +38,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
     }
 ]
 ```
+
 | 键值 | 类型 | 描述 |
 |:--- | :---- | :---- |
 | role | string | user表示用户，assistant表示对话助手 |
