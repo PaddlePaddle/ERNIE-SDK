@@ -1,6 +1,6 @@
 <div align="center">
 
-<font size=6>ERNIE Bot SDK</font>
+<h1>ERNIE Bot SDK</h1>
 
 ERNIE Bot SDK 提供一系列便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
 
