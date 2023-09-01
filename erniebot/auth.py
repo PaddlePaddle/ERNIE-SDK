@@ -240,7 +240,7 @@ class BCEAuthManager(AuthManager):
 class AIStudioAuthManager(AuthManager):
     def _request_access_token(self, init: bool) -> str:
         if init:
-            token = os.environ.get('AISTUDIO_TOKEN', None)
+            token = os.environ.get('AISTUDIO_ACCESS_TOKEN', None)
             if token is None:
                 raise RuntimeError(
                     "Failed to read the access token from environment variables."

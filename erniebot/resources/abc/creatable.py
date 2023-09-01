@@ -27,24 +27,29 @@ class Creatable(Resource, Protocol):
 
     @classmethod
     def create(cls,
+               *,
+               config: Optional[Dict[str, Any]]=None,
                **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
         """Create a new resource.
 
         Args:
+            config: Configuration dictionary.
             **create_kwargs: Parameters for creating the resource.
 
         Returns:
             Response from the server.
         """
-        resource = cls.new_object()
+        config = config or {}
+        resource = cls.new_object(**config)
         return resource.create_resource(**create_kwargs)
 
     @classmethod
     async def acreate(
-        cls,
+        cls, *, config: Optional[Dict[str, Any]]=None,
         **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `create`."""
-        resource = cls.new_object()
+        config = config or {}
+        resource = cls.new_object(**config)
         resp = await resource.acreate_resource(**create_kwargs)
         return resp
 

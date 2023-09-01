@@ -6,7 +6,7 @@
 
 ERNIE Bot SDK支持的文心大模型来自多个后端平台，大家可以阅读下表，参照文档申请AK/SK。
 
-| 后端平台   |  API_TYPE  |  支持模型 | 申请AK/SK的方法 | 
+| 后端平台   |  API_TYPE  |  支持模型 | 申请AK/SK的方法 |
 | :---     | :----      | :----  | :----  |
 | 千帆大模型平台 | qianfan | ernie-bot-3.5, ernie-bot-turbo, ernie-text-embedding | [申请千帆大模型平台的AK/SK](#申请千帆大模型平台的aksk)
 | 智能创作平台 | yinian | ernie-vilg-v2 | [申请智能创作平台的AK/SK](#申请智能创作平台的aksk)
@@ -19,7 +19,7 @@ ERNIE Bot SDK认证鉴权需要设置三个输入参数：
 * 后端平台上申请的Secret Key。
 
 
-ERNIE Bot SDK支持两种方式设置认证鉴权的参数，大家可以自由选择。
+ERNIE Bot SDK支持3种方式设置认证鉴权的参数，大家可以自由选择。
 
 1）使用环境变量：
 ```shell
@@ -28,19 +28,38 @@ export EB_AK="<EB-ACCESS-KEY>"
 export EB_SK="<EB-SECRET-KEY>"
 ```
 
-2）使用Python API：
+2）使用全局变量：
 ``` {.py .copy}
 import erniebot
 
-erniebot.api_type = "<EB-SECRET-KEY>"
+erniebot.api_type = "<EB-API-TYPE>"
 erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 ```
 
+3) 使用`config`参数：
+``` {.py .copy}
+import erniebot
+
+# Take erniebot.ChatCompletion as an example
+chat_completion = erniebot.ChatCompletion.create(
+    config=dict(
+        api_type="<EB-API-TYPE>",
+        ak="<EB-ACCESS-KEY>",
+        sk="<EB-SECRET-KEY>",
+    ),
+    model="ernie-bot-3.5",
+    messages=[{
+        "role": "user",
+        "content": "你好，请介绍下你自己",
+    }],
+)
+```
+
 注意事项：
 
-* 使用Python API设置的优先级高于使用环境变量设置。
-* **使用特定模型，请准确设置对应后端平台的认证鉴权参数**
+* 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`config`参数，使用全局变量，使用环境变量。
+* **使用特定模型，请准确设置对应后端平台的认证鉴权参数。**
 
 ## 申请千帆大模型平台的AK/SK
 
