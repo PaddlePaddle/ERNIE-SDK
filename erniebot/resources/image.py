@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, Dict, Optional, Tuple)
+from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 from typing_extensions import TypeAlias
 
@@ -25,18 +25,25 @@ from .resource import EBResource
 
 class _Image(EBResource):
     @classmethod
-    def create(cls, **create_kwargs: Any) -> EBResponse:
-        resource = cls.new_object()
+    def create(cls, **kwargs: Any) -> EBResponse:
+        """Create a resource."""
+        config = kwargs.pop('config', {})
+        resource = cls.new_object(**config)
+        create_kwargs = kwargs
         return resource.create_resource(**create_kwargs)
 
     @classmethod
-    async def acreate(cls, **create_kwargs: Any) -> EBResponse:
-        resource = cls.new_object()
+    async def acreate(cls, **kwargs: Any) -> EBResponse:
+        """Asynchronous version of `create`."""
+        config = kwargs.pop('config', {})
+        resource = cls.new_object(**config)
+        create_kwargs = kwargs
         resp = await resource.acreate_resource(**create_kwargs)
         return resp
 
-    def create_resource(self, **kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_paint(kwargs)
+    def create_resource(self, **create_kwargs: Any) -> EBResponse:
+        url, params, headers, request_timeout = self._prepare_paint(
+            create_kwargs)
         resp_p = self.request(
             method='POST',
             url=url,
@@ -59,8 +66,9 @@ class _Image(EBResource):
 
         return resp_f
 
-    async def acreate_resource(self, **kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_paint(kwargs)
+    async def acreate_resource(self, **create_kwargs: Any) -> EBResponse:
+        url, params, headers, request_timeout = self._prepare_paint(
+            create_kwargs)
         resp_p = await self.arequest(
             method='POST',
             url=url,
@@ -105,6 +113,8 @@ class _Image(EBResource):
 class ImageV1(_Image):
     """Generate a new image based on a given prompt."""
 
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN, )
+
     def _prepare_paint(self,
                        kwargs: Dict[str, Any]) -> Tuple[str,
                                                         Optional[ParamsType],
@@ -141,10 +151,12 @@ class ImageV1(_Image):
         style = kwargs['style']
 
         # url
+        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN, )
         if self.api_type is APIType.YINIAN:
             url = "/txt2img"
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}
@@ -166,10 +178,12 @@ class ImageV1(_Image):
                                                           Optional[HeadersType],
                                                           ]:
         # url
+        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN, )
         if self.api_type is APIType.YINIAN:
             url = "/getImg"
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}
@@ -188,6 +202,8 @@ class ImageV1(_Image):
 
 class ImageV2(_Image):
     """Generate a new image based on a given prompt."""
+
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN, )
 
     def _prepare_paint(self,
                        kwargs: Dict[str, Any]) -> Tuple[str,
@@ -231,13 +247,15 @@ class ImageV2(_Image):
         height = kwargs['height']
 
         # url
+        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN, )
         if self.api_type is APIType.YINIAN:
             url = "/txt2imgv2"
             if model != 'ernie-vilg-v2':
                 raise errors.InvalidArgumentError(
                     f"{repr(model)} is not a supported model.")
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}
@@ -260,10 +278,12 @@ class ImageV2(_Image):
                                                           Optional[HeadersType],
                                                           ]:
         # url
+        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN, )
         if self.api_type is APIType.YINIAN:
             url = "/getImgv2"
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}
