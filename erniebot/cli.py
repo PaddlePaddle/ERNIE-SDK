@@ -62,7 +62,7 @@ def console_main():
 
 def parse_args(*args, **kwargs):
     parser = argparse.ArgumentParser(prog='erniebot')
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest='sub_command', required=True)
 
     # Global arguments
     parser.add_argument('--access-token', type=str, help="Access token to use.")
@@ -92,7 +92,7 @@ def parse_args(*args, **kwargs):
         help="Show version number and exit.")
 
     subparser_api = subparsers.add_parser('api', help="API calls.")
-    api_parsers = subparser_api.add_subparsers()
+    api_parsers = subparser_api.add_subparsers(dest='api', required=True)
     _register_resource(api_parsers, ChatCompletionHelper, 'chat_completion')
     _register_resource(api_parsers, ChatFileHelper, 'chat_file')
     _register_resource(api_parsers, ImageV2Helper, 'image')
