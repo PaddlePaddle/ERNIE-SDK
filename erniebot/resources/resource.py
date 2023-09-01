@@ -43,10 +43,6 @@ class EBResource(object):
     facilitate reuse of concrete implementations. Most methods of this class are
     marked as final (e.g., `request`, `arequest`), while some methods can be
     overridden to change the default behavior (e.g., `_create_config_dict`).
-
-    Attributes:
-        cfg (Dict[str, Any]): Dictionary that stores global settings.
-        client (erniebot.client.EBClient): Low-level client instance.
     """
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = ()

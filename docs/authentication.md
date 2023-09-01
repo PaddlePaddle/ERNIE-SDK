@@ -37,13 +37,13 @@ erniebot.ak = "<EB-ACCESS-KEY>"
 erniebot.sk = "<EB-SECRET-KEY>"
 ```
 
-3) 使用`config`参数：
+3) 使用`_config_`参数：
 ``` {.py .copy}
 import erniebot
 
 # Take erniebot.ChatCompletion as an example
 chat_completion = erniebot.ChatCompletion.create(
-    config=dict(
+    _config_=dict(
         api_type="<EB-API-TYPE>",
         ak="<EB-ACCESS-KEY>",
         sk="<EB-SECRET-KEY>",
@@ -58,7 +58,7 @@ chat_completion = erniebot.ChatCompletion.create(
 
 注意事项：
 
-* 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`config`参数，使用全局变量，使用环境变量。
+* 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
 * **使用特定模型，请准确设置对应后端平台的认证鉴权参数。**
 
 ## 申请千帆大模型平台的AK/SK

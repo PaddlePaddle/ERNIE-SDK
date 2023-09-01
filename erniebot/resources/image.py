@@ -27,7 +27,7 @@ class _Image(EBResource):
     @classmethod
     def create(cls, **kwargs: Any) -> EBResponse:
         """Create a resource."""
-        config = kwargs.pop('config', {})
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         return resource.create_resource(**create_kwargs)
@@ -35,7 +35,7 @@ class _Image(EBResource):
     @classmethod
     async def acreate(cls, **kwargs: Any) -> EBResponse:
         """Asynchronous version of `create`."""
-        config = kwargs.pop('config', {})
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         resp = await resource.acreate_resource(**create_kwargs)

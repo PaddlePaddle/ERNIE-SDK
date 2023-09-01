@@ -28,7 +28,7 @@ class Creatable(Resource, Protocol):
     @classmethod
     def create(cls, **kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
         """Create a resource."""
-        config = kwargs.pop('config', {})
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         return resource.create_resource(**create_kwargs)
@@ -37,7 +37,7 @@ class Creatable(Resource, Protocol):
     async def acreate(
         cls, **kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `create`."""
-        config = kwargs.pop('config', {})
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         resp = await resource.acreate_resource(**create_kwargs)
