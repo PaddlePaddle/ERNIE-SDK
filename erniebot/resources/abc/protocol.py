@@ -29,7 +29,7 @@ class Resource(Protocol):
     """
 
     @classmethod
-    def new_object(cls, **kwargs: Any) -> Self:
+    def new_object(cls, **config: Any) -> Self:
         ...
 
     def request(
