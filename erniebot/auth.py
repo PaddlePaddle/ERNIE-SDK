@@ -36,7 +36,7 @@ def build_auth_manager(config_dict: Dict[str, Any],
         api_type = convert_str_to_api_type(api_type)
     if api_type in (APIType.QIANFAN, APIType.YINIAN):
         return BCEAuthManager(api_type, **config_dict)
-    elif api_type is APIType.AI_STUDIO:
+    elif api_type is APIType.AISTUDIO:
         return AIStudioAuthManager(api_type, **config_dict)
     else:
         raise ValueError(f"Unsupported API type: {api_type.name}")

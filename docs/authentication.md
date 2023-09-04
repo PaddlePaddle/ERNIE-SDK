@@ -8,7 +8,7 @@
 
 | API参数名称   | 环境变量名称  |  类型   |  必须设置 |  描述   |
 | :---         | :----       | :----  | :---- |  :---- |
-| api_type     | EB_API_TYPE | string | 否 | 设置后端平台的类型。支持`'qianfan'`和`'yinian'`，默认是`'qianfan'`。|
+| api_type     | EB_API_TYPE | string | 否 | 设置后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
 | ak           | EB_AK       | string | 否 | 设置认证鉴权的access key。必须和`sk`同时设置。 |
 | sk           | EB_SK       | string | 否 | 设置认证鉴权的secret key。必须和`ak`同时设置。 |
 | access_token | EB_ACCESS_TOKEN | string | 否 | 设置认证鉴权的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
@@ -16,15 +16,16 @@
 
 ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的鉴权参数不尽相同。请阅读下表，参照对应的文档申请鉴权参数。
 
-| 后端平台   |  API_TYPE  |  支持模型 | 申请鉴权参数的方法 | 是否支持AK/SK |
+| 后端平台   |  EB_API_TYPE  |  支持的鉴权参数 | 申请鉴权参数的方法 | 支持的模型 |
 | :---     | :----      | :----  | :----  | :---  |
-| 千帆大模型平台 | `qianfan` | `ernie-bot-3.5`, `ernie-bot-turbo`, `ernie-text-embedding` | [申请千帆大模型平台的鉴权参数](#申请千帆大模型平台的鉴权参数)| 是 |
-| 智能创作平台 | `yinian` | `ernie-vilg-v2` | [申请智能创作平台的鉴权参数](#申请智能创作平台的鉴权参数) | 是 |
-| AI Studio | `ai_studio` | `ernie-bot-3.5`, `ernie-bot-turbo`, `ernie-text-embedding` | [申请AI Studio平台的鉴权参数](#申请ai-studio平台的鉴权参数) | 否 |
+| 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的鉴权参数](#申请千帆大模型平台的鉴权参数) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的鉴权参数](#申请智能创作平台的鉴权参数) | ernie-vilg-v2 |
+| AI Studio | aistudio | access token | [申请AI Studio平台的鉴权参数](#申请ai-studio平台的鉴权参数) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
-1）使用环境变量：
+(1）使用环境变量：
+
 ```shell
 export EB_API_TYPE="<EB-API-TYPE>"
 export EB_AK="<EB-ACCESS-KEY>"
@@ -32,7 +33,8 @@ export EB_SK="<EB-SECRET-KEY>"
 export EB_ACCESS_TOKEN="<EB-ACCESS-TOKEN>"
 ```
 
-2）使用全局变量：
+(2）使用全局变量：
+
 ``` {.py .copy}
 import erniebot
 
@@ -42,7 +44,8 @@ erniebot.sk = "<EB-SECRET-KEY>"
 erniebot.access_token = "<EB-ACCESS-TOKEN>"
 ```
 
-3) 使用`_config_`参数：
+(3) 使用`_config_`参数：
+
 ``` {.py .copy}
 import erniebot
 

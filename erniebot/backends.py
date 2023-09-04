@@ -32,7 +32,7 @@ def build_backend(config_dict: Dict[str, Any],
         return QianfanBackend(config_dict)
     elif api_type is APIType.YINIAN:
         return YinianBackend(config_dict)
-    elif api_type is APIType.AI_STUDIO:
+    elif api_type is APIType.AISTUDIO:
         return AIStudioBackend(config_dict)
     else:
         raise ValueError(f"Unrecoginzed API type: {api_type.name}")
@@ -144,7 +144,7 @@ class YinianBackend(_BCEBackend):
 
 
 class AIStudioBackend(EBBackend):
-    API_TYPE: ClassVar[APIType] = APIType.AI_STUDIO
+    API_TYPE: ClassVar[APIType] = APIType.AISTUDIO
     BASE_URL: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
 
     def prepare_request(self, url: str, headers: HeadersType,

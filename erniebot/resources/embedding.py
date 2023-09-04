@@ -25,7 +25,7 @@ class Embedding(EBResource, Creatable):
     """Get the embeddings of a given text input."""
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
-                                                          APIType.AI_STUDIO)
+                                                          APIType.AISTUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             'prefix': 'embeddings',
@@ -35,7 +35,7 @@ class Embedding(EBResource, Creatable):
                 },
             },
         },
-        APIType.AI_STUDIO: {
+        APIType.AISTUDIO: {
             'prefix': 'embeddings',
             'models': {
                 'ernie-text-embedding': {

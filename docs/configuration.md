@@ -4,18 +4,21 @@ ERNIE Bot SDK参数配置，主要涉及认证鉴权、后端平台等信息。
 
 ERNIE Bot SDK支持3种参数配置的方法：1）使用环境变量，2）使用全局变量，3) 使用`_config_`参数。
 
-1）使用环境变量：
+(1) 使用环境变量：
+
 ``` {.copy}
 export EB_API_TYPE="<EB-API-TYPE>"
 ```
 
-2）使用全局变量：
+(2) 使用全局变量：
+
 ``` {.py .copy}
 import erniebot
 erniebot.api_type = "<EB-API-TYPE>"
 ```
 
-3) 使用`_config_`参数：
+(3) 使用`_config_`参数：
+
 ``` {.py .copy}
 import erniebot
 

@@ -25,7 +25,7 @@ class ChatCompletion(EBResource, Creatable):
     """Given a conversation, get a new reply from the model."""
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
-                                                          APIType.AI_STUDIO)
+                                                          APIType.AISTUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             'prefix': 'chat',
@@ -38,7 +38,7 @@ class ChatCompletion(EBResource, Creatable):
                 },
             },
         },
-        APIType.AI_STUDIO: {
+        APIType.AISTUDIO: {
             'prefix': 'chat',
             'models': {
                 'ernie-bot-3.5': {
