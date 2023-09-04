@@ -10,61 +10,55 @@ def test_function_calling(model="ernie-bot-3.5"):
         messages=[
             {
                 "role": "user",
-                "content": "百度公司当前在纳斯达克的股价是多少？",
+                "content": "深圳市今天气温如何？",
             },
             {
                 "role": "assistant",
                 "content": None,
                 "function_call": {
-                    "name": "get_current_price",
+                    "name": "get_current_temperature",
                     "arguments": json.dumps({
-                        "company": "百度",
-                        "exchange": "纳斯达克",
+                        "location": "广东省，深圳市",
+                        "unit": "摄氏度",
                     }),
                 },
             },
             {
                 "role": "function",
-                "name": "get_current_price",
+                "name": "get_current_temperature",
                 "content": json.dumps({
-                    "price": 146.47,
-                    "unit": "美元",
-                    "change": "上涨2.55%",
+                    "temperature": 25,
+                    "type": "摄氏度",
                 }),
             },
         ],
         functions=[{
-            "name": "get_current_price",
-            "description": "获得指定公司的股价",
+            "name": "get_current_temperature",
+            "description": "获取指定城市的气温",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "company": {
+                    "location": {
                         "type": "string",
-                        "description": "公司名，例如：腾讯，阿里巴巴",
+                        "description": "省名，市名。例如：河北省，石家庄市",
                     },
-                    "exchange": {
+                    "unit": {
                         "type": "string",
-                        "enum": ["纳斯达克", "上海证券交易所", "香港证券交易所"],
+                        "enum": ["摄氏度", "华氏度"],
                     },
                 },
-                "required": ["company", "exchange"],
+                "required": ["location", "unit"],
             },
             "responses": {
                 "type": "object",
                 "properties": {
-                    "price": {
-                        "type": "float",
-                        "description": "当日股票价格",
+                    "temperature": {
+                        "type": "int",
+                        "description": "城市气温",
                     },
                     "unit": {
                         "type": "string",
-                        "enum": ["人民币", "美元", "港币"],
-                        "description": "股票价格货币类型",
-                    },
-                    "change": {
-                        "type": "string",
-                        "description": "当日股票价格变化，如下跌3%，上涨0.5%",
+                        "enum": ["摄氏度", "华氏度"],
                     },
                 },
             },

@@ -60,48 +60,41 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ``` {.py .copy}
 [
     {
-        "name": "get_current_price",
-        "description": "获得指定公司的股价",
+        "name": "get_current_temperature",
+        "description": "获取指定城市的气温",
         "parameters": {
             "type": "object",
             "properties": {
-                "company": {
+                "location": {
                     "type": "string",
-                    "description": "公司名，例如：腾讯，阿里巴巴"
-                },
-                "exchange": {
-                    "type": "string",
-                    "enum": [
-                        "纳斯达克",
-                        "上海证券交易所",
-                        "香港证券交易所"
-                    ]
-                }
-            },
-            "required": [
-                "company",
-                "exchange"
-            ]
-        },
-        "response": {
-            "type": "object",
-            "properties": {
-                "price": {
-                    "type": "float",
-                    "description": "当日股票价格"
+                    "description": "省名，市名。例如：河北省，石家庄市"
                 },
                 "unit": {
                     "type": "string",
                     "enum": [
-                        "人民币",
-                        "美元",
-                        "港币"
-                    ],
-                    "description": "股票价格货币类型"
+                        "摄氏度",
+                        "华氏度"
+                    ]
+                }
+            },
+            "required": [
+                "location",
+                "unit"
+            ]
+        },
+        "responses": {
+            "type": "object",
+            "properties": {
+                "temperature": {
+                    "type": "int",
+                    "description": "城市气温"
                 },
-                "change": {
+                "unit": {
                     "type": "string",
-                    "description": "当日股票价格变化，如下跌3%，上涨0.5%"
+                    "enum": [
+                        "摄氏度",
+                        "华氏度"
+                    ]
                 }
             }
         }
@@ -116,7 +109,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | name | string | 是 | 函数名称。 |
 | description | string | 是 | 对函数功能的描述。 |
 | parameters | dict | 否 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
-| response | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
+| responses | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。 |
 
 ### `function_call`
