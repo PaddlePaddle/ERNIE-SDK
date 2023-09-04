@@ -13,16 +13,20 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :---   | :--- | :------- | :---- |
-| model  | string | 是 | 模型名，当前支持"ernie-bot-3.5"和"ernie-bot-turbo" |
-| messages | list(dict) | 是 | 对话上下文信息，其中list元素个数须为奇数 |
-| top_p | float | 否 | 生成环节在概率加和为top_p以内的Top Token集合内进行采样 <br>(1)影响输出文本的多样性，取值越大，生成文本的多样性越强 <br>(2)默认0.8，取值范围 [0, 1.0] <br>(3)建议该参数和temperature只设置1个|
-| temperature | float | 否 | 采样环节的参数，用于控制随机性 <br>(1)较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定 <br>(2)默认0.95，范围 (0, 1.0]，不能为0 <br>(3)建议该参数和top_p只设置1个  |
-| penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象, 值越高则惩罚越大 <br>(1)值越大表示惩罚越大 <br>(2)默认1.0，取值范围：[1.0, 2.0]|
-| stream | boolean | 否 | 是否以流式接口返回数据，默认False |
-| user_id | string | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用 |
+| model  | string | 是 | 模型名称。当前支持`'ernie-bot-3.5'`和`'ernie-bot-turbo'`。 |
+| messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
+| functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。 |
+| top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议该参数和temperature只设置其中一个。 |
+| temperature | float | 否 | 采样环节的参数，用于控制随机性。 <br>(1) 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议该参数和`top_p`只设置其中一个。 |
+| penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象, 值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
+| stream | boolean | 否 | 是否以流式接口返回数据，默认`False`。 |
+| user_id | string | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
 
-其中message作为python列表，其每个元素均为一个dict，包含"role"和"content"两个key，示例如下所示, 为了与模型进行多轮对话，我们将模型的回复结果插入在message中再继续请求
-```
+### `messages`
+
+`messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入在`messages`中再继续请求：
+
+``` {.py .copy}
 [
     {
         "role": "user",
@@ -39,18 +43,100 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ]
 ```
 
-| 键值 | 类型 | 描述 |
-|:--- | :---- | :---- |
-| role | string | user表示用户，assistant表示对话助手 |
-| content | string | 对话内容，不能为空 |
+`messages`中的每个元素包含如下键值对：
+
+| 键名 | 类型 | 必填 | 描述 |
+|:--- | :---- | :--- | :---- |
+| role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示。 |
+| content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，设置该参数为`None`。 |
+| name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
+| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
+
+
+### `functions`
+
+`functions`为一个Python list，其中每个元素为一个dict。示例如下：
+
+``` {.py .copy}
+[
+    {
+        "name": "get_current_price",
+        "description": "获得指定公司的股价",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "type": "string",
+                    "description": "公司名，例如：腾讯，阿里巴巴"
+                },
+                "exchange": {
+                    "type": "string",
+                    "enum": [
+                        "纳斯达克",
+                        "上海证券交易所",
+                        "香港证券交易所"
+                    ]
+                }
+            },
+            "required": [
+                "company",
+                "exchange"
+            ]
+        },
+        "response": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "float",
+                    "description": "当日股票价格"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": [
+                        "人民币",
+                        "美元",
+                        "港币"
+                    ],
+                    "description": "股票价格货币类型"
+                },
+                "change": {
+                    "type": "string",
+                    "description": "当日股票价格变化，如下跌3%，上涨0.5%"
+                }
+            }
+        }
+    }
+]
+```
+
+`functions`中的每个元素包含如下键值对：
+
+| 键名 | 类型 | 必填 | 描述 |
+|:--- | :---- | :--- | :---- |
+| name | string | 是 | 函数名称。 |
+| description | string | 是 | 对函数功能的描述。 |
+| parameters | dict | 否 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
+| response | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
+| examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。 |
+
+### `function_call`
+
+`function_call`为一个Python dict，其中包含如下键值对：
+
+| 键名 | 类型 | 必填 | 描述 |
+|:--- | :---- | :--- | :---- |
+| name | string | 是 | 函数名称。 |
+| thoughts | string | 是 | 模型思考过程。 |
+| arguments | string | 是 | 请求参数。 |
 
 
 ## 返回结果
 
-当为非流式，即`stream`为`False`时，接口返回`erniebot.response.EBResponse`结构体；当为流式，即`stream`为`True`时，接口返回Python的`Generator`类型结构体，其中`Generator`中每个元素均为`erniebot.response.EBResponse`结构体。
+当采用非流式接口、即`stream`为`False`时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口、即`stream`为`True`时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
 
-`erniebot.response.EBResponse`结构体示例数据如下所示：
-```
+`erniebot.response.EBResponse`对象中包含一些字段，可通过`x[key]`或`x.key`的方式访问。一个典型示例如下：
+
+```python
 {
     "code": 200,
     "id": "as-0rphgw7hw2",
@@ -69,19 +155,20 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 }
 ```
 
-其中字段含义如下表所示：
+各字段含义如下表所示：
 
 | 字段 | 类型 | 描述 |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态 |
-| body | dict | 请求返回的源数据 |
-| result | string | 对话返回的生成结果 |
-| is_truncated | boolean | 生成结果是否被长度限制截断 |
-| sentence_id | int | 仅流式情况下返回该字段，表示返回结果中的文本顺序，从0开始计数 |
-| need_clear_history | boolean | 表示用户输入是否存在安全，是否关闭当前会话，清理历史会话信息 <br>true：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息 <br>false：否，表示用户输入无安全风险|
-| ban_round | int | 当need_clear_history为true时，会返回此字段表示第几轮对话有敏感信息，如果是当前问题，ban_round=-1 |
-| is_end | boolean | 仅流式情况下返回该字段，表示是否为是返回结果的最后一段文本 |
-| usage | dict | 输入输出Token统计信息，注意当前Token统计采用估算逻辑， token数 = 汉字数 + 单词数 * 1.3。<br>prompt_tokens(int): 输入Token数量(含上下文拼接); <br>completion_tokens: 当前结构体包含的生成结果的Token数量; <br>total_tokens: 输入与输出的Token总数 |
+| code | int | 请求返回状态。 |
+| body | dict | 请求返回的源数据。 |
+| result | string | 对话返回的生成结果。 |
+| is_truncated | boolean | 生成结果是否被长度限制截断。 |
+| sentence_id | int | 仅流式情况下返回该字段，表示返回结果中的文本顺序，从`0`开始计数。 |
+| need_clear_history | boolean | 表示用户输入是否存在安全，是否关闭当前会话，清理历史会话信息 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息 <br>`False`：否，表示用户输入无安全风险。 |
+| ban_round | int | 当`need_clear_history`为`True`时，会返回此字段表示第几轮对话有敏感信息，如果是当前轮次存在问题，则`ban_round=-1`。 |
+| is_end | boolean | 仅流式情况下返回该字段，表示是否为是返回结果的最后一段文本。 |
+| usage | dict | 输入输出token统计信息。注意当前token统计采用估算逻辑为：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`: 输入与输出的token总数。 |
+| function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
 
 ## 使用示例
 

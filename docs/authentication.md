@@ -2,7 +2,7 @@
 
 ## 认证鉴权
 
-大家使用ERNIE Bot SDK，首先需要申请鉴权参数，然后设置鉴权参数，最后使用接口调用文心大模型的能力。
+在使用ERNIE Bot SDK提供的接口调用文心大模型的能力前，首先需要申请鉴权参数，然后设置鉴权参数。
 
 目前ERNIE Bot SDK支持的鉴权参数如下：
 
@@ -14,7 +14,7 @@
 | access_token | EB_ACCESS_TOKEN | string | 否 | 设置认证鉴权的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
 | access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 设置存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
 
-ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的鉴权参数不尽相同。大家可以阅读下表，参照对应的文档申请鉴权参数。
+ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的鉴权参数不尽相同。请阅读下表，参照对应的文档申请鉴权参数。
 
 | 后端平台   |  API_TYPE  |  支持模型 | 申请鉴权参数的方法 | 是否支持AK/SK |
 | :---     | :----      | :----  | :----  | :---  |
@@ -22,7 +22,7 @@ ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支�
 | 智能创作平台 | `yinian` | `ernie-vilg-v2` | [申请智能创作平台的鉴权参数](#申请智能创作平台的鉴权参数) | 是 |
 | AI Studio | `ai_studio` | `ernie-bot-3.5`, `ernie-bot-turbo`, `ernie-text-embedding` | [申请AI Studio平台的鉴权参数](#申请ai-studio平台的鉴权参数) | 否 |
 
-与其它参数类似，鉴权参数可通过如下3种方式设置，大家可以自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
+与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
 1）使用环境变量：
 ```shell
