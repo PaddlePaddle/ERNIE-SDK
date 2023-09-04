@@ -24,6 +24,8 @@ from .resource import EBResource
 class ChatCompletion(EBResource, Creatable):
     """Given a conversation, get a new reply from the model."""
 
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
+                                                          APIType.AI_STUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             'prefix': 'chat',
@@ -85,14 +87,15 @@ class ChatCompletion(EBResource, Creatable):
         messages = kwargs['messages']
 
         # url
-        if self.api_type in self._API_INFO_DICT:
+        if self.api_type in self.SUPPORTED_API_TYPES:
             api_info = self._API_INFO_DICT[self.api_type]
             if model not in api_info['models']:
                 raise errors.InvalidArgumentError(
                     f"{repr(model)} is not a supported model.")
             url = f"/{api_info['prefix']}/{api_info['models'][model]['suffix']}"
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}

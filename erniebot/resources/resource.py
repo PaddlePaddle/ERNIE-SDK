@@ -13,13 +13,15 @@
 # limitations under the License.
 
 import asyncio
+import operator
 import time
-from typing import (Any, AsyncIterator, Callable, cast, Dict, Iterator,
-                    Optional, Union)
+from typing import (Any, AsyncIterator, Callable, cast, ClassVar, Dict,
+                    Iterator, List, Optional, Tuple, Union)
 
 from typing_extensions import final, Self
 
 import erniebot.errors as errors
+from erniebot.api_types import APIType
 from erniebot.backends import build_backend, convert_str_to_api_type
 from erniebot.client import EBClient
 from erniebot.config import GlobalConfig
@@ -41,20 +43,18 @@ class EBResource(object):
     facilitate reuse of concrete implementations. Most methods of this class are
     marked as final (e.g., `request`, `arequest`), while some methods can be
     overridden to change the default behavior (e.g., `_create_config_dict`).
-
-    Attributes:
-        cfg (Dict[str, Any]): Dictionary that stores global settings.
-        client (erniebot.client.EBClient): Low-level client instance.
     """
+
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = ()
 
     MAX_POLLING_RETRIES: int = 20
     POLLING_INTERVAL: int = 5
     _MAX_TOKEN_UPDATE_RETRIES: int = 3
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **config: Any) -> None:
         super().__init__()
 
-        self._cfg = self._create_config_dict(**kwargs)
+        self._cfg = self._create_config_dict(config)
 
         self.api_type = self._cfg['api_type']
         self.timeout = self._cfg['timeout']
@@ -66,6 +66,10 @@ class EBResource(object):
     @classmethod
     def new_object(cls, **kwargs: Any) -> Self:
         return cls(**kwargs)
+
+    @classmethod
+    def get_supported_api_type_names(cls) -> List[str]:
+        return list(map(operator.attrgetter('name'), cls.SUPPORTED_API_TYPES))
 
     @final
     def request(
@@ -285,7 +289,7 @@ class EBResource(object):
                 else:
                     raise
 
-    def _create_config_dict(self, **overrides: Any) -> Dict[str, Any]:
+    def _create_config_dict(self, overrides: Any) -> Dict[str, Any]:
         cfg_dict = cast(Dict[str, Any], GlobalConfig().create_dict(**overrides))
         api_type_str = cfg_dict['api_type']
         if not isinstance(api_type_str, str):

@@ -24,6 +24,8 @@ from .resource import EBResource
 class ChatFile(EBResource, Creatable):
     """Chat with the model about the content of a given file."""
 
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, )
+
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
                                                          Optional[ParamsType],
@@ -46,10 +48,12 @@ class ChatFile(EBResource, Creatable):
         messages = kwargs['messages']
 
         # url
+        assert self.SUPPORTED_API_TYPES == (APIType.QIANFAN, )
         if self.api_type is APIType.QIANFAN:
             url = "/chat/chatfile_adv"
         else:
-            raise errors.UnsupportedAPITypeError
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
 
         # params
         params = {}

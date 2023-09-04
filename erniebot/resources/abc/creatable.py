@@ -26,37 +26,28 @@ class Creatable(Resource, Protocol):
     """Creatable resource protocol."""
 
     @classmethod
-    def create(cls,
-               *,
-               config: Optional[Dict[str, Any]]=None,
-               **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
-        """Create a new resource.
-
-        Args:
-            config: Configuration dictionary.
-            **create_kwargs: Parameters for creating the resource.
-
-        Returns:
-            Response from the server.
-        """
-        config = config or {}
+    def create(cls, **kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
+        """Create a resource."""
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
+        create_kwargs = kwargs
         return resource.create_resource(**create_kwargs)
 
     @classmethod
     async def acreate(
-        cls, *, config: Optional[Dict[str, Any]]=None,
-        **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        cls, **kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `create`."""
-        config = config or {}
+        config = kwargs.pop('_config_', {})
         resource = cls.new_object(**config)
+        create_kwargs = kwargs
         resp = await resource.acreate_resource(**create_kwargs)
         return resp
 
     def create_resource(
-            self, **kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
+            self,
+            **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
         url, params, headers, files, stream, request_timeout = self._prepare_create(
-            kwargs)
+            create_kwargs)
         resp = self.request(
             method='POST',
             url=url,
@@ -70,9 +61,10 @@ class Creatable(Resource, Protocol):
         return resp
 
     async def acreate_resource(
-        self, **kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        self,
+        **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, params, headers, files, stream, request_timeout = self._prepare_create(
-            kwargs)
+            create_kwargs)
         resp = await self.arequest(
             method='POST',
             url=url,
