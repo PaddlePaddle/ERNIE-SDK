@@ -21,7 +21,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-大家使用ERNIE Bot SDK之前，请申请AK/SK进行认证鉴权，具体请参考[认证鉴权](./docs/authentication.md)。
+大家使用ERNIE Bot SDK之前，请申请AK/SK进行认证鉴权，具体请参考[认证鉴权](./authentication.md)。
 
 ### Python 接口
 
@@ -173,17 +173,17 @@ print(response)
 ## 完整教程文档
 
 * 快速开始
-  * [安装](./docs/installation.md)
-  * [认证鉴权](./docs/authentication.md)
-  * [参数配置](./docs/configuration.md)
+  * [安装](./installation.md)
+  * [认证鉴权](./authentication.md)
+  * [参数配置](./configuration.md)
 * 使用指南
-  * [对话补全ChatCompletion](./docs/guide/chat_completion.md)
-  * [语义向量Embedding](./docs/guide/embedding.md)
-  * [文生图Image](./docs/guide/image.md)
+  * [对话补全ChatCompletion](./guide/chat_completion.md)
+  * [语义向量Embedding](./guide/embedding.md)
+  * [文生图Image](./guide/image.md)
 * API文档
-  * [对话补全ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [语义向量Embedding](./docs/api_reference/embedding.md)
-  * [文生图Image](./docs/api_reference/image.md)
+  * [对话补全ChatCompletion](./api_reference/chat_completion.md)
+  * [语义向量Embedding](./api_reference/embedding.md)
+  * [文生图Image](./api_reference/image.md)
 
 
 ## Acknowledgement
