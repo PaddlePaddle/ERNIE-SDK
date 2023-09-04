@@ -1,15 +1,6 @@
-<div align="center">
-
-<h1>ERNIE Bot SDK</h1>
+# ERNIE Bot SDK
 
 ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
-
-[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
-![python version](https://img.shields.io/badge/python-3.8+-orange.svg)
-![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
-
-</div>
 
 ## 快速安装
 
@@ -166,25 +157,9 @@ print(response)
 
 ## Gradio可视化应用
 
-为了让开发者可以更全面更低门槛的了解ERNIE Bot SDK的全功能，我们基于Gradio实现了一个功能丰富的可视化界面，参阅[示例说明](examples)可以快速本地测试ChatCompletion、Embedding和Image的可视化交互示例。
+为了让开发者可以更全面更低门槛的了解ERNIE Bot SDK的全功能，我们基于Gradio实现了一个功能丰富的可视化界面，参阅[示例说明](../examples)可以快速本地测试ChatCompletion、Embedding和Image的可视化交互示例。
 
 <img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
-
-## 完整教程文档
-
-* 快速开始
-  * [安装](./installation.md)
-  * [认证鉴权](./authentication.md)
-  * [参数配置](./configuration.md)
-* 使用指南
-  * [对话补全ChatCompletion](./guide/chat_completion.md)
-  * [语义向量Embedding](./guide/embedding.md)
-  * [文生图Image](./guide/image.md)
-* API文档
-  * [对话补全ChatCompletion](./api_reference/chat_completion.md)
-  * [语义向量Embedding](./api_reference/embedding.md)
-  * [文生图Image](./api_reference/image.md)
-
 
 ## Acknowledgement
 
