@@ -64,7 +64,7 @@ class ChatCompletion(EBResource, Creatable):
                 dst[key] = src[key]
 
         VALID_KEYS = {
-            'model', 'messages', 'stream', 'temperature', 'top_p',
+            'model', 'messages', 'functions', 'stream', 'temperature', 'top_p',
             'penalty_score', 'headers', 'request_timeout'
         }
         if self.api_type is APIType.QIANFAN:
@@ -100,6 +100,7 @@ class ChatCompletion(EBResource, Creatable):
         # params
         params = {}
         params['messages'] = messages
+        _set_val_if_key_exists(kwargs, params, 'functions')
         _set_val_if_key_exists(kwargs, params, 'stream')
         _set_val_if_key_exists(kwargs, params, 'temperature')
         _set_val_if_key_exists(kwargs, params, 'top_p')
