@@ -52,7 +52,7 @@ class EBResource(object):
     _MAX_TOKEN_UPDATE_RETRIES: int = 3
 
     def __init__(self, **config: Any) -> None:
-        super().__init__()
+        object.__init__(self)
 
         self._cfg = self._create_config_dict(config)
 
