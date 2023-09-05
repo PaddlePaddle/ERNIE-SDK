@@ -110,6 +110,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | parameters | dict | 否 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | responses | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。 |
+| plugin_id | string | 否 | 标记函数关联的插件，便于数据统计。 |
 
 ### `function_call`
 
@@ -158,7 +159,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | need_clear_history | boolean | 表示用户输入是否存在安全，是否关闭当前会话，清理历史会话信息 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息 <br>`False`：否，表示用户输入无安全风险。 |
 | ban_round | int | 当`need_clear_history`为`True`时，会返回此字段表示第几轮对话有敏感信息，如果是当前轮次存在问题，则`ban_round=-1`。 |
 | is_end | boolean | 仅流式情况下返回该字段，表示是否为是返回结果的最后一段文本。 |
-| usage | dict | 输入输出token统计信息。注意当前token统计采用估算逻辑为：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`: 输入与输出的token总数。 |
+| usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`：输入与输出的token总数；<br> `plugins`：插件消耗的token数量。 |
 | function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
 
 ## 使用示例
