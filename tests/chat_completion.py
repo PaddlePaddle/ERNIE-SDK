@@ -4,7 +4,7 @@ logger.set_level("WARNING")
 
 
 def test_chat_completion(model="ernie-bot-3.5"):
-    chat_completion = erniebot.ChatCompletion.create(
+    response = erniebot.ChatCompletion.create(
         model=model,
         messages=[{
             "role": "user",
@@ -18,11 +18,11 @@ def test_chat_completion(model="ernie-bot-3.5"):
             "content": "我在深圳，周末可以去哪里玩？"
         }],
         stream=False)
-    print(chat_completion)
+    print(response)
 
 
 def test_chat_completion_stream_mode(model="ernie-bot-3.5"):
-    chat_completion = erniebot.ChatCompletion.create(
+    response = erniebot.ChatCompletion.create(
         model=model,
         messages=[{
             "role": "user",
@@ -37,7 +37,7 @@ def test_chat_completion_stream_mode(model="ernie-bot-3.5"):
         }],
         stream=True)
 
-    for item in chat_completion:
+    for item in response:
         print(item)
 
 

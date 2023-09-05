@@ -25,7 +25,7 @@ class ChatCompletion(EBResource, Creatable):
     """Given a conversation, get a new reply from the model."""
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
-                                                          APIType.AI_STUDIO)
+                                                          APIType.AISTUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             'prefix': 'chat',
@@ -38,7 +38,7 @@ class ChatCompletion(EBResource, Creatable):
                 },
             },
         },
-        APIType.AI_STUDIO: {
+        APIType.AISTUDIO: {
             'prefix': 'chat',
             'models': {
                 'ernie-bot-3.5': {
@@ -64,7 +64,7 @@ class ChatCompletion(EBResource, Creatable):
                 dst[key] = src[key]
 
         VALID_KEYS = {
-            'model', 'messages', 'stream', 'temperature', 'top_p',
+            'model', 'messages', 'functions', 'stream', 'temperature', 'top_p',
             'penalty_score', 'headers', 'request_timeout'
         }
         if self.api_type is APIType.QIANFAN:
@@ -100,6 +100,7 @@ class ChatCompletion(EBResource, Creatable):
         # params
         params = {}
         params['messages'] = messages
+        _set_val_if_key_exists(kwargs, params, 'functions')
         _set_val_if_key_exists(kwargs, params, 'stream')
         _set_val_if_key_exists(kwargs, params, 'temperature')
         _set_val_if_key_exists(kwargs, params, 'top_p')
