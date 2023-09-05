@@ -2,25 +2,25 @@
 
 ## 认证鉴权
 
-在使用ERNIE Bot SDK提供的接口调用文心大模型的能力前，首先需要申请鉴权参数，然后设置鉴权参数。
+在使用ERNIE Bot SDK提供的接口调用文心大模型的能力前，首先需要申请用户凭证，然后设置鉴权参数。
 
 目前ERNIE Bot SDK支持的鉴权参数如下：
 
 | API参数名称   | 环境变量名称  |  类型   |  必须设置 |  描述   |
 | :---         | :----       | :----  | :---- |  :---- |
-| api_type     | EB_API_TYPE | string | 否 | 设置后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
-| ak           | EB_AK       | string | 否 | 设置认证鉴权的access key。必须和`sk`同时设置。 |
-| sk           | EB_SK       | string | 否 | 设置认证鉴权的secret key。必须和`ak`同时设置。 |
-| access_token | EB_ACCESS_TOKEN | string | 否 | 设置认证鉴权的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
-| access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 设置存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
+| api_type     | EB_API_TYPE | string | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
+| ak           | EB_AK       | string | 否 | 认证鉴权使用的access key（AK）。必须和`sk`同时设置。 |
+| sk           | EB_SK       | string | 否 | 认证鉴权使用的secret key（SK）。必须和`ak`同时设置。 |
+| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
+| access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
 
-ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的鉴权参数不尽相同。请阅读下表，参照对应的文档申请鉴权参数。
+ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的用户凭证类型不尽相同。请阅读下表，参照对应的文档申请用户凭证。
 
-| 后端平台   |  EB_API_TYPE  |  支持的鉴权参数 | 申请鉴权参数的方法 | 支持的模型 |
+| 后端平台   |  EB_API_TYPE  |  支持的用户凭证类型 | 申请用户凭证的方法 | 支持的模型 |
 | :---     | :----      | :----  | :----  | :---  |
-| 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的鉴权参数](#申请千帆大模型平台的鉴权参数) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
-| 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的鉴权参数](#申请智能创作平台的鉴权参数) | ernie-vilg-v2 |
-| AI Studio | aistudio | access token | [申请AI Studio平台的鉴权参数](#申请ai-studio平台的鉴权参数) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的用户凭证](#申请千帆大模型平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的用户凭证](#申请智能创作平台的用户凭证) | ernie-vilg-v2 |
+| AI Studio | aistudio | access token | [申请AI Studio平台的用户凭证](#申请ai-studio平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
@@ -68,11 +68,11 @@ chat_completion = erniebot.ChatCompletion.create(
 
 * 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
 * **使用特定模型，请准确设置对应后端平台的鉴权参数。**
-    * 对于所有后端平台，均支持仅指定access token、而不指定其余的鉴权参数。
+    * 对于所有后端平台，均支持仅指定access token、而不提供其余的用户凭证。
     * 对于支持AK/SK的后端平台，允许仅设置AK和SK、而将access token留空，在这种情况下程序将根据AK和SK自动维护access token。
     * 对于不支持AK/SK的后端平台，只需设定access token。
 
-## 申请千帆大模型平台的鉴权参数
+## 申请千帆大模型平台的用户凭证
 
 具体流程：
 
@@ -92,7 +92,7 @@ chat_completion = erniebot.ChatCompletion.create(
 * 千帆大模型平台的新用户，默认会有20元代金券，大家可以快速体验ERNIE Bot SDK。
 * 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)
 
-## 申请智能创作平台的鉴权参数
+## 申请智能创作平台的用户凭证
 
 具体流程：
 
@@ -109,4 +109,4 @@ chat_completion = erniebot.ChatCompletion.create(
 * AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
 * 智能创作平台的完整介绍，请参考[使用文档](https://ai.baidu.com/ai-doc/NLP/Uk53wndcb)；费用、充值相关的问题，请参考[计费简介](https://ai.baidu.com/ai-doc/NLP/qla2beec2)。
 
-## 申请AI Studio平台的鉴权参数
+## 申请AI Studio平台的用户凭证
