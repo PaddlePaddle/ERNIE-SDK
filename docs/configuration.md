@@ -22,7 +22,7 @@ erniebot.api_type = "<EB-API-TYPE>"
 ``` {.py .copy}
 import erniebot
 
-chat_completion = erniebot.ChatCompletion.create(
+response = erniebot.ChatCompletion.create(
     _config_=dict(
         api_type="<EB-API-TYPE>",
     ),

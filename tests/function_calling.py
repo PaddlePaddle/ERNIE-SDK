@@ -5,7 +5,7 @@ from erniebot.utils import logger
 
 
 def test_function_calling(model="ernie-bot-3.5"):
-    chat_completion = erniebot.ChatCompletion.create(
+    response = erniebot.ChatCompletion.create(
         model=model,
         messages=[
             {
@@ -64,7 +64,7 @@ def test_function_calling(model="ernie-bot-3.5"):
             },
         }, ],
         stream=False)
-    print(chat_completion)
+    print(response)
 
 
 if __name__ == "__main__":
