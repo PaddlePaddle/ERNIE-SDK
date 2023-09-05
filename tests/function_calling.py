@@ -18,7 +18,7 @@ def test_function_calling(model="ernie-bot-3.5"):
                 "function_call": {
                     "name": "get_current_temperature",
                     "arguments": json.dumps({
-                        "location": "广东省，深圳市",
+                        "location": "深圳市",
                         "unit": "摄氏度",
                     }),
                 },
@@ -40,7 +40,7 @@ def test_function_calling(model="ernie-bot-3.5"):
                 "properties": {
                     "location": {
                         "type": "string",
-                        "description": "省名，市名。例如：河北省，石家庄市",
+                        "description": "城市名称",
                     },
                     "unit": {
                         "type": "string",

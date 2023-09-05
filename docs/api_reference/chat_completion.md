@@ -47,11 +47,10 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 键名 | 类型 | 必填 | 描述 |
 |:--- | :---- | :--- | :---- |
-| role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示。 |
+| role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
 | content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，设置该参数为`None`。 |
 | name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
 | function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
-
 
 ### `functions`
 
@@ -67,7 +66,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
             "properties": {
                 "location": {
                     "type": "string",
-                    "description": "省名，市名。例如：河北省，石家庄市"
+                    "description": "城市名称"
                 },
                 "unit": {
                     "type": "string",
@@ -122,7 +121,6 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | thoughts | string | 是 | 模型思考过程。 |
 | arguments | string | 是 | 请求参数。 |
 
-
 ## 返回结果
 
 当采用非流式接口、即`stream`为`False`时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口、即`stream`为`True`时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
@@ -172,7 +170,7 @@ import erniebot
 # erniebot.sk = "<EB-SECRET-ACCESS-KEY>"
 
 stream = False
-chat_completion = erniebot.ChatCompletion.create(
+response = erniebot.ChatCompletion.create(
     model="ernie-bot-3.5",
     messages=[{
         "role": "user",
@@ -183,10 +181,10 @@ chat_completion = erniebot.ChatCompletion.create(
 
 result = ""
 if stream:
-    for res in chat_completion:
+    for res in response:
         result += res.result
 else:
-    result = chat_completion.result
+    result = response.result
 
 print("ERNIEBOT: ", result)
 ```
