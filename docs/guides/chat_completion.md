@@ -1,4 +1,4 @@
-# 对话补全
+# 对话补全（Chat Completion）
 
 ## 介绍
 

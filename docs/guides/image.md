@@ -1,4 +1,4 @@
-# 文生图
+# 文生图（Image Generation）
 
 # 介绍
 

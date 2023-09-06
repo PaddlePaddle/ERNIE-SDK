@@ -39,7 +39,7 @@ response = erniebot.ChatCompletion.create(model="ernie-bot-3.5", messages=[{"rol
 print(response.result)
 ```
 
-### 命令行接口 (CLI)
+### 命令行接口（CLI）
 
 ```bash
 # List supported models
@@ -64,7 +64,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ## 经典示例
 
-### 对话补全 (Chat Completion)
+### 对话补全（Chat Completion）
 
 ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型`ernie-bot-3.5`和文心一言迅捷版模型`ernie-bot-turbo`。
 旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
@@ -95,7 +95,7 @@ response = erniebot.ChatCompletion.create(
 print(response)
 ```
 
-### 语义向量生成 (Embedding Generation)
+### 语义向量（Embedding）
 
 ERNIE Bot SDK提供提取语义向量的Embedding模型。
 该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将字符串转为384维浮点数表达的语义向量，语义向量具备极其精准的语义表达能力，可以用于度量两个字符串之间的语义相似度。
