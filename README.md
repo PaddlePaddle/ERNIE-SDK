@@ -169,7 +169,6 @@ ERNIE Bot SDK提供函数调用功能，即通过大模型根据对话上下文�
 以下是调用文心一言旗舰版模型进行函数调用的示例。
 
 ```python
-import json
 import erniebot
 
 erniebot.api_type = "qianfan"
@@ -231,13 +230,14 @@ print(response)
   * [认证鉴权](./docs/authentication.md)
   * [参数配置](./docs/configuration.md)
 * 使用指南
-  * [对话补全ChatCompletion](./docs/guide/chat_completion.md)
-  * [语义向量生成Embedding](./docs/guide/embedding.md)
-  * [文生图Image](./docs/guide/image.md)
+  * [对话补全](./docs/guides/chat_completion.md)
+  * [语义向量生成](./docs/guides/embedding.md)
+  * [文生图](./docs/guides/image.md)
+  * [【beta】函数调用](./docs/guides/function_calling.md)
 * API文档
-  * [对话补全ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [语义向量生成Embedding](./docs/api_reference/embedding.md)
-  * [文生图Image](./docs/api_reference/image.md)
+  * [对话补全](./docs/api_reference/chat_completion.md)
+  * [语义向量生成](./docs/api_reference/embedding.md)
+  * [文生图](./docs/api_reference/image.md)
 
 ## Acknowledgement
 
