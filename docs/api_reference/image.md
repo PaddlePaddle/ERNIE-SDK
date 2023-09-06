@@ -59,26 +59,28 @@ ernie.api_type = "yinian"
 
 返回结果的具体字段含义如下表：
 
-| 字段  | 类型   | 描述  |
+| 字段名  | 类型   | 描述  |
 | :--- | :---- | :---- |
-| data | object | 返回数据。 |
+| code | int | 请求返回状态。 |
+| data | dict | 返回数据。 |
+
+`data`包含如下键值对：
+
+| 键名  | 值类型   | 值描述  |
+| :--- | :---- | :---- |
 | task_id | int | 任务ID。 |
 | task_status | string | 任务总体状态，有`'INIT'`（初始化）、`'WAIT'`（排队中）、`'RUNNING'`（生成中）、`'FAILED'`（失败）、`'SUCCESS'`（成功）五种状态，只有`'SUCCESS'`为成功状态。 |
 | task_progress | int | 任务总体进度，`0`表示未处理完，`1`表示处理完成。 |
 | sub_task_result_list | list[dict] | 子任务的结果列表。 |
-| final_image_list | object[] | 子任务生成图像的列表。 |
-| img_url | string | 图片的下载地址，默认1小时后失效。 |
-| height | int | 图片的高度。 |
-| width | int | 图片的宽度。 |
-| img_approve_conclusion | string | 图片机审结果，`'block'`表示输出图片违规，`'review'`表示输出图片疑似违规，`'pass'`表示输出图片未发现问题。 |
 
-`sub_task_status`为一个Python list，其中每个元素为一个dict，包含如下键值对：
+`sub_task_result_list`为一个Python list，其中每个元素为一个dict，包含如下键值对：
 
-| 字段  | 类型   | 描述  |
+| 键名  | 值类型   | 值描述  |
 | :--- | :---- | :---- |
 | sub_task_status | string | 子任务状态，有`'INIT'`（初始化）、`'WAIT'`（排队中）、`'RUNNING'`（生成中）、`'FAILED'`（失败）、`'SUCCESS'`（成功）五种状态，只有`'SUCCESS'`为成功状态。 |
 | sub_task_progress | int | 子任务进度，`0`表示未处理完，`1`表示处理完成。 |
 | sub_task_error_code | int | 子任务任务错误码，`0`表示正常，`501`表示文本黄反拦截，`201`表示模型生图失败。 |
+| final_image_list | list[dict] | 子任务生成图像的列表。列表中的元素均为dict，包含如下键值对：<br>`img_url`：图片的下载地址，默认1小时后失效； <br>`height`：图片的高度； <br>`width`：图片的宽度； <br>`img_approve_conclusion`：图片机审结果，`'block'`表示输出图片违规，`'review'`表示输出图片疑似违规，`'pass'`表示输出图片未发现问题。 |
 
 ## 使用示例
 

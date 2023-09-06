@@ -1,8 +1,8 @@
 # ChatCompletion
 
-给定对话文本，模型服务会响应给出新的回复，包括回复的文本以及Token统计等信息。
+给定对话文本，模型服务会响应给出新的回复，包括回复的文本以及token数量统计等信息。
 
-## 函数接口
+## Python接口
 
 ``` {.py .copy}
 erniebot.ChatCompletion.create(**kwargs: Any)
@@ -15,7 +15,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | :---   | :--- | :------- | :---- |
 | model  | string | 是 | 模型名称。当前支持`'ernie-bot-3.5'`和`'ernie-bot-turbo'`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
-| functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。当`model='ernie-bot-turbo'`时，此参数无效。 |
+| functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。`ernie-bot-turbo`模型暂不支持此参数。 |
 | top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议该参数和temperature只设置其中一个。 |
 | temperature | float | 否 | 采样环节的参数，用于控制随机性。 <br>(1) 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议该参数和`top_p`只设置其中一个。 |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象，值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
@@ -45,7 +45,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 `messages`中的每个元素包含如下键值对：
 
-| 键名 | 类型 | 必填 | 描述 |
+| 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
 | role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
 | content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，可以设置该参数为`None`。 |
@@ -103,7 +103,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 `functions`中的每个元素包含如下键值对：
 
-| 键名 | 类型 | 必填 | 描述 |
+| 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
 | name | string | 是 | 函数名称。 |
 | description | string | 是 | 对函数功能的描述。 |
@@ -116,7 +116,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 `function_call`为一个Python dict，其中包含如下键值对：
 
-| 键名 | 类型 | 必填 | 描述 |
+| 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
 | name | string | 是 | 函数名称。 |
 | thoughts | string | 是 | 模型思考过程。 |
@@ -149,10 +149,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 各字段含义如下表所示：
 
-| 字段 | 类型 | 描述 |
+| 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
 | code | int | 请求返回状态。 |
-| body | dict | 请求返回的源数据。 |
 | result | string | 对话返回的生成结果。 |
 | is_truncated | boolean | 生成结果是否被长度限制截断。 |
 | sentence_id | int | 仅流式模式下返回该字段，表示返回结果中的文本顺序，从`0`开始计数。 |

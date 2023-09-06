@@ -160,7 +160,6 @@ ERNIE Bot SDK提供函数调用功能，即通过大模型根据对话上下文�
 以下是调用文心一言旗舰版模型进行函数调用的示例。
 
 ```python
-import json
 import erniebot
 
 erniebot.api_type = "qianfan"
