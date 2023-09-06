@@ -153,7 +153,7 @@ print(response)
 
 大家也可登陆[文心一格](https://yige.baidu.com/)平台，体验更多AI艺术与创意辅助的能力。
 
-## 【beta】函数调用（Function Calling）
+### 【beta】函数调用（Function Calling）
 
 ERNIE Bot SDK提供函数调用功能，即通过大模型根据对话上下文确定何时以及如何调用函数。该功能目前处于测试状态。
 
