@@ -11,7 +11,7 @@
 | api_type     | EB_API_TYPE | string | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
 | ak           | EB_AK       | string | 否 | 认证鉴权使用的access key（AK）。必须和`sk`同时设置。 |
 | sk           | EB_SK       | string | 否 | 认证鉴权使用的secret key（SK）。必须和`ak`同时设置。 |
-| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
+| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过AK/SK获取access token。|
 | access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
 
 ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的用户凭证类型不尽相同。请阅读下表，参照对应的文档申请用户凭证。
@@ -90,7 +90,7 @@ response = erniebot.ChatCompletion.create(
 
 * AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
 * 千帆大模型平台的新用户，默认会有20元代金券，大家可以快速体验ERNIE Bot SDK。
-* 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)
+* 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)。
 
 ## 申请智能创作平台的用户凭证
 
