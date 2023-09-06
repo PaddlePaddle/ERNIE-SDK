@@ -230,14 +230,14 @@ print(response)
   * [认证鉴权](./docs/authentication.md)
   * [参数配置](./docs/configuration.md)
 * 使用指南
-  * [对话补全](./docs/guides/chat_completion.md)
-  * [语义向量](./docs/guides/embedding.md)
-  * [文生图](./docs/guides/image.md)
-  * [【beta】函数调用](./docs/guides/function_calling.md)
+  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
+  * [语义向量（Embedding）](./docs/guides/embedding.md)
+  * [文生图（Image Generation）](./docs/guides/image.md)
+  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
 * API文档
-  * [对话补全](./docs/api_reference/chat_completion.md)
-  * [语义向量](./docs/api_reference/embedding.md)
-  * [文生图](./docs/api_reference/image.md)
+  * [ChatCompletion](./docs/api_reference/chat_completion.md)
+  * [Embedding](./docs/api_reference/embedding.md)
+  * [Image](./docs/api_reference/image.md)
 
 ## Acknowledgement
 
