@@ -11,7 +11,7 @@
 | api_type     | EB_API_TYPE | string | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
 | ak           | EB_AK       | string | 否 | 认证鉴权使用的access key（AK）。必须和`sk`同时设置。 |
 | sk           | EB_SK       | string | 否 | 认证鉴权使用的secret key（SK）。必须和`ak`同时设置。 |
-| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过`ak`和`sk`获取access token。|
+| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过AK/SK获取access token。|
 | access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
 
 ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的用户凭证类型不尽相同。请阅读下表，参照对应的文档申请用户凭证。
@@ -24,7 +24,7 @@ ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支�
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
-(1）使用环境变量：
+1. 使用环境变量：
 
 ```shell
 export EB_API_TYPE="<EB-API-TYPE>"
@@ -33,7 +33,7 @@ export EB_SK="<EB-SECRET-KEY>"
 export EB_ACCESS_TOKEN="<EB-ACCESS-TOKEN>"
 ```
 
-(2）使用全局变量：
+2. 使用全局变量：
 
 ``` {.py .copy}
 import erniebot
@@ -44,7 +44,7 @@ erniebot.sk = "<EB-SECRET-KEY>"
 erniebot.access_token = "<EB-ACCESS-TOKEN>"
 ```
 
-(3) 使用`_config_`参数：
+3. 使用`_config_`参数：
 
 ``` {.py .copy}
 import erniebot
@@ -90,7 +90,7 @@ response = erniebot.ChatCompletion.create(
 
 * AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
 * 千帆大模型平台的新用户，默认会有20元代金券，大家可以快速体验ERNIE Bot SDK。
-* 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)
+* 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)。
 
 ## 申请智能创作平台的用户凭证
 

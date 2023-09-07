@@ -65,10 +65,8 @@ class ChatCompletion(EBResource, Creatable):
 
         VALID_KEYS = {
             'model', 'messages', 'functions', 'stream', 'temperature', 'top_p',
-            'penalty_score', 'headers', 'request_timeout'
+            'penalty_score', 'user_id', 'headers', 'request_timeout'
         }
-        if self.api_type is APIType.QIANFAN:
-            VALID_KEYS.add('user_id')
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -105,7 +103,8 @@ class ChatCompletion(EBResource, Creatable):
         _set_val_if_key_exists(kwargs, params, 'temperature')
         _set_val_if_key_exists(kwargs, params, 'top_p')
         _set_val_if_key_exists(kwargs, params, 'penalty_score')
-        if self.api_type is APIType.QIANFAN:
+        if self.api_type is not APIType.AISTUDIO:
+            # NOTE: The AISTUDIO backend automatically injects `user_id`.
             _set_val_if_key_exists(kwargs, params, 'user_id')
 
         # headers
