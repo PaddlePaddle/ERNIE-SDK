@@ -111,7 +111,7 @@ def get_current_temperature(location: str, unit: str) -> dict:
 name2function = {"get_current_temperature": get_current_temperature}
 func = name2function[function_call["name"]]
 args = json.loads(function_call["arguments"])
-res = get_current_temperature(location=args["location"], unit=args["unit"])
+res = func(location=args["location"], unit=args["unit"])
 ```
 
 将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。如果函数的响应不是JSON格式的字符串，需要先对其进行编码。

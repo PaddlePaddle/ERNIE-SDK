@@ -147,8 +147,9 @@ class EBClient(object):
         if stream != got_stream:
             logger.error("Unexpected response: %s", resp)
             raise RuntimeError(
-                "Streaming response is expected, but got non-streaming response. This may indicate a bug in erniebot."
-            )
+                f"A {'streamed' if stream else 'non-streamed'} response was expected, "
+                f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
+                "This may indicate a bug in erniebot.")
         return resp
 
     @overload
@@ -226,8 +227,9 @@ class EBClient(object):
             if stream != got_stream:
                 logger.error("Unexpected response: %s", resp)
                 raise RuntimeError(
-                    "Streaming response is expected, but got non-streaming response. This may indicate a bug in erniebot."
-                )
+                    f"A {'streamed' if stream else 'non-streamed'} response was expected, "
+                    f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
+                    "This may indicate a bug in erniebot.")
         except Exception as e:
             await ctx.__aexit__(None, None, None)
             raise e
@@ -300,7 +302,6 @@ class EBClient(object):
             raise errors.ConnectionError(
                 f"Error communicating with server: {e}") from e
 
-        logger.debug("API response body: %r", result.content)
         logger.debug("API response headers: %r", result.headers)
 
         return result
@@ -340,7 +341,6 @@ class EBClient(object):
             raise errors.ConnectionError(
                 f"Error communicating with server: {e}") from e
 
-        logger.debug("API response body: %r", result.content)
         logger.debug("API response headers: %r", result.headers)
 
         return result
@@ -406,10 +406,11 @@ class EBClient(object):
     def _parse_line(self, line: bytes) -> Optional[str]:
         if line:
             if line.startswith(b"data: "):
+                # Data-only messages
                 line = line[len(b"data: "):]
                 return line.decode('utf-8')
             else:
-                # Filter out empty lines
+                # Filter out other lines
                 return None
         return None
 
