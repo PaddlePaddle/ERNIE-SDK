@@ -20,7 +20,7 @@ ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支�
 | :---     | :----      | :----  | :----  | :---  |
 | 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的用户凭证](#申请千帆大模型平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的用户凭证](#申请智能创作平台的用户凭证) | ernie-vilg-v2 |
-| AI Studio | aistudio | access token | [申请AI Studio平台的用户凭证](#申请ai-studio平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| AI Studio | aistudio | access token |  | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
@@ -108,5 +108,3 @@ response = erniebot.ChatCompletion.create(
 
 * AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
 * 智能创作平台的完整介绍，请参考[使用文档](https://ai.baidu.com/ai-doc/NLP/Uk53wndcb)；费用、充值相关的问题，请参考[计费简介](https://ai.baidu.com/ai-doc/NLP/qla2beec2)。
-
-## 申请AI Studio平台的用户凭证

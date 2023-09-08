@@ -22,7 +22,8 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | stream | boolean | 否 | 是否以流式接口返回数据，默认`False`。 |
 | user_id | string | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
 
-### `messages`
+<details>
+<summary><code name="messages">messages</code></summary>
 
 `messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入在`messages`中再继续请求：
 
@@ -50,9 +51,12 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
 | content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，可以设置该参数为`None`。 |
 | name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
-| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
+| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#function_call)。 |
 
-### `functions`
+</details>
+
+<details>
+<summary><code name="functions">functions</code></summary>
 
 `functions`为一个Python list，其中每个元素为一个dict。示例如下：
 
@@ -112,7 +116,10 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。 |
 | plugin_id | string | 否 | 标记函数关联的插件，便于数据统计。 |
 
-### `function_call`
+</details>
+
+<details>
+<summary><code name="function_call">function_call</code></summary>
 
 `function_call`为一个Python dict，其中包含如下键值对：
 
@@ -122,11 +129,13 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | thoughts | string | 是 | 模型思考过程。 |
 | arguments | string | 是 | 请求参数。 |
 
+</details>
+
 ## 返回结果
 
-当采用非流式接口、即`stream`为`False`时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口、即`stream`为`True`时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
+当采用非流式接口（即`stream`为`False`）时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口、即`stream`为`True`时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
 
-`erniebot.response.EBResponse`对象中包含一些字段，可通过`x[key]`或`x.key`的方式访问。一个典型示例如下：
+`erniebot.response.EBResponse`对象中包含一些字段。一个典型示例如下：
 
 ```python
 {
@@ -147,7 +156,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 }
 ```
 
-各字段含义如下表所示：
+`erniebot.response.EBResponse`对象的各字段含义如下表所示：
 
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
@@ -159,7 +168,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | ban_round | int | 当`need_clear_history`为`True`时，会返回此字段表示第几轮对话有敏感信息，如果是当前轮次存在问题，则`ban_round=-1`。 |
 | is_end | boolean | 仅流式模式下返回该字段，表示是否为是返回结果的最后一段文本。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`：输入与输出的token总数；<br> `plugins`：插件消耗的token数量。 |
-| function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#functioncall)。 |
+| function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#function_call)。 |
+
+字段的访问方式有2种：假设`resp`为一个`erniebot.response.EBResponse`对象，`resp['result']`或`resp.result`均可获取`result`字段的内容。
 
 ## 使用示例
 

@@ -78,7 +78,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot-3.5和文心一言迅捷版模型ernie-bot-turbo。
 旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
 
-以下是调用文心一言旗舰版模型进行多轮对话的示例。
+以下是调用文心一言旗舰版模型进行多轮对话的示例：
 
 ```python
 import erniebot
@@ -155,7 +155,6 @@ print(response)
 
 <img width="512" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c">
 
-
 我们推荐两个撰写文生图Prompt提示词的文档，大家可以组合使用，创作出更加精美的图片。
 * [AI作画-基础版使用指南](https://ai.baidu.com/ai-doc/NLP/qlakgh129)
 * [AI作画-高级版使用指南](https://ai.baidu.com/ai-doc/NLP/4libyluzs)
@@ -164,9 +163,10 @@ print(response)
 
 ### 【beta】函数调用（Function Calling）
 
-ERNIE Bot SDK提供函数调用功能，即通过大模型根据对话上下文确定何时以及如何调用函数。该功能目前处于测试状态。
+ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
+借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。该功能目前处于测试状态。
 
-以下是调用文心一言旗舰版模型进行函数调用的示例。
+以下是调用文心一言旗舰版模型进行函数调用的示例：
 
 ```python
 import erniebot
