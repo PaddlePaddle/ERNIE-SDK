@@ -67,6 +67,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 ### 对话补全（Chat Completion）
 
 ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot-3.5和文心一言迅捷版模型ernie-bot-turbo。
+
 旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
 
 以下是调用文心一言旗舰版模型进行多轮对话的示例。
@@ -98,6 +99,7 @@ print(response)
 ### 语义向量（Embedding）
 
 ERNIE Bot SDK提供提取语义向量的Embedding模型。
+
 该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将字符串转为384维浮点数表达的语义向量，语义向量具备极其精准的语义表达能力，可以用于度量两个字符串之间的语义相似度。
 
 大家可以使用以下代码提取句子的语义向量。
@@ -124,6 +126,7 @@ print(response)
 ### 文生图（Image Generation）
 
 ERNIE Bot SDK提供具备文生图能力的ERNIE-ViLG大模型。
+
 该模型具备丰富的风格与强大的中文理解能力，支持生成多种尺寸的图片。
 
 ```python
@@ -155,9 +158,11 @@ print(response)
 
 ### 【beta】函数调用（Function Calling）
 
-ERNIE Bot SDK提供函数调用功能，即通过大模型根据对话上下文确定何时以及如何调用函数。该功能目前处于测试状态。
+ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
 
-以下是调用文心一言旗舰版模型进行函数调用的示例。
+借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。该功能目前处于测试状态。
+
+以下是调用文心一言旗舰版模型进行函数调用的示例：
 
 ```python
 import erniebot

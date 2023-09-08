@@ -406,7 +406,6 @@ class EBClient(object):
     def _parse_line(self, line: bytes) -> Optional[str]:
         if line:
             if line.startswith(b"data: "):
-                # Data-only messages
                 line = line[len(b"data: "):]
                 return line.decode('utf-8')
             else:
