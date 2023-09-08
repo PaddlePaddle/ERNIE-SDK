@@ -17,7 +17,7 @@
 
 如下展示了一个函数调用的例子。
 
-1. 首先，对函数的基本信息进行描述，使用[JSON Schema](https://json-schema.org/)格式描述函数的请求参数与响应参数。
+(1) 首先，对函数的基本信息进行描述，使用[JSON Schema](https://json-schema.org/)格式描述函数的请求参数与响应参数。
 
 ``` {.py .copy}
 functions = [
@@ -66,7 +66,7 @@ functions = [
 
 代码中定义了一个列表`functions`，作为示例，其中仅包含对一个函数`get_current_temperature`的名称、请求参数等信息的描述。
 
-2. 接着，将以上信息与对需要完成的任务的自然语言描述一同传给`erniebot.ChatCompletion` API。
+(2) 接着，将以上信息与对需要完成的任务的自然语言描述一同传给`erniebot.ChatCompletion` API。
 
 ``` {.py .copy}
 import erniebot
@@ -100,7 +100,7 @@ print(function_call)
 
 `function_call`是一个字典，其中包含的键`name`、`thoughts`分别对应大模型选择调用的函数名称以及模型的思考过程。`function_call["arguments"]`是一个JSON格式的字符串，其中包含了调用函数时需要用到的参数。
 
-3. 然后，根据模型的提示调用相应函数得到结果。
+(3) 然后，根据模型的提示调用相应函数得到结果。
 
 ``` {.py .copy}
 import json
@@ -116,7 +116,7 @@ res = func(location=args["location"], unit=args["unit"])
 
 以上代码从`function_call`中获取模型选择调用的函数名称（`function_call["name"]`），通过该名称找到对应的函数，并从`function_call["arguments"]`中解析需要传入函数的参数，最终完成对函数的调用。作为演示，以上代码所使用的`get_current_temperature`是一个硬编码的dummy函数，在实际生产中可将其替换为真正具备相应功能的API。
 
-4. 最后，将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。回传给模型的函数响应内容应当是JSON格式的字符串（如`'{"temperature": 25, "unit": "摄氏度"}'`），在本示例中，函数的响应是一个字典，因此需要先调用`json.dumps`函数对其进行编码。
+(4) 最后，将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。回传给模型的函数响应内容应当是JSON格式的字符串（如`'{"temperature": 25, "unit": "摄氏度"}'`），在本示例中，函数的响应是一个字典，因此需要先调用`json.dumps`函数对其进行编码。
 
 ``` {.py .copy}
 messages.append(

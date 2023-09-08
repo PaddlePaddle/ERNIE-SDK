@@ -24,7 +24,7 @@ ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支�
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
-1. 使用环境变量：
+(1) 使用环境变量：
 
 ```shell
 export EB_API_TYPE="<EB-API-TYPE>"
@@ -33,7 +33,7 @@ export EB_SK="<EB-SECRET-KEY>"
 export EB_ACCESS_TOKEN="<EB-ACCESS-TOKEN>"
 ```
 
-2. 使用全局变量：
+(2) 使用全局变量：
 
 ``` {.py .copy}
 import erniebot
@@ -44,7 +44,7 @@ erniebot.sk = "<EB-SECRET-KEY>"
 erniebot.access_token = "<EB-ACCESS-TOKEN>"
 ```
 
-3. 使用`_config_`参数：
+(3) 使用`_config_`参数：
 
 ``` {.py .copy}
 import erniebot
