@@ -53,6 +53,19 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
 | function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#function_call)。 |
 
+<details>
+<summary><code name="function_call">function_call</code></summary>
+
+`function_call`为一个Python dict，其中包含如下键值对：
+
+| 键名 | 值类型 | 必填 | 值描述 |
+|:--- | :---- | :--- | :---- |
+| name | string | 是 | 函数名称。 |
+| thoughts | string | 是 | 模型思考过程。 |
+| arguments | string | 是 | 请求参数。 |
+
+</details>
+
 </details>
 
 <details>
@@ -118,22 +131,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 </details>
 
-<details>
-<summary><code name="function_call">function_call</code></summary>
-
-`function_call`为一个Python dict，其中包含如下键值对：
-
-| 键名 | 值类型 | 必填 | 值描述 |
-|:--- | :---- | :--- | :---- |
-| name | string | 是 | 函数名称。 |
-| thoughts | string | 是 | 模型思考过程。 |
-| arguments | string | 是 | 请求参数。 |
-
-</details>
-
 ## 返回结果
 
-当采用非流式接口（即`stream`为`False`）时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口、即`stream`为`True`时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
+当采用非流式接口（即`stream`为`False`）时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口（即`stream`为`True`）时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
 
 `erniebot.response.EBResponse`对象中包含一些字段。一个典型示例如下：
 
