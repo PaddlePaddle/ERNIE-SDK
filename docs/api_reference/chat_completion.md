@@ -51,10 +51,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
 | content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，可以设置该参数为`None`。 |
 | name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
-| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`function_call`](#function_call)。 |
-
-<details>
-<summary><code name="function_call">function_call</code></summary>
+| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。 |
 
 `function_call`为一个Python dict，其中包含如下键值对：
 
@@ -63,8 +60,6 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | name | string | 是 | 函数名称。 |
 | thoughts | string | 是 | 模型思考过程。 |
 | arguments | string | 是 | 请求参数。 |
-
-</details>
 
 </details>
 
@@ -168,7 +163,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | ban_round | int | 当`need_clear_history`为`True`时，会返回此字段表示第几轮对话有敏感信息，如果是当前轮次存在问题，则`ban_round=-1`。 |
 | is_end | boolean | 仅流式模式下返回该字段，表示是否为是返回结果的最后一段文本。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`：输入与输出的token总数；<br> `plugins`：插件消耗的token数量。 |
-| function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`messages`](#messages)中的[`function_call`](#function_call)。 |
+| function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`messages`](#messages)中的`function_call`。 |
 
 字段的访问方式有2种：假设`resp`为一个`erniebot.response.EBResponse`对象，`resp['result']`或`resp.result`均可获取`result`字段的内容。
 
