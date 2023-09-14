@@ -48,7 +48,7 @@ functions = [
             "type": "object",
             "properties": {
                 "temperature": {
-                    "type": "int",
+                    "type": "integer",
                     "description": "城市气温"
                 },
                 "unit": {
