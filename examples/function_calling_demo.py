@@ -162,7 +162,8 @@ def create_components(functions):
             outputs=auth_state,
         )
         access_key.change(
-            make_state_updater(key='ak'),
+            make_state_updater(
+                key='ak', strip=True),
             inputs=[
                 auth_state,
                 access_key,
@@ -170,7 +171,8 @@ def create_components(functions):
             outputs=auth_state,
         )
         secret_key.change(
-            make_state_updater(key='sk'),
+            make_state_updater(
+                key='sk', strip=True),
             inputs=[
                 auth_state,
                 secret_key,
@@ -362,8 +364,10 @@ def create_function_tab(function):
                 interactive=False)
 
 
-def make_state_updater(key):
+def make_state_updater(key, *, strip=False):
     def _update_state(state, val):
+        if strip:
+            val = val.strip()
         state[key] = val
         return state
 
