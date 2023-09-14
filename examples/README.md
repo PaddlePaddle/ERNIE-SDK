@@ -1,6 +1,6 @@
-# Gradio演示程序
+# Gradio演示应用
 
-演示程序基于Gradio开发，提供一系列demo，可供用户快速体验ERNIE Bot SDK的功能。
+演示应用基于Gradio开发，提供一系列demo，可供用户快速体验ERNIE Bot SDK的功能。
 
 - **对话补全（Chat Completion）** 基于ernie-bot-3.5或ernie-bot-turbo的生成式对话能力；
 - **语义向量（Embedding）** 提取输入文本的语义向量表征，并计算不同向量间的余弦相似度；
