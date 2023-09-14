@@ -28,24 +28,24 @@ class ChatCompletion(EBResource, Creatable):
                                                           APIType.AISTUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
-            'prefix': 'chat',
+            'resource_id': 'chat',
             'models': {
                 'ernie-bot-3.5': {
-                    'suffix': 'completions',
+                    'model_id': 'completions',
                 },
                 'ernie-bot-turbo': {
-                    'suffix': 'eb-instant',
+                    'model_id': 'eb-instant',
                 },
             },
         },
         APIType.AISTUDIO: {
-            'prefix': 'chat',
+            'resource_id': 'chat',
             'models': {
                 'ernie-bot-3.5': {
-                    'suffix': 'completions',
+                    'model_id': 'completions',
                 },
                 'ernie-bot-turbo': {
-                    'suffix': 'eb-instant',
+                    'model_id': 'eb-instant',
                 },
             },
         },
@@ -90,7 +90,7 @@ class ChatCompletion(EBResource, Creatable):
             if model not in api_info['models']:
                 raise errors.InvalidArgumentError(
                     f"{repr(model)} is not a supported model.")
-            url = f"/{api_info['prefix']}/{api_info['models'][model]['suffix']}"
+            url = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -98,7 +98,18 @@ class ChatCompletion(EBResource, Creatable):
         # params
         params = {}
         params['messages'] = messages
-        _set_val_if_key_exists(kwargs, params, 'functions')
+        if 'functions' in kwargs:
+            functions = kwargs['functions']
+            required_keys = ('name', 'description', 'parameters')
+            for idx, function in enumerate(functions):
+                missing_keys = [
+                    key for key in required_keys if key not in function
+                ]
+                if len(missing_keys) > 0:
+                    raise errors.InvalidArgumentError(
+                        f"Function {idx} does not contain required keys: {missing_keys}"
+                    )
+            params['functions'] = functions
         _set_val_if_key_exists(kwargs, params, 'stream')
         _set_val_if_key_exists(kwargs, params, 'temperature')
         _set_val_if_key_exists(kwargs, params, 'top_p')

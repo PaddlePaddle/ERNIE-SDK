@@ -97,7 +97,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
             "type": "object",
             "properties": {
                 "temperature": {
-                    "type": "int",
+                    "type": "integer",
                     "description": "城市气温"
                 },
                 "unit": {
@@ -119,9 +119,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 |:--- | :---- | :--- | :---- |
 | name | string | 是 | 函数名称。 |
 | description | string | 是 | 对函数功能的描述。 |
-| parameters | dict | 否 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
+| parameters | dict | 是 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | responses | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
-| examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。 |
+| examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。一个例子如下：`[{'role': 'user', 'content': "深圳市今天气温如何？"}, {'role': 'assistant', 'content': None, 'function_call': {'name': 'get_current_temperature', 'arguments': '{"location":"深圳市","unit":"摄氏度"}'}}, {'role': 'function', 'name': 'get_current_temperature', 'content': '{"temperature":25,"unit":"摄氏度"}'}]` |
 | plugin_id | string | 否 | 标记函数关联的插件，便于数据统计。 |
 
 </details>

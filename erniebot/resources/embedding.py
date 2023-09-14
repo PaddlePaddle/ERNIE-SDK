@@ -28,18 +28,18 @@ class Embedding(EBResource, Creatable):
                                                           APIType.AISTUDIO)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
-            'prefix': 'embeddings',
+            'resource_id': 'embeddings',
             'models': {
                 'ernie-text-embedding': {
-                    'suffix': 'embedding-v1',
+                    'model_id': 'embedding-v1',
                 },
             },
         },
         APIType.AISTUDIO: {
-            'prefix': 'embeddings',
+            'resource_id': 'embeddings',
             'models': {
                 'ernie-text-embedding': {
-                    'suffix': 'embedding-v1',
+                    'model_id': 'embedding-v1',
                 },
             },
         },
@@ -81,7 +81,7 @@ class Embedding(EBResource, Creatable):
             if model not in api_info['models']:
                 raise errors.InvalidArgumentError(
                     f"{repr(model)} is not a supported model.")
-            url = f"/{api_info['prefix']}/{api_info['models'][model]['suffix']}"
+            url = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
