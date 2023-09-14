@@ -154,29 +154,28 @@ def create_components(functions):
             raw_context_json = gr.JSON(label="原始对话上下文信息")
 
         api_type.change(
-            functools.partial(
-                update_state, key='api_type'),
+            make_state_updater(key='api_type'),
             inputs=[
-                api_type,
                 auth_state,
+                api_type,
             ],
             outputs=auth_state,
         )
         access_key.change(
-            functools.partial(
-                update_state, key='ak'),
+            make_state_updater(
+                key='ak', strip=True),
             inputs=[
-                access_key,
                 auth_state,
+                access_key,
             ],
             outputs=auth_state,
         )
         secret_key.change(
-            functools.partial(
-                update_state, key='sk'),
+            make_state_updater(
+                key='sk', strip=True),
             inputs=[
-                secret_key,
                 auth_state,
+                secret_key,
             ],
             outputs=auth_state,
         )
@@ -365,9 +364,14 @@ def create_function_tab(function):
                 interactive=False)
 
 
-def update_state(state, key, val):
-    state[key] = val
-    return state
+def make_state_updater(key, *, strip=False):
+    def _update_state(state, val):
+        if strip:
+            val = val.strip()
+        state[key] = val
+        return state
+
+    return _update_state
 
 
 def remove_old_custom_function(state, candidates):
@@ -450,7 +454,7 @@ def generate_response_for_text(
         temperature,
 ):
     if content.strip() == '':
-        raise gr.Error("输入不能为空，请在清空后重试")
+        raise gr.Error("输入不能为空，请在重置对话后重试")
     content = content.strip().replace('<br>', '\n')
     message = {'role': 'user', 'content': content}
     return generate_response(
@@ -475,7 +479,7 @@ def generate_response_for_function(
         temperature,
 ):
     if func_name.strip() == '':
-        raise gr.Error("函数名称不能为空")
+        raise gr.Error("函数名称不能为空，请在重置对话后重试")
     func_name = func_name.strip()
     message = {
         'role': 'function',
@@ -528,6 +532,7 @@ def regenerate_response(
             raise gr.Error("消息中的`role`不正确")
     except Exception as e:
         state['context'] = old_context
+        traceback.print_exc()
         raise gr.Error(f"重新生成结果失败，原因如下：{str(e)}") from e
 
 
@@ -767,6 +772,7 @@ def create_chat_completion(*args, **kwargs):
     try:
         response = eb.ChatCompletion.create(*args, **kwargs)
     except eb.errors.EBError as e:
+        traceback.print_exc()
         raise gr.Error(f"请求失败，错误信息如下：{str(e)}") from e
     return response
 
