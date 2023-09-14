@@ -199,7 +199,7 @@ response = erniebot.ChatCompletion.create(
             "type": "object",
             "properties": {
                 "temperature": {
-                    "type": "int",
+                    "type": "integer",
                     "description": "城市气温",
                 },
                 "unit": {
@@ -213,9 +213,9 @@ response = erniebot.ChatCompletion.create(
 print(response)
 ```
 
-## Gradio可视化应用
+## Gradio Demos
 
-为了让开发者可以更全面更低门槛的了解ERNIE Bot SDK的全功能，我们基于Gradio实现了一个功能丰富的可视化界面，参阅[示例说明](../examples)可以快速本地测试ChatCompletion、Embedding和Image的可视化交互示例。
+为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一个带有web用户界面的演示程序。请参阅[示例说明](../examples)，尝试对话补全、语义向量、文生图等可交互例子。
 
 <img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
 
