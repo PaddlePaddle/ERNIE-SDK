@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import errors
 from .config import GlobalConfig, init_global_config
 from .intro import Model
 from .resources import (ChatCompletion, ChatFile, Embedding, Image, ImageV1,
