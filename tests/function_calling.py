@@ -53,7 +53,7 @@ def test_function_calling(model="ernie-bot-3.5"):
                 "type": "object",
                 "properties": {
                     "temperature": {
-                        "type": "int",
+                        "type": "integer",
                         "description": "城市气温",
                     },
                     "unit": {
