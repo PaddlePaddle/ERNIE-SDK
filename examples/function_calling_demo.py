@@ -49,7 +49,7 @@ def create_ui_and_launch(args):
     with gr.Blocks(
             title="ERNIE Bot SDK Function Calling Demo",
             theme=gr.themes.Soft(
-                spacing_size='sm', text_size='sm')) as block:
+                spacing_size='sm', text_size='md')) as block:
         create_components(functions=get_predefined_functions())
 
     block.queue(api_open=False).launch(
@@ -68,6 +68,7 @@ def create_components(functions):
         'api_type': default_api_type,
         'ak': "",
         'sk': "",
+        'access_token': "",
     })
 
     with gr.Row():
@@ -232,6 +233,14 @@ def create_components(functions):
             show_progress=False,
         )
         regen_btn.click(
+            lambda history: (history and history[:-1], gr.update(interactive=False)),
+            inputs=context_chatbot,
+            outputs=[
+                context_chatbot,
+                regen_btn,
+            ],
+            show_progress=False,
+        ).then(
             regenerate_response,
             inputs=[
                 state,
@@ -251,7 +260,10 @@ def create_components(functions):
                 func_out_params,
                 func_call_accord,
             ],
-        )
+        ).then(
+            lambda: gr.update(interactive=True),
+            outputs=regen_btn,
+            show_progress=False)
         send_text_btn.click(
             generate_response_for_text,
             inputs=[
@@ -404,6 +416,26 @@ def remove_old_custom_function(state, candidates):
     return state, candidates
 
 
+def try_update_candidates(state, candidates, custom_func_code,
+                          custom_func_desc_str):
+    if CUSTOM_FUNC_NAME in candidates:
+        try:
+            custom_function = make_custom_function(custom_func_code,
+                                                   custom_func_desc_str)
+        except Exception as e:
+            handle_exception(
+                e,
+                f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
+                raise_=False)
+            # HACK: Add a time delay so that the warning can be read.
+            import time
+            time.sleep(3)
+            candidates.remove(CUSTOM_FUNC_NAME)
+        else:
+            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
+    return state, candidates
+
+
 def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
     try:
         func = code_to_function(custom_func_code, CUSTOM_FUNC_NAME)
@@ -432,29 +464,10 @@ def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
             new_params_desc['properties'][name] = param_desc
         custom_func_desc['parameters'] = new_params_desc
     except Exception as e:
-        traceback.print_exc()
-        gr.Warning(f"更新函数描述失败，错误信息如下：{str(e)}")
+        handle_exception(e, f"更新函数描述失败，错误信息如下：{str(e)}", raise_=False)
         return gr.update()
     else:
         return to_pretty_json(custom_func_desc)
-
-
-def try_update_candidates(state, candidates, custom_func_code,
-                          custom_func_desc_str):
-    if CUSTOM_FUNC_NAME in candidates:
-        try:
-            custom_function = make_custom_function(custom_func_code,
-                                                   custom_func_desc_str)
-        except Exception as e:
-            traceback.print_exc()
-            gr.Warning(f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}")
-            # HACK: Add a time delay so that the warning can be read.
-            import time
-            time.sleep(3)
-            candidates.remove(CUSTOM_FUNC_NAME)
-        else:
-            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
-    return state, candidates
 
 
 def make_custom_function(code, desc_str):
@@ -467,19 +480,28 @@ def make_custom_function(code, desc_str):
     return make_function(func, desc, name=CUSTOM_FUNC_NAME)
 
 
-def generate_response_for_text(
+def generate_response_for_function(
         state,
         candidates,
         auth_config,
         ernie_model,
-        content,
+        func_name,
+        func_res,
         top_p,
         temperature,
 ):
-    if content.strip() == '':
-        raise gr.Error("输入不能为空，请在重置对话后重试")
-    content = content.strip().replace('<br>', '\n')
-    message = {'role': 'user', 'content': content}
+    if text_is_empty(func_name):
+        gr.Warning("函数名称不能为空")
+        return get_fallback_return()
+    if func_res is None:
+        gr.Warning("无法获取函数响应参数，请调用函数")
+        return get_fallback_return()
+    message = {
+        'role': 'function',
+        'name': func_name,
+        'content': to_compact_json(
+            func_res, from_json=True)
+    }
     return generate_response(
         state=state,
         candidates=candidates,
@@ -491,25 +513,20 @@ def generate_response_for_text(
     )
 
 
-def generate_response_for_function(
+def generate_response_for_text(
         state,
         candidates,
         auth_config,
         ernie_model,
-        func_name,
-        func_res,
+        content,
         top_p,
         temperature,
 ):
-    if func_name.strip() == '':
-        raise gr.Error("函数名称不能为空，请在重置对话后重试")
-    func_name = func_name.strip()
-    message = {
-        'role': 'function',
-        'name': func_name,
-        'content': to_compact_json(
-            func_res, from_json=True)
-    }
+    if text_is_empty(content):
+        gr.Warning("消息内容不能为空")
+        return get_fallback_return()
+    content = content.strip().replace('<br>', '\n')
+    message = {'role': 'user', 'content': content}
     return generate_response(
         state=state,
         candidates=candidates,
@@ -531,7 +548,8 @@ def regenerate_response(
 ):
     context = state['context']
     if len(context) < 2:
-        raise gr.Error("请至少进行一轮对话")
+        gr.Warning("请至少进行一轮对话")
+        return get_fallback_return()
     old_context = copy.copy(context)
     context.pop()
     user_message = context.pop()
@@ -553,10 +571,9 @@ def regenerate_response(
             return generate_response_for_text(**kwargs)
         else:
             raise gr.Error("消息中的`role`不正确")
-    except Exception as e:
+    except Exception:
         state['context'] = old_context
-        traceback.print_exc()
-        raise gr.Error(f"重新生成结果失败，原因如下：{str(e)}") from e
+        raise
 
 
 def reset_conversation(state):
@@ -573,11 +590,6 @@ def generate_response(
         top_p,
         temperature,
 ):
-    if auth_config['ak'] == '' or auth_config['sk'] == '':
-        raise gr.Error("需要填写正确的AK/SK，不能为空")
-
-    model = 'ernie-bot-3.5' if (ernie_model is None or
-                                ernie_model.strip() == '') else ernie_model
     context = copy.copy(state['context'])
     context.append(message)
     name2function = state['name2function']
@@ -589,8 +601,15 @@ def generate_response(
         'functions': functions
     }
 
-    response = create_chat_completion(
-        _config_=auth_config, model=model, **data, stream=False)
+    try:
+        response = create_chat_completion(
+            _config_=auth_config, model=ernie_model, **data, stream=False)
+    except eb.errors.TokenUpdateFailedError as e:
+        handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
+        return get_fallback_return()
+    except eb.errors.EBError as e:
+        handle_exception(e, f"请求失败。错误信息如下：{str(e)}", raise_=False)
+        return get_fallback_return()
 
     if hasattr(response, 'function_call'):
         function_call = response.function_call
@@ -600,19 +619,25 @@ def generate_response(
             'function_call': function_call
         })
         func_name = function_call['name']
-        func_args = to_pretty_json(function_call['arguments'], from_json=True)
+        try:
+            func_args = to_pretty_json(
+                function_call['arguments'], from_json=True)
+        except gr.Error as e:
+            # This is most likely because the model is returning incorrectly
+            # formatted JSON. In this case we use the raw string.
+            func_args = function_call['arguments']
         accord_update = gr.update(open=True)
     else:
         context.append({'role': 'assistant', 'content': response.result})
         func_name = None
         func_args = None
         accord_update = gr.update()
-    history = get_history(context)
+    history = extract_history(context)
     state['context'] = context
     return state, None, history, context, func_name, func_args, None, accord_update
 
 
-def get_history(context):
+def extract_history(context):
     # TODO: Cache history and make incremental updates.
     history = []
 
@@ -643,23 +668,58 @@ def get_history(context):
     return history
 
 
+def get_fallback_return():
+    return tuple(gr.update() for _ in range(8))
+
+
 def call_function(state, candidates, func_name, func_args):
     name2function = state['name2function']
-    if not func_name in name2function:
-        raise gr.Error(f"函数`{func_name}`不存在")
-    if not func_name in candidates:
-        raise gr.Error(f"函数`{func_name}`不是候选函数")
+    if text_is_empty(func_name):
+        gr.Warning(f"函数名称不能为空")
+        return None
+    if func_name not in name2function:
+        gr.Warning(f"函数`{func_name}`不存在")
+        return None
+    if func_name not in candidates:
+        gr.Warning(f"函数`{func_name}`不是候选函数")
+        return None
     func = name2function[func_name].func
+    if text_is_empty(func_args):
+        func_args = '{}'
     func_args = json_to_obj(func_args)
     if not isinstance(func_args, dict):
-        raise gr.Error(f"无法将{reprlib.repr(func_args)}解析为字典")
-    res = func(**func_args)
+        gr.Warning(f"无法将{reprlib.repr(func_args)}解析为字典")
+        return None
+    try:
+        res = func(**func_args)
+    except Exception as e:
+        handle_exception(e, f"函数{func_name}调用失败，错误信息如下：{str(e)}", raise_=True)
     return to_pretty_json(res, from_json=False)
 
 
 JSONCode = functools.partial(gr.Code, language='json')
 
 Function = collections.namedtuple('Function', ['name', 'func', 'desc'])
+
+
+def get_custom_func_def_template():
+    indent = 2
+    return f"def {CUSTOM_FUNC_NAME}():\n{' '*indent}# Write your code here"
+
+
+def get_custom_func_desc_template():
+    return {
+        'name': CUSTOM_FUNC_NAME,
+        'description': "",
+        'parameters': {
+            'type': 'object',
+            'properties': {},
+        },
+        'responses': {
+            'type': 'object',
+            'properties': {},
+        },
+    }
 
 
 def get_predefined_functions():
@@ -749,26 +809,6 @@ def get_predefined_functions():
     return functions
 
 
-def get_custom_func_def_template():
-    indent = 2
-    return f"def {CUSTOM_FUNC_NAME}():\n{' '*indent}# Write your code here"
-
-
-def get_custom_func_desc_template():
-    return {
-        'name': CUSTOM_FUNC_NAME,
-        'description': "",
-        'parameters': {
-            'type': 'object',
-            'properties': {},
-        },
-        'responses': {
-            'type': 'object',
-            'properties': {},
-        },
-    }
-
-
 def code_to_function(code, func_name):
     code = compile(code, '<string>', 'exec')
     co_names = code.co_names
@@ -792,11 +832,7 @@ def make_function(func, desc, *, name=None):
 
 
 def create_chat_completion(*args, **kwargs):
-    try:
-        response = eb.ChatCompletion.create(*args, **kwargs)
-    except eb.errors.EBError as e:
-        traceback.print_exc()
-        raise gr.Error(f"请求失败，错误信息如下：{str(e)}") from e
+    response = eb.ChatCompletion.create(*args, **kwargs)
     return response
 
 
@@ -824,6 +860,18 @@ def to_pretty_json(obj, *, from_json=False):
     if from_json:
         obj = json_to_obj(obj)
     return obj_to_json(obj, sort_keys=False, ensure_ascii=False, indent=2)
+
+
+def handle_exception(exception, message, *, raise_=False):
+    traceback.print_exception(exception)
+    if raise_:
+        raise gr.Error(message)
+    else:
+        gr.Warning(message)
+
+
+def text_is_empty(text):
+    return text is None or text.strip() == ''
 
 
 if __name__ == '__main__':
