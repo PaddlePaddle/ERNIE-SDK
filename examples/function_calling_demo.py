@@ -77,16 +77,18 @@ def create_components(functions):
                     label="API Type",
                     info=f"提供对话能力的后端平台",
                     value=default_api_type,
-                    choices=['qianfan'])
+                    choices=['qianfan', 'aistudio'])
                 access_key = gr.Textbox(
                     label="Access Key ID",
-                    info="用于访问后端平台的AK",
-                    placeholder="Access Key ID",
+                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
                     type='password')
                 secret_key = gr.Textbox(
                     label="Secret Access Key",
-                    info="用于访问后端平台的SK",
-                    placeholder="Secret Access Key",
+                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
+                    type='password')
+                access_token = gr.Textbox(
+                    label="Access Token",
+                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
                     type='password')
                 ernie_model = gr.Dropdown(
                     label="Model",
@@ -154,12 +156,16 @@ def create_components(functions):
             raw_context_json = gr.JSON(label="原始对话上下文信息")
 
         api_type.change(
-            make_state_updater(key='api_type'),
+            update_api_type,
             inputs=[
                 auth_state,
                 api_type,
             ],
-            outputs=auth_state,
+            outputs=[
+                auth_state,
+                access_key,
+                secret_key,
+            ],
         )
         access_key.change(
             make_state_updater(
@@ -176,6 +182,15 @@ def create_components(functions):
             inputs=[
                 auth_state,
                 secret_key,
+            ],
+            outputs=auth_state,
+        )
+        access_token.change(
+            make_state_updater(
+                key='access_token', strip=True),
+            inputs=[
+                auth_state,
+                access_token,
             ],
             outputs=auth_state,
         )
@@ -372,6 +387,14 @@ def make_state_updater(key, *, strip=False):
         return state
 
     return _update_state
+
+
+def update_api_type(auth_state, api_type):
+    auth_state['api_type'] = api_type
+    if api_type == 'qianfan':
+        return auth_state, gr.update(visible=True), gr.update(visible=True)
+    elif api_type == 'aistudio':
+        return auth_state, gr.update(visible=False), gr.update(visible=False)
 
 
 def remove_old_custom_function(state, candidates):
