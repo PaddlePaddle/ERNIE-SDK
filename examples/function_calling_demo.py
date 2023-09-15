@@ -197,6 +197,14 @@ def create_components(functions):
         )
 
         input_text.submit(
+            lambda: (gr.update(interactive=False), gr.update(interactive=False)),
+            outputs=[
+                input_text,
+                send_text_btn,
+            ],
+            show_progress=False,
+            queue=False,
+        ).then(
             generate_response_for_text,
             inputs=[
                 state,
@@ -217,6 +225,14 @@ def create_components(functions):
                 func_out_params,
                 func_call_accord,
             ],
+        ).then(
+            lambda: (gr.update(interactive=True), gr.update(interactive=True)),
+            outputs=[
+                input_text,
+                send_text_btn,
+            ],
+            show_progress=False,
+            queue=False,
         )
         clear_btn.click(
             reset_conversation,
@@ -240,6 +256,7 @@ def create_components(functions):
                 regen_btn,
             ],
             show_progress=False,
+            queue=False,
         ).then(
             regenerate_response,
             inputs=[
@@ -263,8 +280,18 @@ def create_components(functions):
         ).then(
             lambda: gr.update(interactive=True),
             outputs=regen_btn,
-            show_progress=False)
+            show_progress=False,
+            queue=False,
+        )
         send_text_btn.click(
+            lambda: (gr.update(interactive=False), gr.update(interactive=False)),
+            outputs=[
+                input_text,
+                send_text_btn,
+            ],
+            show_progress=False,
+            queue=False,
+        ).then(
             generate_response_for_text,
             inputs=[
                 state,
@@ -285,6 +312,14 @@ def create_components(functions):
                 func_out_params,
                 func_call_accord,
             ],
+        ).then(
+            lambda: (gr.update(interactive=True), gr.update(interactive=True)),
+            outputs=[
+                input_text,
+                send_text_btn,
+            ],
+            show_progress=False,
+            queue=False,
         )
 
         custom_func_code.change(
@@ -334,6 +369,11 @@ def create_components(functions):
         )
 
         call_func_btn.click(
+            lambda: gr.update(interactive=False),
+            outputs=call_func_btn,
+            show_progress=False,
+            queue=False,
+        ).then(
             call_function,
             inputs=[
                 state,
@@ -342,8 +382,18 @@ def create_components(functions):
                 func_in_params,
             ],
             outputs=func_out_params,
+        ).then(
+            lambda: gr.update(interactive=True),
+            outputs=call_func_btn,
+            show_progress=False,
+            queue=False,
         )
         send_res_btn.click(
+            lambda: gr.update(interactive=False),
+            outputs=send_res_btn,
+            show_progress=False,
+            queue=False,
+        ).then(
             generate_response_for_function,
             inputs=[
                 state,
@@ -364,6 +414,11 @@ def create_components(functions):
                 func_in_params,
                 func_out_params,
             ],
+        ).then(
+            lambda: gr.update(interactive=True),
+            outputs=send_res_btn,
+            show_progress=False,
+            queue=False,
         )
         reset_func_btn.click(
             lambda: (None, None, None),
