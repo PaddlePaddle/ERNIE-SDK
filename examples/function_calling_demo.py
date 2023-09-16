@@ -829,7 +829,7 @@ def get_predefined_functions():
 
     functions.append(make_function(get_current_date, get_current_date_desc))
 
-    def get_friend_info(name, field=None):
+    def get_contact_info(name, field=None):
         info_dict = {
             '李小明': {
                 'age': 31,
@@ -853,8 +853,8 @@ def get_predefined_functions():
         else:
             return {'name': name, ** info}
 
-    get_friend_info_desc = {
-        'name': 'get_friend_info',
+    get_contact_info_desc = {
+        'name': 'get_contact_info',
         'description': "获取好友的个人信息",
         'parameters': {
             'type': 'object',
@@ -904,7 +904,7 @@ def get_predefined_functions():
         },
     }
 
-    functions.append(make_function(get_friend_info, get_friend_info_desc))
+    functions.append(make_function(get_contact_info, get_contact_info_desc))
 
     return functions
 
