@@ -864,6 +864,7 @@ def get_predefined_functions():
                     'description': "好友姓名",
                 },
                 'field': {
+                    'type': 'string',
                     'description': "想要获取的字段名称，如果不指定则返回所有字段",
                     'enum': [
                         'age',
