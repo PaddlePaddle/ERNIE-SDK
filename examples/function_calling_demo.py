@@ -834,17 +834,14 @@ def get_predefined_functions():
             '李小明': {
                 'age': 31,
                 'email': 'lxm@bidu.com',
-                'hobbies': ['健身', '篮球', '钢琴', '游泳'],
             },
             '王刚': {
                 'age': 28,
                 'email': 'wg123@bidu.com',
-                'hobbies': ['游戏', '电影', '烹饪', '摄影'],
             },
             '张一一': {
                 'age': 26,
                 'email': 'z11@bidu.com',
-                'hobbies': ['羽毛球', '旅游', '电影', '滑雪'],
             },
         }
         info = info_dict[name]
@@ -855,13 +852,13 @@ def get_predefined_functions():
 
     get_contact_info_desc = {
         'name': 'get_contact_info',
-        'description': "获取好友的个人信息",
+        'description': "获取联系人的个人信息",
         'parameters': {
             'type': 'object',
             'properties': {
                 'name': {
                     'type': 'string',
-                    'description': "好友姓名",
+                    'description': "联系人姓名",
                 },
                 'field': {
                     'type': 'string',
@@ -869,9 +866,8 @@ def get_predefined_functions():
                     'enum': [
                         'age',
                         'email',
-                        'hobbies',
                     ],
-                }
+                },
             },
             'required': ['name', ],
         },
@@ -891,13 +887,6 @@ def get_predefined_functions():
                     'type': 'string',
                     'description': "电子邮箱地址",
                     'format': 'email',
-                },
-                'hobbies': {
-                    'type': 'array',
-                    'description': "兴趣爱好列表",
-                    'items': {
-                        'type': 'string',
-                    },
                 },
             },
             'required': ['name', ],
