@@ -21,6 +21,7 @@ import functools
 import inspect
 import json
 import operator
+import random
 import reprlib
 import sys
 major = sys.version_info.major
@@ -30,6 +31,7 @@ if int(major) != 3 or int(minor) < 8:
         f"The Gradio demo requires Python >= 3.8, but your Python version is {major}.{minor}."
     )
 import textwrap
+import time
 import traceback
 
 import erniebot as eb
@@ -54,7 +56,7 @@ def create_ui_and_launch(args):
         create_components(functions=get_predefined_functions())
 
     block.queue(
-        api_open=False, concurrency_count=1).launch(
+        api_open=False, concurrency_count=8).launch(
             server_name="0.0.0.0", server_port=args.port)
 
 
@@ -259,7 +261,7 @@ def create_components(functions):
 
         disable_chat_input_args = {
             'fn':
-            lambda: tuple(gr.update(interactive=False) for _ in range(6)),
+            lambda: replicate_gradio_update(6, interactive=False),
             'inputs': None,
             'outputs': [
                 input_text,
@@ -273,7 +275,7 @@ def create_components(functions):
             'queue': False,
         }
         enable_chat_input_args = {
-            'fn': lambda: tuple(gr.update(interactive=True) for _ in range(6)),
+            'fn': lambda: replicate_gradio_update(6, interactive=True),
             'inputs': None,
             'outputs': [
                 input_text,
@@ -299,27 +301,29 @@ def create_components(functions):
             ],
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
                 func_call_accord,
             ],
+            show_progress=False,
         ).then(**enable_chat_input_args)
         clear_btn.click(**disable_chat_input_args).then(
             reset_conversation,
             inputs=state,
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
             ],
+            show_progress=False,
         ).then(**enable_chat_input_args)
         send_text_btn.click(**disable_chat_input_args).then(
             generate_response_for_text,
@@ -334,14 +338,15 @@ def create_components(functions):
             ],
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
                 func_call_accord,
             ],
+            show_progress=False,
         ).then(**enable_chat_input_args)
         regen_btn.click(**disable_chat_input_args).then(
             lambda history: (history and history[:-1], gr.update(interactive=False)),
@@ -364,19 +369,21 @@ def create_components(functions):
             ],
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
                 func_call_accord,
             ],
+            show_progress=False,
         ).then(**enable_chat_input_args)
         recall_btn.click(**disable_chat_input_args).then(
             recall_message,
             inputs=state,
             outputs=[state, context_chatbot, raw_context_json],
+            show_progress=False,
         ).then(**enable_chat_input_args)
 
         call_func_btn.click(
@@ -413,13 +420,14 @@ def create_components(functions):
             ],
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
             ],
+            show_progress=False,
         ).then(**enable_chat_input_args)
         reset_func_btn.click(
             lambda: (None, None, None),
@@ -484,7 +492,6 @@ def try_update_candidates(state, candidates, custom_func_code,
                 f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
                 raise_=False)
             # HACK: Add a time delay so that the warning message can be read.
-            import time
             time.sleep(5)
             candidates.remove(CUSTOM_FUNC_NAME)
         else:
@@ -548,17 +555,19 @@ def generate_response_for_function(
 ):
     if text_is_empty(func_name):
         gr.Warning("函数名称不能为空")
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
     if func_res is None:
         gr.Warning("无法获取函数响应参数，请调用函数")
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
     message = {
         'role': 'function',
         'name': func_name,
         'content': to_compact_json(
             func_res, from_json=True)
     }
-    return generate_response(
+    yield from generate_response(
         state=state,
         candidates=candidates,
         auth_config=auth_config,
@@ -580,10 +589,11 @@ def generate_response_for_text(
 ):
     if text_is_empty(content):
         gr.Warning("消息内容不能为空")
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
     content = content.strip().replace('<br>', '\n')
     message = {'role': 'user', 'content': content}
-    return generate_response(
+    yield from generate_response(
         state=state,
         candidates=candidates,
         auth_config=auth_config,
@@ -598,7 +608,7 @@ def recall_message(state):
     context = state['context']
     if len(context) < 2:
         gr.Warning("请至少进行一轮对话")
-        return gr.update(), gr.update()
+        return replicate_gradio_update(3)
     context = context[:-2]
     history = extract_history(context)
     state['context'] = context
@@ -616,10 +626,11 @@ def regenerate_response(
     context = state['context']
     if len(context) < 2:
         gr.Warning("请至少进行一轮对话")
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
     context.pop()
     user_message = context.pop()
-    return generate_response(
+    yield from generate_response(
         state=state,
         candidates=candidates,
         auth_config=auth_config,
@@ -656,50 +667,103 @@ def generate_response(
     }
 
     try:
-        response = create_chat_completion(
-            _config_=auth_config, model=ernie_model, **data, stream=False)
+        resp_stream = create_chat_completion(
+            _config_=auth_config, model=ernie_model, **data, stream=True)
     except eb.errors.TokenUpdateFailedError as e:
         handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
     except eb.errors.EBError as e:
         handle_exception(e, f"请求失败。错误信息如下：{str(e)}", raise_=False)
-        return get_fallback_return()
+        yield get_fallback_return()
+        return
 
-    if hasattr(response, 'function_call'):
-        function_call = response.function_call
-        context.append({
-            'role': 'assistant',
-            'content': None,
-            'function_call': function_call
-        })
-        func_name = function_call['name']
-        try:
-            func_args = to_pretty_json(
-                function_call['arguments'], from_json=True)
-        except gr.Error as e:
-            # This is most likely because the model is returning incorrectly
-            # formatted JSON. In this case we use the raw string.
-            func_args = function_call['arguments']
-        func_res = None
-        accord_update = gr.update(open=True)
+    context.append({'role': 'assistant', 'content': None})
+    history = None
+    for resp in resp_stream:
+        if hasattr(resp, 'function_call'):
+            function_call = resp.function_call
+            func_name = function_call['name']
+            try:
+                func_args = to_pretty_json(
+                    function_call['arguments'], from_json=True)
+            except gr.Error as e:
+                # This is most likely because the model is returning incorrectly
+                # formatted JSON. In this case we use the raw string.
+                func_args = function_call['arguments']
+            context[-1]['function_call'] = function_call
+            history = extract_history(context)
+            state['context'] = context
+            yield (
+                state,
+                history,
+                None,
+                context[-MAX_CONTEXT_LINES_TO_SHOW:],
+                func_name,
+                func_args,
+                None,
+                gr.update(open=True), )
+            break
+        else:
+            if context[-1]['content'] is None:
+                context[-1]['content'] = resp.result
+            else:
+                context[-1]['content'] += resp.result
+            if history is None:
+                old_content = ""
+            else:
+                old_content = history[-1][1]
+            history = extract_history(context, history)
+            new_content = history[-1][1]
+            temp_history = copy.copy(history)
+            # Partial deep copy
+            temp_history[-1][1] = history[-1][1][:]
+            for content in stream_output_smoother(
+                    old_content,
+                    new_content,
+                    min_num_chars=1,
+                    max_num_chars=4,
+                    delay=0.1,
+            ):
+                temp_history[-1][1] = content
+                yield (
+                    state,
+                    temp_history,
+                    None,
+                    *replicate_gradio_update(5), )
     else:
-        context.append({'role': 'assistant', 'content': response.result})
-        func_name = gr.update()
-        func_args = gr.update()
-        func_res = gr.update()
-        accord_update = gr.update()
-    history = extract_history(context)
-    state['context'] = context
-    return state, None, history, context[
-        -MAX_CONTEXT_LINES_TO_SHOW:], func_name, func_args, func_res, accord_update
+        state['context'] = context
+        yield (
+            state,
+            history,
+            None,
+            context[-MAX_CONTEXT_LINES_TO_SHOW:],
+            *replicate_gradio_update(4), )
 
 
-def extract_history(context):
-    # TODO: Cache history and make incremental updates.
-    history = []
+def extract_history(context, old_history=None):
+    if old_history is not None:
+        history = old_history
+    else:
+        history = []
 
-    for turn_idx in range(0, len(context), 2):
-        user_message = context[turn_idx]
+    len_history = len(history)
+    len_context = len(context)
+    diff = len_history - (len(context) + 1) // 2
+    if diff > 0:
+        for _ in range(diff):
+            history.pop()
+        return history
+
+    if diff == 0:
+        if len_history > 0:
+            history.pop()
+        start = len_context - 1 - (len_context % 2 == 0)
+    else:
+        start = len_history * 2
+
+    for round_idx in range(start, len_context, 2):
+        user_message = context[round_idx]
         pair = []
         if user_message['role'] == 'function':
             pair.append(
@@ -710,14 +774,18 @@ def extract_history(context):
         else:
             raise gr.Error("消息中的`role`不正确")
 
-        assistant_message = context[turn_idx + 1]
-        if 'function_call' in assistant_message:
-            function_call = assistant_message['function_call']
-            pair.append(
-                f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
-            )
+        try:
+            assistant_message = context[round_idx + 1]
+        except IndexError:
+            pair.append(None)
         else:
-            pair.append(assistant_message['content'])
+            if 'function_call' in assistant_message:
+                function_call = assistant_message['function_call']
+                pair.append(
+                    f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
+                )
+            else:
+                pair.append(assistant_message['content'])
 
         assert len(pair) == 2
         history.append(pair)
@@ -726,7 +794,26 @@ def extract_history(context):
 
 
 def get_fallback_return():
-    return tuple(gr.update() for _ in range(8))
+    return replicate_gradio_update(8)
+
+
+def stream_output_smoother(old_content,
+                           new_content,
+                           *,
+                           min_num_chars=1,
+                           max_num_chars=16,
+                           delay=0.03,
+                           add_cursor=True):
+    end = len(new_content)
+    pos = len(old_content)
+    while pos < end:
+        offset = random.randint(min_num_chars, max_num_chars)
+        pos += offset
+        curr = new_content[:pos]
+        if add_cursor:
+            curr += "▌"
+        yield curr
+        time.sleep(delay)
 
 
 def call_function(state, candidates, func_name, func_args):
@@ -957,6 +1044,10 @@ def handle_exception(exception, message, *, raise_=False):
         raise gr.Error(message)
     else:
         gr.Warning(message)
+
+
+def replicate_gradio_update(count, /, **kwargs):
+    return tuple(gr.update(**kwargs) for _ in range(count))
 
 
 def text_is_empty(text):
