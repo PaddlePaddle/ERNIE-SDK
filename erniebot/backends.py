@@ -177,7 +177,7 @@ class AIStudioBackend(EBBackend):
             else:
                 raise errors.APIError(emsg)
         else:
-            return resp
+            return EBResponse(resp.code, resp.result, resp.headers)
 
     def _extract_auth_config(self,
                              config_dict: Dict[str, Any]) -> Dict[str, Any]:
