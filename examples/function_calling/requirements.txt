@@ -1,1 +1,1 @@
-gradio
+gradio >= 3.44.3
