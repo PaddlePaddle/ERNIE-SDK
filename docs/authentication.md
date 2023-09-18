@@ -6,15 +6,15 @@ ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大�
 
 | 后端   |  API_TYPE  |  支持的模型 |
 | :---     | :----      |   :---  |
-| AIStudio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| AI Studio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 千帆大模型平台 | qianfan |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian |  ernie-vilg-v2 |
 
-## 1 `AIStudio`后端的认证鉴权
+## 1 `AI Studio`后端的认证鉴权
 
 ### 1.1 申请用户凭证
 
-在[AI Studio](https://aistudio.baidu.com/index)平台注册并登录账号，可以在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取用户凭证access token。
+在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，可以在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取用户凭证access token。
 
 注意事项：
 
@@ -23,7 +23,7 @@ ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大�
 
 ### 1.2 设置鉴权参数
 
-AIStudio后端可以使用access token进行鉴权，支持如下三种方法来设置鉴权参数。
+AI Studio后端可以使用access token进行鉴权，支持如下三种方法来设置鉴权参数。
 
 (1) 使用环境变量：
 ```shell
@@ -79,7 +79,7 @@ response = erniebot.ChatCompletion.create(
 
 ### 2.2 设置鉴权参数
 
-千帆后端也可以使用access token进行鉴权，设置鉴权参数的三种方法和AIStudio后端类似，举例如下。
+千帆后端也可以使用access token进行鉴权，设置鉴权参数的三种方法和AI Studio后端类似，举例如下。
 请注意替换后端参数为`qianfan`，并且使用千帆平台申请的`access_token`。
 
 ```shell
