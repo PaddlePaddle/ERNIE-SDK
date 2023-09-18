@@ -33,7 +33,7 @@ AI Studio后端可以使用access token进行鉴权，支持如下三种方法�
 
 (1) 使用环境变量：
 
-```shell
+``` {.copy}
 export EB_API_TYPE="aistudio"
 export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 ```
@@ -63,7 +63,7 @@ response = erniebot.ChatCompletion.create(
 )
 ```
 
-如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
+如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数 > 使用全局变量 > 使用环境变量。
 
 ## 2 `千帆大模型平台`后端的认证鉴权
 
@@ -90,7 +90,7 @@ response = erniebot.ChatCompletion.create(
 
 请注意设置后端参数为`'qianfan'`，并且使用千帆平台申请的access token。
 
-```shell
+``` {.copy}
 export EB_API_TYPE="qianfan"
 export EB_ACCESS_TOKEN="<access-token-for-qianfan>"
 ```
@@ -104,7 +104,7 @@ erniebot.access_token = "<access-token-for-qianfan>"
 
 此外，千帆后端还可以使用AK/SK进行鉴权，同样支持三种方法，环境变量对应是`EB_AK`和`EB_SK`，Python变量对应是`ak`和`sk`，举例如下。
 
-```shell
+``` {.copy}
 export EB_API_TYPE="qianfan"
 export EB_AK="<access-key-for-qianfan>"
 export EB_SK="<secret-access-key-for-qianfan>"
@@ -140,7 +140,9 @@ erniebot.sk = "<secret-access-key-for-qianfan>"
 
 请注意设置后端参数为`'yinian'`，并且使用智能创作平台申请的access_token、AK/SK。
 
-```shell
+使用access token的例子：
+
+``` {.copy}
 export EB_API_TYPE="yinian"
 export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 ```
@@ -150,4 +152,20 @@ import erniebot
 
 erniebot.api_type = "yinian"
 erniebot.access_token = "<access-token-for-yinian>"
+```
+
+使用AK/SK的例子：
+
+``` {.copy}
+export EB_API_TYPE="yinian"
+export EB_AK="<access-key-for-yinian>"
+export EB_SK="<secret-access-key-for-yinian>"
+```
+
+``` {.py .copy}
+import erniebot
+
+erniebot.api_type = "yinian"
+erniebot.ak = "<access-key-for-yinian>"
+erniebot.sk = "<secret-access-key-for-yinian>"
 ```
