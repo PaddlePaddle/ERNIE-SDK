@@ -50,15 +50,19 @@ def create_ui_and_launch(args):
 
 def create_chat_completion_tab():
     def _infer(ernie_model, content, state, top_p, temperature, api_type,
-               access_key, secret_key):
-        if access_key.strip() == '' or secret_key.strip() == '':
-            raise gr.Error("需要填写正确的AK/SK，不能为空")
+               access_key, secret_key, access_token):
+        if (access_key.strip() == '' or
+                secret_key.strip() == '') and access_token.strip() == '':
+            raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
         if content.strip() == '':
             raise gr.Error("输入不能为空，请在清空后重试")
 
-        auth_config = {'api_type': api_type, 'ak': access_key, 'sk': secret_key}
-        model = 'ernie-bot-3.5' if (ernie_model is None or
-                                    ernie_model.strip() == '') else ernie_model
+        auth_config = {
+            'api_type': api_type,
+            'ak': access_key.strip(),
+            'sk': secret_key.strip(),
+            'access_token': access_token.strip(),
+        }
         content = content.strip().replace('<br>', '\n')
         context = state.setdefault('context', [])
         context.append({'role': 'user', 'content': content})
@@ -73,7 +77,7 @@ def create_chat_completion_tab():
                 _config_=auth_config, **data, stream=False)
         else:
             response = eb.ChatCompletion.create(
-                _config_=auth_config, model=model, **data, stream=False)
+                _config_=auth_config, model=ernie_model, **data, stream=False)
 
         bot_response = response.result
         context.append({'role': 'assistant', 'content': bot_response})
@@ -81,7 +85,7 @@ def create_chat_completion_tab():
         return None, history, context, state
 
     def _regen_response(ernie_model, state, top_p, temperature, api_type,
-                        access_key, secret_key):
+                        access_key, secret_key, access_token):
         """Regenerate response."""
         context = state.setdefault('context', [])
         if len(context) < 2:
@@ -89,7 +93,8 @@ def create_chat_completion_tab():
         context.pop()
         user_message = context.pop()
         return _infer(ernie_model, user_message['content'], state, top_p,
-                      temperature, api_type, access_key, secret_key)
+                      temperature, api_type, access_key, secret_key,
+                      access_token)
 
     def _rollback(state):
         """Roll back context."""
@@ -116,16 +121,18 @@ def create_chat_completion_tab():
                     label="API Type",
                     info="提供对话能力的后端平台",
                     value='qianfan',
-                    choices=['qianfan'])
+                    choices=['qianfan', 'aistudio'])
                 access_key = gr.Textbox(
                     label="Access Key ID",
-                    info="用于访问后端平台的AK",
-                    placeholder="Access Key ID",
+                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
                     type='password')
                 secret_key = gr.Textbox(
                     label="Secret Access Key",
-                    info="用于访问后端平台的SK",
-                    placeholder="Secret Access Key",
+                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
+                    type='password')
+                access_token = gr.Textbox(
+                    label="Access Token",
+                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
                     type='password')
                 ernie_model = gr.Dropdown(
                     label="Model",
@@ -158,107 +165,127 @@ def create_chat_completion_tab():
                 with gr.Row():
                     raw_context_json = gr.JSON(label="原始对话上下文信息")
 
-            chat_completion_tab.select(
-                lambda: (None, None, None, {}),
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-            )
-            input_text.submit(
-                _infer,
-                inputs=[
-                    ernie_model,
-                    input_text,
-                    state,
-                    top_p,
-                    temperature,
-                    api_type,
-                    access_key,
-                    secret_key,
-                ],
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-            )
-            clear_btn.click(
-                lambda _: (None, None, None, {}),
-                inputs=clear_btn,
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-                show_progress=False,
-            )
-            rollback_btn.click(
-                _rollback,
-                inputs=[state],
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-                show_progress=False,
-            )
-            regen_btn.click(
-                _regen_response,
-                inputs=[
-                    ernie_model,
-                    state,
-                    top_p,
-                    temperature,
-                    api_type,
-                    access_key,
-                    secret_key,
-                ],
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-            )
-            send_btn.click(
-                _infer,
-                inputs=[
-                    ernie_model,
-                    input_text,
-                    state,
-                    top_p,
-                    temperature,
-                    api_type,
-                    access_key,
-                    secret_key,
-                ],
-                outputs=[
-                    input_text,
-                    context_chatbot,
-                    raw_context_json,
-                    state,
-                ],
-            )
+        api_type.change(
+            lambda api_type: {
+                'qianfan': (gr.update(visible=True), gr.update(visible=True)),
+                'aistudio': (gr.update(visible=False), gr.update(visible=False)), }[api_type],
+            inputs=api_type,
+            outputs=[
+                access_key,
+                secret_key,
+            ],
+        )
+        chat_completion_tab.select(
+            lambda: (None, None, None, {}),
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+        )
+        input_text.submit(
+            _infer,
+            inputs=[
+                ernie_model,
+                input_text,
+                state,
+                top_p,
+                temperature,
+                api_type,
+                access_key,
+                secret_key,
+                access_token,
+            ],
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+        )
+        clear_btn.click(
+            lambda _: (None, None, None, {}),
+            inputs=clear_btn,
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+            show_progress=False,
+        )
+        rollback_btn.click(
+            _rollback,
+            inputs=[state],
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+            show_progress=False,
+        )
+        regen_btn.click(
+            _regen_response,
+            inputs=[
+                ernie_model,
+                state,
+                top_p,
+                temperature,
+                api_type,
+                access_key,
+                secret_key,
+                access_token,
+            ],
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+        )
+        send_btn.click(
+            _infer,
+            inputs=[
+                ernie_model,
+                input_text,
+                state,
+                top_p,
+                temperature,
+                api_type,
+                access_key,
+                secret_key,
+                access_token,
+            ],
+            outputs=[
+                input_text,
+                context_chatbot,
+                raw_context_json,
+                state,
+            ],
+        )
 
 
 def create_embedding_tab():
-    def _get_embeddings(text1, text2, api_type, access_key, secret_key):
-        eb.api_type = api_type
-        eb.ak = access_key
-        eb.sk = secret_key
-        if access_key.strip() == '' or secret_key.strip() == '':
-            raise gr.Error("需要填写正确的AK/SK，不能为空")
+    def _get_embeddings(text1, text2, api_type, access_key, secret_key,
+                        access_token):
+        if (access_key.strip() == '' or
+                secret_key.strip() == '') and access_token.strip() == '':
+            raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
 
         if text1.strip() == '' or text2.strip() == '':
             raise gr.Error("两个输入均不能为空")
         embeddings = eb.Embedding.create(
-            model='ernie-text-embedding', input=[text1.strip(), text2.strip()])
+            _config_={
+                'api_type': api_type,
+                'ak': access_key,
+                'sk': secret_key,
+                'access_token': access_token,
+            },
+            model='ernie-text-embedding',
+            input=[text1.strip(), text2.strip()],
+        )
         emb_0 = embeddings.body['data'][0]['embedding']
         emb_1 = embeddings.body['data'][1]['embedding']
         cos_sim = _calc_cosine_similarity(emb_0, emb_1)
@@ -278,16 +305,18 @@ def create_embedding_tab():
                     label="API Type",
                     info="提供语义向量能力的后端平台",
                     value='qianfan',
-                    choices=['qianfan'])
+                    choices=['qianfan', 'aistudio'])
                 access_key = gr.Textbox(
                     label="Access Key ID",
-                    info="用于访问后端平台的AK",
-                    placeholder="Access Key ID",
+                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
                     type='password')
                 secret_key = gr.Textbox(
                     label="Secret Access Key",
-                    info="用于访问后端平台的SK",
-                    placeholder="Secret Access Key",
+                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
+                    type='password')
+                access_token = gr.Textbox(
+                    label="Access Token",
+                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
                     type='password')
             with gr.Column(scale=4):
                 with gr.Row():
@@ -298,41 +327,59 @@ def create_embedding_tab():
                 with gr.Row():
                     embedding1 = gr.Textbox(label="文本1向量结果")
                     embedding2 = gr.Textbox(label="文本2向量结果")
-                cal_emb.click(
-                    _get_embeddings,
-                    inputs=[
-                        text1,
-                        text2,
-                        api_type,
-                        access_key,
-                        secret_key,
-                    ],
-                    outputs=[
-                        embedding1,
-                        embedding2,
-                        cos_sim,
-                    ],
-                )
+
+        api_type.change(
+            lambda api_type: {
+                'qianfan': (gr.update(visible=True), gr.update(visible=True)),
+                'aistudio': (gr.update(visible=False), gr.update(visible=False)), }[api_type],
+            inputs=api_type,
+            outputs=[
+                access_key,
+                secret_key,
+            ],
+        )
+        cal_emb.click(
+            _get_embeddings,
+            inputs=[
+                text1,
+                text2,
+                api_type,
+                access_key,
+                secret_key,
+                access_token,
+            ],
+            outputs=[
+                embedding1,
+                embedding2,
+                cos_sim,
+            ],
+        )
 
 
 def create_image_tab():
-    def _gen_image(prompt, w_and_h, api_type, access_key, secret_key):
+    def _gen_image(prompt, w_and_h, api_type, access_key, secret_key,
+                   access_token):
         timestamp = int(time.time())
-        eb.api_type = api_type
-        eb.ak = access_key
-        eb.sk = secret_key
-        if access_key.strip() == '' or secret_key.strip() == '':
-            raise gr.Error("需要填写正确的AK/SK，不能为空")
+        if (access_key.strip() == '' or
+                secret_key.strip() == '') and access_token.strip() == '':
+            raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
         if prompt.strip() == '':
             raise gr.Error("输入不能为空")
         w, h = [int(x) for x in w_and_h.strip().split('x')]
         response = eb.Image.create(
+            _config_={
+                'api_type': api_type,
+                'ak': access_key,
+                'sk': secret_key,
+                'access_token': access_token,
+            },
             model='ernie-vilg-v2',
             prompt=prompt,
             width=w,
             height=h,
             version='v2',
-            image_num=1)
+            image_num=1,
+        )
         img_url = response.data['sub_task_result_list'][0]['final_image_list'][
             0]['img_url']
         res = requests.get(img_url)
@@ -350,13 +397,15 @@ def create_image_tab():
                     choices=['yinian'])
                 access_key = gr.Textbox(
                     label="Access Key ID",
-                    info="用于访问后端平台的AK",
-                    placeholder="Access Key ID",
+                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
                     type='password')
                 secret_key = gr.Textbox(
                     label="Secret Access Key",
-                    info="用于访问后端平台的SK",
-                    placeholder="Secret Access Key",
+                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
+                    type='password')
+                access_token = gr.Textbox(
+                    label="Access Token",
+                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
                     type='password')
             with gr.Column(scale=4):
                 with gr.Row():
@@ -374,17 +423,19 @@ def create_image_tab():
                 submit_btn = gr.Button("生成图片")
                 image_show_zone = gr.Image(
                     label="图片生成结果", type='filepath', show_download_button=True)
-                submit_btn.click(
-                    _gen_image,
-                    inputs=[
-                        prompt,
-                        w_and_h,
-                        api_type,
-                        access_key,
-                        secret_key,
-                    ],
-                    outputs=image_show_zone,
-                )
+
+        submit_btn.click(
+            _gen_image,
+            inputs=[
+                prompt,
+                w_and_h,
+                api_type,
+                access_key,
+                secret_key,
+                access_token,
+            ],
+            outputs=image_show_zone,
+        )
 
 
 if __name__ == '__main__':

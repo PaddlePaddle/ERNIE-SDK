@@ -1,4 +1,4 @@
-# 安装
+# 快速安装
 
 执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（推荐Python >= 3.8)。
 ```shell

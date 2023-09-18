@@ -71,9 +71,8 @@ functions = [
 ``` {.py .copy}
 import erniebot
 
-erniebot.api_type = "qianfan"
-erniebot.ak = "<ak-for-qianfan>"
-erniebot.sk = "<sk-for-qianfan>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<eb-access-token>"
 
 messages = [
     {

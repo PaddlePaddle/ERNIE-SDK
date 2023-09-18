@@ -9,10 +9,9 @@
 | API参数名称   | 环境变量名称  |  类型   |  必须设置 |  描述   |
 | :---         | :----       | :----  | :---- |  :---- |
 | api_type     | EB_API_TYPE | string | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
-| ak           | EB_AK       | string | 否 | 认证鉴权使用的access key（AK）。必须和`sk`同时设置。 |
-| sk           | EB_SK       | string | 否 | 认证鉴权使用的secret key（SK）。必须和`ak`同时设置。 |
-| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。推荐优先使用`ak`和`sk`。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过AK/SK获取access token。|
-| access_token_path | EB_ACCESS_TOKEN_PATH | string | 否 | 存有access token的文件路径。推荐优先使用`ak`和`sk`。`access_token_path`生效原理和`access_token`相同。|
+| ak           | EB_AK       | string | 否 | 认证鉴权使用的access key ID（AK）。必须和`sk`同时设置。 |
+| sk           | EB_SK       | string | 否 | 认证鉴权使用的secret access key（SK）。必须和`ak`同时设置。 |
+| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过AK/SK获取access token。|
 
 ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的用户凭证类型不尽相同。请阅读下表，参照对应的文档申请用户凭证。
 
@@ -20,17 +19,17 @@ ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支�
 | :---     | :----      | :----  | :----  | :---  |
 | 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的用户凭证](#申请千帆大模型平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的用户凭证](#申请智能创作平台的用户凭证) | ernie-vilg-v2 |
-| AI Studio | aistudio | access token |  | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| AI Studio | aistudio | access token | [申请AI Studio平台的用户凭证](#申请ai-studio平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 
 与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
 
 (1) 使用环境变量：
 
 ```shell
-export EB_API_TYPE="<EB-API-TYPE>"
-export EB_AK="<EB-ACCESS-KEY>"
-export EB_SK="<EB-SECRET-KEY>"
-export EB_ACCESS_TOKEN="<EB-ACCESS-TOKEN>"
+export EB_API_TYPE="<eb-api-type>"
+export EB_ACCESS_TOKEN="<eb-access-token>"
+export EB_AK="<eb-access-key-id>"
+export EB_SK="<eb-secret-access-key>"
 ```
 
 (2) 使用全局变量：
@@ -38,10 +37,10 @@ export EB_ACCESS_TOKEN="<EB-ACCESS-TOKEN>"
 ``` {.py .copy}
 import erniebot
 
-erniebot.api_type = "<EB-API-TYPE>"
-erniebot.ak = "<EB-ACCESS-KEY>"
-erniebot.sk = "<EB-SECRET-KEY>"
-erniebot.access_token = "<EB-ACCESS-TOKEN>"
+erniebot.api_type = "<eb-api-type>"
+erniebot.access_token = "<eb-access-token>"
+erniebot.ak = "<eb-access-key-id>"
+erniebot.sk = "<eb-secret-access-key>"
 ```
 
 (3) 使用`_config_`参数：
@@ -51,10 +50,10 @@ import erniebot
 
 response = erniebot.ChatCompletion.create(
     _config_=dict(
-        api_type="<EB-API-TYPE>",
-        ak="<EB-ACCESS-KEY>",
-        sk="<EB-SECRET-KEY>",
-        access_token="<EB-ACCESS-TOKEN>",
+        api_type="<eb-api-type>",
+        access_token="<eb-access-token>",
+        ak="<eb-access-key-id>",
+        sk="<eb-secret-access-key>",
     ),
     model="ernie-bot-3.5",
     messages=[{
@@ -108,3 +107,11 @@ response = erniebot.ChatCompletion.create(
 
 * AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
 * 智能创作平台的完整介绍，请参考[使用文档](https://ai.baidu.com/ai-doc/NLP/Uk53wndcb)；费用、充值相关的问题，请参考[计费简介](https://ai.baidu.com/ai-doc/NLP/qla2beec2)。
+
+## 申请AI Studio平台的用户凭证
+
+AI Studio平台用户可以直接在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取access token。
+
+注意事项：
+
+* AI Studio平台为每个账户提供了100万token的免费额度，可以用于ERNIE Bot SDK调用文心一言大模型。
