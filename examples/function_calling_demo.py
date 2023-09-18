@@ -21,6 +21,7 @@ import functools
 import inspect
 import json
 import operator
+import random
 import reprlib
 import sys
 major = sys.version_info.major
@@ -30,12 +31,14 @@ if int(major) != 3 or int(minor) < 8:
         f"The Gradio demo requires Python >= 3.8, but your Python version is {major}.{minor}."
     )
 import textwrap
+import time
 import traceback
 
 import erniebot as eb
 import gradio as gr
 
 CUSTOM_FUNC_NAME = 'custom_function'
+MAX_CONTEXT_LINES_TO_SHOW = 10
 
 
 def parse_setup_args():
@@ -49,11 +52,12 @@ def create_ui_and_launch(args):
     with gr.Blocks(
             title="ERNIE Bot SDK Function Calling Demo",
             theme=gr.themes.Soft(
-                spacing_size='sm', text_size='sm')) as block:
+                spacing_size='sm', text_size='md')) as block:
         create_components(functions=get_predefined_functions())
 
-    block.queue(api_open=False).launch(
-        server_name="0.0.0.0", server_port=args.port)
+    block.queue(
+        api_open=False, concurrency_count=8).launch(
+            server_name="0.0.0.0", server_port=args.port)
 
 
 def create_components(functions):
@@ -68,98 +72,118 @@ def create_components(functions):
         'api_type': default_api_type,
         'ak': "",
         'sk': "",
+        'access_token': "",
     })
 
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Accordion(label="基础配置", open=True):
-                api_type = gr.Dropdown(
-                    label="API Type",
-                    info=f"提供对话能力的后端平台",
-                    value=default_api_type,
-                    choices=['qianfan'])
-                access_key = gr.Textbox(
-                    label="Access Key ID",
-                    info="用于访问后端平台的AK",
-                    placeholder="Access Key ID",
-                    type='password')
-                secret_key = gr.Textbox(
-                    label="Secret Access Key",
-                    info="用于访问后端平台的SK",
-                    placeholder="Secret Access Key",
-                    type='password')
-                ernie_model = gr.Dropdown(
-                    label="Model",
-                    info=f"模型类型",
-                    value=default_model,
-                    choices=['ernie-bot-3.5'])
+                with gr.Group():
+                    api_type = gr.Dropdown(
+                        label="API Type",
+                        info=f"提供对话能力的后端平台",
+                        value=default_api_type,
+                        choices=['qianfan', 'aistudio'])
+                    access_key = gr.Textbox(
+                        label="Access Key ID",
+                        info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
+                        type='password')
+                    secret_key = gr.Textbox(
+                        label="Secret Access Key",
+                        info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
+                        type='password')
+                    access_token = gr.Textbox(
+                        label="Access Token",
+                        info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
+                        type='password')
+                    ernie_model = gr.Dropdown(
+                        label="Model",
+                        info=f"模型类型",
+                        value=default_model,
+                        choices=['ernie-bot-3.5'])
             with gr.Accordion(label="高级配置", open=False):
-                top_p = gr.Slider(
-                    label="Top-p",
-                    info="控制采样范围，该参数越小生成结果越稳定",
-                    value=0.7,
-                    minimum=0,
-                    maximum=1,
-                    step=0.05)
-                temperature = gr.Slider(
-                    label="Temperature",
-                    info="控制采样随机性，该参数越小生成结果越稳定",
-                    value=0.95,
-                    minimum=0.05,
-                    maximum=1.5,
-                    step=0.05)
+                with gr.Group():
+                    top_p = gr.Slider(
+                        label="Top-p",
+                        info="控制采样范围，该参数越小生成结果越稳定",
+                        value=0.7,
+                        minimum=0,
+                        maximum=1,
+                        step=0.05)
+                    temperature = gr.Slider(
+                        label="Temperature",
+                        info="控制采样随机性，该参数越小生成结果越稳定",
+                        value=0.95,
+                        minimum=0.05,
+                        maximum=1.5,
+                        step=0.05)
             with gr.Accordion(label="函数信息", open=False):
-                with gr.Column():
-                    with gr.Tabs():
-                        for function in functions:
-                            create_function_tab(function)
-                        with gr.Tab(label="自定义函数"):
-                            custom_func_code = gr.Code(
-                                label="定义",
-                                value=get_custom_func_def_template(),
-                                language='python',
-                                interactive=True)
-                            update_func_desc_btn = gr.Button("更新描述")
-                            custom_func_desc = JSONCode(
-                                label="描述",
-                                value=to_pretty_json(
-                                    get_custom_func_desc_template(),
-                                    from_json=False),
-                                interactive=True)
+                with gr.Tabs():
+                    for function in functions:
+                        create_function_tab(function)
+                    with gr.Tab(label="自定义函数"):
+                        custom_func_code = gr.Code(
+                            label="定义",
+                            value=get_custom_func_def_template(),
+                            language='python',
+                            interactive=True)
+                        update_func_desc_btn = gr.Button("更新描述")
+                        custom_func_desc = JSONCode(
+                            label="描述",
+                            value=to_pretty_json(
+                                get_custom_func_desc_template(),
+                                from_json=False),
+                            interactive=True)
             chosen_func_names = gr.CheckboxGroup(
                 label="备选函数",
                 value=func_name_list,
                 choices=func_name_list + [CUSTOM_FUNC_NAME])
 
         with gr.Column(scale=2):
-            context_chatbot = gr.Chatbot(label="对话历史")
+            context_chatbot = gr.Chatbot(
+                label="对话历史",
+                latex_delimiters=[{
+                    'left': '$$',
+                    'right': '$$',
+                    'display': True
+                }, {
+                    'left': '$',
+                    'right': '$',
+                    'display': False
+                }],
+                bubble_full_width=False)
             input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
             with gr.Row():
                 clear_btn = gr.Button("重置对话")
+                send_text_btn = gr.Button("发送消息")
+            with gr.Row():
                 regen_btn = gr.Button("重新生成")
-                send_text_btn = gr.Button("发送文本")
+                recall_btn = gr.Button("撤回消息")
             func_call_accord = gr.Accordion(label="函数调用", open=False)
             with func_call_accord:
+                func_name = gr.Textbox(label="函数名称")
+                func_in_params = JSONCode(label="请求参数")
+                func_out_params = JSONCode(label="响应参数", interactive=False)
                 with gr.Row():
-                    with gr.Column():
-                        func_name = gr.Textbox(label="函数名称")
-                        func_in_params = JSONCode(label="请求参数")
-                        func_out_params = JSONCode(
-                            label="响应参数", interactive=False)
-                    with gr.Column():
-                        call_func_btn = gr.Button("调用函数")
-                        send_res_btn = gr.Button("发送调用结果")
-                        reset_func_btn = gr.Button("重置函数调用信息")
-        with gr.Column(scale=1):
-            raw_context_json = gr.JSON(label="原始对话上下文信息")
+                    call_func_btn = gr.Button("调用函数", scale=1)
+                    send_res_btn = gr.Button("发送调用结果", scale=1)
+                reset_func_btn = gr.Button("重置函数调用信息")
+
+        with gr.Accordion(label="原始对话上下文信息", open=False):
+            raw_context_json = gr.JSON(
+                label=f"最近{MAX_CONTEXT_LINES_TO_SHOW}条消息", scale=1)
 
         api_type.change(
-            make_state_updater(key='api_type'),
+            update_api_type,
             inputs=[
                 auth_state,
                 api_type,
             ],
-            outputs=auth_state,
+            outputs=[
+                auth_state,
+                access_key,
+                secret_key,
+            ],
         )
         access_key.change(
             make_state_updater(
@@ -179,85 +203,14 @@ def create_components(functions):
             ],
             outputs=auth_state,
         )
-
-        input_text.submit(
-            generate_response_for_text,
+        access_token.change(
+            make_state_updater(
+                key='access_token', strip=True),
             inputs=[
-                state,
-                chosen_func_names,
                 auth_state,
-                ernie_model,
-                input_text,
-                top_p,
-                temperature,
+                access_token,
             ],
-            outputs=[
-                state,
-                input_text,
-                context_chatbot,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
-        )
-        clear_btn.click(
-            reset_conversation,
-            inputs=state,
-            outputs=[
-                state,
-                input_text,
-                context_chatbot,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-            show_progress=False,
-        )
-        regen_btn.click(
-            regenerate_response,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                input_text,
-                context_chatbot,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
-        )
-        send_text_btn.click(
-            generate_response_for_text,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                input_text,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                input_text,
-                context_chatbot,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
+            outputs=auth_state,
         )
 
         custom_func_code.change(
@@ -306,7 +259,139 @@ def create_components(functions):
             ],
         )
 
+        disable_chat_input_args = {
+            'fn':
+            lambda: replicate_gradio_update(6, interactive=False),
+            'inputs': None,
+            'outputs': [
+                input_text,
+                clear_btn,
+                recall_btn,
+                regen_btn,
+                send_text_btn,
+                send_res_btn,
+            ],
+            'show_progress': False,
+            'queue': False,
+        }
+        enable_chat_input_args = {
+            'fn': lambda: replicate_gradio_update(6, interactive=True),
+            'inputs': None,
+            'outputs': [
+                input_text,
+                clear_btn,
+                recall_btn,
+                regen_btn,
+                send_text_btn,
+                send_res_btn,
+            ],
+            'show_progress': False,
+            'queue': False,
+        }
+        input_text.submit(**disable_chat_input_args).then(
+            generate_response_for_text,
+            inputs=[
+                state,
+                chosen_func_names,
+                auth_state,
+                ernie_model,
+                input_text,
+                top_p,
+                temperature,
+            ],
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+                func_call_accord,
+            ],
+            show_progress=False,
+        ).then(**enable_chat_input_args)
+        clear_btn.click(**disable_chat_input_args).then(
+            reset_conversation,
+            inputs=state,
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+            ],
+            show_progress=False,
+        ).then(**enable_chat_input_args)
+        send_text_btn.click(**disable_chat_input_args).then(
+            generate_response_for_text,
+            inputs=[
+                state,
+                chosen_func_names,
+                auth_state,
+                ernie_model,
+                input_text,
+                top_p,
+                temperature,
+            ],
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+                func_call_accord,
+            ],
+            show_progress=False,
+        ).then(**enable_chat_input_args)
+        regen_btn.click(**disable_chat_input_args).then(
+            lambda history: (history and history[:-1], gr.update(interactive=False)),
+            inputs=context_chatbot,
+            outputs=[
+                context_chatbot,
+                regen_btn,
+            ],
+            show_progress=False,
+            queue=False,
+        ).then(
+            regenerate_response,
+            inputs=[
+                state,
+                chosen_func_names,
+                auth_state,
+                ernie_model,
+                top_p,
+                temperature,
+            ],
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+                func_call_accord,
+            ],
+            show_progress=False,
+        ).then(**enable_chat_input_args)
+        recall_btn.click(**disable_chat_input_args).then(
+            recall_message,
+            inputs=state,
+            outputs=[state, context_chatbot, raw_context_json],
+            show_progress=False,
+        ).then(**enable_chat_input_args)
+
         call_func_btn.click(
+            lambda: gr.update(interactive=False),
+            outputs=call_func_btn,
+            show_progress=False,
+            queue=False,
+        ).then(
             call_function,
             inputs=[
                 state,
@@ -315,8 +400,13 @@ def create_components(functions):
                 func_in_params,
             ],
             outputs=func_out_params,
+        ).then(
+            lambda: gr.update(interactive=True),
+            outputs=call_func_btn,
+            show_progress=False,
+            queue=False,
         )
-        send_res_btn.click(
+        send_res_btn.click(**disable_chat_input_args).then(
             generate_response_for_function,
             inputs=[
                 state,
@@ -330,14 +420,15 @@ def create_components(functions):
             ],
             outputs=[
                 state,
-                input_text,
                 context_chatbot,
+                input_text,
                 raw_context_json,
                 func_name,
                 func_in_params,
                 func_out_params,
             ],
-        )
+            show_progress=False,
+        ).then(**enable_chat_input_args)
         reset_func_btn.click(
             lambda: (None, None, None),
             outputs=[
@@ -374,10 +465,37 @@ def make_state_updater(key, *, strip=False):
     return _update_state
 
 
+def update_api_type(auth_state, api_type):
+    auth_state['api_type'] = api_type
+    if api_type == 'qianfan':
+        return auth_state, gr.update(visible=True), gr.update(visible=True)
+    elif api_type == 'aistudio':
+        return auth_state, gr.update(visible=False), gr.update(visible=False)
+
+
 def remove_old_custom_function(state, candidates):
     state['name2function'].pop(CUSTOM_FUNC_NAME, None)
     if CUSTOM_FUNC_NAME in candidates:
         candidates.remove(CUSTOM_FUNC_NAME)
+    return state, candidates
+
+
+def try_update_candidates(state, candidates, custom_func_code,
+                          custom_func_desc_str):
+    if CUSTOM_FUNC_NAME in candidates:
+        try:
+            custom_function = make_custom_function(custom_func_code,
+                                                   custom_func_desc_str)
+        except Exception as e:
+            handle_exception(
+                e,
+                f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
+                raise_=False)
+            # HACK: Add a time delay so that the warning message can be read.
+            time.sleep(5)
+            candidates.remove(CUSTOM_FUNC_NAME)
+        else:
+            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
     return state, candidates
 
 
@@ -409,29 +527,10 @@ def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
             new_params_desc['properties'][name] = param_desc
         custom_func_desc['parameters'] = new_params_desc
     except Exception as e:
-        traceback.print_exc()
-        gr.Warning(f"更新函数描述失败，错误信息如下：{str(e)}")
+        handle_exception(e, f"更新函数描述失败，错误信息如下：{str(e)}", raise_=False)
         return gr.update()
     else:
         return to_pretty_json(custom_func_desc)
-
-
-def try_update_candidates(state, candidates, custom_func_code,
-                          custom_func_desc_str):
-    if CUSTOM_FUNC_NAME in candidates:
-        try:
-            custom_function = make_custom_function(custom_func_code,
-                                                   custom_func_desc_str)
-        except Exception as e:
-            traceback.print_exc()
-            gr.Warning(f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}")
-            # HACK: Add a time delay so that the warning can be read.
-            import time
-            time.sleep(3)
-            candidates.remove(CUSTOM_FUNC_NAME)
-        else:
-            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
-    return state, candidates
 
 
 def make_custom_function(code, desc_str):
@@ -444,30 +543,6 @@ def make_custom_function(code, desc_str):
     return make_function(func, desc, name=CUSTOM_FUNC_NAME)
 
 
-def generate_response_for_text(
-        state,
-        candidates,
-        auth_config,
-        ernie_model,
-        content,
-        top_p,
-        temperature,
-):
-    if content.strip() == '':
-        raise gr.Error("输入不能为空，请在重置对话后重试")
-    content = content.strip().replace('<br>', '\n')
-    message = {'role': 'user', 'content': content}
-    return generate_response(
-        state=state,
-        candidates=candidates,
-        auth_config=auth_config,
-        ernie_model=ernie_model,
-        message=message,
-        top_p=top_p,
-        temperature=temperature,
-    )
-
-
 def generate_response_for_function(
         state,
         candidates,
@@ -478,16 +553,21 @@ def generate_response_for_function(
         top_p,
         temperature,
 ):
-    if func_name.strip() == '':
-        raise gr.Error("函数名称不能为空，请在重置对话后重试")
-    func_name = func_name.strip()
+    if text_is_empty(func_name):
+        gr.Warning("函数名称不能为空")
+        yield get_fallback_return()
+        return
+    if func_res is None:
+        gr.Warning("无法获取函数响应参数，请调用函数")
+        yield get_fallback_return()
+        return
     message = {
         'role': 'function',
         'name': func_name,
         'content': to_compact_json(
             func_res, from_json=True)
     }
-    return generate_response(
+    yield from generate_response(
         state=state,
         candidates=candidates,
         auth_config=auth_config,
@@ -496,6 +576,43 @@ def generate_response_for_function(
         top_p=top_p,
         temperature=temperature,
     )
+
+
+def generate_response_for_text(
+        state,
+        candidates,
+        auth_config,
+        ernie_model,
+        content,
+        top_p,
+        temperature,
+):
+    if text_is_empty(content):
+        gr.Warning("消息内容不能为空")
+        yield get_fallback_return()
+        return
+    content = content.strip().replace('<br>', '\n')
+    message = {'role': 'user', 'content': content}
+    yield from generate_response(
+        state=state,
+        candidates=candidates,
+        auth_config=auth_config,
+        ernie_model=ernie_model,
+        message=message,
+        top_p=top_p,
+        temperature=temperature,
+    )
+
+
+def recall_message(state):
+    context = state['context']
+    if len(context) < 2:
+        gr.Warning("请至少进行一轮对话")
+        return replicate_gradio_update(3)
+    context = context[:-2]
+    history = extract_history(context)
+    state['context'] = context
+    return state, history, context[-MAX_CONTEXT_LINES_TO_SHOW:]
 
 
 def regenerate_response(
@@ -508,32 +625,20 @@ def regenerate_response(
 ):
     context = state['context']
     if len(context) < 2:
-        raise gr.Error("请至少进行一轮对话")
-    old_context = copy.copy(context)
+        gr.Warning("请至少进行一轮对话")
+        yield get_fallback_return()
+        return
     context.pop()
     user_message = context.pop()
-    kwargs = dict(
+    yield from generate_response(
         state=state,
         candidates=candidates,
         auth_config=auth_config,
         ernie_model=ernie_model,
+        message=user_message,
         top_p=top_p,
         temperature=temperature,
     )
-    try:
-        if user_message['role'] == 'function':
-            kwargs['func_name'] = user_message['name']
-            kwargs['func_res'] = user_message['content']
-            return generate_response_for_function(**kwargs)
-        elif user_message['role'] == 'user':
-            kwargs['content'] = user_message['content']
-            return generate_response_for_text(**kwargs)
-        else:
-            raise gr.Error("消息中的`role`不正确")
-    except Exception as e:
-        state['context'] = old_context
-        traceback.print_exc()
-        raise gr.Error(f"重新生成结果失败，原因如下：{str(e)}") from e
 
 
 def reset_conversation(state):
@@ -550,11 +655,6 @@ def generate_response(
         top_p,
         temperature,
 ):
-    if auth_config['ak'] == '' or auth_config['sk'] == '':
-        raise gr.Error("需要填写正确的AK/SK，不能为空")
-
-    model = 'ernie-bot-3.5' if (ernie_model is None or
-                                ernie_model.strip() == '') else ernie_model
     context = copy.copy(state['context'])
     context.append(message)
     name2function = state['name2function']
@@ -566,35 +666,104 @@ def generate_response(
         'functions': functions
     }
 
-    response = create_chat_completion(
-        _config_=auth_config, model=model, **data, stream=False)
+    try:
+        resp_stream = create_chat_completion(
+            _config_=auth_config, model=ernie_model, **data, stream=True)
+    except eb.errors.TokenUpdateFailedError as e:
+        handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
+        yield get_fallback_return()
+        return
+    except eb.errors.EBError as e:
+        handle_exception(e, f"请求失败。错误信息如下：{str(e)}", raise_=False)
+        yield get_fallback_return()
+        return
 
-    if hasattr(response, 'function_call'):
-        function_call = response.function_call
-        context.append({
-            'role': 'assistant',
-            'content': None,
-            'function_call': function_call
-        })
-        func_name = function_call['name']
-        func_args = to_pretty_json(function_call['arguments'], from_json=True)
-        accord_update = gr.update(open=True)
+    context.append({'role': 'assistant', 'content': None})
+    history = None
+    for resp in resp_stream:
+        if hasattr(resp, 'function_call'):
+            function_call = resp.function_call
+            func_name = function_call['name']
+            try:
+                func_args = to_pretty_json(
+                    function_call['arguments'], from_json=True)
+            except gr.Error as e:
+                # This is most likely because the model is returning incorrectly
+                # formatted JSON. In this case we use the raw string.
+                func_args = function_call['arguments']
+            context[-1]['function_call'] = function_call
+            history = extract_history(context)
+            state['context'] = context
+            yield (
+                state,
+                history,
+                None,
+                context[-MAX_CONTEXT_LINES_TO_SHOW:],
+                func_name,
+                func_args,
+                None,
+                gr.update(open=True), )
+            break
+        else:
+            if context[-1]['content'] is None:
+                context[-1]['content'] = resp.result
+            else:
+                context[-1]['content'] += resp.result
+            if history is None:
+                old_content = ""
+            else:
+                old_content = history[-1][1]
+            history = extract_history(context, history)
+            new_content = history[-1][1]
+            temp_history = copy.copy(history)
+            # Partial deep copy
+            temp_history[-1][1] = history[-1][1][:]
+            for content in stream_output_smoother(
+                    old_content,
+                    new_content,
+                    min_num_chars=1,
+                    max_num_chars=4,
+                    delay=0.1,
+            ):
+                temp_history[-1][1] = content
+                yield (
+                    state,
+                    temp_history,
+                    None,
+                    *replicate_gradio_update(5), )
     else:
-        context.append({'role': 'assistant', 'content': response.result})
-        func_name = None
-        func_args = None
-        accord_update = gr.update()
-    history = get_history(context)
-    state['context'] = context
-    return state, None, history, context, func_name, func_args, None, accord_update
+        state['context'] = context
+        yield (
+            state,
+            history,
+            None,
+            context[-MAX_CONTEXT_LINES_TO_SHOW:],
+            *replicate_gradio_update(4), )
 
 
-def get_history(context):
-    # TODO: Cache history and make incremental updates.
-    history = []
+def extract_history(context, old_history=None):
+    if old_history is not None:
+        history = old_history
+    else:
+        history = []
 
-    for turn_idx in range(0, len(context), 2):
-        user_message = context[turn_idx]
+    len_history = len(history)
+    len_context = len(context)
+    diff = len_history - (len(context) + 1) // 2
+    if diff > 0:
+        for _ in range(diff):
+            history.pop()
+        return history
+
+    if diff == 0:
+        if len_history > 0:
+            history.pop()
+        start = len_context - 1 - (len_context % 2 == 0)
+    else:
+        start = len_history * 2
+
+    for round_idx in range(start, len_context, 2):
+        user_message = context[round_idx]
         pair = []
         if user_message['role'] == 'function':
             pair.append(
@@ -605,14 +774,18 @@ def get_history(context):
         else:
             raise gr.Error("消息中的`role`不正确")
 
-        assistant_message = context[turn_idx + 1]
-        if 'function_call' in assistant_message:
-            function_call = assistant_message['function_call']
-            pair.append(
-                f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
-            )
+        try:
+            assistant_message = context[round_idx + 1]
+        except IndexError:
+            pair.append(None)
         else:
-            pair.append(assistant_message['content'])
+            if 'function_call' in assistant_message:
+                function_call = assistant_message['function_call']
+                pair.append(
+                    f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
+                )
+            else:
+                pair.append(assistant_message['content'])
 
         assert len(pair) == 2
         history.append(pair)
@@ -620,17 +793,51 @@ def get_history(context):
     return history
 
 
+def get_fallback_return():
+    return replicate_gradio_update(8)
+
+
+def stream_output_smoother(old_content,
+                           new_content,
+                           *,
+                           min_num_chars=1,
+                           max_num_chars=16,
+                           delay=0.03,
+                           add_cursor=True):
+    end = len(new_content)
+    pos = len(old_content)
+    while pos < end:
+        offset = random.randint(min_num_chars, max_num_chars)
+        pos += offset
+        curr = new_content[:pos]
+        if add_cursor:
+            curr += "▌"
+        yield curr
+        time.sleep(delay)
+
+
 def call_function(state, candidates, func_name, func_args):
     name2function = state['name2function']
-    if not func_name in name2function:
-        raise gr.Error(f"函数`{func_name}`不存在")
-    if not func_name in candidates:
-        raise gr.Error(f"函数`{func_name}`不是候选函数")
+    if text_is_empty(func_name):
+        gr.Warning(f"函数名称不能为空")
+        return None
+    if func_name not in name2function:
+        gr.Warning(f"函数`{func_name}`不存在")
+        return None
+    if func_name not in candidates:
+        gr.Warning(f"函数`{func_name}`不是候选函数")
+        return None
     func = name2function[func_name].func
+    if text_is_empty(func_args):
+        func_args = '{}'
     func_args = json_to_obj(func_args)
     if not isinstance(func_args, dict):
-        raise gr.Error(f"无法将{reprlib.repr(func_args)}解析为字典")
-    res = func(**func_args)
+        gr.Warning(f"无法将{reprlib.repr(func_args)}解析为字典")
+        return None
+    try:
+        res = func(**func_args)
+    except Exception as e:
+        handle_exception(e, f"函数{func_name}调用失败，错误信息如下：{str(e)}", raise_=True)
     return to_pretty_json(res, from_json=False)
 
 
@@ -639,42 +846,28 @@ JSONCode = functools.partial(gr.Code, language='json')
 Function = collections.namedtuple('Function', ['name', 'func', 'desc'])
 
 
-def get_predefined_functions():
-    functions = []
+def get_custom_func_def_template():
+    indent = 2
+    return f"def {CUSTOM_FUNC_NAME}():\n{' '*indent}# Write your code here"
 
-    def add(a, b):
-        return {'result': a + b}
 
-    add_desc = {
-        'name': 'add',
-        'description': "计算两数之和",
+def get_custom_func_desc_template():
+    return {
+        'name': CUSTOM_FUNC_NAME,
+        'description': "",
         'parameters': {
             'type': 'object',
-            'properties': {
-                'a': {
-                    'type': 'integer',
-                },
-                'b': {
-                    'type': 'integer',
-                },
-            },
-            'required': [
-                'a',
-                'b',
-            ],
+            'properties': {},
         },
         'responses': {
             'type': 'object',
-            'properties': {
-                'result': {
-                    'type': 'integer',
-                    'description': "两数之和",
-                },
-            },
+            'properties': {},
         },
     }
 
-    functions.append(make_function(add, add_desc))
+
+def get_predefined_functions():
+    functions = []
 
     def get_current_date(breakup=False):
         from datetime import date
@@ -706,7 +899,7 @@ def get_predefined_functions():
             'properties': {
                 'date': {
                     'type': 'string',
-                    'description': "完整日期，如'2023-09-13'"
+                    'description': "完整日期，如'2023-09-13'",
                 },
                 'year': {
                     'type': 'integer',
@@ -723,27 +916,73 @@ def get_predefined_functions():
 
     functions.append(make_function(get_current_date, get_current_date_desc))
 
-    return functions
+    def get_contact_info(name, field=None):
+        info_dict = {
+            '李小明': {
+                'age': 31,
+                'email': 'lxm@bidu.com',
+            },
+            '王刚': {
+                'age': 28,
+                'email': 'wg123@bidu.com',
+            },
+            '张一一': {
+                'age': 26,
+                'email': 'z11@bidu.com',
+            },
+        }
+        info = info_dict[name]
+        if field is not None:
+            return {'name': name, field: info[field]}
+        else:
+            return {'name': name, ** info}
 
-
-def get_custom_func_def_template():
-    indent = 2
-    return f"def {CUSTOM_FUNC_NAME}():\n{' '*indent}# Write your code here"
-
-
-def get_custom_func_desc_template():
-    return {
-        'name': CUSTOM_FUNC_NAME,
-        'description': "",
+    get_contact_info_desc = {
+        'name': 'get_contact_info',
+        'description': "获取联系人的个人信息",
         'parameters': {
             'type': 'object',
-            'properties': {},
+            'properties': {
+                'name': {
+                    'type': 'string',
+                    'description': "联系人姓名",
+                },
+                'field': {
+                    'type': 'string',
+                    'description': "想要获取的字段名称，如果不指定则返回所有字段",
+                    'enum': [
+                        'age',
+                        'email',
+                    ],
+                },
+            },
+            'required': ['name', ],
         },
         'responses': {
             'type': 'object',
-            'properties': {},
+            'properties': {
+                'name': {
+                    'type': 'string',
+                    'description': "姓名",
+                },
+                'age': {
+                    'type': 'integer',
+                    'description': "年龄",
+                    'minimum': 0,
+                },
+                'email': {
+                    'type': 'string',
+                    'description': "电子邮箱地址",
+                    'format': 'email',
+                },
+            },
+            'required': ['name', ],
         },
     }
+
+    functions.append(make_function(get_contact_info, get_contact_info_desc))
+
+    return functions
 
 
 def code_to_function(code, func_name):
@@ -769,11 +1008,7 @@ def make_function(func, desc, *, name=None):
 
 
 def create_chat_completion(*args, **kwargs):
-    try:
-        response = eb.ChatCompletion.create(*args, **kwargs)
-    except eb.errors.EBError as e:
-        traceback.print_exc()
-        raise gr.Error(f"请求失败，错误信息如下：{str(e)}") from e
+    response = eb.ChatCompletion.create(*args, **kwargs)
     return response
 
 
@@ -801,6 +1036,22 @@ def to_pretty_json(obj, *, from_json=False):
     if from_json:
         obj = json_to_obj(obj)
     return obj_to_json(obj, sort_keys=False, ensure_ascii=False, indent=2)
+
+
+def handle_exception(exception, message, *, raise_=False):
+    traceback.print_exception(exception)
+    if raise_:
+        raise gr.Error(message)
+    else:
+        gr.Warning(message)
+
+
+def replicate_gradio_update(count, /, **kwargs):
+    return tuple(gr.update(**kwargs) for _ in range(count))
+
+
+def text_is_empty(text):
+    return text is None or text.strip() == ''
 
 
 if __name__ == '__main__':

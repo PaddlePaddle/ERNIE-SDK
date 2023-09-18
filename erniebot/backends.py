@@ -164,7 +164,7 @@ class AIStudioBackend(EBBackend):
                 raise errors.ServiceUnavailableError(emsg)
             elif ecode == 6:
                 raise errors.PermissionError(emsg)
-            elif ecode in (17, 18, 19):
+            elif ecode in (17, 18, 19, 40406):
                 raise errors.RequestLimitError(emsg)
             elif ecode == 110:
                 raise errors.InvalidTokenError(emsg)
@@ -172,7 +172,7 @@ class AIStudioBackend(EBBackend):
                 raise errors.TokenExpiredError(emsg)
             elif ecode == 336003:
                 raise errors.InvalidParameterError(emsg)
-            elif ecode in (336100, 40406):
+            elif ecode == 336100:
                 raise errors.TryAgain(emsg)
             else:
                 raise errors.APIError(emsg)
