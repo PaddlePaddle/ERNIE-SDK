@@ -216,7 +216,7 @@ print(response)
 
 ## Gradio Demos
 
-为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了数个带有web用户界面的演示应用。请参阅[示例说明](./examples)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
+为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[示例说明](./examples)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
 <img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
 
