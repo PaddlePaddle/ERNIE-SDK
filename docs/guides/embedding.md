@@ -26,7 +26,7 @@ Embedding服务是文心基于大模型技术研发的文本表示模型，将�
 
 目前千帆平台采用`汉字数 + 单词数 * 1.3`估算token总数。使用ERNIE Bot SDK，你可以通过如下代码计算得到token数量：
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 token_num = erniebot.utils.approx_num_tokens("你好，我是文心一言。")
 ```

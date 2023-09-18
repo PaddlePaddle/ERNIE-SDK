@@ -6,7 +6,7 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心一言的能力，�
 
 执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（推荐Python >= 3.8)。
 
-```shell
+```{.sh .copy}
 pip install --upgrade erniebot
 ```
 
@@ -16,7 +16,7 @@ pip install --upgrade erniebot
 
 ### Python接口
 
-```python
+```{.py .copy}
 import erniebot
 
 # List supported models
@@ -40,7 +40,7 @@ print(response.result)
 
 ### 命令行接口（CLI）
 
-```bash
+```{.sh .copy}
 # List supported models
 erniebot api model.list
 
@@ -69,7 +69,7 @@ ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-b
 
 以下是调用文心一言旗舰版模型进行多轮对话的示例。
 
-```python
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
@@ -100,7 +100,7 @@ ERNIE Bot SDK提供提取语义向量的Embedding模型。
 
 大家可以使用以下代码提取句子的语义向量。
 
-```python
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
@@ -124,7 +124,7 @@ ERNIE Bot SDK提供具备文生图能力的ERNIE-ViLG大模型。
 
 该模型具备丰富的风格与强大的中文理解能力，支持生成多种尺寸的图片。
 
-```python
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "yinian"
@@ -148,7 +148,7 @@ print(response)
 
 大家也可登陆[文心一格](https://yige.baidu.com/)平台，体验更多AI艺术与创意辅助的能力。
 
-### 【beta】函数调用（Function Calling）
+### 函数调用（Function Calling）
 
 ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
 
@@ -156,7 +156,7 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 
 以下是调用文心一言旗舰版模型进行函数调用的示例：
 
-```python
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
@@ -206,7 +206,7 @@ print(response)
 
 ## Gradio Demos
 
-为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[示例说明](../examples)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
+为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/tree/develop/examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
 <img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
 

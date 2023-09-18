@@ -19,7 +19,7 @@
 
 (1) 首先，对函数的基本信息进行描述，使用[JSON Schema](https://json-schema.org/)格式描述函数的请求参数与响应参数。
 
-``` {.py .copy}
+```{.py .copy}
 functions = [
     {
         "name": "get_current_temperature",
@@ -68,7 +68,7 @@ functions = [
 
 (2) 接着，将以上信息与对需要完成的任务的自然语言描述一同传给`erniebot.ChatCompletion` API。
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
@@ -101,7 +101,7 @@ print(function_call)
 
 (3) 然后，根据模型的提示调用相应函数得到结果。
 
-``` {.py .copy}
+```{.py .copy}
 import json
 
 def get_current_temperature(location: str, unit: str) -> dict:
@@ -117,7 +117,7 @@ res = func(location=args["location"], unit=args["unit"])
 
 (4) 最后，将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。回传给模型的函数响应内容应当是JSON格式的字符串（如`'{"temperature": 25, "unit": "摄氏度"}'`），在本示例中，函数的响应是一个字典，因此需要先调用`json.dumps`函数对其进行编码。
 
-``` {.py .copy}
+```{.py .copy}
 messages.append(
     {
         "role": "assistant",

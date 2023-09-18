@@ -33,14 +33,14 @@ AI Studio后端可以使用access token进行鉴权，支持如下三种方法�
 
 (1) 使用环境变量：
 
-``` {.copy}
+```{.sh .copy}
 export EB_API_TYPE="aistudio"
 export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 ```
 
 (2) 使用全局变量：
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
@@ -49,7 +49,7 @@ erniebot.access_token = "<access-token-for-aistudio>"
 
 (3) 使用`_config_`参数：
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 response = erniebot.ChatCompletion.create(
@@ -90,12 +90,12 @@ response = erniebot.ChatCompletion.create(
 
 请注意设置后端参数为`'qianfan'`，并且使用千帆平台申请的access token。
 
-``` {.copy}
+```{.sh .copy}
 export EB_API_TYPE="qianfan"
 export EB_ACCESS_TOKEN="<access-token-for-qianfan>"
 ```
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "qianfan"
@@ -104,13 +104,13 @@ erniebot.access_token = "<access-token-for-qianfan>"
 
 此外，千帆后端还可以使用AK/SK进行鉴权，同样支持三种方法，环境变量对应是`EB_AK`和`EB_SK`，Python变量对应是`ak`和`sk`，举例如下。
 
-``` {.copy}
+```{.sh .copy}
 export EB_API_TYPE="qianfan"
 export EB_AK="<access-key-for-qianfan>"
 export EB_SK="<secret-access-key-for-qianfan>"
 ```
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "qianfan"
@@ -142,12 +142,12 @@ erniebot.sk = "<secret-access-key-for-qianfan>"
 
 使用access token的例子：
 
-``` {.copy}
+```{.sh .copy}
 export EB_API_TYPE="yinian"
 export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 ```
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "yinian"
@@ -156,13 +156,13 @@ erniebot.access_token = "<access-token-for-yinian>"
 
 使用AK/SK的例子：
 
-``` {.copy}
+```{.sh .copy}
 export EB_API_TYPE="yinian"
 export EB_AK="<access-key-for-yinian>"
 export EB_SK="<secret-access-key-for-yinian>"
 ```
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "yinian"

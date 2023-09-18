@@ -4,14 +4,14 @@
 
 ## 函数接口
 
-``` {.py .copy}
+```{.py .copy}
 erniebot.Image.create(**kwargs: Any) -> EBResponse:
 ```
 ## 输入参数
 
 调用Image接口前，需要首先设置`api_type`参数。
 
-``` {.py .copy}
+```{.py .copy}
 ernie.api_type = "yinian"
 ```
 
@@ -84,7 +84,7 @@ ernie.api_type = "yinian"
 
 ## 使用示例
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "yinian

@@ -4,7 +4,7 @@
 
 ## Python接口
 
-``` {.py .copy}
+```{.py .copy}
 erniebot.ChatCompletion.create(**kwargs: Any)
 	-> Union[EBResponse, Iterator[EBResponse]]
 ```
@@ -27,7 +27,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 `messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入在`messages`中再继续请求：
 
-``` {.py .copy}
+```{.py .copy}
 [
     {
         "role": "user",
@@ -68,7 +68,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 `functions`为一个Python list，其中每个元素为一个dict。示例如下：
 
-``` {.py .copy}
+```{.py .copy}
 [
     {
         "name": "get_current_temperature",
@@ -169,7 +169,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 ## 使用示例
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "aistudio"
