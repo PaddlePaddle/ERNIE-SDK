@@ -25,6 +25,6 @@ python function_calling_demo.py --port 8188
 
 ### 典型使用流程
 
-使用前，请参考[认证鉴权文档](../docs/authentication.md#%E7%94%B3%E8%AF%B7%E5%8D%83%E5%B8%86%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E7%9A%84aksk)申请千帆平台的AK/SK用于服务调用鉴权。
+使用前，请参考[认证鉴权文档](../../docs/authentication.md#%E7%94%B3%E8%AF%B7%E5%8D%83%E5%B8%86%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E7%9A%84aksk)申请千帆平台的AK/SK用于服务调用鉴权。
 
 ### 添加自定义函数
