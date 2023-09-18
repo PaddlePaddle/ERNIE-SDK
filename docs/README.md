@@ -130,7 +130,6 @@ import erniebot
 erniebot.api_type = "yinian"
 erniebot.access_token = "<access-token-for-yinian>"
 
-
 response = erniebot.Image.create(
     model="ernie-vilg-v2",
     prompt="雨后的桃花，8k，辛烷值渲染",
@@ -142,7 +141,6 @@ print(response)
 ```
 
 <img width="512" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c">
-
 
 我们推荐两个撰写文生图Prompt提示词的文档，大家可以组合使用，创作出更加精美的图片。
 * [AI作画-基础版使用指南](https://ai.baidu.com/ai-doc/NLP/qlakgh129)
