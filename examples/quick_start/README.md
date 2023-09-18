@@ -27,7 +27,7 @@ python gradio_demo.py --port 8188
 
 ### 对话补全（Chat Completion）
 
-使用前，请参考[认证鉴权文档](../../docs/authentication.md#%E7%94%B3%E8%AF%B7%E5%8D%83%E5%B8%86%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E7%9A%84aksk)申请千帆平台的AK/SK用于服务调用鉴权。
+使用前，请参考[认证鉴权文档](../../docs/authentication.md)获取要使用的后端的鉴权参数。
 
 在页面的左侧如下图所示的两处红框处分别填入申请得到的AK/SK，之后输入对话内容并点击提交即可。
 
@@ -35,7 +35,7 @@ python gradio_demo.py --port 8188
 
 ### 语义向量（Embedding）
 
-使用前，请参考[认证鉴权文档](../../docs/authentication.md#%E7%94%B3%E8%AF%B7%E5%8D%83%E5%B8%86%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B9%B3%E5%8F%B0%E7%9A%84aksk)申请千帆平台的AK/SK用于服务调用鉴权。
+使用前，请参考[认证鉴权文档](../../docs/authentication.md)获取要使用的后端的鉴权参数。
 
 在页面左侧如下图所示的两处红框处分别填入申请得到的AK/SK。输入两段文本，点击提交后，demo会展示提取到的向量，以及计算得到的两个向量间的余弦相似度。
 
@@ -43,6 +43,6 @@ python gradio_demo.py --port 8188
 
 ### 文生图（Image Generation）
 
-使用前，请参考[认证鉴权文档](../../docs/authentication.md#%E7%94%B3%E8%AF%B7%E6%99%BA%E8%83%BD%E5%88%9B%E4%BD%9C%E5%B9%B3%E5%8F%B0%E7%9A%84aksk)申请智能创作平台的AK/SK用于服务调用鉴权。
+使用前，请参考[认证鉴权文档](../../docs/authentication.md)申请智能创作平台的AK/SK用于服务调用鉴权。
 
 ![example_pic3](https://user-images.githubusercontent.com/19339784/263580304-5e1e75ce-dcf5-4b62-8b95-fe3f59be2598.png)
