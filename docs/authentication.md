@@ -1,35 +1,41 @@
 # 认证鉴权
+调用文心大模型是一项收费服务，所以大家使用ERNIE Bot SDK需要进行认证鉴权。
+认证鉴权主要包括两步：申请用户凭证，设置鉴权参数。
 
-## 认证鉴权
+ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大家可以根据实际情况选择。不同后端支持的模型、认证鉴权方式存在差异，下面我们分别介绍。
 
-在使用ERNIE Bot SDK提供的接口调用文心大模型的能力前，首先需要申请用户凭证，然后设置鉴权参数。
+| 后端   |  API_TYPE  |  支持的模型 |
+| :---     | :----      |   :---  |
+| AI Studio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| 千帆大模型平台 | qianfan |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| 智能创作平台 | yinian |  ernie-vilg-v2 |
 
-目前ERNIE Bot SDK支持的鉴权参数如下：
+## 1 `AI Studio`后端的认证鉴权
 
-| API参数名称   | 环境变量名称  |  类型   |  必须设置 |  描述   |
-| :---         | :----       | :----  | :---- |  :---- |
-| api_type     | EB_API_TYPE | string | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
-| ak           | EB_AK       | string | 否 | 认证鉴权使用的access key ID（AK）。必须和`sk`同时设置。 |
-| sk           | EB_SK       | string | 否 | 认证鉴权使用的secret access key（SK）。必须和`ak`同时设置。 |
-| access_token | EB_ACCESS_TOKEN | string | 否 | 认证鉴权使用的access token。如果设置了`access_token`，则使用该access token；如果`access_token`没有设置或者失效，并且设置了`ak`和`sk`，部分后端平台类型支持自动通过AK/SK获取access token。|
+### 1.1 申请用户凭证
 
-ERNIE Bot SDK支持的文心大模型来自多个后端平台，不同平台支持的用户凭证类型不尽相同。请阅读下表，参照对应的文档申请用户凭证。
+在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，可以在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取用户凭证access token。
 
-| 后端平台   |  EB_API_TYPE  |  支持的用户凭证类型 | 申请用户凭证的方法 | 支持的模型 |
-| :---     | :----      | :----  | :----  | :---  |
-| 千帆大模型平台 | qianfan | AK/SK，access token | [申请千帆大模型平台的用户凭证](#申请千帆大模型平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
-| 智能创作平台 | yinian | AK/SK，access token | [申请智能创作平台的用户凭证](#申请智能创作平台的用户凭证) | ernie-vilg-v2 |
-| AI Studio | aistudio | access token | [申请AI Studio平台的用户凭证](#申请ai-studio平台的用户凭证) | ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 
-与其它参数类似，鉴权参数可通过如下3种方式设置，请根据需要自由选择。关于参数配置的更多技巧，请在[此文档](./configuration.md)了解。
+<div align="center">
+<img src="https://user-images.githubusercontent.com/52520497/268609784-8476269e-5cdb-4dfc-9841-983b5a766226.png"  width = "800" />  
+</div>
+
+
+
+注意事项：
+
+* AI Studio每个账户的access token，有100万token的免费额度，可以用于ERNIE Bot SDK调用文心一言大模型。AI Studio近期将会开通付费购买的渠道。
+* access token是私密信息，切记不要对外公开。
+
+### 1.2 设置鉴权参数
+
+AI Studio后端可以使用access token进行鉴权，支持如下三种方法来设置鉴权参数。
 
 (1) 使用环境变量：
-
 ```shell
-export EB_API_TYPE="<eb-api-type>"
-export EB_ACCESS_TOKEN="<eb-access-token>"
-export EB_AK="<eb-access-key-id>"
-export EB_SK="<eb-secret-access-key>"
+export EB_API_TYPE="aistudio"
+export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 ```
 
 (2) 使用全局变量：
@@ -37,10 +43,8 @@ export EB_SK="<eb-secret-access-key>"
 ``` {.py .copy}
 import erniebot
 
-erniebot.api_type = "<eb-api-type>"
-erniebot.access_token = "<eb-access-token>"
-erniebot.ak = "<eb-access-key-id>"
-erniebot.sk = "<eb-secret-access-key>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 ```
 
 (3) 使用`_config_`参数：
@@ -50,68 +54,99 @@ import erniebot
 
 response = erniebot.ChatCompletion.create(
     _config_=dict(
-        api_type="<eb-api-type>",
-        access_token="<eb-access-token>",
-        ak="<eb-access-key-id>",
-        sk="<eb-secret-access-key>",
+        api_type="aistudio",
+        access_token="<access-token-for-aistudio>",
     ),
     model="ernie-bot-3.5",
-    messages=[{
-        "role": "user",
-        "content": "你好，请介绍下你自己",
+    messages=[{"role": "user", "content": "你好，请介绍下你自己",
     }],
 )
 ```
 
-注意事项：
+如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
 
-* 允许同时使用多种方式设置鉴权信息，程序将根据设置方式的优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
-* **使用特定模型，请准确设置对应后端平台的鉴权参数。**
-    * 对于所有后端平台，均支持仅指定access token、而不提供其余的用户凭证。
-    * 对于支持AK/SK的后端平台，允许仅设置AK和SK、而将access token留空，在这种情况下程序将根据AK和SK自动维护access token。
-    * 对于不支持AK/SK的后端平台，只需设定access token。
+## 2 `千帆大模型平台`后端的认证鉴权
 
-## 申请千帆大模型平台的用户凭证
+### 2.1 申请用户凭证
 
-具体流程：
+申请流程：
 
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
 * 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交申请体验。通常几个小时后会通知申请通过。
 * 登录[千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，进入[控制台](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application)创建千帆应用，可以拿到AK/SK（如下图）。
-* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择服务并开通付费，比如：`ERNIE-Bot大模型公有云在线调用服务`、`ERNIE-Bot-turbo大模型公有云在线调用服务`和`Embedding-V1公有云在线调用服务`。
-* （可选）参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用AK和SK获取access token。
+* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择服务并开通付费，包括：`ERNIE-Bot大模型公有云在线调用服务`、`ERNIE-Bot-turbo大模型公有云在线调用服务`和`Embedding-V1公有云在线调用服务`。
+* 参考access token[获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用AK/SK获取access token。
 
 <div align="center">
 <img src="https://user-images.githubusercontent.com/52520497/264009567-46f88a38-df70-4a79-affb-ddbf797855b1.jpeg"  width = "800" />  
 </div>
 
 注意事项：
+* 千帆的AK/SK是一直有效，而access token默认有效期是30天，失效后需要重新获取access token。
 
-* AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
-* 千帆大模型平台的新用户，默认会有20元代金券，大家可以快速体验ERNIE Bot SDK。
-* 千帆大模型平台的完整介绍，请参考[使用文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)；费用、充值相关的问题，请参考[价格文档](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf)。
+### 2.2 设置鉴权参数
 
-## 申请智能创作平台的用户凭证
+千帆后端也可以使用access token进行鉴权，设置鉴权参数的三种方法和AI Studio后端类似，举例如下。
+请注意替换后端参数为`qianfan`，并且使用千帆平台申请的`access_token`。
 
-具体流程：
+```shell
+export EB_API_TYPE="qianfan"
+export EB_ACCESS_TOKEN="<access-token-for-qianfan>"
+```
+
+``` {.py .copy}
+import erniebot
+
+erniebot.api_type = "qianfan"
+erniebot.access_token = "<access-token-for-qianfan>"
+```
+
+此外，千帆后端还可以使用AK/SK进行鉴权，同样支持三种方法，环境变量对应是`EB_AK`和`EB_SK`，代码变量对应是`ak`和`sk`，举例如下。
+
+```shell
+export EB_API_TYPE="qianfan"
+export EB_AK="<access-key-for-qianfan>"
+export EB_SK="<secret-access-key-for-qianfan>"
+```
+
+``` {.py .copy}
+import erniebot
+
+erniebot.api_type = "qianfan"
+erniebot.ak = "<access-key-for-qianfan>"
+erniebot.sk = "<secret-access-key-for-qianfan>"
+```
+
+## 3 `智能创作平台`后端的认证鉴权
+
+### 3.1 申请用户凭证
+
+申请流程：
 
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
 * 进入百度云 - [智能创作平台](https://console.bce.baidu.com/ai/#/ai/intelligentwriting/app/list)，创建应用，可以拿到AK/SK（如下图）。
-* （可选）参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用AK和SK获取access token。
+* 参考access token[获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用AK和SK获取access token。
 
 <div align="center">
 <img src="https://user-images.githubusercontent.com/52520497/264009612-17658684-c066-44e5-8814-178214aa8155.jpeg"  width = "800" />  
 </div>
 
-注意事项：
 
-* AK/SK是私人信息，大家不要分享给他人，也不要对外暴露。
-* 智能创作平台的完整介绍，请参考[使用文档](https://ai.baidu.com/ai-doc/NLP/Uk53wndcb)；费用、充值相关的问题，请参考[计费简介](https://ai.baidu.com/ai-doc/NLP/qla2beec2)。
+智能创作平台的完整介绍，请参考[使用文档](https://ai.baidu.com/ai-doc/NLP/Uk53wndcb)；费用、充值相关的问题，请参考[计费简介](https://ai.baidu.com/ai-doc/NLP/qla2beec2)。
 
-## 申请AI Studio平台的用户凭证
+### 3.2 设置鉴权参数
 
-AI Studio平台用户可以直接在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取access token。
+智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者AK/SK参数，举例如下。
+请注意替换后端参数为`yinian`，并且使用智能创作平台申请的`access_token`、`AK/SK`。
 
-注意事项：
+```shell
+export EB_API_TYPE="yinian"
+export EB_ACCESS_TOKEN="<access-token-for-yinian>"
+```
 
-* AI Studio平台为每个账户提供了100万token的免费额度，可以用于ERNIE Bot SDK调用文心一言大模型。
+``` {.py .copy}
+import erniebot
+
+erniebot.api_type = "yinian"
+erniebot.access_token = "<access-token-for-yinian>"
+```
