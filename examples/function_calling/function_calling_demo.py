@@ -76,98 +76,105 @@ def create_components(functions):
     })
 
     with gr.Row():
-        with gr.Column(scale=2):
-            with gr.Accordion(label="基础配置", open=True):
-                with gr.Group():
-                    api_type = gr.Dropdown(
-                        label="API Type",
-                        info=f"提供对话能力的后端平台",
-                        value=default_api_type,
-                        choices=['qianfan', 'aistudio'])
-                    access_key = gr.Textbox(
-                        label="Access Key ID",
-                        info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
-                        type='password')
-                    secret_key = gr.Textbox(
-                        label="Secret Access Key",
-                        info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
-                        type='password')
-                    access_token = gr.Textbox(
-                        label="Access Token",
-                        info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
-                        type='password')
-                    ernie_model = gr.Dropdown(
-                        label="Model",
-                        info=f"模型类型",
-                        value=default_model,
-                        choices=['ernie-bot-3.5'])
-            with gr.Accordion(label="高级配置", open=False):
-                with gr.Group():
-                    top_p = gr.Slider(
-                        label="Top-p",
-                        info="控制采样范围，该参数越小生成结果越稳定",
-                        value=0.7,
-                        minimum=0,
-                        maximum=1,
-                        step=0.05)
-                    temperature = gr.Slider(
-                        label="Temperature",
-                        info="控制采样随机性，该参数越小生成结果越稳定",
-                        value=0.95,
-                        minimum=0.05,
-                        maximum=1.5,
-                        step=0.05)
-            with gr.Accordion(label="函数信息", open=False):
-                with gr.Tabs():
-                    for function in functions:
-                        create_function_tab(function)
-                    with gr.Tab(label="自定义函数"):
-                        custom_func_code = gr.Code(
-                            label="定义",
-                            value=get_custom_func_def_template(),
-                            language='python',
-                            interactive=True)
-                        update_func_desc_btn = gr.Button("更新描述")
-                        custom_func_desc = JSONCode(
-                            label="描述",
-                            value=to_pretty_json(
-                                get_custom_func_desc_template(),
-                                from_json=False),
-                            interactive=True)
-            chosen_func_names = gr.CheckboxGroup(
-                label="备选函数",
-                value=func_name_list,
-                choices=func_name_list + [CUSTOM_FUNC_NAME])
+        with gr.Column(scale=4):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    with gr.Accordion(label="基础配置", open=True):
+                        with gr.Group():
+                            api_type = gr.Dropdown(
+                                label="API Type",
+                                info=f"提供对话能力的后端平台",
+                                value=default_api_type,
+                                choices=['qianfan', 'aistudio'])
+                            access_key = gr.Textbox(
+                                label="Access Key ID",
+                                info="用于访问后端平台的AK",
+                                type='password')
+                            secret_key = gr.Textbox(
+                                label="Secret Access Key",
+                                info="用于访问后端平台的SK",
+                                type='password')
+                            access_token = gr.Textbox(
+                                label="Access Token",
+                                info="用于访问后端平台的access token",
+                                type='password')
+                            ernie_model = gr.Dropdown(
+                                label="Model",
+                                info=f"模型类型",
+                                value=default_model,
+                                choices=['ernie-bot-3.5'])
+                    with gr.Accordion(label="高级配置", open=False):
+                        with gr.Group():
+                            top_p = gr.Slider(
+                                label="Top-p",
+                                info="控制采样范围，该参数越小生成结果越稳定",
+                                value=0.7,
+                                minimum=0,
+                                maximum=1,
+                                step=0.05)
+                            temperature = gr.Slider(
+                                label="Temperature",
+                                info="控制采样随机性，该参数越小生成结果越稳定",
+                                value=0.95,
+                                minimum=0.05,
+                                maximum=1.5,
+                                step=0.05)
 
-        with gr.Column(scale=2):
-            context_chatbot = gr.Chatbot(
-                label="对话历史",
-                latex_delimiters=[{
-                    'left': '$$',
-                    'right': '$$',
-                    'display': True
-                }, {
-                    'left': '$',
-                    'right': '$',
-                    'display': False
-                }],
-                bubble_full_width=False)
-            input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
-            with gr.Row():
-                clear_btn = gr.Button("重置对话")
-                send_text_btn = gr.Button("发送消息")
-            with gr.Row():
-                regen_btn = gr.Button("重新生成")
-                recall_btn = gr.Button("撤回消息")
+                with gr.Column(scale=3):
+                    context_chatbot = gr.Chatbot(
+                        label="对话历史",
+                        latex_delimiters=[{
+                            'left': '$$',
+                            'right': '$$',
+                            'display': True
+                        }, {
+                            'left': '$',
+                            'right': '$',
+                            'display': False
+                        }],
+                        bubble_full_width=False)
+                    input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
+                    with gr.Row():
+                        clear_btn = gr.Button("重置对话")
+                        send_text_btn = gr.Button("发送消息")
+                    with gr.Row():
+                        regen_btn = gr.Button("重新生成")
+                        recall_btn = gr.Button("撤回消息")
+
             func_call_accord = gr.Accordion(label="函数调用", open=False)
             with func_call_accord:
-                func_name = gr.Textbox(label="函数名称")
-                func_in_params = JSONCode(label="请求参数")
-                func_out_params = JSONCode(label="响应参数", interactive=False)
+                chosen_func_names = gr.CheckboxGroup(
+                    label="备选函数",
+                    value=func_name_list,
+                    choices=func_name_list + [CUSTOM_FUNC_NAME])
+
                 with gr.Row():
-                    call_func_btn = gr.Button("调用函数", scale=1)
-                    send_res_btn = gr.Button("发送调用结果", scale=1)
-                reset_func_btn = gr.Button("重置函数调用信息")
+                    with gr.Tabs():
+                        for function in functions:
+                            create_function_tab(function)
+                        with gr.Tab(label="自定义函数"):
+                            custom_func_code = gr.Code(
+                                label="定义",
+                                value=get_custom_func_def_template(),
+                                language='python',
+                                interactive=True)
+                            update_func_desc_btn = gr.Button("更新描述")
+                            custom_func_desc = JSONCode(
+                                label="描述",
+                                value=to_pretty_json(
+                                    get_custom_func_desc_template(),
+                                    from_json=False),
+                                interactive=True)
+
+                    with gr.Column(scale=1):
+                        func_name = gr.Textbox(label="函数名称")
+                        func_in_params = JSONCode(label="请求参数")
+                        func_out_params = JSONCode(
+                            label="响应参数", interactive=False)
+                        with gr.Row():
+                            call_func_btn = gr.Button("调用函数", scale=1)
+                            send_res_btn = gr.Button("发送调用结果", scale=1)
+                        reset_func_btn = gr.Button("重置函数调用信息")
 
         with gr.Accordion(label="原始对话上下文信息", open=False):
             raw_context_json = gr.JSON(
@@ -211,52 +218,6 @@ def create_components(functions):
                 access_token,
             ],
             outputs=auth_state,
-        )
-
-        custom_func_code.change(
-            remove_old_custom_function,
-            inputs=[
-                state,
-                chosen_func_names,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
-            show_progress=False,
-        )
-        custom_func_desc.change(
-            remove_old_custom_function,
-            inputs=[
-                state,
-                chosen_func_names,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
-            show_progress=False,
-        )
-        update_func_desc_btn.click(
-            try_update_custom_func_desc,
-            inputs=[
-                custom_func_code,
-                custom_func_desc,
-            ],
-            outputs=custom_func_desc,
-        )
-        chosen_func_names.change(
-            try_update_candidates,
-            inputs=[
-                state,
-                chosen_func_names,
-                custom_func_code,
-                custom_func_desc,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
         )
 
         disable_chat_input_args = {
@@ -386,6 +347,53 @@ def create_components(functions):
             show_progress=False,
         ).then(**enable_chat_input_args)
 
+        chosen_func_names.change(
+            try_update_candidates,
+            inputs=[
+                state,
+                chosen_func_names,
+                custom_func_code,
+                custom_func_desc,
+            ],
+            outputs=[
+                state,
+                chosen_func_names,
+            ],
+        )
+
+        custom_func_code.change(
+            remove_old_custom_function,
+            inputs=[
+                state,
+                chosen_func_names,
+            ],
+            outputs=[
+                state,
+                chosen_func_names,
+            ],
+            show_progress=False,
+        )
+        custom_func_desc.change(
+            remove_old_custom_function,
+            inputs=[
+                state,
+                chosen_func_names,
+            ],
+            outputs=[
+                state,
+                chosen_func_names,
+            ],
+            show_progress=False,
+        )
+        update_func_desc_btn.click(
+            try_update_custom_func_desc,
+            inputs=[
+                custom_func_code,
+                custom_func_desc,
+            ],
+            outputs=custom_func_desc,
+        )
+
         call_func_btn.click(
             lambda: gr.update(interactive=False),
             outputs=call_func_btn,
@@ -471,76 +479,6 @@ def update_api_type(auth_state, api_type):
         return auth_state, gr.update(visible=True), gr.update(visible=True)
     elif api_type == 'aistudio':
         return auth_state, gr.update(visible=False), gr.update(visible=False)
-
-
-def remove_old_custom_function(state, candidates):
-    state['name2function'].pop(CUSTOM_FUNC_NAME, None)
-    if CUSTOM_FUNC_NAME in candidates:
-        candidates.remove(CUSTOM_FUNC_NAME)
-    return state, candidates
-
-
-def try_update_candidates(state, candidates, custom_func_code,
-                          custom_func_desc_str):
-    if CUSTOM_FUNC_NAME in candidates:
-        try:
-            custom_function = make_custom_function(custom_func_code,
-                                                   custom_func_desc_str)
-        except Exception as e:
-            handle_exception(
-                e,
-                f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
-                raise_=False)
-            # HACK: Add a time delay so that the warning message can be read.
-            time.sleep(5)
-            candidates.remove(CUSTOM_FUNC_NAME)
-        else:
-            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
-    return state, candidates
-
-
-def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
-    try:
-        func = code_to_function(custom_func_code, CUSTOM_FUNC_NAME)
-        sig = inspect.signature(func)
-        custom_func_desc = json_to_obj(custom_func_desc_str)
-        new_params_desc = get_custom_func_desc_template()['parameters']
-        for param in sig.parameters.values():
-            name = param.name
-            if name in custom_func_desc['parameters']['properties']:
-                param_desc = custom_func_desc['parameters']['properties'][name]
-            else:
-                param_desc = {}
-            if param.kind in (param.POSITIONAL_ONLY, param.VAR_POSITIONAL,
-                              param.VAR_KEYWORD):
-                raise gr.Error(
-                    "函数中不可包含positional-only、var-positional或var-keyword参数")
-            if param.default is not param.empty:
-                param_desc['default'] = param.default
-            else:
-                if 'default' in param_desc:
-                    del param_desc['default']
-            if param.kind == param.POSITIONAL_OR_KEYWORD and param.default is param.empty:
-                if 'required' not in new_params_desc:
-                    new_params_desc['required'] = []
-                new_params_desc['required'].append(name)
-            new_params_desc['properties'][name] = param_desc
-        custom_func_desc['parameters'] = new_params_desc
-    except Exception as e:
-        handle_exception(e, f"更新函数描述失败，错误信息如下：{str(e)}", raise_=False)
-        return gr.update()
-    else:
-        return to_pretty_json(custom_func_desc)
-
-
-def make_custom_function(code, desc_str):
-    func = code_to_function(code, CUSTOM_FUNC_NAME)
-    if func.__name__ != CUSTOM_FUNC_NAME:
-        raise gr.Error(f"在自定义函数的定义中，必须将函数名称设置为{repr(CUSTOM_FUNC_NAME)}")
-    desc = json_to_obj(desc_str)
-    if desc['name'] != CUSTOM_FUNC_NAME:
-        raise gr.Error(f"在自定义函数的描述中，必须将函数名称设置为{repr(CUSTOM_FUNC_NAME)}")
-    return make_function(func, desc, name=CUSTOM_FUNC_NAME)
 
 
 def generate_response_for_function(
@@ -717,7 +655,7 @@ def generate_response(
             new_content = history[-1][1]
             temp_history = copy.copy(history)
             # Partial deep copy
-            temp_history[-1][1] = history[-1][1][:]
+            temp_history[-1] = history[-1][:]
             for content in stream_output_smoother(
                     old_content,
                     new_content,
@@ -814,6 +752,76 @@ def stream_output_smoother(old_content,
             curr += "▌"
         yield curr
         time.sleep(delay)
+
+
+def try_update_candidates(state, candidates, custom_func_code,
+                          custom_func_desc_str):
+    if CUSTOM_FUNC_NAME in candidates:
+        try:
+            custom_function = make_custom_function(custom_func_code,
+                                                   custom_func_desc_str)
+        except Exception as e:
+            handle_exception(
+                e,
+                f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
+                raise_=False)
+            # HACK: Add a time delay so that the warning message can be read.
+            time.sleep(5)
+            candidates.remove(CUSTOM_FUNC_NAME)
+        else:
+            state['name2function'][CUSTOM_FUNC_NAME] = custom_function
+    return state, candidates
+
+
+def remove_old_custom_function(state, candidates):
+    state['name2function'].pop(CUSTOM_FUNC_NAME, None)
+    if CUSTOM_FUNC_NAME in candidates:
+        candidates.remove(CUSTOM_FUNC_NAME)
+    return state, candidates
+
+
+def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
+    try:
+        func = code_to_function(custom_func_code, CUSTOM_FUNC_NAME)
+        sig = inspect.signature(func)
+        custom_func_desc = json_to_obj(custom_func_desc_str)
+        new_params_desc = get_custom_func_desc_template()['parameters']
+        for param in sig.parameters.values():
+            name = param.name
+            if name in custom_func_desc['parameters']['properties']:
+                param_desc = custom_func_desc['parameters']['properties'][name]
+            else:
+                param_desc = {}
+            if param.kind in (param.POSITIONAL_ONLY, param.VAR_POSITIONAL,
+                              param.VAR_KEYWORD):
+                raise gr.Error(
+                    "函数中不可包含positional-only、var-positional或var-keyword参数")
+            if param.default is not param.empty:
+                param_desc['default'] = param.default
+            else:
+                if 'default' in param_desc:
+                    del param_desc['default']
+            if param.kind == param.POSITIONAL_OR_KEYWORD and param.default is param.empty:
+                if 'required' not in new_params_desc:
+                    new_params_desc['required'] = []
+                new_params_desc['required'].append(name)
+            new_params_desc['properties'][name] = param_desc
+        custom_func_desc['parameters'] = new_params_desc
+    except Exception as e:
+        handle_exception(e, f"更新函数描述失败，错误信息如下：{str(e)}", raise_=False)
+        return gr.update()
+    else:
+        return to_pretty_json(custom_func_desc)
+
+
+def make_custom_function(code, desc_str):
+    func = code_to_function(code, CUSTOM_FUNC_NAME)
+    if func.__name__ != CUSTOM_FUNC_NAME:
+        raise gr.Error(f"在自定义函数的定义中，必须将函数名称设置为{repr(CUSTOM_FUNC_NAME)}")
+    desc = json_to_obj(desc_str)
+    if desc['name'] != CUSTOM_FUNC_NAME:
+        raise gr.Error(f"在自定义函数的描述中，必须将函数名称设置为{repr(CUSTOM_FUNC_NAME)}")
+    return make_function(func, desc, name=CUSTOM_FUNC_NAME)
 
 
 def call_function(state, candidates, func_name, func_args):

@@ -139,7 +139,6 @@ import erniebot
 erniebot.api_type = "yinian"
 erniebot.access_token = "<access-token-for-yinian>"
 
-
 response = erniebot.Image.create(
     model="ernie-vilg-v2",
     prompt="雨后的桃花，8k，辛烷值渲染",
