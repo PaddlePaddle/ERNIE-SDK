@@ -38,9 +38,8 @@ print(models)
 # ernie-vilg-v2         文心一格模型
 
 # Set authentication params
-erniebot.api_type = "qianfan"
-erniebot.ak = "<ak-for-qianfan>"
-erniebot.sk = "<sk-for-qianfan>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 # Create a chat completion
 response = erniebot.ChatCompletion.create(model="ernie-bot-3.5", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
@@ -55,17 +54,15 @@ print(response.result)
 erniebot api model.list
 
 # Set authentication params for chat_completion.create
-export EB_API_TYPE="qianfan"
-export EB_AK="<ak-for-qianfan>"
-export EB_SK="<sk-for-qianfan>"
+export EB_API_TYPE="aistudio"
+export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 
 # Create a chat completion (using ernie-bot-3.5, ernie-bot-turbo, etc.)
 erniebot api chat_completion.create --model ernie-bot-3.5 --message user "请介绍下你自己"
 
 # Set authentication params for image.create
 export EB_API_TYPE="yinian"
-export EB_AK="<ak-for-yinian>"
-export EB_SK="<sk-for-yinian>"
+export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 
 # Generate images via ERNIE-ViLG
 erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
@@ -84,9 +81,8 @@ ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-b
 ```python
 import erniebot
 
-erniebot.api_type = "qianfan"
-erniebot.ak = "<ak-for-qianfan>"
-erniebot.sk = "<sk-for-qianfan>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
     model="ernie-bot-3.5",
@@ -116,9 +112,8 @@ ERNIE Bot SDK提供用于提取语义向量的Embedding模型。
 ```python
 import erniebot
 
-erniebot.api_type = "qianfan"
-erniebot.ak = "<ak-for-qianfan>"
-erniebot.sk = "<sk-for-qianfan>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.Embedding.create(
     model="ernie-text-embedding",
@@ -142,8 +137,7 @@ ERNIE Bot SDK提供具备文生图能力的ERNIE-ViLG大模型。
 import erniebot
 
 erniebot.api_type = "yinian"
-erniebot.ak = "<ak-for-yinian>"
-erniebot.sk = "<sk-for-yinian>"
+erniebot.access_token = "<access-token-for-yinian>"
 
 
 response = erniebot.Image.create(
@@ -175,9 +169,8 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 ```python
 import erniebot
 
-erniebot.api_type = "qianfan"
-erniebot.ak = "<ak-for-qianfan>"
-erniebot.sk = "<sk-for-qianfan>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
     model="ernie-bot-3.5",

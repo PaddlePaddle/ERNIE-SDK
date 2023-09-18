@@ -21,8 +21,7 @@ import erniebot
 
 erniebot.api_type = "yinian"
 
-# erniebot.ak = "<EB-ACCESS-KEY-ID>"
-# erniebot.sk = "<EB-SECRET-ACCESS-KEY>"
+# erniebot.access_token = "<eb-access-token>"
 
 response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
 

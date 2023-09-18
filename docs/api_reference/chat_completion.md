@@ -172,8 +172,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ``` {.py .copy}
 import erniebot
 
-# erniebot.ak = "<EB-ACCESS-KEY-ID>"
-# erniebot.sk = "<EB-SECRET-ACCESS-KEY>"
+# erniebot.access_token = "<eb-access-token>"
 
 stream = False
 response = erniebot.ChatCompletion.create(

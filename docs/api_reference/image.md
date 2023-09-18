@@ -87,8 +87,7 @@ ernie.api_type = "yinian"
 ``` {.py .copy}
 import erniebot
 
-# erniebot.ak = "<EB-ACCESS-KEY-ID>"
-# erniebot.sk = "<EB-SECRET-ACCESS-KEY>"
+# erniebot.access_token = "<eb-access-token>"
 
 erniebot.api_type = "yinian"
 
