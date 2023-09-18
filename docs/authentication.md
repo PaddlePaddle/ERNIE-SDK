@@ -1,12 +1,12 @@
 # 认证鉴权
-文心大模型是一项收费服务，所以大家使用ERNIE Bot SDK接口调用文心大模型，需要进行认证鉴权。
-认证鉴权主要包括两步：首先申请用户凭证，然后设置鉴权参数。
+调用文心大模型是一项收费服务，所以大家使用ERNIE Bot SDK需要进行认证鉴权。
+认证鉴权主要包括两步：申请用户凭证，设置鉴权参数。
 
 ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大家可以根据实际情况选择。不同后端支持的模型、认证鉴权方式存在差异，下面我们分别介绍。
 
-| 后端平台   |  API_TYPE  |  支持的模型 |
+| 后端   |  API_TYPE  |  支持的模型 |
 | :---     | :----      |   :---  |
-| AI Studio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| AIStudio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 千帆大模型平台 | qianfan |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian |  ernie-vilg-v2 |
 
@@ -56,7 +56,7 @@ response = erniebot.ChatCompletion.create(
 )
 ```
 
-如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
+如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数，使用全局变量，使用环境变量。
 
 ## 2 `千帆大模型平台`后端的认证鉴权
 
@@ -80,7 +80,7 @@ response = erniebot.ChatCompletion.create(
 ### 2.2 设置鉴权参数
 
 千帆后端也可以使用access token进行鉴权，设置鉴权参数的三种方法和AIStudio后端类似，举例如下。
-请注意替换后端参数为`qianfan`，并且使用千帆平台申请的access_token。
+请注意替换后端参数为`qianfan`，并且使用千帆平台申请的`access_token`。
 
 ```shell
 export EB_API_TYPE="qianfan"
@@ -94,7 +94,7 @@ erniebot.api_type = "qianfan"
 erniebot.access_token = "<access-token-for-qianfan>"
 ```
 
-此外，千帆后端还可以基于AK/SK使用三种方法进行鉴权，环境变量对应是`EB_AK`和`EB_SK`，代码变量对应是`ak`和`sk`，举例如下。
+此外，千帆后端还可以使用AK/SK进行鉴权，同样支持三种方法，环境变量对应是`EB_AK`和`EB_SK`，代码变量对应是`ak`和`sk`，举例如下。
 
 ```shell
 export EB_API_TYPE="qianfan"
@@ -130,7 +130,7 @@ erniebot.sk = "<secret-access-key-for-qianfan>"
 ### 3.2 设置鉴权参数
 
 智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者AK/SK参数，举例如下。
-请注意替换后端参数为`yinian`，并且使用智能创作平台申请的access_token、AK/SK。
+请注意替换后端参数为`yinian`，并且使用智能创作平台申请的`access_token`、`AK/SK`。
 
 ```shell
 export EB_API_TYPE="yinian"
