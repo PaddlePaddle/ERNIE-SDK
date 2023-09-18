@@ -172,7 +172,8 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ``` {.py .copy}
 import erniebot
 
-# erniebot.access_token = "<eb-access-token>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 stream = False
 response = erniebot.ChatCompletion.create(

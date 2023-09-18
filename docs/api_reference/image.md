@@ -87,9 +87,8 @@ ernie.api_type = "yinian"
 ``` {.py .copy}
 import erniebot
 
-# erniebot.access_token = "<eb-access-token>"
-
-erniebot.api_type = "yinian"
+erniebot.api_type = "yinian
+erniebot.access_token = "<access-token-for-yinian>"
 
 response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
 

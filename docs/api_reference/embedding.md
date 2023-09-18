@@ -73,7 +73,8 @@ erniebot.Embedding.create(**kwargs: Any)
 import erniebot
 import numpy as np
 
-# erniebot.access_token = "<eb-access-token>"
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.Embedding.create(
     model="ernie-text-embedding",

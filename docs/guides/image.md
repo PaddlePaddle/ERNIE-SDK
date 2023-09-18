@@ -10,9 +10,11 @@ ERNIE Bot SDK中，文生图功能的接口如下。接口具体支持的输入�
 erniebot.Image.create(**kwargs: Any) -> EBResponse:
 ```
 
+请注意，目前仅`yinian`后端支持文生图功能。
+
 # 使用示例
 
-大家可以使用下面示例代码，体验文生图的服务（请注意替换成自己的AK和SK）。
+大家可以使用下面示例代码，体验文生图的服务（请注意替换成自己的access token）。
 
 执行完成后，请及时通过`image_url`下载创作的图片，默认1小时后链接失效。
 
@@ -20,8 +22,7 @@ erniebot.Image.create(**kwargs: Any) -> EBResponse:
 import erniebot
 
 erniebot.api_type = "yinian"
-
-# erniebot.access_token = "<eb-access-token>"
+erniebot.access_token = "<access-token-for-yinian>"
 
 response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
 
