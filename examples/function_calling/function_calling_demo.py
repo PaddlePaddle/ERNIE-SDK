@@ -1047,7 +1047,8 @@ def to_pretty_json(obj, *, from_json=False):
 
 
 def handle_exception(exception, message, *, raise_=False):
-    traceback.print_exception(exception)
+    traceback.print_exception(
+        type(exception), exception, exception.__traceback__)
     if raise_:
         raise gr.Error(message)
     else:
