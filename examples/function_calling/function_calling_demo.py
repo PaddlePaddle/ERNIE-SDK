@@ -1027,7 +1027,7 @@ def json_to_obj(str_):
 
 def obj_to_json(obj, **kwargs):
     try:
-        return json.dumps(obj, **kwargs)
+        return json.dumps(obj, ensure_ascii=False, **kwargs)
     except TypeError as e:
         raise gr.Error(f"无法将{reprlib.repr(obj)}编码为JSON") from e
 
@@ -1041,7 +1041,7 @@ def to_compact_json(obj, *, from_json=False):
 def to_pretty_json(obj, *, from_json=False):
     if from_json:
         obj = json_to_obj(obj)
-    return obj_to_json(obj, sort_keys=False, ensure_ascii=False, indent=2)
+    return obj_to_json(obj, sort_keys=False, indent=2)
 
 
 def handle_exception(exception, message, *, raise_=False):

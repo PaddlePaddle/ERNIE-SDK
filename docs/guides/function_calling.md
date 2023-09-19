@@ -133,7 +133,7 @@ messages.append(
     {
         "role": "function",
         "name": function_call["name"],
-        "content": json.dumps(res)
+        "content": json.dumps(res, ensure_ascii=False)
     }
 )
 response = erniebot.ChatCompletion.create(

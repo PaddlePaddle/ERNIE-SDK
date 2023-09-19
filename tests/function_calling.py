@@ -17,19 +17,22 @@ def test_function_calling(model="ernie-bot-3.5"):
                 "content": None,
                 "function_call": {
                     "name": "get_current_temperature",
-                    "arguments": json.dumps({
-                        "location": "深圳市",
-                        "unit": "摄氏度",
-                    }),
+                    "arguments": json.dumps(
+                        {
+                            "location": "深圳市",
+                            "unit": "摄氏度",
+                        },
+                        ensure_ascii=False),
                 },
             },
             {
                 "role": "function",
                 "name": "get_current_temperature",
-                "content": json.dumps({
-                    "temperature": 25,
-                    "type": "摄氏度",
-                }),
+                "content": json.dumps(
+                    {
+                        "temperature": 25,
+                        "type": "摄氏度",
+                    }, ensure_ascii=False),
             },
         ],
         functions=[{
