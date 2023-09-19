@@ -4,7 +4,7 @@
 
 ## Python接口
 
-``` {.py .copy}
+```{.py .copy}
 erniebot.Embedding.create(**kwargs: Any)
 	-> Union[EBResponse, Iterator[EBResponse]]
 ```
@@ -68,7 +68,7 @@ erniebot.Embedding.create(**kwargs: Any)
 
 ## 使用示例
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 import numpy as np
 

@@ -347,7 +347,7 @@ def create_components(functions):
             show_progress=False,
         ).then(**enable_chat_input_args)
 
-        chosen_func_names.change(
+        chosen_func_names.select(
             try_update_candidates,
             inputs=[
                 state,
@@ -765,8 +765,6 @@ def try_update_candidates(state, candidates, custom_func_code,
                 e,
                 f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
                 raise_=False)
-            # HACK: Add a time delay so that the warning message can be read.
-            time.sleep(5)
             candidates.remove(CUSTOM_FUNC_NAME)
         else:
             state['name2function'][CUSTOM_FUNC_NAME] = custom_function
@@ -1029,7 +1027,7 @@ def json_to_obj(str_):
 
 def obj_to_json(obj, **kwargs):
     try:
-        return json.dumps(obj, **kwargs)
+        return json.dumps(obj, ensure_ascii=False, **kwargs)
     except TypeError as e:
         raise gr.Error(f"无法将{reprlib.repr(obj)}编码为JSON") from e
 
@@ -1043,7 +1041,7 @@ def to_compact_json(obj, *, from_json=False):
 def to_pretty_json(obj, *, from_json=False):
     if from_json:
         obj = json_to_obj(obj)
-    return obj_to_json(obj, sort_keys=False, ensure_ascii=False, indent=2)
+    return obj_to_json(obj, sort_keys=False, indent=2)
 
 
 def handle_exception(exception, message, *, raise_=False):

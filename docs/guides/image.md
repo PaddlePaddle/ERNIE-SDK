@@ -6,7 +6,7 @@
 
 ERNIE Bot SDK中，文生图功能的接口如下。接口具体支持的输入参数与返回结果请参考[Image API文档](../api_reference/image.md)。
 
-``` {.py .copy}
+```{.py .copy}
 erniebot.Image.create(**kwargs: Any) -> EBResponse:
 ```
 
@@ -18,7 +18,7 @@ erniebot.Image.create(**kwargs: Any) -> EBResponse:
 
 执行完成后，请及时通过`image_url`下载创作的图片，默认1小时后链接失效。
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 
 erniebot.api_type = "yinian"

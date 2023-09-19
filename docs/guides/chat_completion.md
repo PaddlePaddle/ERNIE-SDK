@@ -64,7 +64,7 @@ ernie-bot-3.5与ernie-bot-turbo模型对于输入和输出的token数量会有�
 
 目前千帆平台采用`汉字数 + 单词数 * 1.3`估算token总数。使用ERNIE Bot SDK，你可以通过如下代码计算得到token数量：
 
-``` {.py .copy}
+```{.py .copy}
 import erniebot
 token_num = erniebot.utils.approx_num_tokens("你好，我是文心一言。")
 ```

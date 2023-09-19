@@ -29,9 +29,10 @@ nav:
       - "authentication.md"
       - "configuration.md"
     - 使用指南:
-      - "guide/chat_completion.md"
-      - "guide/embedding.md"
-      - "guide/image.md"
+      - "guides/chat_completion.md"
+      - "guides/embedding.md"
+      - "guides/image.md"
+      - "guides/function_calling.md"
   - API文档:
     - "api_reference/chat_completion.md"
     - "api_reference/embedding.md"
