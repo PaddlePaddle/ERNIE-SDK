@@ -347,7 +347,7 @@ def create_components(functions):
             show_progress=False,
         ).then(**enable_chat_input_args)
 
-        chosen_func_names.change(
+        chosen_func_names.select(
             try_update_candidates,
             inputs=[
                 state,
@@ -765,8 +765,6 @@ def try_update_candidates(state, candidates, custom_func_code,
                 e,
                 f"自定义函数的定义或描述中存在错误，无法将其添加为候选函数。错误信息如下：{str(e)}",
                 raise_=False)
-            # HACK: Add a time delay so that the warning message can be read.
-            time.sleep(5)
             candidates.remove(CUSTOM_FUNC_NAME)
         else:
             state['name2function'][CUSTOM_FUNC_NAME] = custom_function
