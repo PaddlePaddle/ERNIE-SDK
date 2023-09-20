@@ -58,7 +58,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
 | name | string | 是 | 函数名称。 |
-| thoughts | string | 是 | 模型思考过程。 |
+| thoughts | string | 否 | 模型思考过程。 |
 | arguments | string | 是 | 请求参数。 |
 
 </details>
