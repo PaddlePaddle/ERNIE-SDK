@@ -49,7 +49,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
 | role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
-| content | string or `None` | 是 | 对话内容，当`role`不为`'function'`时，必须设置该参数为非`None`值；当`role`为`'function'`时，可以设置该参数为`None`。 |
+| content | string or `None` | 是 | 当`role`不为`'function'`时，表示对话内容，必须设置该参数为非`None`值；当`role`为`'function'`时，表示函数响应参数，可以设置该参数为`None`。 |
 | name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
 | function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。 |
 
