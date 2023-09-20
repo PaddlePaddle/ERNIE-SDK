@@ -19,7 +19,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议该参数和temperature只设置其中一个。 |
 | temperature | float | 否 | 采样环节的参数，用于控制随机性。 <br>(1) 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议该参数和`top_p`只设置其中一个。 |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象，值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
-| stream | boolean | 否 | 是否以流式接口返回数据，默认`False`。 |
+| stream | boolean | 否 | 是否以流式方式返回数据，默认`False`。 |
 | user_id | string | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
 
 <details>
@@ -128,7 +128,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 ## 返回结果
 
-当采用非流式接口（即`stream`为`False`）时，接口返回`erniebot.response.EBResponse`对象；当采用流式接口（即`stream`为`True`）时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
+当采用非流式模式（即`stream`为`False`）时，接口返回`erniebot.response.EBResponse`对象；当采用流式模式（即`stream`为`True`）时，接口返回一个Python生成器，其产生的每个元素均为`erniebot.response.EBResponse`对象。
 
 `erniebot.response.EBResponse`对象中包含一些字段。一个典型示例如下：
 
