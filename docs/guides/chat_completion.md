@@ -42,7 +42,7 @@
 
 | 模型 | 说明 | API调用方式 |
 | :--- | :--- | :----- |
-| ernie-bot-3.5 | 具备最优的知识增强和生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model="ernie-bot-3.5", ...)` |
+| ernie-bot | 具备最优的知识增强和生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model="ernie-bot", ...)` |
 | ernie-bot-turbo | 具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model="ernie-bot-turbo", ...)`|
 
 参阅[ChatCompletion API文档](../api_reference/chat_completion.md)了解API的完整使用方式。
@@ -55,7 +55,7 @@
 
 ### 模型的输入输出有什么限制？
 
-ernie-bot-3.5与ernie-bot-turbo模型对于输入和输出的token数量会有限制，通常情况下输入的token数量不能超过3072，输出的token数量不会超过1024。当输入的token数量超过限制时，会有以下几种情况：
+ernie-bot与ernie-bot-turbo模型对于输入和输出的token数量会有限制，通常情况下输入的token数量不能超过3072，输出的token数量不会超过1024。当输入的token数量超过限制时，会有以下几种情况：
 
 * 单轮对话下，用户发送的文本超出输入限制，会直接返回错误；
 * 多轮对话下，用户发送的文本，如若最近一次用户文本超出输入限制，会直接返回错误；如若最近一次用户文本没有超出限制，则模型服务会在拼接历史信息时最多拼接到相应的token数上限，并丢弃多余的历史信息。

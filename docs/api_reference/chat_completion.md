@@ -13,7 +13,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :---   | :--- | :------- | :---- |
-| model  | string | 是 | 模型名称。当前支持`'ernie-bot-3.5'`和`'ernie-bot-turbo'`。 |
+| model  | string | 是 | 模型名称。当前支持`'ernie-bot'`和`'ernie-bot-turbo'`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
 | functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。`ernie-bot-turbo`模型暂不支持此参数。 |
 | top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议该参数和temperature只设置其中一个。 |
@@ -177,7 +177,7 @@ erniebot.access_token = "<access-token-for-aistudio>"
 
 stream = False
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=[{
         "role": "user",
         "content": "周末深圳去哪里玩？"

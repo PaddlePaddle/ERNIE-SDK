@@ -23,7 +23,7 @@ import erniebot
 models = erniebot.Model.list()
 
 print(models)
-# ernie-bot-3.5         文心一言旗舰版
+# ernie-bot             文心一言旗舰版
 # ernie-bot-turbo       文心一言轻量版
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
@@ -33,7 +33,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 # Create a chat completion
-response = erniebot.ChatCompletion.create(model="ernie-bot-3.5", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
+response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
 
 print(response.result)
 ```
@@ -48,8 +48,8 @@ erniebot api model.list
 export EB_API_TYPE="aistudio"
 export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 
-# Create a chat completion (using ernie-bot-3.5, ernie-bot-turbo, etc.)
-erniebot api chat_completion.create --model ernie-bot-3.5 --message user "请介绍下你自己"
+# Create a chat completion (using ernie-bot, ernie-bot-turbo, etc.)
+erniebot api chat_completion.create --model ernie-bot --message user "请介绍下你自己"
 
 # Set authentication params for image.create
 export EB_API_TYPE="yinian"
@@ -63,7 +63,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ### 对话补全（Chat Completion）
 
-ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot-3.5和文心一言迅捷版模型ernie-bot-turbo。
+ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot和文心一言迅捷版模型ernie-bot-turbo。
 
 旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
 
@@ -76,7 +76,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=[{
         "role": "user",
         "content": "请问你是谁？"
@@ -163,7 +163,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=[
         {
             "role": "user",
