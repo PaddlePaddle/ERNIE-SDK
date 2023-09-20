@@ -4,7 +4,7 @@ import erniebot
 from erniebot.utils import logger
 
 
-def test_function_calling(model="ernie-bot-3.5"):
+def test_function_calling(model="ernie-bot"):
     response = erniebot.ChatCompletion.create(
         model=model,
         messages=[

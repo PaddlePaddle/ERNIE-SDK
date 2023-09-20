@@ -82,7 +82,7 @@ messages = [
 ]
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=messages,
     functions=functions
 )
@@ -133,7 +133,7 @@ messages.append(
     }
 )
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=messages,
     functions=functions
 )
