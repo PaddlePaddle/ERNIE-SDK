@@ -151,7 +151,7 @@ def create_chat_completion_tab():
                     info="控制采样随机性，该参数越小生成结果越稳定",
                     value=0.95,
                     minimum=0.05,
-                    maximum=1.5,
+                    maximum=1,
                     step=0.05)
             with gr.Column(scale=4):
                 state = gr.State({})
