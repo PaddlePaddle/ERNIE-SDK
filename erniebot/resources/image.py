@@ -52,7 +52,6 @@ class _Image(EBResource):
             headers=headers,
             files=None,
             request_timeout=request_timeout)
-        assert isinstance(resp_p, EBResponse)
 
         url, params, headers = self._prepare_fetch(resp_p)
         resp_f = self.poll(
@@ -77,7 +76,6 @@ class _Image(EBResource):
             headers=headers,
             files=None,
             request_timeout=request_timeout)
-        assert isinstance(resp_p, EBResponse)
 
         url, params, headers = self._prepare_fetch(resp_p)
         resp_f = await self.apoll(

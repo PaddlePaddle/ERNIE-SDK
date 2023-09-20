@@ -16,7 +16,7 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
+from erniebot.types import (ParamsType, HeadersType, FilesType)
 from .abc import Creatable
 from .resource import EBResource
 
@@ -131,6 +131,3 @@ class ChatCompletion(EBResource, Creatable):
         request_timeout = kwargs.get('request_timeout', None)
 
         return url, params, headers, files, stream, request_timeout
-
-    def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        return resp
