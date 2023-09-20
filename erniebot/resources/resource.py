@@ -16,9 +16,9 @@ import asyncio
 import operator
 import time
 from typing import (Any, AsyncIterator, Callable, cast, ClassVar, Dict,
-                    Iterator, List, Optional, Tuple, Union)
+                    Iterator, List, Optional, overload, Tuple, Union)
 
-from typing_extensions import final, Self
+from typing_extensions import final, Literal, Self
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
@@ -71,13 +71,57 @@ class EBResource(object):
     def get_supported_api_type_names(cls) -> List[str]:
         return list(map(operator.attrgetter('name'), cls.SUPPORTED_API_TYPES))
 
+    @overload
+    def request(
+            self,
+            method: str,
+            url: str,
+            stream: Literal[False],
+            *,
+            params: Optional[ParamsType]=...,
+            headers: Optional[HeadersType]=...,
+            files: Optional[FilesType]=...,
+            request_timeout: Optional[float]=...,
+    ) -> EBResponse:
+        ...
+
+    @overload
+    def request(
+            self,
+            method: str,
+            url: str,
+            stream: Literal[True],
+            *,
+            params: Optional[ParamsType]=...,
+            headers: Optional[HeadersType]=...,
+            files: Optional[FilesType]=...,
+            request_timeout: Optional[float]=...,
+    ) -> Iterator[EBResponse]:
+        ...
+
+    @overload
+    def request(
+            self,
+            method: str,
+            url: str,
+            stream: bool,
+            *,
+            params: Optional[ParamsType]=...,
+            headers: Optional[HeadersType]=...,
+            files: Optional[FilesType]=...,
+            request_timeout: Optional[float]=...,
+    ) -> Union[EBResponse,
+               Iterator[EBResponse],
+               ]:
+        ...
+
     @final
     def request(
             self,
             method: str,
             url: str,
-            *,
             stream: bool,
+            *,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
             files: Optional[FilesType]=None,
@@ -113,13 +157,57 @@ class EBResource(object):
                     else:
                         logger.info("Another attempt will be made.")
 
+    @overload
+    async def arequest(
+        self,
+        method: str,
+        url: str,
+        stream: Literal[False],
+        *,
+        params: Optional[ParamsType]=...,
+        headers: Optional[HeadersType]=...,
+        files: Optional[FilesType]=...,
+        request_timeout: Optional[float]=...,
+    ) -> EBResponse:
+        ...
+
+    @overload
+    async def arequest(
+        self,
+        method: str,
+        url: str,
+        stream: Literal[True],
+        *,
+        params: Optional[ParamsType]=...,
+        headers: Optional[HeadersType]=...,
+        files: Optional[FilesType]=...,
+        request_timeout: Optional[float]=...,
+    ) -> AsyncIterator[EBResponse]:
+        ...
+
+    @overload
+    async def arequest(
+        self,
+        method: str,
+        url: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType]=...,
+        headers: Optional[HeadersType]=...,
+        files: Optional[FilesType]=...,
+        request_timeout: Optional[float]=...,
+    ) -> Union[EBResponse,
+               AsyncIterator[EBResponse],
+               ]:
+        ...
+
     @final
     async def arequest(
         self,
         method: str,
         url: str,
-        *,
         stream: bool,
+        *,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
         files: Optional[FilesType]=None,
@@ -175,7 +263,6 @@ class EBResource(object):
                 headers=headers,
                 files=None,
                 request_timeout=request_timeout)
-            assert isinstance(resp, EBResponse)
             if until(resp):
                 return resp
             logger.info(f"Waiting...")
@@ -204,7 +291,6 @@ class EBResource(object):
                 headers=headers,
                 files=None,
                 request_timeout=request_timeout)
-            assert isinstance(resp, EBResponse)
             if until(resp):
                 return resp
             logger.info(f"Waiting...")
@@ -212,6 +298,47 @@ class EBResource(object):
         else:
             logger.error(f"Max retries exceeded while polling.")
             raise errors.MaxRetriesExceededError
+
+    @overload
+    def _request(
+            self,
+            method: str,
+            url: str,
+            stream: Literal[False],
+            params: Optional[ParamsType],
+            headers: Optional[HeadersType],
+            files: Optional[FilesType],
+            request_timeout: Optional[float],
+    ) -> EBResponse:
+        ...
+
+    @overload
+    def _request(
+            self,
+            method: str,
+            url: str,
+            stream: Literal[True],
+            params: Optional[ParamsType],
+            headers: Optional[HeadersType],
+            files: Optional[FilesType],
+            request_timeout: Optional[float],
+    ) -> Iterator[EBResponse]:
+        ...
+
+    @overload
+    def _request(
+            self,
+            method: str,
+            url: str,
+            stream: bool,
+            params: Optional[ParamsType],
+            headers: Optional[HeadersType],
+            files: Optional[FilesType],
+            request_timeout: Optional[float],
+    ) -> Union[EBResponse,
+               Iterator[EBResponse],
+               ]:
+        ...
 
     @final
     def _request(
@@ -230,7 +357,7 @@ class EBResource(object):
         attempts = 0
         while True:
             try:
-                return self._client.request(
+                resp = self._client.request(
                     token,
                     method,
                     url,
@@ -249,6 +376,59 @@ class EBResource(object):
                     continue
                 else:
                     raise
+            else:
+                if stream:
+                    if not isinstance(resp, Iterator):
+                        raise TypeError(
+                            "Expected an iterator of response objects.")
+                    else:
+                        return resp
+                else:
+                    if not isinstance(resp, EBResponse):
+                        raise TypeError("Expected a response object.")
+                    else:
+                        return resp
+
+    @overload
+    async def _arequest(
+        self,
+        method: str,
+        url: str,
+        stream: Literal[False],
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
+    ) -> EBResponse:
+        ...
+
+    @overload
+    async def _arequest(
+        self,
+        method: str,
+        url: str,
+        stream: Literal[True],
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
+    ) -> AsyncIterator[EBResponse]:
+        ...
+
+    @overload
+    async def _arequest(
+        self,
+        method: str,
+        url: str,
+        stream: bool,
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
+    ) -> Union[EBResponse,
+               AsyncIterator[EBResponse],
+               ]:
+        ...
 
     @final
     async def _arequest(
@@ -267,7 +447,7 @@ class EBResource(object):
         attempts = 0
         while True:
             try:
-                return await self._client.arequest(
+                resp = await self._client.arequest(
                     token,
                     method,
                     url,
@@ -288,6 +468,18 @@ class EBResource(object):
                     continue
                 else:
                     raise
+            else:
+                if stream:
+                    if not isinstance(resp, AsyncIterator):
+                        raise TypeError(
+                            "Expected an iterator of response objects.")
+                    else:
+                        return resp
+                else:
+                    if not isinstance(resp, EBResponse):
+                        raise TypeError("Expected a response object.")
+                    else:
+                        return resp
 
     def _create_config_dict(self, overrides: Any) -> Dict[str, Any]:
         cfg_dict = cast(Dict[str, Any], GlobalConfig().create_dict(**overrides))

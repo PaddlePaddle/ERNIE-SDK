@@ -45,12 +45,10 @@ import time
 from contextlib import asynccontextmanager
 from json import JSONDecodeError
 from typing import (Any, AsyncIterator, Dict, Iterator, Mapping, Optional,
-                    overload, Tuple, TYPE_CHECKING, Union)
+                    Tuple, Union)
 
 import aiohttp
 import requests
-if TYPE_CHECKING:
-    from typing_extensions import Literal
 
 from . import errors
 from .backends import EBBackend
@@ -77,50 +75,6 @@ class EBClient(object):
         self._backend = backend
         self._proxy = self._cfg['proxy']
 
-    @overload
-    def request(
-            self,
-            token: str,
-            method: str,
-            url: str,
-            stream: Literal[False],
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> EBResponse:
-        ...
-
-    @overload
-    def request(
-            self,
-            token: str,
-            method: str,
-            url: str,
-            stream: Literal[True],
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Iterator[EBResponse]:
-        ...
-
-    @overload
-    def request(
-            self,
-            token: str,
-            method: str,
-            url: str,
-            stream: bool,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
-        ...
-
     def request(
             self,
             token: str,
@@ -145,56 +99,12 @@ class EBClient(object):
             request_timeout=request_timeout)
         resp, got_stream = self._interpret_response(result, stream)
         if stream != got_stream:
-            logger.error("Unexpected response: %s", resp)
-            raise RuntimeError(
+            logger.warning("Unexpected response: %s", resp)
+            logger.warning(
                 f"A {'streamed' if stream else 'non-streamed'} response was expected, "
                 f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
-                "This may indicate a bug in erniebot.")
+            )
         return resp
-
-    @overload
-    async def arequest(
-        self,
-        token: str,
-        method: str,
-        url: str,
-        stream: Literal[False],
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> EBResponse:
-        ...
-
-    @overload
-    async def arequest(
-        self,
-        token: str,
-        method: str,
-        url: str,
-        stream: Literal[True],
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> AsyncIterator[EBResponse]:
-        ...
-
-    @overload
-    async def arequest(
-        self,
-        token: str,
-        method: str,
-        url: str,
-        stream: bool,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
-        ...
 
     async def arequest(
         self,
@@ -225,15 +135,15 @@ class EBClient(object):
             resp, got_stream = await self._interpret_async_response(result,
                                                                     stream)
             if stream != got_stream:
-                logger.error("Unexpected response: %s", resp)
-                raise RuntimeError(
+                logger.warning("Unexpected response: %s", resp)
+                logger.warning(
                     f"A {'streamed' if stream else 'non-streamed'} response was expected, "
                     f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
-                    "This may indicate a bug in erniebot.")
+                )
         except Exception as e:
             await ctx.__aexit__(None, None, None)
             raise e
-        if stream:
+        if isinstance(resp, AsyncIterator):
 
             async def wrap_resp(
                 resp: AsyncIterator) -> AsyncIterator[EBResponse]:
@@ -243,7 +153,6 @@ class EBClient(object):
                 finally:
                     await ctx.__aexit__(None, None, None)
 
-            assert isinstance(resp, AsyncIterator)
             return wrap_resp(resp)
         else:
             await ctx.__aexit__(None, None, None)
