@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .creatable import Creatable
+from .queryable import Queryable
