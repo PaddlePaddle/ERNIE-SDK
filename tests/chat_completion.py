@@ -3,7 +3,7 @@ from erniebot.utils import logger
 logger.set_level("WARNING")
 
 
-def test_chat_completion(model="ernie-bot-3.5"):
+def test_chat_completion(model="ernie-bot"):
     response = erniebot.ChatCompletion.create(
         model=model,
         messages=[{
@@ -21,7 +21,7 @@ def test_chat_completion(model="ernie-bot-3.5"):
     print(response)
 
 
-def test_chat_completion_stream_mode(model="ernie-bot-3.5"):
+def test_chat_completion_stream_mode(model="ernie-bot"):
     response = erniebot.ChatCompletion.create(
         model=model,
         messages=[{

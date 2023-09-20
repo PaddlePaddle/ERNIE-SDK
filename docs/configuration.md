@@ -26,7 +26,7 @@ response = erniebot.ChatCompletion.create(
     _config_=dict(
         api_type="<eb-api-type>",
     ),
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=[{
         "role": "user",
         "content": "你好，请介绍下你自己",
