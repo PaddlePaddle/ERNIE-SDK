@@ -16,10 +16,12 @@ pip install -r requirements.txt
 执行如下命令：
 
 ```shell
-python function_calling_demo.py --port 8188
+python gradio_demo.py
 ```
 
-然后，使用本地浏览器打开[http://localhost:8188](http://localhost:8188)。
+然后，使用本地浏览器打开[http://localhost:8073](http://localhost:8073)。
+
+可以通过`--port`指定端口号，例如`python gradio_demo.py --port 8188`指定8188端口作为启动Gradio服务的端口。默认端口为8073。
 
 ### 界面介绍
 
