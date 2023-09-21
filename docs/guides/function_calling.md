@@ -2,7 +2,7 @@
 
 ## 介绍
 
-文心一言提供函数调用功能，模型根据用户需求以及对函数的描述确定何时以及如何调用函数。具体而言，一个典型的函数调用流程如下：
+文心一言提供函数调用功能，模型根据用户需求以及对函数的描述确定何时以及如何调用函数。函数调用功能的典型使用流程如下：
 
 (1) 用户提供对一组函数的名称、功能、请求参数（输入参数）和响应参数（返回值）的描述；
 <br>(2) 模型根据用户需求以及函数描述信息，智能确定是否应该调用函数、调用哪一个函数、以及在调用该函数时需要如何设置输入参数；
@@ -139,7 +139,6 @@ messages.append(
 response = erniebot.ChatCompletion.create(
     model="ernie-bot",
     messages=messages,
-    functions=functions
 )
 print(response.result)
 ```
@@ -149,3 +148,5 @@ print(response.result)
 ```text
 深圳市今天的温度是25摄氏度，天气还算舒适，建议穿轻薄的衣服出门。
 ```
+
+需要说明的是，在上述代码中，我们并没有向`erniebot.ChatCompletion.create` API传入`functions`参数，因此模型将返回自然语言形式的回答。在实际生产中，如果需要支持连续多次调用函数的功能，则仍需要传入`functions`参数。此时，模型可能返回自然语言文本，也可能返回另一个`function_call`。
