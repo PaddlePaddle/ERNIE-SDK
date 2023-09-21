@@ -22,7 +22,8 @@ from .resource import EBResource
 
 
 class FineTuningTask(EBResource, Creatable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.AISTUDIO, )
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
+                                                          APIType.AISTUDIO)
 
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
@@ -53,7 +54,6 @@ class FineTuningTask(EBResource, Creatable):
         description = kwargs['description']
 
         # url
-        assert self.SUPPORTED_API_TYPES == (APIType.AISTUDIO, )
         if self.api_type is APIType.AISTUDIO:
             url = "/finetune/createTask"
         else:
@@ -81,7 +81,8 @@ class FineTuningTask(EBResource, Creatable):
 
 
 class FineTuningJob(EBResource, Creatable, Queryable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.AISTUDIO, )
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
+                                                          APIType.AISTUDIO)
 
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
@@ -98,8 +99,6 @@ class FineTuningJob(EBResource, Creatable, Queryable):
 
         VALID_KEYS = {
             'task_id',
-            'base_train_type',
-            'train_type',
             'train_mode',
             'peft_type',
             'train_config',
@@ -119,12 +118,6 @@ class FineTuningJob(EBResource, Creatable, Queryable):
 
         # task_id
         task_id = _get_required_arg('task_id', kwargs)
-
-        # base_train_type
-        base_train_type = _get_required_arg('base_train_type', kwargs)
-
-        # train_type
-        train_type = _get_required_arg('train_type', kwargs)
 
         # train_mode
         train_mode = _get_required_arg('train_mode', kwargs)
@@ -152,8 +145,6 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         # params
         params = {}
         params['taskId'] = task_id
-        params['baseTrainType'] = base_train_type
-        params['trainType'] = train_type
         params['trainMode'] = train_mode
         params['peftType'] = peft_type
         params['trainConfig'] = train_config
@@ -161,6 +152,8 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         params['train_set_rate'] = train_set_rate
         if 'description' in kwargs:
             params['description'] = kwargs['description']
+        params['baseTrainType'] = 'ERNIE-Bot-turbo'
+        params['trainType'] = 'ERNIE-Bot-turbo-0725'
 
         # headers
         headers = kwargs.get('headers', None)

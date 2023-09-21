@@ -50,17 +50,17 @@ class EBBackend(object):
         self.auth = build_auth_manager(auth_cfg, self.api_type)
 
     def prepare_request(self, url: str, headers: HeadersType,
-                        access_token: str) -> Tuple[str, HeadersType]:
+                        auth_token: str) -> Tuple[str, HeadersType]:
         raise NotImplementedError
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         raise NotImplementedError
 
-    def get_access_token(self) -> str:
-        return self.auth.get_access_token()
+    def get_auth_token(self) -> str:
+        return self.auth.get_auth_token()
 
-    def update_access_token(self) -> str:
-        return self.auth.update_access_token()
+    def update_auth_token(self) -> str:
+        return self.auth.update_auth_token()
 
     def _extract_auth_config(self,
                              config_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -71,21 +71,20 @@ class _BCEBackend(EBBackend):
     def prepare_request(self,
                         url: str,
                         headers: Dict[str, Any],
-                        access_token: str) -> Tuple[str, HeadersType]:
-        url = add_query_params(url, [('access_token', access_token)])
+                        auth_token: str) -> Tuple[str, HeadersType]:
+        url = add_query_params(url, [('access_token', auth_token)])
         return url, headers
 
-    def get_access_token(self) -> str:
-        return self.auth.get_access_token()
+    def get_auth_token(self) -> str:
+        return self.auth.get_auth_token()
 
-    def update_access_token(self) -> str:
-        return self.auth.update_access_token()
+    def update_auth_token(self) -> str:
+        return self.auth.update_auth_token()
 
     def _extract_auth_config(self,
                              config_dict: Dict[str, Any]) -> Dict[str, Any]:
         return dict(
-            access_token=config_dict['access_token'],
-            access_token_path=config_dict['access_token_path'],
+            auth_token=config_dict['access_token'],
             ak=config_dict['ak'],
             sk=config_dict['sk'])
 
@@ -148,12 +147,12 @@ class AIStudioBackend(EBBackend):
     BASE_URL: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
 
     def prepare_request(self, url: str, headers: HeadersType,
-                        access_token: str) -> Tuple[str, HeadersType]:
+                        auth_token: str) -> Tuple[str, HeadersType]:
         if 'Authorization' in headers:
             logger.warning(
                 "Key 'Authorization' already exists in `headers`: %r",
                 headers['Authorization'])
-        headers['Authorization'] = f"token {access_token}"
+        headers['Authorization'] = f"token {auth_token}"
         return url, headers
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
@@ -181,6 +180,4 @@ class AIStudioBackend(EBBackend):
 
     def _extract_auth_config(self,
                              config_dict: Dict[str, Any]) -> Dict[str, Any]:
-        return dict(
-            access_token=config_dict['access_token'],
-            access_token_path=config_dict['access_token_path'])
+        return dict(auth_token=config_dict['access_token'])

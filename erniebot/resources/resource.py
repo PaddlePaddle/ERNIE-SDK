@@ -36,7 +36,7 @@ class EBResource(object):
     This class implements the resource protocol and provides the following
     additional functionalities:
     1. Support synchronous and asynchronous HTTP polling.
-    2. Automatically refresh the access token.
+    2. Automatically refresh the security token.
     3. Override the global settings.
 
     This class can be typically used as a mix-in for another resource class to
@@ -353,12 +353,12 @@ class EBResource(object):
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        token = self._backend.get_access_token()
+        auth_token = self._backend.get_auth_token()
         attempts = 0
         while True:
             try:
                 resp = self._client.request(
-                    token,
+                    auth_token,
                     method,
                     url,
                     stream,
@@ -370,9 +370,9 @@ class EBResource(object):
                 attempts += 1
                 if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
                     logger.warning(
-                        f"Access token provided is invalid or has expired. An automatic update will be performed before retrying."
-                    )
-                    token = self._backend.update_access_token()
+                        "Security token provided is invalid or has expired. "
+                        "An automatic update will be performed before retrying.")
+                    auth_token = self._backend.update_auth_token()
                     continue
                 else:
                     raise
@@ -443,12 +443,12 @@ class EBResource(object):
     ) -> Union[EBResponse,
                AsyncIterator[EBResponse],
                ]:
-        token = self._backend.get_access_token()
+        auth_token = self._backend.get_auth_token()
         attempts = 0
         while True:
             try:
                 resp = await self._client.arequest(
-                    token,
+                    auth_token,
                     method,
                     url,
                     stream,
@@ -460,11 +460,11 @@ class EBResource(object):
                 attempts += 1
                 if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
                     logger.warning(
-                        f"Access token provided is invalid or has expired. An automatic update will be performed before retrying."
-                    )
+                        "Security token provided is invalid or has expired. "
+                        "An automatic update will be performed before retrying.")
                     loop = asyncio.get_running_loop()
-                    token = await loop.run_in_executor(
-                        None, self._backend.update_access_token)
+                    auth_token = await loop.run_in_executor(
+                        None, self._backend.update_auth_token)
                     continue
                 else:
                     raise
