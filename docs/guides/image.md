@@ -1,6 +1,6 @@
 # 文生图（Image Generation）
 
-# 介绍
+## 介绍
 
 文生图是根据文本提示、图像尺寸等信息，使用使用文心大模型，自动创作图片。
 
@@ -12,7 +12,7 @@ erniebot.Image.create(**kwargs: Any) -> EBResponse:
 
 请注意，目前仅`yinian`后端支持文生图功能。
 
-# 使用示例
+## 使用示例
 
 大家可以使用下面示例代码，体验文生图的服务（请注意替换成自己的access token）。
 

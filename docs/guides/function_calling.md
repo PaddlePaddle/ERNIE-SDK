@@ -13,7 +13,7 @@
 
 在ERNIE Bot SDK中，`erniebot.ChatCompletion.create`接口提供函数调用功能。关于该接口的更多详情请参考[ChatCompletion API文档](../api_reference/chat_completion.md)。
 
-# 使用示例
+## 使用示例
 
 假设我们有如下的函数实现：
 

@@ -2,11 +2,12 @@
 
 根据文本提示、尺寸等信息，使用文心一格大模型，自动创作图片。
 
-## 函数接口
+## Python接口
 
 ```{.py .copy}
 erniebot.Image.create(**kwargs: Any) -> EBResponse:
 ```
+
 ## 输入参数
 
 调用Image接口前，需要首先设置`api_type`参数。
