@@ -193,6 +193,18 @@ def create_components(functions):
                 access_key,
                 secret_key,
             ],
+        ).success(
+            reset_conversation,
+            inputs=state,
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+            ],
         )
         access_key.change(
             make_state_updater(
@@ -346,7 +358,6 @@ def create_components(functions):
                 func_in_params,
                 func_out_params,
             ],
-            show_progress=False,
         ).then(**enable_chat_input_args)
 
         chosen_func_names.select(
@@ -608,7 +619,12 @@ def generate_response(
 
     try:
         resp_stream = create_chat_completion(
-            _config_=auth_config, model=ernie_model, **data, stream=True)
+            _config_={k: v
+                      for k, v in auth_config.items() if v},
+            model=ernie_model,
+            **data,
+            stream=True,
+        )
     except eb.errors.TokenUpdateFailedError as e:
         handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
         yield get_fallback_return()
