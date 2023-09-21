@@ -30,7 +30,7 @@ class ChatCompletion(EBResource, Creatable):
         APIType.QIANFAN: {
             'resource_id': 'chat',
             'models': {
-                'ernie-bot-3.5': {
+                'ernie-bot': {
                     'model_id': 'completions',
                 },
                 'ernie-bot-turbo': {
@@ -41,7 +41,7 @@ class ChatCompletion(EBResource, Creatable):
         APIType.AISTUDIO: {
             'resource_id': 'chat',
             'models': {
-                'ernie-bot-3.5': {
+                'ernie-bot': {
                     'model_id': 'completions',
                 },
                 'ernie-bot-turbo': {
@@ -78,6 +78,9 @@ class ChatCompletion(EBResource, Creatable):
         if 'model' not in kwargs:
             raise errors.ArgumentNotFoundError("`model` is not found.")
         model = kwargs['model']
+        # For backward compatibility
+        if model == 'ernie-bot-3.5':
+            model = 'ernie-bot'
 
         # messages
         if 'messages' not in kwargs:

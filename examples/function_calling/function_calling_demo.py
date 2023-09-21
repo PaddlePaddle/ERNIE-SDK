@@ -65,7 +65,7 @@ def create_components(functions):
     name2function = collections.OrderedDict(zip(func_name_list, functions))
     default_state = {'name2function': name2function, 'context': []}
     default_api_type = 'qianfan'
-    default_model = 'ernie-bot-3.5'
+    default_model = 'ernie-bot'
 
     state = gr.State(value=default_state)
     auth_state = gr.State(value={
@@ -104,7 +104,7 @@ def create_components(functions):
                                 label="Model",
                                 info=f"模型类型",
                                 value=default_model,
-                                choices=['ernie-bot-3.5'])
+                                choices=['ernie-bot'])
                     with gr.Accordion(label="高级配置", open=False):
                         with gr.Group():
                             top_p = gr.Slider(

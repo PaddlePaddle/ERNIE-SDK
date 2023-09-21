@@ -137,8 +137,8 @@ def create_chat_completion_tab():
                 ernie_model = gr.Dropdown(
                     label="Model",
                     info="模型类型",
-                    value='ernie-bot-3.5',
-                    choices=['ernie-bot-3.5', 'ernie-bot-turbo'])
+                    value='ernie-bot',
+                    choices=['ernie-bot', 'ernie-bot-turbo'])
                 top_p = gr.Slider(
                     label="Top-p",
                     info="控制采样范围，该参数越小生成结果越稳定",

@@ -8,8 +8,8 @@ ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大�
 
 | 后端   |  API_TYPE  |  支持的模型 |
 | :---     | :----      |   :---  |
-| AI Studio | aistudio |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
-| 千帆大模型平台 | qianfan |  ernie-bot-3.5，ernie-bot-turbo，ernie-text-embedding |
+| AI Studio | aistudio |  ernie-bot，ernie-bot-turbo，ernie-text-embedding |
+| 千帆大模型平台 | qianfan |  ernie-bot，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian |  ernie-vilg-v2 |
 
 ## 1 `AI Studio`后端的认证鉴权
@@ -57,7 +57,7 @@ response = erniebot.ChatCompletion.create(
         api_type="aistudio",
         access_token="<access-token-for-aistudio>",
     ),
-    model="ernie-bot-3.5",
+    model="ernie-bot",
     messages=[{"role": "user", "content": "你好，请介绍下你自己",
     }],
 )
