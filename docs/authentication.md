@@ -12,7 +12,7 @@ ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大�
 | 千帆大模型平台 | qianfan |  ernie-bot，ernie-bot-turbo，ernie-text-embedding |
 | 智能创作平台 | yinian |  ernie-vilg-v2 |
 
-## 1 `AI Studio`后端的认证鉴权
+## 1 AI Studio后端的认证鉴权
 
 ### 1.1 申请用户凭证
 
@@ -65,7 +65,7 @@ response = erniebot.ChatCompletion.create(
 
 如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数 > 使用全局变量 > 使用环境变量。
 
-## 2 `千帆大模型平台`后端的认证鉴权
+## 2 千帆大模型平台后端的认证鉴权
 
 ### 2.1 申请用户凭证
 
@@ -74,7 +74,7 @@ response = erniebot.ChatCompletion.create(
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
 * 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交申请体验。通常几个小时后会通知申请通过。
 * 登录[千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，进入[控制台](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application)创建千帆应用，可以拿到AK/SK（如下图）。
-* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择服务并开通付费，包括：`ERNIE-Bot大模型公有云在线调用服务`、`ERNIE-Bot-turbo大模型公有云在线调用服务`和`Embedding-V1公有云在线调用服务`。
+* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择服务并开通付费，包括：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务和Embedding-V1公有云在线调用服务。
 * 参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用AK/SK获取access token。
 
 <div align="center">
@@ -118,7 +118,7 @@ erniebot.ak = "<access-key-for-qianfan>"
 erniebot.sk = "<secret-access-key-for-qianfan>"
 ```
 
-## 3 `智能创作平台`后端的认证鉴权
+## 3 智能创作平台后端的认证鉴权
 
 ### 3.1 申请用户凭证
 
