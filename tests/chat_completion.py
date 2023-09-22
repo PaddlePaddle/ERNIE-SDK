@@ -1,5 +1,5 @@
 import erniebot
-from erniebot.utils import logger
+from erniebot.utils.logging import logger
 logger.set_level("WARNING")
 
 

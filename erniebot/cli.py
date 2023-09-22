@@ -18,7 +18,7 @@ import erniebot
 from .config import GlobalConfig
 from .errors import EBError
 from .response import EBResponse
-from .utils import logger
+from .utils.logging import logger
 
 __all__ = ['console_main', 'parse_args']
 

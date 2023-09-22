@@ -3,7 +3,7 @@
 import threading
 
 import erniebot
-from erniebot.utils import logger
+from erniebot.utils.logging import logger
 
 NUM_TASKS = 4
 

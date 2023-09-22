@@ -297,8 +297,8 @@ def create_embedding_tab():
             model='ernie-text-embedding',
             input=[text1.strip(), text2.strip()],
         )
-        emb_0 = embeddings.body['data'][0]['embedding']
-        emb_1 = embeddings.body['data'][1]['embedding']
+        emb_0 = embeddings.rbody['data'][0]['embedding']
+        emb_1 = embeddings.rbody['data'][1]['embedding']
         cos_sim = _calc_cosine_similarity(emb_0, emb_1)
         cos_sim_text = f"## 两段文本余弦相似度: {cos_sim}"
         return str(emb_0), str(emb_1), cos_sim_text

@@ -1,7 +1,7 @@
 import json
 
 import erniebot
-from erniebot.utils import logger
+from erniebot.utils.logging import logger
 
 
 def test_function_calling(model="ernie-bot"):

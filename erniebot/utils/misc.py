@@ -27,7 +27,7 @@ class Constant(object):
         return self.val
 
     def __set__(self, obj, val):
-        raise AttributeError("The value of a constant cannot be modified!")
+        raise AttributeError("The value of a constant cannot be modified.")
 
 
 class Singleton(type):

@@ -17,7 +17,7 @@ from typing import (Any, AsyncIterator, Iterator, Optional, overload, Union)
 from typing_extensions import Literal, Protocol, runtime_checkable, Self
 
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType, FilesType)
+from erniebot.types import (FilesType, HeadersType, ParamsType)
 
 
 @runtime_checkable

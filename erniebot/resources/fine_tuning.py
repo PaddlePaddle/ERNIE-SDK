@@ -16,7 +16,7 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import (ParamsType, HeadersType, FilesType)
+from erniebot.types import (FilesType, HeadersType, ParamsType)
 from .abc import Creatable, Queryable
 from .resource import EBResource
 
@@ -54,7 +54,7 @@ class FineTuningTask(EBResource, Creatable):
         description = kwargs['description']
 
         # url
-        if self.api_type is APIType.AISTUDIO:
+        if self.api_type is APIType.QIANFAN:
             url = "/finetune/createTask"
         else:
             raise errors.UnsupportedAPITypeError(
@@ -92,7 +92,7 @@ class FineTuningJob(EBResource, Creatable, Queryable):
                                                          bool,
                                                          Optional[float],
                                                          ]:
-        def _get_required_arg(key, kwargs):
+        def _get_required_arg(key: str) -> Any:
             if key not in kwargs:
                 raise errors.ArgumentNotFoundError(f"`{key}` is not found.")
             return kwargs[key]
@@ -117,26 +117,25 @@ class FineTuningJob(EBResource, Creatable, Queryable):
                 f"Invalid keys found in `kwargs`: {list(invalid_keys)}")
 
         # task_id
-        task_id = _get_required_arg('task_id', kwargs)
+        task_id = _get_required_arg('task_id')
 
         # train_mode
-        train_mode = _get_required_arg('train_mode', kwargs)
+        train_mode = _get_required_arg('train_mode')
 
         # peft_type
-        peft_type = _get_required_arg('peft_type', kwargs)
+        peft_type = _get_required_arg('peft_type')
 
         # train_config
-        train_config = _get_required_arg('train_config', kwargs)
+        train_config = _get_required_arg('train_config')
 
         # train_set
-        train_set = _get_required_arg('train_set', kwargs)
+        train_set = _get_required_arg('train_set')
 
         # train_set_rate
-        train_set_rate = _get_required_arg('train_set_rate', kwargs)
+        train_set_rate = _get_required_arg('train_set_rate')
 
         # url
-        assert self.SUPPORTED_API_TYPES == (APIType.AISTUDIO, )
-        if self.api_type is APIType.AISTUDIO:
+        if self.api_type is APIType.QIANFAN:
             url = "/finetune/createJob"
         else:
             raise errors.UnsupportedAPITypeError(
@@ -194,8 +193,7 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         job_id = kwargs['job_id']
 
         # url
-        assert self.SUPPORTED_API_TYPES == (APIType.AISTUDIO, )
-        if self.api_type is APIType.AISTUDIO:
+        if self.api_type is APIType.QIANFAN:
             url = "/finetune/jobDetail"
         else:
             raise errors.UnsupportedAPITypeError(

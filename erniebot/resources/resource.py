@@ -21,13 +21,12 @@ from typing import (Any, AsyncIterator, Callable, cast, ClassVar, Dict,
 from typing_extensions import final, Literal, Self
 
 import erniebot.errors as errors
-from erniebot.api_types import APIType
-from erniebot.backends import build_backend, convert_str_to_api_type
-from erniebot.client import EBClient
+from erniebot.api_types import APIType, convert_str_to_api_type
+from erniebot.backends import build_backend
 from erniebot.config import GlobalConfig
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType, FilesType)
-from erniebot.utils import logger
+from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.utils.logging import logger
 
 
 class EBResource(object):
@@ -36,7 +35,7 @@ class EBResource(object):
     This class implements the resource protocol and provides the following
     additional functionalities:
     1. Support synchronous and asynchronous HTTP polling.
-    2. Automatically refresh the security token.
+    2. Support different backends.
     3. Override the global settings.
 
     This class can be typically used as a mix-in for another resource class to
@@ -46,10 +45,10 @@ class EBResource(object):
     """
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = ()
+    _BUILD_BACKEND_OPTS_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {}
 
     MAX_POLLING_RETRIES: int = 20
     POLLING_INTERVAL: int = 5
-    _MAX_TOKEN_UPDATE_RETRIES: int = 3
 
     def __init__(self, **config: Any) -> None:
         object.__init__(self)
@@ -59,9 +58,11 @@ class EBResource(object):
         self.api_type = self._cfg['api_type']
         self.timeout = self._cfg['timeout']
 
-        backend = build_backend(self._cfg, self._cfg['api_type'])
-        self._backend = backend
-        self._client = EBClient(self._cfg, backend)
+        self._backend = build_backend(
+            self.api_type,
+            self._cfg,
+            **self._BUILD_BACKEND_OPTS_DICT.get(self.api_type, {}),
+        )
 
     @classmethod
     def new_object(cls, **kwargs: Any) -> Self:
@@ -137,7 +138,8 @@ class EBResource(object):
                 params=params,
                 headers=headers,
                 files=files,
-                request_timeout=request_timeout)
+                request_timeout=request_timeout,
+            )
         else:
             st_time = time.time()
             while True:
@@ -149,7 +151,8 @@ class EBResource(object):
                         params=params,
                         headers=headers,
                         files=files,
-                        request_timeout=request_timeout)
+                        request_timeout=request_timeout,
+                    )
                 except errors.TryAgain as e:
                     if time.time() > st_time + self.timeout:
                         logger.info("Operation timed out. No more attempts.")
@@ -223,7 +226,8 @@ class EBResource(object):
                 params=params,
                 headers=headers,
                 files=files,
-                request_timeout=request_timeout)
+                request_timeout=request_timeout,
+            )
         else:
             st_time = time.time()
             while True:
@@ -235,7 +239,8 @@ class EBResource(object):
                         params=params,
                         headers=headers,
                         files=files,
-                        request_timeout=request_timeout)
+                        request_timeout=request_timeout,
+                    )
                 except errors.TryAgain as e:
                     if time.time() > st_time + self.timeout:
                         logger.info("Operation timed out. No more attempts.")
@@ -262,7 +267,8 @@ class EBResource(object):
                 params=params,
                 headers=headers,
                 files=None,
-                request_timeout=request_timeout)
+                request_timeout=request_timeout,
+            )
             if until(resp):
                 return resp
             logger.info(f"Waiting...")
@@ -290,7 +296,8 @@ class EBResource(object):
                 params=params,
                 headers=headers,
                 files=None,
-                request_timeout=request_timeout)
+                request_timeout=request_timeout,
+            )
             if until(resp):
                 return resp
             logger.info(f"Waiting...")
@@ -353,41 +360,25 @@ class EBResource(object):
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        auth_token = self._backend.get_auth_token()
-        attempts = 0
-        while True:
-            try:
-                resp = self._client.request(
-                    auth_token,
-                    method,
-                    url,
-                    stream,
-                    params=params,
-                    headers=headers,
-                    files=files,
-                    request_timeout=request_timeout)
-            except (errors.TokenExpiredError, errors.InvalidTokenError):
-                attempts += 1
-                if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
-                    logger.warning(
-                        "Security token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying.")
-                    auth_token = self._backend.update_auth_token()
-                    continue
-                else:
-                    raise
+        resp = self._backend.request(
+            method,
+            url,
+            stream,
+            params=params,
+            headers=headers,
+            files=files,
+            request_timeout=request_timeout,
+        )
+        if stream:
+            if not isinstance(resp, Iterator):
+                raise TypeError("Expected an iterator of response objects.")
             else:
-                if stream:
-                    if not isinstance(resp, Iterator):
-                        raise TypeError(
-                            "Expected an iterator of response objects.")
-                    else:
-                        return resp
-                else:
-                    if not isinstance(resp, EBResponse):
-                        raise TypeError("Expected a response object.")
-                    else:
-                        return resp
+                return resp
+        else:
+            if not isinstance(resp, EBResponse):
+                raise TypeError("Expected a response object.")
+            else:
+                return resp
 
     @overload
     async def _arequest(
@@ -443,43 +434,25 @@ class EBResource(object):
     ) -> Union[EBResponse,
                AsyncIterator[EBResponse],
                ]:
-        auth_token = self._backend.get_auth_token()
-        attempts = 0
-        while True:
-            try:
-                resp = await self._client.arequest(
-                    auth_token,
-                    method,
-                    url,
-                    stream,
-                    params=params,
-                    headers=headers,
-                    files=files,
-                    request_timeout=request_timeout)
-            except (errors.TokenExpiredError, errors.InvalidTokenError):
-                attempts += 1
-                if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
-                    logger.warning(
-                        "Security token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying.")
-                    loop = asyncio.get_running_loop()
-                    auth_token = await loop.run_in_executor(
-                        None, self._backend.update_auth_token)
-                    continue
-                else:
-                    raise
+        resp = await self._backend.arequest(
+            method,
+            url,
+            stream,
+            params=params,
+            headers=headers,
+            files=files,
+            request_timeout=request_timeout,
+        )
+        if stream:
+            if not isinstance(resp, AsyncIterator):
+                raise TypeError("Expected an iterator of response objects.")
             else:
-                if stream:
-                    if not isinstance(resp, AsyncIterator):
-                        raise TypeError(
-                            "Expected an iterator of response objects.")
-                    else:
-                        return resp
-                else:
-                    if not isinstance(resp, EBResponse):
-                        raise TypeError("Expected a response object.")
-                    else:
-                        return resp
+                return resp
+        else:
+            if not isinstance(resp, EBResponse):
+                raise TypeError("Expected a response object.")
+            else:
+                return resp
 
     def _create_config_dict(self, overrides: Any) -> Dict[str, Any]:
         cfg_dict = cast(Dict[str, Any], GlobalConfig().create_dict(**overrides))

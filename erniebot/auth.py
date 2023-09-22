@@ -14,8 +14,6 @@
 
 import functools
 import json
-import os
-import pathlib
 import threading
 import time
 from typing import (Any, Callable, Dict, Hashable, Optional, Tuple, Union)
@@ -23,23 +21,19 @@ from typing import (Any, Callable, Dict, Hashable, Optional, Tuple, Union)
 import requests
 
 from . import errors
-from .api_types import APIType, convert_str_to_api_type
-from .utils import logger
+from .api_types import APIType
+from .utils.logging import logger
 from .utils.misc import Singleton
 
 __all__ = ['build_auth_manager']
 
 
-def build_auth_manager(config_dict: Dict[str, Any],
-                       api_type: Union[str, APIType]) -> 'AuthManager':
-    if isinstance(api_type, str):
-        api_type = convert_str_to_api_type(api_type)
-    if api_type in (APIType.QIANFAN, APIType.YINIAN):
-        return BCEAuthManager(api_type, **config_dict)
-    elif api_type is APIType.AISTUDIO:
-        return AIStudioAuthManager(api_type, **config_dict)
+def build_auth_manager(manager_type: str, api_type: APIType,
+                       **kwargs: Any) -> 'AuthManager':
+    if manager_type == 'bce':
+        return BCEAuthManager(api_type, **kwargs)
     else:
-        raise ValueError(f"Unsupported API type: {api_type.name}")
+        raise ValueError(f"Unsupported manager type: {manager_type}")
 
 
 class _GlobalAuthCache(metaclass=Singleton):
@@ -121,6 +115,7 @@ class _GlobalAuthCache(metaclass=Singleton):
 class AuthManager(object):
     def __init__(self,
                  api_type: APIType,
+                 *,
                  auth_token: Optional[str]=None,
                  **kwargs: Any) -> None:
         super().__init__()
@@ -186,16 +181,21 @@ class AuthManager(object):
 class BCEAuthManager(AuthManager):
     def __init__(self,
                  api_type: APIType,
+                 *,
+                 auth_token: Optional[str]=None,
                  ak: Optional[str]=None,
                  sk: Optional[str]=None,
                  **kwargs: Any) -> None:
-        super().__init__(api_type, ak=ak, sk=sk, **kwargs)
+        super().__init__(
+            api_type, auth_token=auth_token, ak=ak, sk=sk, **kwargs)
 
     def _request_auth_token(self, init: bool) -> str:
-        # `init` unused
+        # `init` not used
         url = "https://aip.baidubce.com/oauth/2.0/token"
-        ak = self._cfg['ak'] or ''
-        sk = self._cfg['sk'] or ''
+        ak = self._cfg['ak']
+        sk = self._cfg['sk']
+        if ak is None or sk is None:
+            raise ValueError("Invalid AK/SK")
         params = {
             'grant_type': 'client_credentials',
             'client_id': ak,
@@ -219,21 +219,3 @@ class BCEAuthManager(AuthManager):
 
     def _get_cache_key(self) -> Hashable:
         return (self._cfg['ak'], self._cfg['sk'])
-
-
-class AIStudioAuthManager(AuthManager):
-    def _request_auth_token(self, init: bool) -> str:
-        if init:
-            token = os.environ.get('AISTUDIO_auth_token', None)
-            if token is None:
-                raise RuntimeError(
-                    "Failed to read the security token from environment variables."
-                )
-            return token
-        else:
-            raise RuntimeError(
-                "Automatic renewal of security tokens for the current API type is not supported. "
-                "Please provide a valid security token manually.")
-
-    def _get_cache_key(self) -> Hashable:
-        return None

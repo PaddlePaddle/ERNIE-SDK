@@ -32,27 +32,27 @@ class EBResponse(Mapping):
     __slots__ = ('__dict', )
 
     _INNER_DICT_TYPE = Constant(dict)
-    _RESERVED_KEYS = Constant(('code', 'body', 'headers'))
+    _RESERVED_KEYS = Constant(('rcode', 'rbody', 'rheaders'))
 
     def __init__(self,
-                 code: int,
-                 body: Union[str, Dict[str, Any]],
-                 headers: Dict[str, Any]) -> None:
+                 rcode: int,
+                 rbody: Union[str, Dict[str, Any]],
+                 rheaders: Dict[str, Any]) -> None:
         """Initialize the instance based on response code, body, and headers.
 
         Args:
-            code: Response status code.
-            body: Response body. If `body` is a dictionary, the key-value pairs
+            rcode: Response status code.
+            rbody: Response body. If `body` is a dictionary, the key-value pairs
                 in the dictionary will also get registered, so that they can be
                 accessed from the object using dot notation.
-            headers: Response headers.
+            rheaders: Response headers.
         """
         super().__init__()
         # Private name mangling to avoid conflicts with keys in `body`.
         self.__dict = self._INNER_DICT_TYPE(
-            code=code, body=body, headers=headers)
-        if isinstance(body, dict):
-            self._update_from_dict(body)
+            rcode=rcode, rbody=rbody, rheaders=rheaders)
+        if isinstance(rbody, dict):
+            self._update_from_dict(rbody)
 
     def __getitem__(self, key: str) -> Any:
         if key in self.__dict:
@@ -68,7 +68,7 @@ class EBResponse(Mapping):
         return len(self.__dict)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(code={repr(self.code)}, body={repr(self.body)}, headers={repr(self.headers)})"
+        return f"{self.__class__.__name__}(rcode={repr(self.rcode)}, rbody={repr(self.rbody)}, rheaders={repr(self.rheaders)})"
 
     def __str__(self) -> str:
         def _format(obj: object, level: int=0) -> str:
@@ -79,13 +79,14 @@ class EBResponse(Mapping):
                 items = []
                 keys_to_ignore = []
                 if isinstance(obj, EBResponse):
-                    items.append(('code', _format(self.code, level=level + 1)))
-                    if not isinstance(self.body, dict):
-                        items.append(('body', _format(
-                            self.body, level=level + 1)))
-                    items.append(('headers', _format(
-                        self.headers, level=level + 1)))
-                    keys_to_ignore.extend(['code', 'body', 'headers'])
+                    items.append(('rcode', _format(
+                        self.rcode, level=level + 1)))
+                    if not isinstance(self.rbody, dict):
+                        items.append(('rbody', _format(
+                            self.rbody, level=level + 1)))
+                    items.append(('rheaders', _format(
+                        self.rheaders, level=level + 1)))
+                    keys_to_ignore.extend(['rcode', 'rbody', 'rheaders'])
                 for k, v in obj.items():
                     if k in keys_to_ignore:
                         continue
@@ -124,10 +125,10 @@ class EBResponse(Mapping):
 
     def __reduce__(self) -> tuple:
         state = copy.copy(self.__dict)
-        code = state.pop('code')
-        body = state.pop('body')
-        headers = state.pop('headers')
-        return (self.__class__, (code, body, headers), state)
+        rcode = state.pop('rcode')
+        rbody = state.pop('rbody')
+        rheaders = state.pop('rheaders')
+        return (self.__class__, (rcode, rbody, rheaders), state)
 
     def __setstate__(self, state: dict) -> None:
         self.__dict.update(state)
