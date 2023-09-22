@@ -147,7 +147,7 @@ erniebot.sk = "<secret-access-key-for-qianfan>"
 
 请注意设置后端参数为`'yinian'`，并且使用智能创作平台申请的access_token、AK/SK。
 
-(1）使用access token的例子：
+(1) 使用access token的例子：
 
 ```{.sh .copy}
 export EB_API_TYPE="yinian"
@@ -161,7 +161,7 @@ erniebot.api_type = "yinian"
 erniebot.access_token = "<access-token-for-yinian>"
 ```
 
-(2）使用AK/SK的例子：
+(2) 使用AK/SK的例子：
 
 ```{.sh .copy}
 export EB_API_TYPE="yinian"
