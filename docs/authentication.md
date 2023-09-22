@@ -6,11 +6,10 @@ ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大�
 
 | 后端   |  API_TYPE  |  支持的模型 |
 | :---     | :----      |   :---  |
-| AI Studio | aistudio |  ernie-bot，ernie-bot-turbo，ernie-text-embedding |
-| 千帆大模型平台 | qianfan |  ernie-bot，ernie-bot-turbo，ernie-text-embedding |
-| 智能创作平台 | yinian |  ernie-vilg-v2 |
+| AI Studio | aistudio |  对话补全模型ernie-bot和ernie-bot-turbo，语义向量模型ernie-text-embedding |
+| 千帆大模型平台 | qianfan |  对话补全模型ernie-bot和ernie-bot-turbo，语义向量模型ernie-text-embedding |
+| 智能创作平台 | yinian |  文生图模型ernie-vilg-v2 |
 
-其中，ernie-bot和ernie-bot-turbo是对话补全Chat Completion模型，ernie-text-embedding是语义向量模型，ernie-vilg-v2是文生图模型。
 
 ## 1 `AI Studio`后端的认证鉴权
 
