@@ -87,13 +87,13 @@ def create_components(functions):
                                 value=default_api_type,
                                 choices=['qianfan', 'aistudio'])
                             access_key = gr.Textbox(
-                                label="Access Key ID",
-                                info="用于访问后端平台的AK",
+                                label="AK",
+                                info="用于访问后端平台的API key或access key ID",
                                 type='password',
                                 visible=(default_api_type == 'qianfan'))
                             secret_key = gr.Textbox(
-                                label="Secret Access Key",
-                                info="用于访问后端平台的SK",
+                                label="SK",
+                                info="用于访问后端平台的secret key或secret access key",
                                 type='password',
                                 visible=(default_api_type == 'qianfan'))
                             access_token = gr.Textbox(

@@ -1,7 +1,7 @@
 import erniebot
 
 if __name__ == "__main__":
-    # Set AK/SK for erniebot.Image.create
+    # Set credentials for erniebot.Image.create
     # erniebot.ak = 'xx'
     # erniebot.sk = 'xx'
     erniebot.api_type = "yinian"

@@ -25,7 +25,6 @@ class ChatFile(EBResource, Creatable):
     """Chat with the model about the content of a given file."""
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, )
-    _BUILD_BACKEND_OPTS_DICT = {APIType.QIANFAN: {'use_legacy_backend': True}, }
 
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,

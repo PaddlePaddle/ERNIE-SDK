@@ -147,7 +147,7 @@ class _BCEBackend(EBBackend):
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
         if self._cfg.get('ak') is None or self._cfg.get('sk') is None:
-            raise RuntimeError("Invalid AK/SK")
+            raise RuntimeError("Invalid access key ID or secret access key")
 
     def request(
             self,

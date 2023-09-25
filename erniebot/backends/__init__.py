@@ -24,18 +24,16 @@ __all__ = ['build_backend']
 
 def build_backend(api_type: Union[str, APIType],
                   config_dict: Dict[str, Any],
-                  *,
-                  use_legacy_backend: bool=False) -> EBBackend:
+                  **opts) -> EBBackend:
     if isinstance(api_type, str):
         api_type = convert_str_to_api_type(api_type)
     if api_type is APIType.QIANFAN:
-        if use_legacy_backend:
-            return QianfanLegacyBackend(config_dict)
-        else:
-            return QianfanBackend(config_dict)
+        return QianfanLegacyBackend(config_dict, **opts)
     elif api_type is APIType.YINIAN:
-        return YinianBackend(config_dict)
+        return YinianBackend(config_dict, **opts)
     elif api_type is APIType.AISTUDIO:
-        return AIStudioBackend(config_dict)
+        return AIStudioBackend(config_dict, **opts)
+    elif api_type is APIType.QIANFAN_SFT:
+        return QianfanBackend(config_dict, **opts)
     else:
         raise ValueError(f"Unrecoginzed API type: {api_type.name}")

@@ -42,7 +42,7 @@ ERNIE Bot SDK支持的参数，具体介绍如下：
 | :---         | :----       | :----  | :---- |  :---- |
 | api_type     | EB_API_TYPE | string | 否 | 设置后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
 | access_token | EB_ACCESS_TOKEN | string | 否 | 设置认证鉴权的access token。具体参见[认证鉴权文档](./authentication.md)。|
-| ak           | EB_AK       | string | 否 | 设置认证鉴权的access key ID（AK）。必须和`sk`同时设置。 |
-| sk           | EB_SK       | string | 否 | 设置认证鉴权的secret access key（SK）。必须和`ak`同时设置。 |
+| ak           | EB_AK       | string | 否 | 设置认证鉴权的API key或access key ID。必须和`sk`同时设置。 |
+| sk           | EB_SK       | string | 否 | 设置认证鉴权的secret key或secret access key。必须和`ak`同时设置。 |
 | proxy        | EB_PROXY    | string | 否 | 设置请求的代理 。|
 | timeout      | EB_TIMEOUT  | float  | 否 | 设置请求超时的时间。如果设置了`timeout`，请求失败后会再次请求，直到成功或者超过设置的时间。|

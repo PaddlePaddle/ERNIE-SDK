@@ -44,7 +44,6 @@ class Embedding(EBResource, Creatable):
             },
         },
     }
-    _BUILD_BACKEND_OPTS_DICT = {APIType.QIANFAN: {'use_legacy_backend': True}, }
 
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,

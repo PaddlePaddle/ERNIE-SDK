@@ -22,7 +22,7 @@ from .resource import EBResource
 
 
 class FineTuningTask(EBResource, Creatable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,
                                                           APIType.AISTUDIO)
 
     def _prepare_create(self,
@@ -54,7 +54,7 @@ class FineTuningTask(EBResource, Creatable):
         description = kwargs['description']
 
         # url
-        if self.api_type is APIType.QIANFAN:
+        if self.api_type is APIType.QIANFAN_SFT:
             url = "/finetune/createTask"
         else:
             raise errors.UnsupportedAPITypeError(
@@ -81,7 +81,7 @@ class FineTuningTask(EBResource, Creatable):
 
 
 class FineTuningJob(EBResource, Creatable, Queryable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,
                                                           APIType.AISTUDIO)
 
     def _prepare_create(self,
@@ -135,7 +135,7 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         train_set_rate = _get_required_arg('train_set_rate')
 
         # url
-        if self.api_type is APIType.QIANFAN:
+        if self.api_type is APIType.QIANFAN_SFT:
             url = "/finetune/createJob"
         else:
             raise errors.UnsupportedAPITypeError(
@@ -193,7 +193,7 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         job_id = kwargs['job_id']
 
         # url
-        if self.api_type is APIType.QIANFAN:
+        if self.api_type is APIType.QIANFAN_SFT:
             url = "/finetune/jobDetail"
         else:
             raise errors.UnsupportedAPITypeError(

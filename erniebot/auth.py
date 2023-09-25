@@ -195,7 +195,7 @@ class BCEAuthManager(AuthManager):
         ak = self._cfg['ak']
         sk = self._cfg['sk']
         if ak is None or sk is None:
-            raise ValueError("Invalid AK/SK")
+            raise ValueError("Invalid API key or secret key")
         params = {
             'grant_type': 'client_credentials',
             'client_id': ak,

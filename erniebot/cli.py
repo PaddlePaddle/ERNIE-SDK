@@ -64,8 +64,9 @@ def parse_args(*args, **kwargs):
 
     # Global arguments
     parser.add_argument('--access-token', type=str, help="Access token to use.")
-    parser.add_argument('--ak', type=str, help="Access key ID (AK).")
-    parser.add_argument('--sk', type=str, help="Secret access key (SK).")
+    parser.add_argument('--ak', type=str, help="API key or access key ID.")
+    parser.add_argument(
+        '--sk', type=str, help="Secret key or secret access key.")
 
     parser.add_argument('--api-base-url', type=str, help="API base URL.")
     parser.add_argument('--api-type', type=str, help="API type.")

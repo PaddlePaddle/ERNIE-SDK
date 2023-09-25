@@ -23,6 +23,7 @@ class APIType(enum.Enum):
     QIANFAN = 1
     YINIAN = 2
     AISTUDIO = 3
+    QIANFAN_SFT = 4
 
 
 def convert_str_to_api_type(api_type_str: str) -> APIType:
@@ -33,6 +34,8 @@ def convert_str_to_api_type(api_type_str: str) -> APIType:
         return APIType.YINIAN
     elif s in ('aistudio', 'ai_studio'):
         return APIType.AISTUDIO
+    elif s in ('qianfan_sft', 'qianfan-sft'):
+        return APIType.QIANFAN_SFT
     else:
         raise errors.UnsupportedAPITypeError(
             f"{repr(api_type_str)} cannot be recognized as an API type.")
