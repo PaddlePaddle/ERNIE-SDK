@@ -135,7 +135,10 @@ def create_components(functions):
                             'display': False
                         }],
                         bubble_full_width=False)
-                    input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
+                    input_text = gr.Textbox(
+                        label="消息内容",
+                        value="请问12和16的“魔法运算”结果是多少？",
+                        placeholder="请输入...")
                     with gr.Row():
                         send_text_btn = gr.Button("发送消息")
                         regen_btn = gr.Button("重新生成")
@@ -174,8 +177,8 @@ def create_components(functions):
                         func_out_params = JSONCode(
                             label="响应参数", interactive=False)
                         with gr.Row():
-                            call_func_btn = gr.Button("调用函数", scale=1)
-                            send_res_btn = gr.Button("发送调用结果", scale=1)
+                            call_func_btn = gr.Button("调用函数")
+                            send_res_btn = gr.Button("发送调用结果")
                         reset_func_btn = gr.Button("重置函数调用信息")
 
         with gr.Accordion(label="原始对话上下文信息", open=False):
@@ -723,7 +726,7 @@ def extract_history(context, old_history=None):
         pair = []
         if user_message['role'] == 'function':
             pair.append(
-                f"**【函数调用】** 我调用了函数`{user_message['name']}`，函数的返回结果如下：\n```\n{to_pretty_json(user_message['content'], from_json=True)}\n```"
+                f"**【函数调用】** 我调用了函数`{user_message['name']}`，函数的返回结果如下：\n\n```\n{to_pretty_json(user_message['content'], from_json=True)}\n```"
             )
         elif user_message['role'] == 'user':
             pair.append(user_message['content'])
@@ -738,7 +741,7 @@ def extract_history(context, old_history=None):
             if 'function_call' in assistant_message:
                 function_call = assistant_message['function_call']
                 pair.append(
-                    f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
+                    f"**【函数调用】** {function_call['thoughts']}\n\n我建议调用函数`{function_call['name']}`，传入如下参数：\n\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
                 )
             else:
                 pair.append(assistant_message['content'])
