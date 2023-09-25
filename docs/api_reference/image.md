@@ -35,6 +35,7 @@ ernie.api_type = "yinian"
 
 ```python
 {
+  "rcode": 200,
    "data": {
      "task_id": 1659384536691865192,
      "task_status": "SUCCESS",
@@ -58,11 +59,11 @@ ernie.api_type = "yinian"
 }
 ```
 
-返回结果的具体字段含义如下表：
+返回结果的关键字段含义如下表：
 
 | 字段名  | 类型   | 描述  |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态。 |
+| rcode | int | HTTP响应状态码。 |
 | data | dict | 返回数据。 |
 
 `data`包含如下键值对：

@@ -16,7 +16,7 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.types import (FilesType, HeadersType, ParamsType, ResponseT)
 from .abc import Creatable
 from .resource import EBResource
 

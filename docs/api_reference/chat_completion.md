@@ -134,7 +134,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 ```python
 {
-    "code": 200,
+    "rcode": 200,
     "id": "as-0rphgw7hw2",
     "object": "chat.completion",
     "created": 1692875360,
@@ -151,11 +151,11 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 }
 ```
 
-`erniebot.response.EBResponse`对象的各字段含义如下表所示：
+`erniebot.response.EBResponse`对象的各关键字段含义如下表所示：
 
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态。 |
+| rcode | int | HTTP响应状态码。 |
 | result | string | 对话返回的生成结果。 |
 | is_truncated | boolean | 生成结果是否被长度限制截断。 |
 | sentence_id | int | 仅流式模式下返回该字段，表示返回结果中的文本顺序，从`0`开始计数。 |

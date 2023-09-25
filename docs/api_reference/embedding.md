@@ -25,7 +25,7 @@ erniebot.Embedding.create(**kwargs: Any)
 
 ```python
 {
-    "code": 200,
+    "rcode": 200,
     "id": "as-s0tdsgnuu4",
     "object": "embedding_list",
     "created": 1692933427,
@@ -58,11 +58,11 @@ erniebot.Embedding.create(**kwargs: Any)
 }
 ```
 
-其中字段含义如下表所示：
+其中关键字段含义如下表所示：
 
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态。 |
+| rcode | int | HTTP响应状态码。 |
 | data | list[dict] | 向量计算结果，列表中元素个数与输入的文本个数一致。列表中的元素均为dict，包含如下键值对：<br>`object`：固定为`'embedding'`； <br>`embedding`：384维的向量结果； <br>`index`：序号。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens/total_tokens`：输入token数量。 |
 
