@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import numbers
 import pathlib
 import re
 import sys
@@ -89,7 +90,7 @@ def init_global_config() -> None:
     # Proxy to use
     cfg.add_item(URLItem(key='proxy', env_key='EB_PROXY'))
     # Timeout for retrying
-    cfg.add_item(PositiveFloatItem(key='timeout', env_key='EB_TIMEOUT'))
+    cfg.add_item(PositiveNumberItem(key='timeout', env_key='EB_TIMEOUT'))
 
 
 _T = TypeVar('_T')
@@ -129,9 +130,6 @@ class _ConfigItem(Generic[_T]):
             if self._key in mod.__dict__:
                 val = mod.__dict__[self._key]
                 assert not isinstance(val, types.ModuleType)
-                if self.data_type is not None:
-                    if not isinstance(val, self.data_type):
-                        raise TypeError
                 return val
             else:
                 if self._env_val is not None:
@@ -152,16 +150,16 @@ class _ConfigItem(Generic[_T]):
         return f"{{{repr(self.key)}: {self.value}}}"
 
 
-class FloatItem(_ConfigItem[float]):
+class NumberItem(_ConfigItem[float]):
     DATA_TYPE = float
     _FACTORY = float
 
     def validate(self, val: float) -> None:
-        if not isinstance(val, float):
+        if not isinstance(val, numbers.Real):
             raise TypeError
 
 
-class PositiveFloatItem(FloatItem):
+class PositiveNumberItem(NumberItem):
     def validate(self, val: float) -> None:
         super().validate(val)
         if val < 0.0:
