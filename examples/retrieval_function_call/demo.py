@@ -51,7 +51,6 @@ erniebot.sk = args.secret_key
 faiss_document_store = "faiss_document_store.db"
 # 如本地语义检索索引已经存在，则直接读取已经构建好的索引
 if os.path.exists(args.index_name) and os.path.exists(faiss_document_store):
-    # connect to existed FAISS Index
     document_store = FAISSDocumentStore.load(args.index_name)
     retriever = EmbeddingRetriever(
         document_store=document_store,
@@ -59,7 +58,7 @@ if os.path.exists(args.index_name) and os.path.exists(faiss_document_store):
         api_key=args.api_key,
         secret_key=args.secret_key,
     )
-# 如本地语义检索索引已经存在，则直接读取已经构建好的索引
+# 如本地语义检索索引不存在，则构建新的索引，并且保存在本地
 else:
     if os.path.exists(args.index_name):
         os.remove(args.index_name)
@@ -77,7 +76,7 @@ else:
         api_key=args.api_key,
         secret_key=args.secret_key,
     )
-    # 将Word文档转换为文字
+    # 将PDF文档转换为文字
     pdf_converter = PDFToTextConverter()
     # 将文字分片
     text_splitter = SpacyTextSplitter(
@@ -95,7 +94,7 @@ else:
     indexing_pipeline.run(file_paths=files_paths)
     document_store.save(args.index_name)
 
-# 构建用于查询的Pipelines
+# 构建用于检索的Pipeline
 ernie_bot = ErnieBot(api_key=args.api_key, secret_key=args.secret_key)
 query_pipeline = Pipeline()
 query_pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
