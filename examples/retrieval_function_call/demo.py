@@ -216,7 +216,7 @@ def prediction(history):
     messages.append({"role": "user", "content": query})
     # 调用eb的chat completion, 提供functions入参
     response = erniebot.ChatCompletion.create(
-        model="ernie-bot-3.5",
+        model="ernie-bot",
         messages=messages,
         functions=functions,
     )
@@ -246,7 +246,7 @@ def prediction(history):
                 res, ensure_ascii=False)
         })
         response = erniebot.ChatCompletion.create(
-            model="ernie-bot-3.5", messages=messages)
+            model="ernie-bot", messages=messages)
         result = response["result"]
     history.append([query, result])
     return history, logs
