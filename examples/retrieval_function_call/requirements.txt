@@ -1,0 +1,4 @@
+erniebot
+paddle-pipelines
+paddlepaddle
+gradio
