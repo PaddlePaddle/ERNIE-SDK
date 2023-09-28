@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import copy
-import functools
 import inspect
 import json
 from collections.abc import Mapping
-from typing import (Any, Dict, Iterator, Optional, Union)
+from typing import (Any, Dict, Iterator, Union)
+
+from typing_extensions import Self
 
 from .utils.misc import Constant
+
+__all__ = ['EBResponse']
 
 
 class EBResponse(Mapping):
@@ -32,15 +35,13 @@ class EBResponse(Mapping):
     """
 
     _INNER_DICT_TYPE = Constant(dict)
-    _INSTANCE_ATTRS = Constant(('_dict', '_result_key'))
+    _INSTANCE_ATTRS = Constant(('_dict', ))
     _RESERVED_KEYS = Constant(('code', 'body', 'headers'))
 
     def __init__(self,
                  code: int,
                  body: Union[str, Dict[str, Any]],
-                 headers: Dict[str, Any],
-                 *,
-                 result_key: Optional[str]=None) -> None:
+                 headers: Dict[str, Any]) -> None:
         """Initialize the instance based on response code, body, and headers.
 
         Args:
@@ -49,14 +50,16 @@ class EBResponse(Mapping):
                 in the dictionary will also get registered, so that they can be
                 accessed from the object using dot notation.
             headers: Response headers.
-            result_key: Key of the major result.
         """
         super().__init__()
         self._dict = self._INNER_DICT_TYPE(
             code=code, body=body, headers=headers)
-        self._result_key = result_key
         if isinstance(body, dict):
             self._update_from_dict(body)
+
+    @classmethod
+    def from_response(cls, response: 'EBResponse') -> Self:
+        return cls(response.code, response.body, response.headers)
 
     def __getitem__(self, key: str) -> Any:
         if key in self._dict:
@@ -73,8 +76,6 @@ class EBResponse(Mapping):
 
     def __repr__(self) -> str:
         params = f"code={repr(self.code)}, body={repr(self.body)}, headers={repr(self.headers)}"
-        if self._result_key is not None:
-            params += f", result_key={repr(self._result_key)}"
         return f"{self.__class__.__name__}({params})"
 
     def __str__(self) -> str:
@@ -140,24 +141,13 @@ class EBResponse(Mapping):
         code = state.pop('code')
         body = state.pop('body')
         headers = state.pop('headers')
-        return (functools.partial(
-            self.__class__, result_key=self._result_key),
-                (code, body, headers), state)
+        return (self.__class__, (code, body, headers), state)
 
     def __setstate__(self, state: dict) -> None:
         self._dict.update(state)
 
     def get_result(self) -> Any:
-        if self._result_key is None:
-            raise RuntimeError("`result_key` is not set.")
-        else:
-            return self._dict[self._result_key]
-
-    def get_result_key(self) -> Optional[str]:
-        return self._result_key
-
-    def set_result_key(self, key: str) -> None:
-        self._result_key = key
+        return self.body
 
     def to_dict(self, deep_copy: bool=False) -> Dict[str, Any]:
         if deep_copy:
@@ -175,31 +165,3 @@ class EBResponse(Mapping):
                 raise KeyError(f"{repr(k)} is a reserved key.")
             else:
                 self._dict[k] = v
-
-
-class ChatResponse(EBResponse):
-    def __init__(self,
-                 code: int,
-                 body: Union[str, Dict[str, Any]],
-                 headers: Dict[str, Any],
-                 *,
-                 result_key: Optional[str]=None) -> None:
-        super().__init__(code, body, headers, result_key=result_key)
-        if self._result_key is None:
-            if self.is_function_response:
-                self._result_key = 'function_call'
-            else:
-                self._result_key = 'result'
-
-    @property
-    def is_function_response(self) -> bool:
-        return 'function_call' in self
-
-    def to_message(self) -> Dict[str, Any]:
-        message: Dict[str, Any] = {'role': 'assistant'}
-        if self.is_function_response:
-            message['content'] = None
-            message['function_call'] = self.function_call
-        else:
-            message['content'] = self.result
-        return message

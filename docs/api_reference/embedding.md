@@ -66,7 +66,7 @@ erniebot.Embedding.create(**kwargs: Any)
 | data | list[dict] | 向量计算结果，列表中元素个数与输入的文本个数一致。列表中的元素均为dict，包含如下键值对：<br>`object`：固定为`'embedding'`； <br>`embedding`：384维的向量结果； <br>`index`：序号。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens/total_tokens`：输入token数量。 |
 
-假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['data']`或`resp.data`均可获取`data`字段的内容。此外，使用`resp.get_result()`可以获取响应中的“主要结果”。对于此接口来说，`resp.get_result()`的返回结果与`resp.data`一致。
+假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['data']`或`resp.data`均可获取`data`字段的内容。此外，可以使用`resp.get_result()`获取响应中的“主要结果”。对于此接口来说，`resp.get_result()`返回一个Python list，其中顺序包含每段输入文本的向量结果。
 
 ## 使用示例
 

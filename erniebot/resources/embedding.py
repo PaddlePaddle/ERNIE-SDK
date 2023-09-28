@@ -108,8 +108,12 @@ class Embedding(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        def _process(resp: EBResponse) -> EBResponse:
-            resp.set_result_key('data')
-            return resp
+        return transform(EmbeddingResponse.from_response, resp)
 
-        return transform(_process, resp)
+
+class EmbeddingResponse(EBResponse):
+    def get_result(self) -> Any:
+        embeddings = []
+        for res in self.data:
+            embeddings.append(res['embedding'])
+        return embeddings

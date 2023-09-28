@@ -82,7 +82,7 @@ ernie.api_type = "yinian"
 | sub_task_error_code | int | 子任务任务错误码，`0`表示正常，`501`表示文本黄反拦截，`201`表示模型生图失败。 |
 | final_image_list | list[dict] | 子任务生成图像的列表。列表中的元素均为dict，包含如下键值对：<br>`img_url`：图片的下载地址，默认1小时后失效； <br>`height`：图片的高度； <br>`width`：图片的宽度； <br>`img_approve_conclusion`：图片机审结果，`'block'`表示输出图片违规，`'review'`表示输出图片疑似违规，`'pass'`表示输出图片未发现问题。 |
 
-假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['data']`或`resp.data`均可获取`data`字段的内容。此外，使用`resp.get_result()`可以获取响应中的“主要结果”。对于此接口来说，`resp.get_result()`的返回结果与`resp.data`一致。
+假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['data']`或`resp.data`均可获取`data`字段的内容。此外，可以使用`resp.get_result()`获取响应中的“主要结果”。对于此接口来说，`resp.get_result()`返回一个Python list，其中包含机审通过的所有图片的URL。
 
 ## 使用示例
 

@@ -202,7 +202,6 @@ class ImageV1(_Image):
         return url, params, headers
 
     def _post_process(self, resp_f: EBResponse) -> EBResponse:
-        resp_f.set_result_key('data')
         return resp_f
 
     @staticmethod
@@ -306,8 +305,7 @@ class ImageV2(_Image):
         return url, params, headers
 
     def _post_process(self, resp_f: EBResponse) -> EBResponse:
-        resp_f.set_result_key('data')
-        return resp_f
+        return ImageV2Response.from_response(resp_f)
 
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:
@@ -317,4 +315,16 @@ class ImageV2(_Image):
         return status == 'SUCCESS'
 
 
+class ImageV2Response(EBResponse):
+    def get_result(self) -> Any:
+        image_urls = []
+        for task_item in self.data['sub_task_result_list']:
+            for image_item in task_item['final_image_list']:
+                review_conclusion = image_item['img_approve_conclusion']
+                if review_conclusion == 'pass':
+                    image_urls.append(image_item['img_url'])
+        return image_urls
+
+
 Image: TypeAlias = ImageV2
+ImageResponse: TypeAlias = ImageV2Response
