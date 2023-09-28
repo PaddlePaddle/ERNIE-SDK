@@ -67,7 +67,7 @@ def test_function_calling(model="ernie-bot"):
             },
         }, ],
         stream=False)
-    print(response)
+    print(response.get_result())
 
 
 if __name__ == "__main__":

@@ -165,7 +165,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`：输入与输出的token总数；<br> `plugins`：插件消耗的token数量。 |
 | function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`messages`](#messages)中的`function_call`。 |
 
-字段的访问方式有2种：假设`resp`为一个`erniebot.response.EBResponse`对象，`resp['result']`或`resp.result`均可获取`result`字段的内容。
+假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['result']`或`resp.result`均可获取`result`字段的内容。此外，使用`resp.get_result()`可以获取响应中的“主要结果”：当模型返回函数调用信息时（此时，`resp`具有`function_call`字段），`resp.get_result()`的返回结果与`resp.function_call`一致；否则，`resp.get_result()`的返回结果与`resp.result`一致，即模型给出的回复文本。
 
 ## 使用示例
 
@@ -187,10 +187,10 @@ response = erniebot.ChatCompletion.create(
 
 result = ""
 if stream:
-    for res in response:
-        result += res.result
+    for resp in response:
+        result += resp.get_result()
 else:
-    result = response.result
+    result = response.get_result()
 
 print("ERNIEBOT: ", result)
 ```

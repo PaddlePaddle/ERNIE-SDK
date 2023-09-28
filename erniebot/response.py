@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import copy
+import functools
+import inspect
 import json
 from collections.abc import Mapping
-from typing import (Any, Dict, Iterator, Union)
+from typing import (Any, Dict, Iterator, Optional, Union)
 
 from .utils.misc import Constant
 
@@ -29,15 +31,16 @@ class EBResponse(Mapping):
     body are accessible through attributes.
     """
 
-    __slots__ = ('__dict', )
-
     _INNER_DICT_TYPE = Constant(dict)
+    _INSTANCE_ATTRS = Constant(('_dict', '_result_key'))
     _RESERVED_KEYS = Constant(('code', 'body', 'headers'))
 
     def __init__(self,
                  code: int,
                  body: Union[str, Dict[str, Any]],
-                 headers: Dict[str, Any]) -> None:
+                 headers: Dict[str, Any],
+                 *,
+                 result_key: Optional[str]=None) -> None:
         """Initialize the instance based on response code, body, and headers.
 
         Args:
@@ -46,29 +49,33 @@ class EBResponse(Mapping):
                 in the dictionary will also get registered, so that they can be
                 accessed from the object using dot notation.
             headers: Response headers.
+            result_key: Key of the major result.
         """
         super().__init__()
-        # Private name mangling to avoid conflicts with keys in `body`.
-        self.__dict = self._INNER_DICT_TYPE(
+        self._dict = self._INNER_DICT_TYPE(
             code=code, body=body, headers=headers)
+        self._result_key = result_key
         if isinstance(body, dict):
             self._update_from_dict(body)
 
     def __getitem__(self, key: str) -> Any:
-        if key in self.__dict:
-            return self.__dict[key]
+        if key in self._dict:
+            return self._dict[key]
         if hasattr(self.__class__, '__missing__'):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self.__dict)
+        return iter(self._dict)
 
     def __len__(self) -> int:
-        return len(self.__dict)
+        return len(self._dict)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(code={repr(self.code)}, body={repr(self.body)}, headers={repr(self.headers)})"
+        params = f"code={repr(self.code)}, body={repr(self.body)}, headers={repr(self.headers)}"
+        if self._result_key is not None:
+            params += f", result_key={repr(self._result_key)}"
+        return f"{self.__class__.__name__}({params})"
 
     def __str__(self) -> str:
         def _format(obj: object, level: int=0) -> str:
@@ -117,33 +124,82 @@ class EBResponse(Mapping):
 
     def __getattr__(self, key: str) -> Any:
         try:
-            val = self.__dict[key]
+            val = self._dict[key]
             return val
         except KeyError:
             raise AttributeError
 
+    def __setattr__(self, key: str, value: Any) -> None:
+        if key in self._INSTANCE_ATTRS:
+            return super().__setattr__(key, value)
+        else:
+            raise AttributeError
+
     def __reduce__(self) -> tuple:
-        state = copy.copy(self.__dict)
+        state = copy.copy(self._dict)
         code = state.pop('code')
         body = state.pop('body')
         headers = state.pop('headers')
-        return (self.__class__, (code, body, headers), state)
+        return (functools.partial(
+            self.__class__, result_key=self._result_key),
+                (code, body, headers), state)
 
     def __setstate__(self, state: dict) -> None:
-        self.__dict.update(state)
+        self._dict.update(state)
+
+    def get_result(self) -> Any:
+        if self._result_key is None:
+            raise RuntimeError("`result_key` is not set.")
+        else:
+            return self._dict[self._result_key]
+
+    def get_result_key(self) -> Optional[str]:
+        return self._result_key
+
+    def set_result_key(self, key: str) -> None:
+        self._result_key = key
 
     def to_dict(self, deep_copy: bool=False) -> Dict[str, Any]:
         if deep_copy:
-            return copy.deepcopy(self.__dict)
+            return copy.deepcopy(self._dict)
         else:
-            return copy.copy(self.__dict)
+            return copy.copy(self._dict)
 
     def to_json(self) -> str:
-        return json.dumps(self.__dict)
+        return json.dumps(self._dict)
 
     def _update_from_dict(self, dict_: Dict[str, Any]) -> None:
+        member_names = set(pair[0] for pair in inspect.getmembers(self))
         for k, v in dict_.items():
-            if k not in self._RESERVED_KEYS:
-                self.__dict[k] = v
+            if k in self._RESERVED_KEYS or k in member_names:
+                raise KeyError(f"{repr(k)} is a reserved key.")
             else:
-                raise ValueError(f"{repr(k)} is a reserved key.")
+                self._dict[k] = v
+
+
+class ChatResponse(EBResponse):
+    def __init__(self,
+                 code: int,
+                 body: Union[str, Dict[str, Any]],
+                 headers: Dict[str, Any],
+                 *,
+                 result_key: Optional[str]=None) -> None:
+        super().__init__(code, body, headers, result_key=result_key)
+        if self._result_key is None:
+            if self.is_function_response:
+                self._result_key = 'function_call'
+            else:
+                self._result_key = 'result'
+
+    @property
+    def is_function_response(self) -> bool:
+        return 'function_call' in self
+
+    def to_message(self) -> Dict[str, Any]:
+        message: Dict[str, Any] = {'role': 'assistant'}
+        if self.is_function_response:
+            message['content'] = None
+            message['function_call'] = self.function_call
+        else:
+            message['content'] = self.result
+        return message

@@ -26,7 +26,7 @@ erniebot.access_token = "<access-token-for-yinian>"
 
 response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
 
-print(response)
+print(response.get_result())
 
 img_url = response["data"]["sub_task_result_list"][0]["final_image_list"][0]["img_url"]
 print(img_url)

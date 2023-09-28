@@ -16,7 +16,9 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
+from erniebot.response import EBResponse
 from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
+from erniebot.utils.misc import transform
 from .abc import Creatable
 from .resource import EBResource
 
@@ -106,4 +108,8 @@ class Embedding(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        return resp
+        def _process(resp: EBResponse) -> EBResponse:
+            resp.set_result_key('data')
+            return resp
+
+        return transform(_process, resp)

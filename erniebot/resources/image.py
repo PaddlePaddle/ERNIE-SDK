@@ -64,6 +64,8 @@ class _Image(EBResource):
             # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
             request_timeout=request_timeout)
 
+        resp_f = self._post_process(resp_f)
+
         return resp_f
 
     async def acreate_resource(self, **create_kwargs: Any) -> EBResponse:
@@ -89,6 +91,8 @@ class _Image(EBResource):
             # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
             request_timeout=request_timeout)
 
+        resp_f = self._post_process(resp_f)
+
         return resp_f
 
     def _prepare_paint(self,
@@ -103,6 +107,9 @@ class _Image(EBResource):
                                                           Optional[ParamsType],
                                                           Optional[HeadersType],
                                                           ]:
+        raise NotImplementedError
+
+    def _post_process(self, resp_f: EBResponse) -> EBResponse:
         raise NotImplementedError
 
     @staticmethod
@@ -193,6 +200,10 @@ class ImageV1(_Image):
         headers = {'Accept': 'application/json'}
 
         return url, params, headers
+
+    def _post_process(self, resp_f: EBResponse) -> EBResponse:
+        resp_f.set_result_key('data')
+        return resp_f
 
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:
@@ -293,6 +304,10 @@ class ImageV2(_Image):
         headers = {'Accept': 'application/json'}
 
         return url, params, headers
+
+    def _post_process(self, resp_f: EBResponse) -> EBResponse:
+        resp_f.set_result_key('data')
+        return resp_f
 
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:

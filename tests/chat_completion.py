@@ -1,5 +1,8 @@
+import sys
+
 import erniebot
 from erniebot.utils import logger
+
 logger.set_level("WARNING")
 
 
@@ -18,7 +21,7 @@ def test_chat_completion(model="ernie-bot"):
             "content": "我在深圳，周末可以去哪里玩？"
         }],
         stream=False)
-    print(response)
+    print(response.get_result())
 
 
 def test_chat_completion_stream_mode(model="ernie-bot"):
@@ -38,7 +41,9 @@ def test_chat_completion_stream_mode(model="ernie-bot"):
         stream=True)
 
     for item in response:
-        print(item)
+        sys.stdout.write(item.get_result())
+        sys.stdout.flush()
+    sys.stdout.write("\n")
 
 
 if __name__ == "__main__":

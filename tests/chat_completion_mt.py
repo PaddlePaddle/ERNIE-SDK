@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import threading
 
 import erniebot
@@ -23,7 +24,7 @@ def create_chat_completion(model):
             'content': "我在深圳，周末可以去哪里玩？"
         }],
         stream=False)
-    print(resp)
+    print(resp.get_result())
 
 
 def create_chat_completion_stream(model):
@@ -43,7 +44,9 @@ def create_chat_completion_stream(model):
         stream=True)
 
     for item in resp:
-        print(item)
+        sys.stdout.write(item.get_result())
+        sys.stdout.flush()
+    sys.stdout.write("\n")
 
 
 def test_mt(target, args):
