@@ -100,21 +100,21 @@ class QianfanBackend(_BCEBackend):
             ecode = resp['error_code']
             emsg = resp['error_msg']
             if ecode == 2:
-                raise errors.ServiceUnavailableError(emsg)
+                raise errors.ServiceUnavailableError(emsg, ecode=ecode)
             elif ecode == 6:
-                raise errors.PermissionError(emsg)
+                raise errors.PermissionError(emsg, ecode=ecode)
             elif ecode in (17, 18, 19):
-                raise errors.RequestLimitError(emsg)
+                raise errors.RequestLimitError(emsg, ecode=ecode)
             elif ecode == 110:
-                raise errors.InvalidTokenError(emsg)
+                raise errors.InvalidTokenError(emsg, ecode=ecode)
             elif ecode == 111:
-                raise errors.TokenExpiredError(emsg)
+                raise errors.TokenExpiredError(emsg, ecode=ecode)
             elif ecode == 336003:
-                raise errors.InvalidParameterError(emsg)
+                raise errors.InvalidParameterError(emsg, ecode=ecode)
             elif ecode == 336100:
-                raise errors.TryAgain(emsg)
+                raise errors.TryAgain(emsg, ecode=ecode)
             else:
-                raise errors.APIError(emsg)
+                raise errors.APIError(emsg, ecode=ecode)
         else:
             return resp
 
@@ -128,17 +128,17 @@ class YinianBackend(_BCEBackend):
             ecode = resp['error_code']
             emsg = resp['error_msg']
             if ecode in (4, 13, 15, 17, 18):
-                raise errors.RequestLimitError(emsg)
+                raise errors.RequestLimitError(emsg, ecode=ecode)
             elif ecode == 6:
-                raise errors.PermissionError(emsg)
+                raise errors.PermissionError(emsg, ecode=ecode)
             elif ecode == 110:
-                raise errors.InvalidTokenError(emsg)
+                raise errors.InvalidTokenError(emsg, ecode=ecode)
             elif ecode == 111:
-                raise errors.TokenExpiredError(emsg)
+                raise errors.TokenExpiredError(emsg, ecode=ecode)
             elif ecode == 216100:
-                raise errors.InvalidParameterError(emsg)
+                raise errors.InvalidParameterError(emsg, ecode=ecode)
             else:
-                raise errors.APIError(emsg)
+                raise errors.APIError(emsg, ecode=ecode)
         else:
             return resp
 
@@ -161,21 +161,21 @@ class AIStudioBackend(EBBackend):
             ecode = resp['errorCode']
             emsg = resp['errorMsg']
             if ecode == 2:
-                raise errors.ServiceUnavailableError(emsg)
+                raise errors.ServiceUnavailableError(emsg, ecode=ecode)
             elif ecode == 6:
-                raise errors.PermissionError(emsg)
+                raise errors.PermissionError(emsg, ecode=ecode)
             elif ecode in (17, 18, 19, 40406):
-                raise errors.RequestLimitError(emsg)
+                raise errors.RequestLimitError(emsg, ecode=ecode)
             elif ecode == 110:
-                raise errors.InvalidTokenError(emsg)
+                raise errors.InvalidTokenError(emsg, ecode=ecode)
             elif ecode == 111:
-                raise errors.TokenExpiredError(emsg)
+                raise errors.TokenExpiredError(emsg, ecode=ecode)
             elif ecode == 336003:
-                raise errors.InvalidParameterError(emsg)
+                raise errors.InvalidParameterError(emsg, ecode=ecode)
             elif ecode == 336100:
-                raise errors.TryAgain(emsg)
+                raise errors.TryAgain(emsg, ecode=ecode)
             else:
-                raise errors.APIError(emsg)
+                raise errors.APIError(emsg, ecode=ecode)
         else:
             return EBResponse(resp.code, resp.result, resp.headers)
 

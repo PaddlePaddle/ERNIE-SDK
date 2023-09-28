@@ -108,7 +108,16 @@ class TimeoutError(HTTPRequestError):
 
 class APIError(HTTPRequestError):
     """Exception that's raised when the API responds with an error code."""
-    pass
+
+    def __init__(self,
+                 message: Optional[str]=None,
+                 rcode: Optional[int]=None,
+                 rbody: Optional[str]=None,
+                 rheaders: Optional[Mapping[str, Any]]=None,
+                 ecode: Optional[int]=None) -> None:
+        super().__init__(
+            message=message, rcode=rcode, rbody=rbody, rheaders=rheaders)
+        self.ecode = ecode
 
 
 class InvalidParameterError(APIError):
