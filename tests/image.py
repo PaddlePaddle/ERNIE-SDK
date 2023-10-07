@@ -12,4 +12,4 @@ if __name__ == "__main__":
         height=512,
         version='v2',
         image_num=1)
-    print(response)
+    print(response.get_result())

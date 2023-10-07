@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import asyncio
+import sys
 
 import erniebot
 from erniebot.utils.logging import logger
@@ -23,7 +24,7 @@ async def acreate_chat_completion(model):
             'content': "我在深圳，周末可以去哪里玩？"
         }],
         stream=False)
-    print(resp)
+    print(resp.get_result())
 
 
 async def acreate_chat_completion_stream(model):
@@ -43,7 +44,9 @@ async def acreate_chat_completion_stream(model):
         stream=True)
 
     async for item in resp:
-        print(item)
+        sys.stdout.write(item.get_result())
+        sys.stdout.flush()
+    sys.stdout.write("\n")
 
 
 async def test_aio(target, args):

@@ -19,7 +19,7 @@ from typing_extensions import TypeAlias
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType)
+from erniebot.types import (HeadersType, ParamsType)
 from .resource import EBResource
 
 
@@ -63,6 +63,8 @@ class _Image(EBResource):
             # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
             request_timeout=request_timeout)
 
+        resp_f = self._postprocess(resp_f)
+
         return resp_f
 
     async def acreate_resource(self, **create_kwargs: Any) -> EBResponse:
@@ -87,6 +89,8 @@ class _Image(EBResource):
             # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
             request_timeout=request_timeout)
 
+        resp_f = self._postprocess(resp_f)
+
         return resp_f
 
     def _prepare_paint(self,
@@ -101,6 +105,9 @@ class _Image(EBResource):
                                                           Optional[ParamsType],
                                                           Optional[HeadersType],
                                                           ]:
+        raise NotImplementedError
+
+    def _postprocess(self, resp_f: EBResponse) -> EBResponse:
         raise NotImplementedError
 
     @staticmethod
@@ -191,6 +198,9 @@ class ImageV1(_Image):
         headers = {'Accept': 'application/json'}
 
         return url, params, headers
+
+    def _postprocess(self, resp_f: EBResponse) -> EBResponse:
+        return resp_f
 
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:
@@ -292,6 +302,9 @@ class ImageV2(_Image):
 
         return url, params, headers
 
+    def _postprocess(self, resp_f: EBResponse) -> EBResponse:
+        return ImageV2Response.from_response(resp_f)
+
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:
         status = resp.data['task_status']
@@ -300,4 +313,16 @@ class ImageV2(_Image):
         return status == 'SUCCESS'
 
 
+class ImageV2Response(EBResponse):
+    def get_result(self) -> Any:
+        image_urls = []
+        for task_item in self.data['sub_task_result_list']:
+            for image_item in task_item['final_image_list']:
+                review_conclusion = image_item['img_approve_conclusion']
+                if review_conclusion == 'pass':
+                    image_urls.append(image_item['img_url'])
+        return image_urls
+
+
 Image: TypeAlias = ImageV2
+ImageResponse: TypeAlias = ImageV2Response

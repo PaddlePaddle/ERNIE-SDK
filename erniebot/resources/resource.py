@@ -34,7 +34,7 @@ class EBResource(object):
 
     This class implements the resource protocol and provides the following
     additional functionalities:
-    1. Support synchronous and asynchronous HTTP polling.
+    1. Synchronous and asynchronous HTTP polling.
     2. Support different backends.
     3. Override the global settings.
 

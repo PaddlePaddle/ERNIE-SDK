@@ -17,3 +17,7 @@ from .chat_file import ChatFile
 from .embedding import Embedding
 from .fine_tuning import FineTuningTask, FineTuningJob
 from .image import Image, ImageV1, ImageV2
+
+__all__ = [
+    'ChatCompletion', 'ChatFile', 'Embedding', 'Image', 'ImageV1', 'ImageV2'
+]

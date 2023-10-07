@@ -35,7 +35,7 @@ erniebot.access_token = "<access-token-for-aistudio>"
 # Create a chat completion
 response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
 
-print(response.result)
+print(response.get_result())
 ```
 
 ### 命令行接口（CLI）
@@ -89,7 +89,7 @@ response = erniebot.ChatCompletion.create(
         "content": "我在深圳，周末可以去哪里玩？"
     }])
 
-print(response)
+print(response.get_result())
 ```
 
 ### 语义向量（Embedding）
@@ -113,7 +113,7 @@ response = erniebot.Embedding.create(
         "2018年深圳市各区GDP"
         ])
 
-print(response)
+print(response.get_result())
 ```
 
 大家可以登陆[文心百中体验中心](https://wenxin.baidu.com/baizhong/knowledgesearch)，体验更多大模型语义搜索的能力。
@@ -137,7 +137,7 @@ response = erniebot.Image.create(
     height=512
 )
 
-print(response)
+print(response.get_result())
 ```
 
 <img width="512" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c">
@@ -201,7 +201,7 @@ response = erniebot.ChatCompletion.create(
         },
     }, ],
 )
-print(response)
+print(response.get_result())
 ```
 
 ## Gradio Demos
