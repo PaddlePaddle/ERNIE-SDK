@@ -17,7 +17,9 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
+from erniebot.utils.misc import transform
 from .abc import Creatable
+from .chat_completion import ChatResponse
 from .resource import EBResource
 
 
@@ -74,4 +76,4 @@ class ChatFile(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        return resp
+        return transform(ChatResponse.from_response, resp)

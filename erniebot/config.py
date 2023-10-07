@@ -59,7 +59,7 @@ class GlobalConfig(BaseConfig, metaclass=Singleton):
                 cfg.validate(val)
             dict_[key] = val
         if len(overrides) != 0:
-            raise ValueError(f"Unexpected keys: {list(overrides.keys())}")
+            raise KeyError(f"Unexpected keys: {list(overrides.keys())}")
         return dict_
 
 

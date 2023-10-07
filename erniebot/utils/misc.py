@@ -14,8 +14,9 @@
 
 import threading
 from typing import (ClassVar)
+from collections.abc import AsyncIterator, Iterator
 
-__all__ = ['Constant', 'Singleton']
+__all__ = ['Constant', 'Singleton', 'transform']
 
 
 class Constant(object):
@@ -40,3 +41,12 @@ class Singleton(type):
                 if cls not in cls._insts:
                     cls._insts[cls] = super().__call__(*args, **kwargs)
         return cls._insts[cls]
+
+
+def transform(func, data):
+    if isinstance(data, Iterator):
+        return (func(d) for d in data)
+    elif isinstance(data, AsyncIterator):
+        return (func(d) async for d in data)
+    else:
+        return func(data)

@@ -16,7 +16,9 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
+from erniebot.response import EBResponse
 from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
+from erniebot.utils.misc import transform
 from .abc import Creatable
 from .resource import EBResource
 
@@ -136,4 +138,25 @@ class ChatCompletion(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        return resp
+        return transform(ChatResponse.from_response, resp)
+
+
+class ChatResponse(EBResponse):
+    @property
+    def is_function_response(self) -> bool:
+        return hasattr(self, 'function_call')
+
+    def get_result(self) -> Any:
+        if self.is_function_response:
+            return self.function_call
+        else:
+            return self.result
+
+    def to_message(self) -> Dict[str, Any]:
+        message: Dict[str, Any] = {'role': 'assistant'}
+        if self.is_function_response:
+            message['content'] = None
+            message['function_call'] = self.function_call
+        else:
+            message['content'] = self.result
+        return message
