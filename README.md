@@ -68,7 +68,7 @@ export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
 ```
 
-## 经典示例
+## 典型示例
 
 ### 对话补全（Chat Completion）
 
