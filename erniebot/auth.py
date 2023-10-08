@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import functools
+import http
 import json
 import threading
 import time
@@ -202,9 +203,9 @@ class BCEAuthManager(AuthManager):
             'client_secret': sk
         }
         result = requests.request(method='GET', url=url, params=params)
-        if result.status_code != 200:
+        if result.status_code != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
-                "Status code is not 200.",
+                f"Status code is not {http.HTTPStatus.OK}.",
                 rcode=result.status_code,
                 rbody=result.content.decode('utf-8'),
                 rheaders=result.headers)

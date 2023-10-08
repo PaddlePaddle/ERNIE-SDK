@@ -39,6 +39,7 @@
 from __future__ import annotations
 
 import asyncio
+import http
 import json
 import threading
 import time
@@ -434,9 +435,9 @@ class EBClient(object):
         resp = EBResponse(
             rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
 
-        if rcode != 200:
+        if rcode != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
-                "Status code is not 200.",
+                f"Status code is not {http.HTTPStatus.OK}.",
                 rcode=resp.rcode,
                 rbody=resp.rbody,
                 rheaders=resp.rheaders)
