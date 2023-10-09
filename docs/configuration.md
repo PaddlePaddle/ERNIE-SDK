@@ -7,14 +7,14 @@ ERNIE Bot SDK支持3种参数配置的方法：(1）使用环境变量，(2）�
 (1) 使用环境变量：
 
 ```{.sh .copy}
-export EB_API_TYPE="<eb-api-type>"
+export EB_API_TYPE='<eb-api-type>'
 ```
 
 (2) 使用全局变量：
 
 ```{.py .copy}
 import erniebot
-erniebot.api_type = "<eb-api-type>"
+erniebot.api_type = '<eb-api-type>'
 ```
 
 (3) 使用`_config_`参数：
@@ -24,12 +24,12 @@ import erniebot
 
 response = erniebot.ChatCompletion.create(
     _config_=dict(
-        api_type="<eb-api-type>",
+        api_type='<eb-api-type>',
     ),
-    model="ernie-bot",
+    model='ernie-bot',
     messages=[{
-        "role": "user",
-        "content": "你好，请介绍下你自己",
+        'role': 'user',
+        'content': "你好，请介绍下你自己",
     }],
 )
 ```

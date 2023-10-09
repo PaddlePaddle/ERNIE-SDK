@@ -42,8 +42,8 @@
 
 | 模型 | 说明 | API调用方式 |
 | :--- | :--- | :----- |
-| ernie-bot | 具备最优的知识增强和生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model="ernie-bot", ...)` |
-| ernie-bot-turbo | 具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model="ernie-bot-turbo", ...)`|
+| ernie-bot | 具备最优的知识增强和生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model='ernie-bot', ...)` |
+| ernie-bot-turbo | 具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)`|
 
 参阅[ChatCompletion API文档](../api_reference/chat_completion.md)了解API的完整使用方式。
 

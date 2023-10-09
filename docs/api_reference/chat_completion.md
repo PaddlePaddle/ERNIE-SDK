@@ -30,16 +30,16 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ```{.py .copy}
 [
     {
-        "role": "user",
-        "content": "你好啊"
+        'role': 'user',
+        'content': "你好啊"
     },
     {
-        "role": "assistant",
-        "content": "你好，我是文心一言"
+        'role': 'assistant',
+        'content': "你好，我是文心一言"
     },
     {
-        "role": "user",
-        "content": "深圳周末去哪里玩好?"
+        'role': 'user',
+        'content': "深圳周末去哪里玩好?"
     }
 ]
 ```
@@ -71,40 +71,40 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ```{.py .copy}
 [
     {
-        "name": "get_current_temperature",
-        "description": "获取指定城市的气温",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "城市名称"
+        'name': 'get_current_temperature',
+        'description': "获取指定城市的气温",
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'location': {
+                    'type': 'string',
+                    'description': "城市名称"
                 },
-                "unit": {
-                    "type": "string",
-                    "enum": [
-                        "摄氏度",
-                        "华氏度"
+                'unit': {
+                    'type': 'string',
+                    'enum': [
+                        '摄氏度',
+                        '华氏度'
                     ]
                 }
             },
-            "required": [
-                "location",
-                "unit"
+            'required': [
+                'location',
+                'unit'
             ]
         },
-        "responses": {
-            "type": "object",
-            "properties": {
-                "temperature": {
-                    "type": "integer",
-                    "description": "城市气温"
+        'responses': {
+            'type': 'object',
+            'properties': {
+                'temperature': {
+                    'type': 'integer',
+                    'description': "城市气温"
                 },
-                "unit": {
-                    "type": "string",
-                    "enum": [
-                        "摄氏度",
-                        "华氏度"
+                'unit': {
+                    'type': 'string',
+                    'enum': [
+                        '摄氏度',
+                        '华氏度'
                     ]
                 }
             }
@@ -134,19 +134,19 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 ```python
 {
-    "rcode": 200,
-    "id": "as-0rphgw7hw2",
-    "object": "chat.completion",
-    "created": 1692875360,
-    "result": "深圳有很多不同的地方可以周末去玩，以下是一些推荐：\n\n1. 深圳东部：深圳东部有着美丽的海滩和壮观的山脉，是进行户外活动和探险的好地方。你可以去大梅沙海滨公园、小梅沙海洋世界、南澳岛等地方。\n2. 深圳中心城区：这里有许多购物中心、美食街、夜市等，可以品尝各种美食，逛街购物。你也可以去世界之窗、深圳华侨城等主题公园。\n3. 深圳西部：深圳西部有许多历史文化名胜和自然风光，比如深圳大学城、蛇口海上世界、南山海岸城等。\n4. 深圳郊区：深圳郊区有许多农业观光园、水果采摘园等，可以体验农家乐和亲近大自然。你可以去光明农场、欢乐田园等地方。\n5. 深圳室内：如果你想在周末找一个室内活动，可以去深圳的博物馆、艺术馆、电影院等，欣赏文化展览或者观看电影。\n\n以上是一些深圳周末游的推荐，你可以根据自己的兴趣和时间来选择合适的地方。",
-    "is_truncated": false,
-    "need_clear_history": false,
-    "sentence_id": 0,
-    "is_end": false,
-    "usage": {
-        "prompt_tokens": 8,
-        "completion_tokens": 311,
-        "total_tokens": 319
+    'rcode': 200,
+    'id': 'as-0rphgw7hw2',
+    'object': 'chat.completion',
+    'created': 1692875360,
+    'result': "深圳有很多不同的地方可以周末去玩，以下是一些推荐：\n\n1. 深圳东部：深圳东部有着美丽的海滩和壮观的山脉，是进行户外活动和探险的好地方。你可以去大梅沙海滨公园、小梅沙海洋世界、南澳岛等地方。\n2. 深圳中心城区：这里有许多购物中心、美食街、夜市等，可以品尝各种美食，逛街购物。你也可以去世界之窗、深圳华侨城等主题公园。\n3. 深圳西部：深圳西部有许多历史文化名胜和自然风光，比如深圳大学城、蛇口海上世界、南山海岸城等。\n4. 深圳郊区：深圳郊区有许多农业观光园、水果采摘园等，可以体验农家乐和亲近大自然。你可以去光明农场、欢乐田园等地方。\n5. 深圳室内：如果你想在周末找一个室内活动，可以去深圳的博物馆、艺术馆、电影院等，欣赏文化展览或者观看电影。\n\n以上是一些深圳周末游的推荐，你可以根据自己的兴趣和时间来选择合适的地方。",
+    'is_truncated': false,
+    'need_clear_history': false,
+    'sentence_id': 0,
+    'is_end': false,
+    'usage': {
+        'prompt_tokens': 8,
+        'completion_tokens': 311,
+        'total_tokens': 319
     }
 }
 ```
@@ -172,15 +172,15 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
+erniebot.api_type = 'aistudio'
+erniebot.access_token = '<access-token-for-aistudio>'
 
 stream = False
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model='ernie-bot',
     messages=[{
-        "role": "user",
-        "content": "周末深圳去哪里玩？"
+        'role': 'user',
+        'content': "周末深圳去哪里玩？"
     }],
     top_p=0.95,
     stream=stream)

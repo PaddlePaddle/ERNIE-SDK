@@ -13,7 +13,7 @@ erniebot.Image.create(**kwargs: Any) -> EBResponse:
 调用Image接口前，需要首先设置`api_type`参数。
 
 ```{.py .copy}
-ernie.api_type = "yinian"
+ernie.api_type = 'yinian'
 ```
 
 `erniebot.Image.create` 接口的详细参数如下：
@@ -35,22 +35,22 @@ ernie.api_type = "yinian"
 
 ```python
 {
-  "rcode": 200,
-   "data": {
-     "task_id": 1659384536691865192,
-     "task_status": "SUCCESS",
-     "task_progress": 1
-     "sub_task_result_list": [
+  'rcode': 200,
+   'data': {
+     'task_id': 1659384536691865192,
+     'task_status': 'SUCCESS',
+     'task_progress': 1
+     'sub_task_result_list': [
         {
-          "sub_task_status": "SUCCESS",
-          "sub_task_progress": 1,
-          "sub_task_error_code": 0,
-          "final_image_list": [
+          'sub_task_status': 'SUCCESS',
+          'sub_task_progress': 1,
+          'sub_task_error_code': 0,
+          'final_image_list': [
            {  
-              "img_url": "http://aigc-t2p.bj.bcebos.com/artist-long/_final.png?02d252c87b91ed3b2f6327db0",
-              "width": 512,
-              "height": 512,
-              "img_approve_conclusion": "pass"
+              'img_url': "http://aigc-t2p.bj.bcebos.com/artist-long/_final.png?02d252c87b91ed3b2f6327db0",
+              'width': 512,
+              'height': 512,
+              'img_approve_conclusion': 'pass'
             }
         ]
       }
@@ -91,10 +91,10 @@ ernie.api_type = "yinian"
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = "yinian
-erniebot.access_token = "<access-token-for-yinian>"
+erniebot.api_type = 'yinian'
+erniebot.access_token = '<access-token-for-yinian>'
 
-response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
+response = erniebot.Image.create(model='ernie-vilg-v2', prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version='v2', image_num=1)
 
 print(response.result())
 ```
