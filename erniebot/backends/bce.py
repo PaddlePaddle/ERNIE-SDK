@@ -360,9 +360,9 @@ class QianfanBackend(_BCEBackend):
     BASE_URL: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if 'code' in resp and 'msg' in resp:
-            ecode = resp['code']
-            emsg = resp['msg']
+        if 'error_code' in resp and 'error_msg' in resp:
+            ecode = resp['error_code']
+            emsg = resp['error_msg']
             if ecode == 500001:
                 raise errors.InvalidParameterError(emsg, ecode=ecode)
             elif ecode == 500002:

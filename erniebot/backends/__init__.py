@@ -24,7 +24,7 @@ __all__ = ['build_backend']
 
 def build_backend(api_type: Union[str, APIType],
                   config_dict: Dict[str, Any],
-                  **opts) -> EBBackend:
+                  **opts: Any) -> EBBackend:
     if isinstance(api_type, str):
         api_type = convert_str_to_api_type(api_type)
     if api_type is APIType.QIANFAN:

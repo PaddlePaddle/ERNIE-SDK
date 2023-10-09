@@ -16,7 +16,9 @@ from typing import (Any, ClassVar, Dict, Optional, Tuple)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.response import EBResponse
+from erniebot.types import (FilesType, HeadersType, ParamsType, ResponseT)
+from erniebot.utils.misc import transform
 from .abc import Creatable, Queryable
 from .resource import EBResource
 
@@ -78,6 +80,9 @@ class FineTuningTask(EBResource, Creatable):
         request_timeout = kwargs.get('request_timeout', None)
 
         return url, params, headers, files, stream, request_timeout
+
+    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
+        return transform(FineTuningResponse.from_response, resp)
 
 
 class FineTuningJob(EBResource, Creatable, Queryable):
@@ -147,8 +152,8 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         params['trainMode'] = train_mode
         params['peftType'] = peft_type
         params['trainConfig'] = train_config
-        params['train_set'] = train_set
-        params['train_set_rate'] = train_set_rate
+        params['trainset'] = train_set
+        params['trainsetRate'] = train_set_rate
         if 'description' in kwargs:
             params['description'] = kwargs['description']
         params['baseTrainType'] = 'ERNIE-Bot-turbo'
@@ -167,6 +172,9 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         request_timeout = kwargs.get('request_timeout', None)
 
         return url, params, headers, files, stream, request_timeout
+
+    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
+        return transform(FineTuningResponse.from_response, resp)
 
     def _prepare_query(self,
                        kwargs: Dict[str, Any]) -> Tuple[str,
@@ -211,3 +219,11 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         request_timeout = kwargs.get('request_timeout', None)
 
         return url, params, headers, request_timeout
+
+    def _postprocess_query(self, resp: EBResponse) -> EBResponse:
+        return FineTuningResponse.from_response(resp)
+
+
+class FineTuningResponse(EBResponse):
+    def get_result(self) -> Any:
+        return self.result

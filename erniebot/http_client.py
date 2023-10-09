@@ -439,7 +439,7 @@ class EBClient(object):
             raise errors.HTTPRequestError(
                 f"Status code is not {http.HTTPStatus.OK}.",
                 rcode=resp.rcode,
-                rbody=resp.rbody,
+                rbody=str(resp.rbody),
                 rheaders=resp.rheaders)
 
         if self._resp_handler is not None:

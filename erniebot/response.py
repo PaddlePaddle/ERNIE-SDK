@@ -38,6 +38,10 @@ class EBResponse(Mapping):
     _INSTANCE_ATTRS = Constant(('_dict', ))
     _RESERVED_KEYS = Constant(('rcode', 'rbody', 'rheaders'))
 
+    rcode: int
+    rbody: Union[str, Dict[str, Any]]
+    rheaders: Dict[str, Any]
+
     def __init__(self,
                  rcode: int,
                  rbody: Union[str, Dict[str, Any]],
@@ -59,6 +63,9 @@ class EBResponse(Mapping):
 
     @classmethod
     def from_response(cls, response: 'EBResponse') -> Self:
+        resp_type = response.__class__
+        if resp_type is not EBResponse:
+            raise TypeError(f"`response` has type `{resp_type.__name__}`.")
         return cls(response.rcode, response.rbody, response.rheaders)
 
     def __getitem__(self, key: str) -> Any:
