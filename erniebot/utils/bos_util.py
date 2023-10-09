@@ -21,7 +21,7 @@ def upload_file_to_bos(origin_file: str,
                        upload_file_name: str,
                        category_dir: str='erniebot',
                        bos_host: str='bj.bcebos.com',
-                       bos_bucket: str='paddle2onnx',
+                       bos_bucket: str='ernie-bot-sdk',
                        access_key_id: Optional[str]=None,
                        secret_access_key: Optional[str]=None) -> str:
     from baidubce.bce_client_configuration import BceClientConfiguration  # type: ignore
