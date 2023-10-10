@@ -87,13 +87,15 @@ def create_components(functions):
                                 value=default_api_type,
                                 choices=['qianfan', 'aistudio'])
                             access_key = gr.Textbox(
-                                label="Access Key ID",
-                                info="用于访问后端平台的AK",
-                                type='password')
+                                label="AK",
+                                info="用于访问后端平台的API key或access key ID",
+                                type='password',
+                                visible=(default_api_type == 'qianfan'))
                             secret_key = gr.Textbox(
-                                label="Secret Access Key",
-                                info="用于访问后端平台的SK",
-                                type='password')
+                                label="SK",
+                                info="用于访问后端平台的secret key或secret access key",
+                                type='password',
+                                visible=(default_api_type == 'qianfan'))
                             access_token = gr.Textbox(
                                 label="Access Token",
                                 info="用于访问后端平台的access token",
@@ -117,7 +119,7 @@ def create_components(functions):
                                 info="控制采样随机性，该参数越小生成结果越稳定",
                                 value=0.95,
                                 minimum=0.05,
-                                maximum=1.5,
+                                maximum=1,
                                 step=0.05)
 
                 with gr.Column(scale=3):
@@ -133,13 +135,16 @@ def create_components(functions):
                             'display': False
                         }],
                         bubble_full_width=False)
-                    input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
+                    input_text = gr.Textbox(
+                        label="消息内容",
+                        value="请问12和16的“魔法运算”结果是多少？",
+                        placeholder="请输入...")
                     with gr.Row():
-                        clear_btn = gr.Button("重置对话")
                         send_text_btn = gr.Button("发送消息")
-                    with gr.Row():
                         regen_btn = gr.Button("重新生成")
+                    with gr.Row():
                         recall_btn = gr.Button("撤回消息")
+                        clear_btn = gr.Button("重置对话")
 
             func_call_accord = gr.Accordion(label="函数调用", open=False)
             with func_call_accord:
@@ -172,8 +177,8 @@ def create_components(functions):
                         func_out_params = JSONCode(
                             label="响应参数", interactive=False)
                         with gr.Row():
-                            call_func_btn = gr.Button("调用函数", scale=1)
-                            send_res_btn = gr.Button("发送调用结果", scale=1)
+                            call_func_btn = gr.Button("调用函数")
+                            send_res_btn = gr.Button("发送调用结果")
                         reset_func_btn = gr.Button("重置函数调用信息")
 
         with gr.Accordion(label="原始对话上下文信息", open=False):
@@ -190,6 +195,18 @@ def create_components(functions):
                 auth_state,
                 access_key,
                 secret_key,
+            ],
+        ).success(
+            reset_conversation,
+            inputs=state,
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
             ],
         )
         access_key.change(
@@ -272,20 +289,6 @@ def create_components(functions):
             ],
             show_progress=False,
         ).then(**enable_chat_input_args)
-        clear_btn.click(**disable_chat_input_args).then(
-            reset_conversation,
-            inputs=state,
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
         send_text_btn.click(**disable_chat_input_args).then(
             generate_response_for_text,
             inputs=[
@@ -345,6 +348,19 @@ def create_components(functions):
             inputs=state,
             outputs=[state, context_chatbot, raw_context_json],
             show_progress=False,
+        ).then(**enable_chat_input_args)
+        clear_btn.click(**disable_chat_input_args).then(
+            reset_conversation,
+            inputs=state,
+            outputs=[
+                state,
+                context_chatbot,
+                input_text,
+                raw_context_json,
+                func_name,
+                func_in_params,
+                func_out_params,
+            ],
         ).then(**enable_chat_input_args)
 
         chosen_func_names.select(
@@ -606,7 +622,12 @@ def generate_response(
 
     try:
         resp_stream = create_chat_completion(
-            _config_=auth_config, model=ernie_model, **data, stream=True)
+            _config_={k: v
+                      for k, v in auth_config.items() if v},
+            model=ernie_model,
+            **data,
+            stream=True,
+        )
     except eb.errors.TokenUpdateFailedError as e:
         handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
         yield get_fallback_return()
@@ -705,7 +726,7 @@ def extract_history(context, old_history=None):
         pair = []
         if user_message['role'] == 'function':
             pair.append(
-                f"**【函数调用】** 我调用了函数`{user_message['name']}`，函数的返回结果如下：\n```\n{to_pretty_json(user_message['content'], from_json=True)}\n```"
+                f"**【函数调用】** 我调用了函数`{user_message['name']}`，函数的返回结果如下：\n\n```\n{to_pretty_json(user_message['content'], from_json=True)}\n```"
             )
         elif user_message['role'] == 'user':
             pair.append(user_message['content'])
@@ -720,7 +741,7 @@ def extract_history(context, old_history=None):
             if 'function_call' in assistant_message:
                 function_call = assistant_message['function_call']
                 pair.append(
-                    f"**【函数调用】** {function_call['thoughts']}\n我建议调用函数`{function_call['name']}`，传入如下参数：\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
+                    f"**【函数调用】** {function_call['thoughts']}\n\n我建议调用函数`{function_call['name']}`，传入如下参数：\n\n```\n{to_pretty_json(function_call['arguments'], from_json=True)}\n```"
                 )
             else:
                 pair.append(assistant_message['content'])
@@ -875,52 +896,39 @@ def get_custom_func_desc_template():
 def get_predefined_functions():
     functions = []
 
-    def get_current_date(breakup=False):
-        from datetime import date
-        today = date.today()
-        ret = {}
-        if breakup:
-            ret['year'] = today.year
-            ret['month'] = today.month
-            ret['day'] = today.day
-        else:
-            ret['date'] = str(today)
-        return ret
+    def magic_op(a, b):
+        return {'result': a * b + (a - b)}
 
-    get_current_date_desc = {
-        'name': 'get_current_date',
-        'description': "获取当日日期",
+    magic_op_desc = {
+        'name': 'magic_op',
+        'description': "计算输入数字经过“魔法运算”得到的结果",
         'parameters': {
             'type': 'object',
             'properties': {
-                'breakup': {
-                    'type': 'boolean',
-                    'description': "是否分开返回年、月、日信息",
-                    'default': False,
+                'a': {
+                    'type': 'integer',
+                },
+                'b': {
+                    'type': 'integer',
                 },
             },
+            'required': [
+                'a',
+                'b',
+            ]
         },
         'responses': {
             'type': 'object',
             'properties': {
-                'date': {
-                    'type': 'string',
-                    'description': "完整日期，如'2023-09-13'",
-                },
-                'year': {
+                'result': {
                     'type': 'integer',
-                },
-                'month': {
-                    'type': 'integer',
-                },
-                'day': {
-                    'type': 'integer',
+                    'description': "“魔法运算”结果",
                 },
             },
         },
     }
 
-    functions.append(make_function(get_current_date, get_current_date_desc))
+    functions.append(make_function(magic_op, magic_op_desc))
 
     def get_contact_info(name, field=None):
         info_dict = {

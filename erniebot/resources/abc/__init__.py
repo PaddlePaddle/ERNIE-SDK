@@ -13,5 +13,6 @@
 # limitations under the License.
 
 from .creatable import Creatable
+from .queryable import Queryable
 
-__all__ = ['Creatable']
+__all__ = ['Creatable', 'Queryable']

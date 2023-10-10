@@ -69,13 +69,9 @@ def init_global_config() -> None:
     # Authentication settings
     # Access token
     cfg.add_item(StringItem(key='access_token', env_key='EB_ACCESS_TOKEN'))
-    # Path to the file that stores the access token
-    cfg.add_item(
-        PathItem(
-            key='access_token_path', env_key='EB_ACCESS_TOKEN_PATH'))
-    # Access key ID
+    # API key or access key ID
     cfg.add_item(StringItem(key='ak', env_key='EB_AK'))
-    # Secret access key
+    # Secret key or secret access key
     cfg.add_item(StringItem(key='sk', env_key='EB_SK'))
 
     # API backend settings

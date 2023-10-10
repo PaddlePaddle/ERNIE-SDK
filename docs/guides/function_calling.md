@@ -13,13 +13,13 @@
 
 在ERNIE Bot SDK中，`erniebot.ChatCompletion.create`接口提供函数调用功能。关于该接口的更多详情请参考[ChatCompletion API文档](../api_reference/chat_completion.md)。
 
-# 使用示例
+## 使用示例
 
 假设我们有如下的函数实现：
 
 ```{.py .copy}
 def get_current_temperature(location: str, unit: str) -> dict:
-    return {"temperature": 25, "unit": "摄氏度"}
+    return {'temperature': 25, 'unit': '摄氏度'}
 ```
 
 在接下来的例子中，我们将尝试让大模型“指导”我们调用这个函数以完成指定的任务。需要说明的是，`get_current_temperature`是出于演示目的定义的一个硬编码的dummy函数，在实际生产中可将其替换为真正具备相应功能的API。
@@ -29,45 +29,45 @@ def get_current_temperature(location: str, unit: str) -> dict:
 ```{.py .copy}
 functions = [
     {
-        "name": "get_current_temperature",
-        "description": "获取指定城市的气温",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "城市名称"
+        'name': 'get_current_temperature',
+        'description': "获取指定城市的气温",
+        'parameters': {
+            'type': 'object',
+            'properties': {
+                'location': {
+                    'type': 'string',
+                    'description': "城市名称",
                 },
-                "unit": {
-                    "type": "string",
-                    "enum": [
-                        "摄氏度",
-                        "华氏度"
-                    ]
-                }
+                'unit': {
+                    'type': 'string',
+                    'enum': [
+                        '摄氏度',
+                        '华氏度',
+                    ],
+                },
             },
-            "required": [
-                "location",
-                "unit"
-            ]
+            'required': [
+                'location',
+                'unit',
+            ],
         },
-        "responses": {
-            "type": "object",
-            "properties": {
-                "temperature": {
-                    "type": "integer",
-                    "description": "城市气温"
+        'responses': {
+            'type': 'object',
+            'properties': {
+                'temperature': {
+                    'type': 'integer',
+                    'description': "城市气温",
                 },
-                "unit": {
-                    "type": "string",
-                    "enum": [
-                        "摄氏度",
-                        "华氏度"
-                    ]
-                }
-            }
-        }
-    }
+                'unit': {
+                    'type': 'string',
+                    'enum': [
+                        '摄氏度',
+                        '华氏度',
+                    ],
+                },
+            },
+        },
+    },
 ]
 ```
 
@@ -78,22 +78,22 @@ functions = [
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<eb-access-token>"
+erniebot.api_type = 'aistudio'
+erniebot.access_token = '<eb-access-token>'
 
 messages = [
     {
-        "role": "user",
-        "content": "深圳市今天气温如何？"
+        'role': 'user',
+        'content': "深圳市今天气温如何？"
     }
 ]
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model='ernie-bot',
     messages=messages,
     functions=functions
 )
-assert hasattr(response, "function_call")
+assert hasattr(response, 'function_call')
 function_call = response.function_call
 print(function_call)
 ```
@@ -111,33 +111,33 @@ print(function_call)
 ```{.py .copy}
 import json
 
-name2function = {"get_current_temperature": get_current_temperature}
-func = name2function[function_call["name"]]
-args = json.loads(function_call["arguments"])
-res = func(location=args["location"], unit=args["unit"])
+name2function = {'get_current_temperature': get_current_temperature}
+func = name2function[function_call['name']]
+args = json.loads(function_call['arguments'])
+res = func(location=args['location'], unit=args['unit'])
 ```
 
-以上代码从`function_call`中获取模型选择调用的函数名称（`function_call["name"]`），通过该名称找到对应的函数，并从`function_call["arguments"]`中解析需要传入函数的参数，最终完成对函数的调用。
+以上代码从`function_call`中获取模型选择调用的函数名称（`function_call['name']`），通过该名称找到对应的函数，并从`function_call['arguments']`中解析需要传入函数的参数，最终完成对函数的调用。
 
-(4) 最后，将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。回传给模型的函数响应内容应当是JSON格式的字符串（如`'{"temperature": 25, "unit": "摄氏度"}'`），在本示例中，函数的响应是一个字典，因此需要先调用`json.dumps`函数对其进行编码。
+(4) 最后，将模型上一轮的响应以及函数的响应加入到对话上下文信息中，再次传递给模型。回传给模型的函数响应内容应当是JSON格式的字符串（如`'{"temperature":25,"unit":"摄氏度"}'`），在本示例中，函数的响应是一个字典，因此需要先调用`json.dumps`函数对其进行编码。
 
 ```{.py .copy}
 messages.append(
     {
-        "role": "assistant",
-        "content": None,
-        "function_call": function_call
+        'role': 'assistant',
+        'content': None,
+        'function_call': function_call
     }
 )
 messages.append(
     {
-        "role": "function",
-        "name": function_call["name"],
-        "content": json.dumps(res, ensure_ascii=False)
+        'role': 'function',
+        'name': function_call['name'],
+        'content': json.dumps(res, ensure_ascii=False)
     }
 )
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model='ernie-bot',
     messages=messages,
 )
 print(response.result)

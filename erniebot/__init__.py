@@ -15,13 +15,20 @@
 from . import errors
 from .config import GlobalConfig, init_global_config
 from .intro import Model
-from .resources import (ChatCompletion, ChatFile, Embedding, Image, ImageV1,
-                        ImageV2)
+from .resources import (ChatCompletion, ChatFile, Embedding, FineTuningTask,
+                        FineTuningJob, Image, ImageV1, ImageV2)
 from .version import VERSION
 
 __all__ = [
-    'ChatCompletion', 'ChatFile', 'Embedding', 'Image', 'ImageV1', 'ImageV2',
-    'Model'
+    'ChatCompletion',
+    'ChatFile',
+    'Embedding',
+    'FineTuningTask',
+    'FineTuningJob',
+    'Image',
+    'ImageV1',
+    'ImageV2',
+    'Model',
 ]
 
 __version__ = VERSION

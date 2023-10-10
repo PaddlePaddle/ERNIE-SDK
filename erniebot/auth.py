@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import functools
+import http
 import json
-import os
-import pathlib
 import threading
 import time
 from typing import (Any, Callable, Dict, Hashable, Optional, Tuple, Union)
@@ -23,23 +22,19 @@ from typing import (Any, Callable, Dict, Hashable, Optional, Tuple, Union)
 import requests
 
 from . import errors
-from .api_types import APIType, convert_str_to_api_type
-from .utils import logger
+from .api_types import APIType
+from .utils.logging import logger
 from .utils.misc import Singleton
 
 __all__ = ['build_auth_manager']
 
 
-def build_auth_manager(config_dict: Dict[str, Any],
-                       api_type: Union[str, APIType]) -> 'AuthManager':
-    if isinstance(api_type, str):
-        api_type = convert_str_to_api_type(api_type)
-    if api_type in (APIType.QIANFAN, APIType.YINIAN):
-        return BCEAuthManager(api_type, **config_dict)
-    elif api_type is APIType.AISTUDIO:
-        return AIStudioAuthManager(api_type, **config_dict)
+def build_auth_manager(manager_type: str, api_type: APIType,
+                       **kwargs: Any) -> 'AuthManager':
+    if manager_type == 'bce':
+        return BCEAuthManager(api_type, **kwargs)
     else:
-        raise ValueError(f"Unsupported API type: {api_type.name}")
+        raise ValueError(f"Unsupported manager type: {manager_type}")
 
 
 class _GlobalAuthCache(metaclass=Singleton):
@@ -121,49 +116,45 @@ class _GlobalAuthCache(metaclass=Singleton):
 class AuthManager(object):
     def __init__(self,
                  api_type: APIType,
-                 access_token: Optional[str]=None,
-                 access_token_path: Optional[str]=None,
+                 *,
+                 auth_token: Optional[str]=None,
                  **kwargs: Any) -> None:
         super().__init__()
         self.api_type = api_type
         self._cfg = dict(**kwargs)
         self._cache_key = self._get_cache_key()
-        self._token = self._init_access_token(access_token, access_token_path)
+        self._token = self._init_auth_token(auth_token)
 
-    def get_access_token(self) -> str:
+    def get_auth_token(self) -> str:
         return self._token
 
-    def update_access_token(self) -> str:
-        new_token = self._update_access_token(self._token)
+    def update_auth_token(self) -> str:
+        new_token = self._update_auth_token(self._token)
         self._token = new_token
-        logger.info("Access token is updated.")
+        logger.info("Security token is updated.")
         return self._token
 
-    def _request_access_token(self, init: bool) -> str:
+    def _request_auth_token(self, init: bool) -> str:
         raise NotImplementedError
 
     def _get_cache_key(self) -> Hashable:
         raise NotImplementedError
 
-    def _init_access_token(self,
-                           token: Optional[str],
-                           token_file_path: Optional[str]) -> str:
-        if token is None and token_file_path is not None:
-            token = self._read_token_from_file(token_file_path)
-
+    def _init_auth_token(self, token: Optional[str]) -> str:
         if token is None:
             cached_token = self._retrieve_from_cache()
             if cached_token is not None:
-                logger.info("Cached access token will be used.")
+                logger.info("Cached security token will be used.")
                 token = cached_token
             else:
                 logger.info(
-                    "Access token is not set. It will be requested based on other parameters."
+                    "Security token is not set. "
+                    "It will be retrieved or generated based on other parameters."
                 )
                 token = self._update_cache(init=True)
         return token
 
-    def _update_access_token(self, old_token: str) -> str:
+    def _update_auth_token(self, old_token: str) -> str:
         cached_token = self._retrieve_from_cache()
         if cached_token is not None and cached_token != old_token:
             new_token = cached_token
@@ -180,47 +171,41 @@ class AuthManager(object):
             self.api_type.name,
             self._cache_key,
             functools.partial(
-                self._request_access_token, init=init))
+                self._request_auth_token, init=init))
         if token is None:
             raise errors.TokenUpdateFailedError
         else:
             logger.debug("Cache is updated.")
             return token
 
-    @staticmethod
-    def _read_token_from_file(token_path: str) -> Optional[str]:
-        if token_path is not None:
-            with open(
-                    pathlib.Path(token_path).absolute(), 'rt',
-                    encoding='utf-8') as f:
-                access_token = f.read().strip()
-            return access_token
-        else:
-            return None
-
 
 class BCEAuthManager(AuthManager):
     def __init__(self,
                  api_type: APIType,
+                 *,
+                 auth_token: Optional[str]=None,
                  ak: Optional[str]=None,
                  sk: Optional[str]=None,
                  **kwargs: Any) -> None:
-        super().__init__(api_type, ak=ak, sk=sk, **kwargs)
+        super().__init__(
+            api_type, auth_token=auth_token, ak=ak, sk=sk, **kwargs)
 
-    def _request_access_token(self, init: bool) -> str:
-        # `init` unused
+    def _request_auth_token(self, init: bool) -> str:
+        # `init` not used
         url = "https://aip.baidubce.com/oauth/2.0/token"
-        ak = self._cfg['ak'] or ''
-        sk = self._cfg['sk'] or ''
+        ak = self._cfg['ak']
+        sk = self._cfg['sk']
+        if ak is None or sk is None:
+            raise ValueError("Invalid API key or secret key")
         params = {
             'grant_type': 'client_credentials',
             'client_id': ak,
             'client_secret': sk
         }
         result = requests.request(method='GET', url=url, params=params)
-        if result.status_code != 200:
+        if result.status_code != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
-                "Status code is not 200.",
+                f"Status code is not {http.HTTPStatus.OK}.",
                 rcode=result.status_code,
                 rbody=result.content.decode('utf-8'),
                 rheaders=result.headers)
@@ -235,21 +220,3 @@ class BCEAuthManager(AuthManager):
 
     def _get_cache_key(self) -> Hashable:
         return (self._cfg['ak'], self._cfg['sk'])
-
-
-class AIStudioAuthManager(AuthManager):
-    def _request_access_token(self, init: bool) -> str:
-        if init:
-            token = os.environ.get('AISTUDIO_ACCESS_TOKEN', None)
-            if token is None:
-                raise RuntimeError(
-                    "Failed to read the access token from environment variables."
-                )
-            return token
-        else:
-            raise RuntimeError(
-                "Automatic renewal of access tokens for the current API type is not supported. "
-                "Please provide a valid access token manually.")
-
-    def _get_cache_key(self) -> Hashable:
-        return None

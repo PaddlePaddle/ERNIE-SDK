@@ -18,7 +18,7 @@ import erniebot
 from .config import GlobalConfig
 from .errors import EBError
 from .response import EBResponse
-from .utils import logger
+from .utils.logging import logger
 
 __all__ = ['console_main', 'parse_args']
 
@@ -35,8 +35,6 @@ def console_main():
 
     if args.access_token:
         cfg.set_value('access_token', args.access_token)
-    if args.access_token_path:
-        cfg.set_value('access_token_path', args.access_token_path)
     if args.ak:
         cfg.set_value('ak', args.ak)
     if args.sk:
@@ -66,12 +64,9 @@ def parse_args(*args, **kwargs):
 
     # Global arguments
     parser.add_argument('--access-token', type=str, help="Access token to use.")
+    parser.add_argument('--ak', type=str, help="API key or access key ID.")
     parser.add_argument(
-        '--access-token-path',
-        type=str,
-        help="Path to the file that stores the access token.")
-    parser.add_argument('--ak', type=str, help="Access key ID (AK).")
-    parser.add_argument('--sk', type=str, help="Secret access key (SK).")
+        '--sk', type=str, help="Secret key or secret access key.")
 
     parser.add_argument('--api-base-url', type=str, help="API base URL.")
     parser.add_argument('--api-type', type=str, help="API type.")

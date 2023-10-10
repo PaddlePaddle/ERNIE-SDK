@@ -39,24 +39,23 @@
 from __future__ import annotations
 
 import asyncio
+import http
 import json
 import threading
 import time
 from contextlib import asynccontextmanager
 from json import JSONDecodeError
-from typing import (Any, AsyncIterator, Dict, Iterator, Mapping, Optional,
-                    overload, Tuple, TYPE_CHECKING, Union)
+from typing import (Any, AsyncIterator, Callable, Dict, Iterator, Mapping,
+                    Optional, Tuple, Union)
 
 import aiohttp
 import requests
-if TYPE_CHECKING:
-    from typing_extensions import Literal
 
 from . import errors
-from .backends import EBBackend
 from .response import EBResponse
-from .types import (ParamsType, HeadersType, FilesType)
-from .utils import add_query_params, logger
+from .types import (FilesType, HeadersType, ParamsType)
+from .utils.logging import logger
+from .utils.url import add_query_params, extract_base_url
 
 __all__ = ['EBClient']
 
@@ -71,138 +70,89 @@ class EBClient(object):
     MAX_SESSION_LIFETIME_SECS: int = 180
     TIMEOUT_SECS: int = 600
 
-    def __init__(self, config_dict: Dict[str, Any], backend: EBBackend) -> None:
+    def __init__(
+            self,
+            response_handler: Optional[Callable[[EBResponse], EBResponse]]=None,
+            proxy: Optional[str]=None) -> None:
         super().__init__()
-        self._cfg = config_dict
-        self._backend = backend
-        self._proxy = self._cfg['proxy']
+        self._resp_handler = response_handler
+        self._proxy = proxy
 
-    @overload
-    def request(
+    def prepare_request(
             self,
-            token: str,
             method: str,
             url: str,
-            stream: Literal[False],
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> EBResponse:
-        ...
+            supplied_headers: Optional[HeadersType],
+            params: Optional[ParamsType],
+            files: Optional[FilesType],
+    ) -> Tuple[str,
+               HeadersType,
+               Optional[bytes],
+               ]:
+        headers = self._validate_headers(supplied_headers)
 
-    @overload
-    def request(
-            self,
-            token: str,
-            method: str,
-            url: str,
-            stream: Literal[True],
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Iterator[EBResponse]:
-        ...
+        data = None
+        method = method.upper()
+        if method == 'GET' or method == 'DELETE':
+            if params:
+                url = add_query_params(url, [(str(k), str(v))
+                                             for k, v in params.items()
+                                             if v is not None])
+        elif method in {'POST', 'PUT'}:
+            if params and not files:
+                data = json.dumps(params).encode()
+                headers['Content-Type'] = 'application/json'
+        else:
+            raise errors.ConnectionError(
+                f"Unrecognized HTTP method {repr(method)}.")
 
-    @overload
-    def request(
+        headers = self.get_request_headers(method, headers)
+
+        logger.debug("Method: %s", method)
+        logger.debug("URL: %s", url)
+        logger.debug("Headers: %r", headers)
+        logger.debug("Data: %r", data)
+
+        return url, headers, data
+
+    def send_request(
             self,
-            token: str,
             method: str,
             url: str,
             stream: bool,
-            params: Optional[ParamsType]=None,
+            data: Optional[bytes]=None,
             headers: Optional[HeadersType]=None,
             files: Optional[FilesType]=None,
             request_timeout: Optional[float]=None,
+            base_url: Optional[str]=None,
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        ...
-
-    def request(
-            self,
-            token: str,
-            method: str,
-            url: str,
-            stream: bool,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
-        result = self.request_raw(
-            token,
+        result = self.send_request_raw(
             method.lower(),
             url,
-            params=params,
-            supplied_headers=headers,
+            base_url if base_url is not None else extract_base_url(url),
+            data=data,
+            headers=headers,
             files=files,
             stream=stream,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp, got_stream = self._interpret_response(result, stream)
         if stream != got_stream:
-            logger.error("Unexpected response: %s", resp)
-            raise RuntimeError(
+            logger.warning("Unexpected response: %s", resp)
+            logger.warning(
                 f"A {'streamed' if stream else 'non-streamed'} response was expected, "
                 f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
-                "This may indicate a bug in erniebot.")
+            )
         return resp
 
-    @overload
-    async def arequest(
+    async def asend_request(
         self,
-        token: str,
-        method: str,
-        url: str,
-        stream: Literal[False],
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> EBResponse:
-        ...
-
-    @overload
-    async def arequest(
-        self,
-        token: str,
-        method: str,
-        url: str,
-        stream: Literal[True],
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> AsyncIterator[EBResponse]:
-        ...
-
-    @overload
-    async def arequest(
-        self,
-        token: str,
         method: str,
         url: str,
         stream: bool,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
-        ...
-
-    async def arequest(
-        self,
-        token: str,
-        method: str,
-        url: str,
-        stream: bool,
-        params: Optional[ParamsType]=None,
+        data: Optional[bytes]=None,
         headers: Optional[HeadersType]=None,
         files: Optional[FilesType]=None,
         request_timeout: Optional[float]=None,
@@ -213,27 +163,27 @@ class EBClient(object):
         ctx = self._make_aiohttp_session()
         session = await ctx.__aenter__()
         try:
-            result = await self.arequest_raw(
-                token,
+            result = await self.asend_request_raw(
                 method.lower(),
                 url,
                 session,
                 files=files,
-                params=params,
-                supplied_headers=headers,
-                request_timeout=request_timeout)
+                data=data,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
             resp, got_stream = await self._interpret_async_response(result,
                                                                     stream)
             if stream != got_stream:
-                logger.error("Unexpected response: %s", resp)
-                raise RuntimeError(
+                logger.warning("Unexpected response: %s", resp)
+                logger.warning(
                     f"A {'streamed' if stream else 'non-streamed'} response was expected, "
                     f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
-                    "This may indicate a bug in erniebot.")
+                )
         except Exception as e:
             await ctx.__aexit__(None, None, None)
             raise e
-        if stream:
+        if isinstance(resp, AsyncIterator):
 
             async def wrap_resp(
                 resp: AsyncIterator) -> AsyncIterator[EBResponse]:
@@ -243,13 +193,13 @@ class EBClient(object):
                 finally:
                     await ctx.__aexit__(None, None, None)
 
-            assert isinstance(resp, AsyncIterator)
             return wrap_resp(resp)
         else:
             await ctx.__aexit__(None, None, None)
             return resp
 
-    def request_headers(self, method: str, extra: HeadersType) -> HeadersType:
+    def get_request_headers(self, method: str,
+                            extra: HeadersType) -> HeadersType:
         headers = {}
 
         # TODO: Add User-Agent header and other headers
@@ -257,24 +207,21 @@ class EBClient(object):
 
         return headers
 
-    def request_raw(
+    def send_request_raw(
             self,
-            token: str,
             method: str,
             url: str,
-            params: Optional[ParamsType],
-            supplied_headers: Optional[HeadersType],
+            base_url: str,
+            data: Optional[bytes],
+            headers: Optional[HeadersType],
             files: Optional[FilesType],
             stream: bool,
             request_timeout: Optional[float],
     ) -> requests.Response:
-        abs_url, headers, data = self._prepare_request_raw(
-            token, url, supplied_headers, method, params, files)
 
         if not hasattr(_thread_context, 'sessions'):
             _thread_context.sessions = {}
             _thread_context.session_create_times = {}
-        base_url = self._backend.base_url
         if base_url not in _thread_context.sessions:
             _thread_context.sessions[base_url] = self._make_session()
             _thread_context.session_create_times[base_url] = time.time()
@@ -286,16 +233,17 @@ class EBClient(object):
         session = _thread_context.sessions[base_url]
 
         try:
-            result = session.request(
+            result = requests.request(
                 method,
-                abs_url,
+                url,
                 headers=headers,
                 data=data,
                 files=files,
                 stream=stream,
                 timeout=request_timeout
                 if request_timeout else self.TIMEOUT_SECS,
-                proxies=session.proxies)
+                proxies=session.proxies,
+            )
         except requests.exceptions.Timeout as e:
             raise errors.TimeoutError(f"Request timed out: {e}") from e
         except requests.exceptions.RequestException as e:
@@ -306,35 +254,35 @@ class EBClient(object):
 
         return result
 
-    async def arequest_raw(
+    async def asend_request_raw(
         self,
-        token: str,
         method: str,
         url: str,
         session: aiohttp.ClientSession,
-        params: Optional[ParamsType],
-        supplied_headers: Optional[HeadersType],
+        data: Optional[bytes],
+        headers: Optional[HeadersType],
         files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
-        abs_url, headers, data = self._prepare_request_raw(
-            token, url, supplied_headers, method, params, files)
+
+        if files is not None:
+            raise TypeError("`files` is currently not supported.")
 
         timeout = aiohttp.ClientTimeout(total=request_timeout if request_timeout
                                         else self.TIMEOUT_SECS)
 
-        request_kwargs = {
+        request_kwargs: dict = {
             'headers': headers,
             'data': data,
             'timeout': timeout,
         }
-        proxy = self._cfg['proxy']
+        proxy = self._proxy
         if proxy is not None:
             request_kwargs['proxy'] = proxy
 
         try:
             result = await session.request(
-                method=method, url=abs_url, **request_kwargs)
+                method=method, url=url, **request_kwargs)
         except (aiohttp.ServerTimeoutError, asyncio.TimeoutError) as e:
             raise errors.TimeoutError(f"Request timed out: {e}") from e
         except aiohttp.ClientError as e:
@@ -345,49 +293,10 @@ class EBClient(object):
 
         return result
 
-    def _prepare_request_raw(
-            self,
-            token: str,
-            url: str,
-            supplied_headers: Optional[HeadersType],
-            method: str,
-            params: Optional[ParamsType],
-            files: Optional[FilesType],
-    ) -> Tuple[str,
-               HeadersType,
-               Optional[bytes],
-               ]:
-        abs_url = f"{self._backend.base_url}{url}"
-        logger.debug("URL: %s", abs_url)
-        headers = self._validate_headers(supplied_headers)
-        abs_url, headers = self._backend.prepare_request(abs_url, headers,
-                                                         token)
-
-        data = None
-        if method == 'get' or method == 'delete':
-            if params:
-                abs_url = add_query_params(abs_url, [(str(k), str(v))
-                                                     for k, v in params.items()
-                                                     if v is not None])
-        elif method in {'post', 'put'}:
-            if params and not files:
-                data = json.dumps(params).encode()
-                headers['Content-Type'] = 'application/json'
-        else:
-            raise errors.ConnectionError(
-                f"Unrecognized HTTP method {repr(method)}.")
-
-        headers = self.request_headers(method, headers)
-
-        logger.debug("Method: %s", method)
-        logger.debug("Data: %r", data)
-        logger.debug("Headers: %r", headers)
-
-        return abs_url, headers, data
-
     def _validate_headers(
             self, supplied_headers: Optional[HeadersType]) -> HeadersType:
         headers: dict = {}
+
         if supplied_headers is None:
             return headers
 
@@ -496,13 +405,6 @@ class EBClient(object):
             rheaders: Mapping[str, Any],
             stream: bool,
     ) -> EBResponse:
-        if rcode != 200:
-            raise errors.HTTPRequestError(
-                "Status code is not 200.",
-                rcode=rcode,
-                rbody=rbody,
-                rheaders=rheaders)
-
         content_type = rheaders.get('Content-Type', '')
         if content_type.startswith('text/plain'):
             decoded_rbody = rbody
@@ -531,9 +433,18 @@ class EBClient(object):
                 rheaders=rheaders)
 
         resp = EBResponse(
-            code=rcode, body=decoded_rbody, headers=dict(rheaders))
+            rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
 
-        return self._backend.handle_response(resp)
+        if rcode != http.HTTPStatus.OK:
+            raise errors.HTTPRequestError(
+                f"Status code is not {http.HTTPStatus.OK}.",
+                rcode=resp.rcode,
+                rbody=str(resp.rbody),
+                rheaders=resp.rheaders)
+
+        if self._resp_handler is not None:
+            resp = self._resp_handler(resp)
+        return resp
 
     def _make_session(self) -> requests.Session:
         s = requests.Session()

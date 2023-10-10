@@ -45,7 +45,7 @@ class MaxRetriesExceededError(EBError):
 
 
 class TokenUpdateFailedError(EBError):
-    """Exception that's raised when the access token cannot be updated."""
+    """Exception that's raised when the security token cannot be updated."""
     pass
 
 
@@ -127,7 +127,7 @@ class InvalidParameterError(APIError):
 
 
 class InvalidTokenError(APIError):
-    """Exception that's raised when the access token is invalid."""
+    """Exception that's raised when the security token is invalid."""
     pass
 
 
@@ -149,7 +149,7 @@ class ServiceUnavailableError(APIError):
 
 
 class TokenExpiredError(APIError):
-    """Exception that's raised when the access token is expired."""
+    """Exception that's raised when the security token is expired."""
     pass
 
 

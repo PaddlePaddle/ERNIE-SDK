@@ -2,17 +2,18 @@
 
 根据文本提示、尺寸等信息，使用文心一格大模型，自动创作图片。
 
-## 函数接口
+## Python接口
 
 ```{.py .copy}
 erniebot.Image.create(**kwargs: Any) -> EBResponse:
 ```
+
 ## 输入参数
 
 调用Image接口前，需要首先设置`api_type`参数。
 
 ```{.py .copy}
-ernie.api_type = "yinian"
+ernie.api_type = 'yinian'
 ```
 
 `erniebot.Image.create` 接口的详细参数如下：
@@ -34,21 +35,22 @@ ernie.api_type = "yinian"
 
 ```python
 {
-   "data": {
-     "task_id": 1659384536691865192,
-     "task_status": "SUCCESS",
-     "task_progress": 1
-     "sub_task_result_list": [
+  'rcode': 200,
+   'data': {
+     'task_id': 1659384536691865192,
+     'task_status': 'SUCCESS',
+     'task_progress': 1
+     'sub_task_result_list': [
         {
-          "sub_task_status": "SUCCESS",
-          "sub_task_progress": 1,
-          "sub_task_error_code": 0,
-          "final_image_list": [
+          'sub_task_status': 'SUCCESS',
+          'sub_task_progress': 1,
+          'sub_task_error_code': 0,
+          'final_image_list': [
            {  
-              "img_url": "http://aigc-t2p.bj.bcebos.com/artist-long/_final.png?02d252c87b91ed3b2f6327db0",
-              "width": 512,
-              "height": 512,
-              "img_approve_conclusion": "pass"
+              'img_url': "http://aigc-t2p.bj.bcebos.com/artist-long/_final.png?02d252c87b91ed3b2f6327db0",
+              'width': 512,
+              'height': 512,
+              'img_approve_conclusion': 'pass'
             }
         ]
       }
@@ -57,11 +59,11 @@ ernie.api_type = "yinian"
 }
 ```
 
-返回结果的具体字段含义如下表：
+返回结果的关键字段含义如下表：
 
 | 字段名  | 类型   | 描述  |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态。 |
+| rcode | int | HTTP响应状态码。 |
 | data | dict | 返回数据。 |
 
 `data`包含如下键值对：
@@ -89,10 +91,10 @@ ernie.api_type = "yinian"
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = "yinian
-erniebot.access_token = "<access-token-for-yinian>"
+erniebot.api_type = 'yinian'
+erniebot.access_token = '<access-token-for-yinian>'
 
-response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
+response = erniebot.Image.create(model='ernie-vilg-v2', prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version='v2', image_num=1)
 
 print(response.result())
 ```

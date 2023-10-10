@@ -57,7 +57,7 @@ class Creatable(Resource, Protocol):
             files=files,
             request_timeout=request_timeout)
         # See https://github.com/python/mypy/issues/1533
-        resp = self._post_process_create(resp)  # type: ignore
+        resp = self._postprocess_create(resp)  # type: ignore
         return resp
 
     async def acreate_resource(
@@ -73,7 +73,7 @@ class Creatable(Resource, Protocol):
             headers=headers,
             files=files,
             request_timeout=request_timeout)
-        resp = self._post_process_create(resp)  # type: ignore
+        resp = self._postprocess_create(resp)  # type: ignore
         return resp
 
     def _prepare_create(self,
@@ -86,5 +86,5 @@ class Creatable(Resource, Protocol):
                                                          ]:
         ...
 
-    def _post_process_create(self, resp: ResponseT) -> ResponseT:
-        ...
+    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
+        return resp

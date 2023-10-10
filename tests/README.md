@@ -1,1 +1,1 @@
-ERNIE Bot SDK Test
+ERNIE Bot SDK Tests

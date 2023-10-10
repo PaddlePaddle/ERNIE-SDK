@@ -36,30 +36,37 @@ class EBResponse(Mapping):
 
     _INNER_DICT_TYPE = Constant(dict)
     _INSTANCE_ATTRS = Constant(('_dict', ))
-    _RESERVED_KEYS = Constant(('code', 'body', 'headers'))
+    _RESERVED_KEYS = Constant(('rcode', 'rbody', 'rheaders'))
+
+    rcode: int
+    rbody: Union[str, Dict[str, Any]]
+    rheaders: Dict[str, Any]
 
     def __init__(self,
-                 code: int,
-                 body: Union[str, Dict[str, Any]],
-                 headers: Dict[str, Any]) -> None:
+                 rcode: int,
+                 rbody: Union[str, Dict[str, Any]],
+                 rheaders: Dict[str, Any]) -> None:
         """Initialize the instance based on response code, body, and headers.
 
         Args:
-            code: Response status code.
-            body: Response body. If `body` is a dictionary, the key-value pairs
-                in the dictionary will also get registered, so that they can be
-                accessed from the object using dot notation.
-            headers: Response headers.
+            rcode: Response status code.
+            rbody: Response body. If `rbody` is a dictionary, the key-value
+                pairs in the dictionary will also get registered, so that they
+                can be accessed from the object using dot notation.
+            rheaders: Response headers.
         """
         super().__init__()
         self._dict = self._INNER_DICT_TYPE(
-            code=code, body=body, headers=headers)
-        if isinstance(body, dict):
-            self._update_from_dict(body)
+            rcode=rcode, rbody=rbody, rheaders=rheaders)
+        if isinstance(rbody, dict):
+            self._update_from_dict(rbody)
 
     @classmethod
     def from_response(cls, response: 'EBResponse') -> Self:
-        return cls(response.code, response.body, response.headers)
+        resp_type = response.__class__
+        if resp_type is not EBResponse:
+            raise TypeError(f"`response` has type `{resp_type.__name__}`.")
+        return cls(response.rcode, response.rbody, response.rheaders)
 
     def __getitem__(self, key: str) -> Any:
         if key in self._dict:
@@ -75,7 +82,7 @@ class EBResponse(Mapping):
         return len(self._dict)
 
     def __repr__(self) -> str:
-        params = f"code={repr(self.code)}, body={repr(self.body)}, headers={repr(self.headers)}"
+        params = f"rcode={repr(self.rcode)}, rbody={repr(self.rbody)}, rheaders={repr(self.rheaders)}"
         return f"{self.__class__.__name__}({params})"
 
     def __str__(self) -> str:
@@ -87,13 +94,14 @@ class EBResponse(Mapping):
                 items = []
                 keys_to_ignore = []
                 if isinstance(obj, EBResponse):
-                    items.append(('code', _format(self.code, level=level + 1)))
-                    if not isinstance(self.body, dict):
-                        items.append(('body', _format(
-                            self.body, level=level + 1)))
-                    items.append(('headers', _format(
-                        self.headers, level=level + 1)))
-                    keys_to_ignore.extend(['code', 'body', 'headers'])
+                    items.append(('rcode', _format(
+                        self.rcode, level=level + 1)))
+                    if not isinstance(self.rbody, dict):
+                        items.append(('rbody', _format(
+                            self.rbody, level=level + 1)))
+                    items.append(('rheaders', _format(
+                        self.rheaders, level=level + 1)))
+                    keys_to_ignore.extend(['rcode', 'rbody', 'rheaders'])
                 for k, v in obj.items():
                     if k in keys_to_ignore:
                         continue
@@ -138,16 +146,16 @@ class EBResponse(Mapping):
 
     def __reduce__(self) -> tuple:
         state = copy.copy(self._dict)
-        code = state.pop('code')
-        body = state.pop('body')
-        headers = state.pop('headers')
-        return (self.__class__, (code, body, headers), state)
+        rcode = state.pop('rcode')
+        rbody = state.pop('rbody')
+        rheaders = state.pop('rheaders')
+        return (self.__class__, (rcode, rbody, rheaders), state)
 
     def __setstate__(self, state: dict) -> None:
         self._dict.update(state)
 
     def get_result(self) -> Any:
-        return self.body
+        return self.rbody
 
     def to_dict(self, deep_copy: bool=False) -> Dict[str, Any]:
         if deep_copy:

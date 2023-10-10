@@ -25,44 +25,44 @@ erniebot.Embedding.create(**kwargs: Any)
 
 ```python
 {
-    "code": 200,
-    "id": "as-s0tdsgnuu4",
-    "object": "embedding_list",
-    "created": 1692933427,
-    "data": [
+    'rcode': 200,
+    'id': 'as-s0tdsgnuu4',
+    'object': 'embedding_list',
+    'created': 1692933427,
+    'data': [
         {
-            "object": "embedding",
-            "embedding": [
+            'object': 'embedding',
+            'embedding': [
                 0.12393086403608322,
                 0.06512520462274551,
                 0.05346716567873955,
                 ...
             ],
-            "index": 0
+            'index': 0
         },
         {
-            "object": "embedding",
-            "embedding": [
+            'object': 'embedding',
+            'embedding': [
                 0.12393086403608322,
                 0.06512520462274551,
                 0.05346716567873955,
                 ...
             ],
-            "index": 1
+            'index': 1
         }
     ],
-    "usage": {
-        "prompt_tokens": 98,
-        "total_tokens": 98
+    'usage': {
+        'prompt_tokens': 98,
+        'total_tokens': 98
     }
 }
 ```
 
-其中字段含义如下表所示：
+其中关键字段含义如下表所示：
 
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
-| code | int | 请求返回状态。 |
+| rcode | int | HTTP响应状态码。 |
 | data | list[dict] | 向量计算结果，列表中元素个数与输入的文本个数一致。列表中的元素均为dict，包含如下键值对：<br>`object`：固定为`'embedding'`； <br>`embedding`：384维的向量结果； <br>`index`：序号。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens/total_tokens`：输入token数量。 |
 
@@ -74,17 +74,17 @@ erniebot.Embedding.create(**kwargs: Any)
 import erniebot
 import numpy as np
 
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
+erniebot.api_type = 'aistudio'
+erniebot.access_token = '<access-token-for-aistudio>'
 
 response = erniebot.Embedding.create(
-    model="ernie-text-embedding",
+    model='ernie-text-embedding',
     input=[
         "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。",
         "2018年深圳市各区GDP"
     ])
 
 for emb_res in response.get_result():
-    embedding = np.array(emb_res["embedding"])
+    embedding = np.array(emb_res['embedding'])
     print(embedding)
 ```

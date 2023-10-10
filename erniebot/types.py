@@ -29,7 +29,7 @@ __all__ = [
 ConfigDictType: TypeAlias = Dict[str, Optional[Any]]
 
 ParamsType: TypeAlias = Dict[str, Any]
-HeadersType: TypeAlias = Dict[str, Any]
+HeadersType: TypeAlias = Dict[str, str]
 FilesType: TypeAlias = Dict[str, IO]
 
 ResponseT = TypeVar('ResponseT', EBResponse, Iterator[EBResponse],
