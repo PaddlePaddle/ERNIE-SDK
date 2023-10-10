@@ -20,7 +20,7 @@ import erniebot
 from erniebot.utils.logging import logger
 
 if __name__ == '__main__':
-    logger.set_level('DEBUG')
+    logger.set_level('WARNING')
 
     erniebot.api_type = 'qianfan-sft'
 
