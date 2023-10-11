@@ -53,6 +53,7 @@ def create_ui_and_launch(args):
             title="ERNIE Bot SDK Function Calling Demo",
             theme=gr.themes.Soft(
                 spacing_size='sm', text_size='md')) as block:
+        gr.Markdown("# ERNIE Bot SDK函数调用功能演示")
         create_components(functions=get_predefined_functions())
 
     block.queue(
