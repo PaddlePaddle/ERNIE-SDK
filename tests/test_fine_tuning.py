@@ -46,15 +46,20 @@ if __name__ == '__main__':
         train_set_rate=20,
     )
     job_info = response.get_result()
+    print(job_info)
 
+    vdl_url = None
     while True:
         response = erniebot.FineTuningJob.query(
             task_id=task_info['id'], job_id=job_info['id'])
         running_info = response.get_result()
+        if vdl_url is None:
+            vdl_url = running_info['vdlLink']
+            print(f"Check VisualDL logs at {vdl_url}")
         status = running_info['trainStatus']
         if status == 'RUNNING':
-            print(running_info['progress'])
-            time.sleep(10)
+            print(f"Progress: {running_info['progress']}%")
+            time.sleep(20)
             continue
         else:
             print(f"Status: {status}")
