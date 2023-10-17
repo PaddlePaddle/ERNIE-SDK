@@ -613,7 +613,8 @@ def generate_response(
     context.append(message)
     name2function = state['name2function']
     functions = [name2function[name].desc for name in candidates]
-    data = {
+    params = {
+        'model': ernie_model,
         'messages': context,
         'top_p': top_p,
         'temperature': temperature,
@@ -624,12 +625,11 @@ def generate_response(
         resp_stream = create_chat_completion(
             _config_={k: v
                       for k, v in auth_config.items() if v},
-            model=ernie_model,
-            **data,
+            **params,
             stream=True,
         )
     except eb.errors.TokenUpdateFailedError as e:
-        handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
+        handle_exception(e, "鉴权参数无效，请重新填写", raise_=False)
         yield get_fallback_return()
         return
     except eb.errors.EBError as e:
@@ -846,7 +846,7 @@ def make_custom_function(code, desc_str):
 def call_function(state, candidates, func_name, func_args):
     name2function = state['name2function']
     if text_is_empty(func_name):
-        gr.Warning(f"函数名称不能为空")
+        gr.Warning("函数名称不能为空")
         return None
     if func_name not in name2function:
         gr.Warning(f"函数`{func_name}`不存在")
