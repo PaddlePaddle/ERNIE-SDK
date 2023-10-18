@@ -21,7 +21,6 @@ import functools
 import inspect
 import json
 import operator
-import random
 import reprlib
 import sys
 major = sys.version_info.major
@@ -640,6 +639,7 @@ def generate_response(
                 # formatted JSON. In this case we use the raw string.
                 func_args = function_call['arguments']
             context[-1]['function_call'] = function_call
+            assert history is None
             history = extract_history(context)
             state['context'] = context
             yield (
@@ -654,20 +654,15 @@ def generate_response(
             break
         else:
             if history is None:
-                old_content = ""
                 history = extract_history(context)
-                if history[-1][1] is None:
-                    history[-1][1] = ""
-            else:
-                old_content = history[-1][1]
             if context[-1]['content'] is None:
-                context[-1]['content'] = resp.result
-            else:
-                context[-1]['content'] += resp.result
-            new_content = context[-1]['content']
+                context[-1]['content'] = ""
+            old_content = context[-1]['content']
+            delta = resp.result
+            context[-1]['content'] += delta
             for content in stream_output_smoother(
                     old_content,
-                    new_content,
+                    delta,
             ):
                 history[-1][1] = content
                 yield (
@@ -675,8 +670,8 @@ def generate_response(
                     history,
                     None,
                     *replicate_gradio_update(5), )
+            assert history[-1][1] == context[-1]['content']
     else:
-        history = extract_history(context)
         state['context'] = context
         yield (
             state,
@@ -718,22 +713,12 @@ def extract_history(context):
     return history
 
 
-def stream_output_smoother(old_content,
-                           new_content,
-                           *,
-                           min_num_chars=1,
-                           max_num_chars=4,
-                           delay=0.1,
-                           add_cursor=True):
-    end = len(new_content)
-    pos = len(old_content)
-    while pos < end:
-        offset = random.randint(min_num_chars, max_num_chars)
-        pos += offset
-        curr = new_content[:pos]
-        if add_cursor:
-            curr += "▌"
-        yield curr
+def stream_output_smoother(old_content, delta, *, delay=0.03):
+    content = old_content
+    yield content
+    for char in delta:
+        content += char
+        yield content
         time.sleep(delay)
 
 
