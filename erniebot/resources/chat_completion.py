@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, ClassVar, Dict, Optional, Tuple)
+from typing import (Any, ClassVar, Dict, List, Optional, Tuple)
 
 import jsonschema
 import jsonschema.exceptions
@@ -168,7 +168,7 @@ class ChatCompletion(EBResource, Creatable):
         return transform(ChatResponse.from_response, resp)
 
     @classmethod
-    def _validate_messages(cls, messages):
+    def _validate_messages(cls, messages: List[dict]) -> None:
         # TODO: Optionally check the total number of tokens
         if len(messages) % 2 != 1:
             raise errors.InvalidArgumentError(
@@ -197,7 +197,7 @@ class ChatCompletion(EBResource, Creatable):
                 f"The last message has more than 3000 tokens.")
 
     @classmethod
-    def _validate_functions(cls, functions):
+    def _validate_functions(cls, functions: List[dict]) -> None:
         required_keys = ('name', 'description', 'parameters')
         optional_keys = ('responses', 'examples', 'plugin_id')
         valid_keys = set(required_keys + optional_keys)
@@ -226,7 +226,7 @@ class ChatCompletion(EBResource, Creatable):
                         f"`responses` of function {idx} is not a valid schema.")
 
     @staticmethod
-    def _check_json_schema(schema):
+    def _check_json_schema(schema: dict) -> bool:
         try:
             jsonschema.Draft202012Validator.check_schema(schema)
         except jsonschema.exceptions.SchemaError:
