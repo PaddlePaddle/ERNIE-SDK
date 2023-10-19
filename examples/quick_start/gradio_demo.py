@@ -39,8 +39,7 @@ def parse_setup_args():
 
 def create_ui_and_launch(args):
     with gr.Blocks(title="ERNIE Bot SDK", theme=gr.themes.Soft()) as block:
-        with gr.Row():
-            gr.Markdown("# ERNIE Bot SDK")
+        gr.Markdown("# ERNIE Bot SDK基础功能演示")
         create_chat_completion_tab()
         create_embedding_tab()
         create_image_tab()
@@ -167,8 +166,7 @@ def create_chat_completion_tab():
                     rollback_btn = gr.Button("撤回")
                     regen_btn = gr.Button("重新生成")
                     send_btn = gr.Button("发送")
-                with gr.Row():
-                    raw_context_json = gr.JSON(label="原始对话上下文信息")
+                raw_context_json = gr.JSON(label="原始对话上下文信息")
 
         api_type.change(
             lambda api_type: {
