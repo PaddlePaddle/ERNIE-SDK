@@ -70,9 +70,9 @@ def create_components(functions):
     state = gr.State(value=default_state)
     auth_state = gr.State(value={
         'api_type': default_api_type,
-        'ak': "",
-        'sk': "",
-        'access_token': "",
+        'ak': '',
+        'sk': '',
+        'access_token': '',
     })
 
     with gr.Row():

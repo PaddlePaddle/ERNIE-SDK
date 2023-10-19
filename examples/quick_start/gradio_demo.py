@@ -38,7 +38,8 @@ def parse_setup_args():
 
 
 def create_ui_and_launch(args):
-    with gr.Blocks(title="ERNIE Bot SDK", theme=gr.themes.Soft()) as block:
+    with gr.Blocks(
+            title="ERNIE Bot SDK Demos", theme=gr.themes.Soft()) as block:
         gr.Markdown("# ERNIE Bot SDK基础功能演示")
         create_chat_completion_tab()
         create_embedding_tab()
