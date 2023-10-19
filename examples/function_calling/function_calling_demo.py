@@ -23,13 +23,6 @@ import json
 import operator
 import random
 import reprlib
-import sys
-major = sys.version_info.major
-minor = sys.version_info.minor
-if int(major) != 3 or int(minor) < 8:
-    raise RuntimeError(
-        f"The Gradio demo requires Python >= 3.8, but your Python version is {major}.{minor}."
-    )
 import textwrap
 import time
 import traceback
