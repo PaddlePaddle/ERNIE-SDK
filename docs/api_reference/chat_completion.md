@@ -12,15 +12,16 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 ## 输入参数
 
 | 参数名 | 类型 | 必填 | 描述 |
-| :---   | :--- | :------- | :---- |
-| model  | string | 是 | 模型名称。当前支持`'ernie-bot'`和`'ernie-bot-turbo'`。 |
+| :--- | :--- | :------- | :---- |
+| model | str | 是 | 模型名称。当前支持`'ernie-bot'`和`'ernie-bot-turbo'`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
 | functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。`ernie-bot-turbo`模型暂不支持此参数。 |
-| top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议该参数和temperature只设置其中一个。 |
-| temperature | float | 否 | 采样环节的参数，用于控制随机性。 <br>(1) 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议该参数和`top_p`只设置其中一个。 |
+| top_p | float | 否 | 生成环节在概率加和为`top_p`以内的top token集合内进行采样： <br>(1) 影响输出文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议此参数和temperature只设置其中一个。 |
+| temperature | float | 否 | 采样环节的参数，用于控制随机性。 <br>(1) 较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议此参数和`top_p`只设置其中一个。 |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象，值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
-| stream | boolean | 否 | 是否流式返回数据，默认`False`。 |
-| user_id | string | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
+| system | str | 否 ｜ 提示模型行为的文本。如果设置了`functions`，则不支持设定此参数。
+| user_id | str | 否 | 表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
+| stream | bool | 否 | 是否流式返回数据，默认`False`。 |
 
 <details>
 <summary><code name="messages">messages</code></summary>
@@ -48,18 +49,18 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
-| role | string | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
-| content | string or `None` | 是 | 当`role`不为`'function'`时，表示对话内容，必须设置该参数为非`None`值；当`role`为`'function'`时，表示函数响应参数，可以设置该参数为`None`。 |
-| name | string | 否 | 信息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
+| role | str | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
+| content | str or `None` | 是 | 当`role`不为`'function'`时，表示对话内容，必须设置此参数为非`None`值；当`role`为`'function'`时，表示函数响应参数，可以设置此参数为`None`。 |
+| name | str | 否 | 消息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
 | function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。 |
 
 `function_call`为一个Python dict，其中包含如下键值对：
 
 | 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
-| name | string | 是 | 函数名称。 |
-| thoughts | string | 否 | 模型思考过程。 |
-| arguments | string | 是 | 请求参数。 |
+| name | str | 是 | 函数名称。 |
+| thoughts | str | 否 | 模型思考过程。 |
+| arguments | str | 是 | 请求参数。 |
 
 </details>
 
@@ -117,12 +118,12 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 键名 | 值类型 | 必填 | 值描述 |
 |:--- | :---- | :--- | :---- |
-| name | string | 是 | 函数名称。 |
-| description | string | 是 | 对函数功能的描述。 |
+| name | str | 是 | 函数名称。 |
+| description | str | 是 | 对函数功能的描述。 |
 | parameters | dict | 是 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | responses | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。一个例子如下：`[{'role': 'user', 'content': "深圳市今天气温如何？"}, {'role': 'assistant', 'content': None, 'function_call': {'name': 'get_current_temperature', 'arguments': '{"location":"深圳市","unit":"摄氏度"}'}}, {'role': 'function', 'name': 'get_current_temperature', 'content': '{"temperature":25,"unit":"摄氏度"}'}]` |
-| plugin_id | string | 否 | 标记函数关联的插件，便于数据统计。 |
+| plugin_id | str | 否 | 标记函数关联的插件，便于数据统计。 |
 
 </details>
 
@@ -156,12 +157,12 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
 | rcode | int | HTTP响应状态码。 |
-| result | string | 对话返回的生成结果。 |
-| is_truncated | boolean | 生成结果是否被长度限制截断。 |
+| result | str | 对话返回的生成结果。 |
+| is_truncated | bool | 生成结果是否被长度限制截断。 |
 | sentence_id | int | 仅流式模式下返回该字段，表示返回结果中的文本顺序，从`0`开始计数。 |
-| need_clear_history | boolean | 表示用户输入是否存在安全，是否关闭当前会话，清理历史会话信息 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息 <br>`False`：否，表示用户输入无安全风险。 |
+| need_clear_history | bool | 表示用户输入是否存在安全，是否关闭当前会话，清理历史会话信息 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息 <br>`False`：否，表示用户输入无安全风险。 |
 | ban_round | int | 当`need_clear_history`为`True`时，会返回此字段表示第几轮对话有敏感信息，如果是当前轮次存在问题，则`ban_round=-1`。 |
-| is_end | boolean | 仅流式模式下返回该字段，表示是否为是返回结果的最后一段文本。 |
+| is_end | bool | 仅流式模式下返回该字段，表示是否为是返回结果的最后一段文本。 |
 | usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。<br>`prompt_tokens`：输入token数量（含上下文拼接）；<br>`completion_tokens`：当前生成结果包含的token数量；<br>`total_tokens`：输入与输出的token总数；<br> `plugins`：插件消耗的token数量。 |
 | function_call | dict | 由模型生成的函数调用，包含函数名称和请求参数等。详见[`messages`](#messages)中的`function_call`。 |
 

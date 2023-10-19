@@ -1,5 +1,6 @@
 aiohttp
 bce-python-sdk
 colorlog
+jsonschema
 requests >= 2.20
 typing_extensions
