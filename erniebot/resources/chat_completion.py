@@ -57,6 +57,9 @@ class ChatCompletion(EBResource, Creatable):
                 'ernie-bot-turbo': {
                     'model_id': 'eb-instant',
                 },
+                'ernie-bot-4': {
+                    'model_id': 'completions_pro',
+                },
             },
         },
     }
