@@ -19,7 +19,7 @@ from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import (FilesType, HeadersType, ParamsType, ResponseT)
 from erniebot.utils.misc import transform
-from .abc import Creatable, Queryable
+from .abc import Cancellable, Creatable, Queryable
 from .resource import EBResource
 
 
@@ -83,9 +83,8 @@ class FineTuningTask(EBResource, Creatable):
         return transform(FineTuningResponse.from_response, resp)
 
 
-class FineTuningJob(EBResource, Creatable, Queryable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,
-                                                          APIType.AISTUDIO)
+class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT, )
 
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
@@ -218,6 +217,53 @@ class FineTuningJob(EBResource, Creatable, Queryable):
         return url, params, headers, request_timeout
 
     def _postprocess_query(self, resp: EBResponse) -> EBResponse:
+        return FineTuningResponse.from_response(resp)
+
+    def _prepare_cancel(self,
+                        kwargs: Dict[str, Any]) -> Tuple[str,
+                                                         Optional[ParamsType],
+                                                         Optional[HeadersType],
+                                                         Optional[float],
+                                                         ]:
+        VALID_KEYS = {'task_id', 'job_id', 'headers', 'request_timeout'}
+
+        invalid_keys = kwargs.keys() - VALID_KEYS
+
+        if len(invalid_keys) > 0:
+            raise errors.InvalidArgumentError(
+                f"Invalid keys found in `kwargs`: {list(invalid_keys)}")
+
+        # task_id
+        if 'task_id' not in kwargs:
+            raise errors.ArgumentNotFoundError("`task_id` is not found.")
+        task_id = kwargs['task_id']
+
+        # job_id
+        if 'job_id' not in kwargs:
+            raise errors.ArgumentNotFoundError("`job_id` is not found.")
+        job_id = kwargs['job_id']
+
+        # url
+        if self.api_type is APIType.QIANFAN_SFT:
+            url = "/finetune/stopJob"
+        else:
+            raise errors.UnsupportedAPITypeError(
+                f"Supported API types: {self.get_supported_api_type_names()}")
+
+        # params
+        params = {}
+        params['taskId'] = task_id
+        params['jobId'] = job_id
+
+        # headers
+        headers = kwargs.get('headers', None)
+
+        # request_timeout
+        request_timeout = kwargs.get('request_timeout', None)
+
+        return url, params, headers, request_timeout
+
+    def _postprocess_cancel(self, resp: EBResponse) -> EBResponse:
         return FineTuningResponse.from_response(resp)
 
 
