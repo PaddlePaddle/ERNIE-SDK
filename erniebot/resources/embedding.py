@@ -59,7 +59,7 @@ class Embedding(EBResource, Creatable):
             if key in src:
                 dst[key] = src[key]
 
-        VALID_KEYS = {'model', 'input', 'headers', 'stream', 'request_timeout'}
+        VALID_KEYS = {'model', 'input', 'headers', 'request_timeout'}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -76,6 +76,8 @@ class Embedding(EBResource, Creatable):
         if 'input' not in kwargs:
             raise errors.ArgumentNotFoundError("`input` is not found.")
         input = kwargs['input']
+        if len(input) > 16:
+            raise errors.InvalidArgumentError("`input` has too many elements.")
 
         # url
         if self.api_type in self.SUPPORTED_API_TYPES:
@@ -100,7 +102,7 @@ class Embedding(EBResource, Creatable):
         files = None
 
         # stream
-        stream = kwargs.get('stream', False)
+        stream = False
 
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)

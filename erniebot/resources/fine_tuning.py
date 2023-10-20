@@ -35,9 +35,7 @@ class FineTuningTask(EBResource, Creatable):
                                                          bool,
                                                          Optional[float],
                                                          ]:
-        VALID_KEYS = {
-            'name', 'description', 'headers', 'stream', 'request_timeout'
-        }
+        VALID_KEYS = {'name', 'description', 'headers', 'request_timeout'}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -74,7 +72,7 @@ class FineTuningTask(EBResource, Creatable):
         files = None
 
         # stream
-        stream = kwargs.get('stream', False)
+        stream = False
 
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
@@ -110,7 +108,6 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
             'train_set_rate',
             'description',
             'headers',
-            'stream',
             'request_timeout',
         }
 
@@ -165,7 +162,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         files = None
 
         # stream
-        stream = kwargs.get('stream', False)
+        stream = False
 
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
