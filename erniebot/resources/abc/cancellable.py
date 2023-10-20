@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 from typing import (Any, Dict, Optional, Tuple)
-
-from typing_extensions import Protocol, runtime_checkable
 
 from erniebot.response import EBResponse
 from erniebot.types import (ParamsType, HeadersType)
 from .protocol import Resource
 
 
-@runtime_checkable
-class Cancellable(Resource, Protocol):
-    """Cancellable resource protocol."""
+class Cancellable(Resource):
+    """Cancellable resource."""
 
     @classmethod
     def cancel(cls, **kwargs: Any) -> EBResponse:
@@ -68,6 +66,7 @@ class Cancellable(Resource, Protocol):
         resp = self._postprocess_cancel(resp)
         return resp
 
+    @abc.abstractmethod
     def _prepare_cancel(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
                                                          Optional[ParamsType],
