@@ -131,10 +131,6 @@ class ChatCompletion(EBResource, Creatable):
             if top_p < 0. or top_p > 1.:
                 raise errors.InvalidArgumentError(
                     "`top_p` must be in the range [0, 1].")
-            if 'temperature' in params:
-                logger.warning(
-                    "It is not recommended to specify both `temperature` and `top_p`."
-                )
             params['top_p'] = top_p
         if 'penalty_score' in kwargs:
             penalty_score = kwargs['penalty_score']

@@ -16,29 +16,14 @@ repos:
     -   id: check-symlinks
     -   id: check-added-large-files
 
--   repo: local
+-   repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.0.1
     hooks:
-    -   id: copyright_checker
-        name: copyright_checker
-        entry: python ./.copyright.hook
-        language: system
-        files: \.(c|cc|cxx|cpp|cu|h|hpp|hxx|proto|py)$
-        exclude: (?!.*third_party)^.*$
-
--   repo: local
-    hooks:
-    -   id: clang-format-with-version-check
-        name: clang-format
-        description: Format files with ClangFormat.
-        entry: bash .clang_format.hook -i
-        language: system
-        files: \.(c|cc|cxx|cpp|cu|hxx|proto)$
-
--   repo: local
-    hooks:
-    -   id: cpplint-cpp-source
-        name: cpplint
-        description: Check C++ code style using cpplint.py.
-        entry: bash .cpplint_pre_commit.hook
-        language: system
-        files: \.(c|cc|cxx|cpp|cu|h|hpp|hxx)$
+    -   id: forbid-crlf
+        files: \.md$
+    -   id: remove-crlf
+        files: \.md$
+    -   id: forbid-tabs
+        files: \.md$
+    -   id: remove-tabs
+        files: \.md$
