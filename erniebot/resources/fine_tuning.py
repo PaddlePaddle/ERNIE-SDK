@@ -80,7 +80,7 @@ class FineTuningTask(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(FineTuningResponse.from_response, resp)
+        return transform(FineTuningResponse.from_mapping, resp)
 
 
 class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
@@ -170,7 +170,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         return url, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(FineTuningResponse.from_response, resp)
+        return transform(FineTuningResponse.from_mapping, resp)
 
     def _prepare_query(self,
                        kwargs: Dict[str, Any]) -> Tuple[str,
@@ -217,7 +217,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         return url, params, headers, request_timeout
 
     def _postprocess_query(self, resp: EBResponse) -> EBResponse:
-        return FineTuningResponse.from_response(resp)
+        return FineTuningResponse.from_mapping(resp)
 
     def _prepare_cancel(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
@@ -264,7 +264,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         return url, params, headers, request_timeout
 
     def _postprocess_cancel(self, resp: EBResponse) -> EBResponse:
-        return FineTuningResponse.from_response(resp)
+        return FineTuningResponse.from_mapping(resp)
 
 
 class FineTuningResponse(EBResponse):

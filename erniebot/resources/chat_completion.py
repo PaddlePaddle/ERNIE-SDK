@@ -164,7 +164,7 @@ class ChatCompletion(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(ChatResponse.from_response, resp)
+        return transform(ChatResponse.from_mapping, resp)
 
     @classmethod
     def _validate_messages(cls, messages: List[dict]) -> None:
