@@ -72,7 +72,7 @@ response = erniebot.ChatCompletion.create(
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
 * 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交申请体验。通常几个小时后会通知申请通过。
 * 登录[千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，进入[控制台](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application)创建千帆应用，可以获取到API key与secret key（如下图）。
-* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择服务并开通付费，包括：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务和Embedding-V1公有云在线调用服务。
+* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择需要用到的服务并开通付费，例如：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务、Embedding-V1公有云在线调用服务等。
 * （非必需）参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用API key和secret key获取access token。
 
 <div align="center">
@@ -131,7 +131,7 @@ erniebot.sk = '<secret-key-for-qianfan>'
 <img src="https://user-images.githubusercontent.com/52520497/264009612-17658684-c066-44e5-8814-178214aa8155.jpeg" width="800">  
 </div>
 
-* 进入百度云 - 智能创作平台 - [概览页面](https://console.bce.baidu.com/ai/#/ai/intelligentwriting/overview/index)，在服务列表中开通接口付费，包括AI作画-高级版和AI作画-基础版（如下图）。
+* 进入百度云 - 智能创作平台 - [概览页面](https://console.bce.baidu.com/ai/#/ai/intelligentwriting/overview/index)，在服务列表中找到AI作画-高级版服务并开通付费（如下图）。
 
 <div align="center">
 <img src="https://github.com/PaddlePaddle/PaddleSeg/assets/52520497/7c855314-8332-47ad-a444-a08dd37ec32f" width="800">  
