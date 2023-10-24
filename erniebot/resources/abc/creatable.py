@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 from typing import (Any, AsyncIterator, Dict, Iterator, Optional, Tuple, Union)
-
-from typing_extensions import Protocol, runtime_checkable
 
 from erniebot.response import EBResponse
 from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
 from .protocol import Resource
 
 
-@runtime_checkable
-class Creatable(Resource, Protocol):
-    """Creatable resource protocol."""
+class Creatable(Resource):
+    """Creatable resource."""
 
     @classmethod
     def create(cls, **kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
@@ -76,6 +74,7 @@ class Creatable(Resource, Protocol):
         resp = self._postprocess_create(resp)  # type: ignore
         return resp
 
+    @abc.abstractmethod
     def _prepare_create(self,
                         kwargs: Dict[str, Any]) -> Tuple[str,
                                                          Optional[ParamsType],

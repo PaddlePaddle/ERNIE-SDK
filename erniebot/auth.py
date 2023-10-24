@@ -69,11 +69,10 @@ class _GlobalAuthCache(metaclass=Singleton):
 
         return key, val
 
-    def add_or_update_entry(
-            self,
-            api_type: str,
-            key: Hashable,
-            value: Union[str, Callable[[], str]]) -> Optional[str]:
+    def upsert_entry(self,
+                     api_type: str,
+                     key: Hashable,
+                     value: Union[str, Callable[[], str]]) -> Optional[str]:
         with self._cond:
             self._writes += 1
             while self._reads > 0 or self._is_writing:
@@ -167,7 +166,7 @@ class AuthManager(object):
                                                  self._cache_key)[1]
 
     def _update_cache(self, init: bool) -> str:
-        token = _GlobalAuthCache().add_or_update_entry(
+        token = _GlobalAuthCache().upsert_entry(
             self.api_type.name,
             self._cache_key,
             functools.partial(

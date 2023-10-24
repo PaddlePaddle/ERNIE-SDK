@@ -21,7 +21,6 @@ import functools
 import inspect
 import json
 import operator
-import random
 import reprlib
 import textwrap
 import time
@@ -64,9 +63,9 @@ def create_components(functions):
     state = gr.State(value=default_state)
     auth_state = gr.State(value={
         'api_type': default_api_type,
-        'ak': "",
-        'sk': "",
-        'access_token': "",
+        'ak': '',
+        'sk': '',
+        'access_token': '',
     })
 
     with gr.Row():
@@ -179,283 +178,285 @@ def create_components(functions):
             raw_context_json = gr.JSON(
                 label=f"最近{MAX_CONTEXT_LINES_TO_SHOW}条消息", scale=1)
 
-        api_type.change(
-            update_api_type,
-            inputs=[
-                auth_state,
-                api_type,
-            ],
-            outputs=[
-                auth_state,
-                access_key,
-                secret_key,
-            ],
-        ).success(
-            reset_conversation,
-            inputs=state,
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-        )
-        access_key.change(
-            make_state_updater(
-                key='ak', strip=True),
-            inputs=[
-                auth_state,
-                access_key,
-            ],
-            outputs=auth_state,
-        )
-        secret_key.change(
-            make_state_updater(
-                key='sk', strip=True),
-            inputs=[
-                auth_state,
-                secret_key,
-            ],
-            outputs=auth_state,
-        )
-        access_token.change(
-            make_state_updater(
-                key='access_token', strip=True),
-            inputs=[
-                auth_state,
-                access_token,
-            ],
-            outputs=auth_state,
-        )
+    api_type.change(
+        update_api_type,
+        inputs=[
+            auth_state,
+            api_type,
+        ],
+        outputs=[
+            auth_state,
+            access_key,
+            secret_key,
+        ],
+    ).success(
+        reset_conversation,
+        inputs=state,
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+        ],
+    )
+    access_key.change(
+        make_state_updater(
+            key='ak', strip=True),
+        inputs=[
+            auth_state,
+            access_key,
+        ],
+        outputs=auth_state,
+    )
+    secret_key.change(
+        make_state_updater(
+            key='sk', strip=True),
+        inputs=[
+            auth_state,
+            secret_key,
+        ],
+        outputs=auth_state,
+    )
+    access_token.change(
+        make_state_updater(
+            key='access_token', strip=True),
+        inputs=[
+            auth_state,
+            access_token,
+        ],
+        outputs=auth_state,
+    )
 
-        disable_chat_input_args = {
-            'fn':
-            lambda: replicate_gradio_update(6, interactive=False),
-            'inputs': None,
-            'outputs': [
-                input_text,
-                clear_btn,
-                recall_btn,
-                regen_btn,
-                send_text_btn,
-                send_res_btn,
-            ],
-            'show_progress': False,
-            'queue': False,
-        }
-        enable_chat_input_args = {
-            'fn': lambda: replicate_gradio_update(6, interactive=True),
-            'inputs': None,
-            'outputs': [
-                input_text,
-                clear_btn,
-                recall_btn,
-                regen_btn,
-                send_text_btn,
-                send_res_btn,
-            ],
-            'show_progress': False,
-            'queue': False,
-        }
-        input_text.submit(**disable_chat_input_args).then(
-            generate_response_for_text,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                input_text,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
-        send_text_btn.click(**disable_chat_input_args).then(
-            generate_response_for_text,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                input_text,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
-        regen_btn.click(**disable_chat_input_args).then(
-            lambda history: (history and history[:-1], gr.update(interactive=False)),
-            inputs=context_chatbot,
-            outputs=[
-                context_chatbot,
-                regen_btn,
-            ],
-            show_progress=False,
-            queue=False,
-        ).then(
-            regenerate_response,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-                func_call_accord,
-            ],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
-        recall_btn.click(**disable_chat_input_args).then(
-            recall_message,
-            inputs=state,
-            outputs=[state, context_chatbot, raw_context_json],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
-        clear_btn.click(**disable_chat_input_args).then(
-            reset_conversation,
-            inputs=state,
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-        ).then(**enable_chat_input_args)
+    disable_chat_input_args = {
+        'fn':
+        lambda: replicate_gradio_update(6, interactive=False),
+        'inputs': None,
+        'outputs': [
+            input_text,
+            clear_btn,
+            recall_btn,
+            regen_btn,
+            send_text_btn,
+            send_res_btn,
+        ],
+        'show_progress': False,
+        'queue': False,
+    }
+    enable_chat_input_args = {
+        'fn': lambda: replicate_gradio_update(6, interactive=True),
+        'inputs': None,
+        'outputs': [
+            input_text,
+            clear_btn,
+            recall_btn,
+            regen_btn,
+            send_text_btn,
+            send_res_btn,
+        ],
+        'show_progress': False,
+        'queue': False,
+    }
+    input_text.submit(**disable_chat_input_args).then(
+        generate_response_for_text,
+        inputs=[
+            state,
+            chosen_func_names,
+            auth_state,
+            ernie_model,
+            input_text,
+            top_p,
+            temperature,
+        ],
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+            func_call_accord,
+        ],
+        show_progress=False,
+    ).then(**enable_chat_input_args)
+    send_text_btn.click(**disable_chat_input_args).then(
+        generate_response_for_text,
+        inputs=[
+            state,
+            chosen_func_names,
+            auth_state,
+            ernie_model,
+            input_text,
+            top_p,
+            temperature,
+        ],
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+            func_call_accord,
+        ],
+        show_progress=False,
+    ).then(**enable_chat_input_args)
+    regen_btn.click(**disable_chat_input_args).then(
+        lambda history: (history and history[:-1], gr.update(interactive=False)),
+        inputs=context_chatbot,
+        outputs=[
+            context_chatbot,
+            regen_btn,
+        ],
+        show_progress=False,
+        queue=False,
+    ).then(
+        regenerate_response,
+        inputs=[
+            state,
+            chosen_func_names,
+            auth_state,
+            ernie_model,
+            top_p,
+            temperature,
+        ],
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+            func_call_accord,
+        ],
+        show_progress=False,
+    ).then(**enable_chat_input_args)
+    recall_btn.click(**disable_chat_input_args).then(
+        recall_message,
+        inputs=state,
+        outputs=[state, context_chatbot, raw_context_json],
+        show_progress=False,
+    ).then(**enable_chat_input_args)
+    clear_btn.click(**disable_chat_input_args).then(
+        reset_conversation,
+        inputs=state,
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+        ],
+    ).then(**enable_chat_input_args)
 
-        chosen_func_names.select(
-            try_update_candidates,
-            inputs=[
-                state,
-                chosen_func_names,
-                custom_func_code,
-                custom_func_desc,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
-        )
+    chosen_func_names.select(
+        try_update_candidates,
+        inputs=[
+            state,
+            chosen_func_names,
+            custom_func_code,
+            custom_func_desc,
+        ],
+        outputs=[
+            state,
+            chosen_func_names,
+        ],
+        show_progress=False,
+    )
 
-        custom_func_code.change(
-            remove_old_custom_function,
-            inputs=[
-                state,
-                chosen_func_names,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
-            show_progress=False,
-        )
-        custom_func_desc.change(
-            remove_old_custom_function,
-            inputs=[
-                state,
-                chosen_func_names,
-            ],
-            outputs=[
-                state,
-                chosen_func_names,
-            ],
-            show_progress=False,
-        )
-        update_func_desc_btn.click(
-            try_update_custom_func_desc,
-            inputs=[
-                custom_func_code,
-                custom_func_desc,
-            ],
-            outputs=custom_func_desc,
-        )
+    custom_func_code.change(
+        remove_old_custom_function,
+        inputs=[
+            state,
+            chosen_func_names,
+        ],
+        outputs=[
+            state,
+            chosen_func_names,
+        ],
+        show_progress=False,
+    )
+    custom_func_desc.change(
+        remove_old_custom_function,
+        inputs=[
+            state,
+            chosen_func_names,
+        ],
+        outputs=[
+            state,
+            chosen_func_names,
+        ],
+        show_progress=False,
+    )
+    update_func_desc_btn.click(
+        update_custom_func_desc,
+        inputs=[
+            custom_func_code,
+            custom_func_desc,
+        ],
+        outputs=custom_func_desc,
+        show_progress=False,
+    )
 
-        call_func_btn.click(
-            lambda: gr.update(interactive=False),
-            outputs=call_func_btn,
-            show_progress=False,
-            queue=False,
-        ).then(
-            call_function,
-            inputs=[
-                state,
-                chosen_func_names,
-                func_name,
-                func_in_params,
-            ],
-            outputs=func_out_params,
-        ).then(
-            lambda: gr.update(interactive=True),
-            outputs=call_func_btn,
-            show_progress=False,
-            queue=False,
-        )
-        send_res_btn.click(**disable_chat_input_args).then(
-            generate_response_for_function,
-            inputs=[
-                state,
-                chosen_func_names,
-                auth_state,
-                ernie_model,
-                func_name,
-                func_out_params,
-                top_p,
-                temperature,
-            ],
-            outputs=[
-                state,
-                context_chatbot,
-                input_text,
-                raw_context_json,
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-            show_progress=False,
-        ).then(**enable_chat_input_args)
-        reset_func_btn.click(
-            lambda: (None, None, None),
-            outputs=[
-                func_name,
-                func_in_params,
-                func_out_params,
-            ],
-            show_progress=False,
-        )
+    call_func_btn.click(
+        lambda: gr.update(interactive=False),
+        outputs=call_func_btn,
+        show_progress=False,
+        queue=False,
+    ).then(
+        call_function,
+        inputs=[
+            state,
+            chosen_func_names,
+            func_name,
+            func_in_params,
+        ],
+        outputs=func_out_params,
+        show_progress=False,
+    ).then(
+        lambda: gr.update(interactive=True),
+        outputs=call_func_btn,
+        show_progress=False,
+        queue=False,
+    )
+    send_res_btn.click(**disable_chat_input_args).then(
+        generate_response_for_function,
+        inputs=[
+            state,
+            chosen_func_names,
+            auth_state,
+            ernie_model,
+            func_name,
+            func_out_params,
+            top_p,
+            temperature,
+        ],
+        outputs=[
+            state,
+            context_chatbot,
+            input_text,
+            raw_context_json,
+            func_name,
+            func_in_params,
+            func_out_params,
+        ],
+        show_progress=False,
+    ).then(**enable_chat_input_args)
+    reset_func_btn.click(
+        lambda: (None, None, None),
+        outputs=[
+            func_name,
+            func_in_params,
+            func_out_params,
+        ],
+    )
 
 
 def create_function_tab(function):
@@ -502,13 +503,9 @@ def generate_response_for_function(
         temperature,
 ):
     if text_is_empty(func_name):
-        gr.Warning("函数名称不能为空")
-        yield get_fallback_return()
-        return
+        raise gr.Error("函数名称不能为空")
     if func_res is None:
-        gr.Warning("无法获取函数响应参数，请调用函数")
-        yield get_fallback_return()
-        return
+        raise gr.Error("无法获取函数响应参数，请调用函数")
     message = {
         'role': 'function',
         'name': func_name,
@@ -536,9 +533,7 @@ def generate_response_for_text(
         temperature,
 ):
     if text_is_empty(content):
-        gr.Warning("消息内容不能为空")
-        yield get_fallback_return()
-        return
+        raise gr.Error("消息内容不能为空")
     content = content.strip().replace('<br>', '\n')
     message = {'role': 'user', 'content': content}
     yield from generate_response(
@@ -555,8 +550,7 @@ def generate_response_for_text(
 def recall_message(state):
     context = state['context']
     if len(context) < 2:
-        gr.Warning("请至少进行一轮对话")
-        return replicate_gradio_update(3)
+        raise gr.Error("请至少进行一轮对话")
     context = context[:-2]
     history = extract_history(context)
     state['context'] = context
@@ -573,9 +567,7 @@ def regenerate_response(
 ):
     context = state['context']
     if len(context) < 2:
-        gr.Warning("请至少进行一轮对话")
-        yield get_fallback_return()
-        return
+        raise gr.Error("请至少进行一轮对话")
     context.pop()
     user_message = context.pop()
     yield from generate_response(
@@ -607,7 +599,8 @@ def generate_response(
     context.append(message)
     name2function = state['name2function']
     functions = [name2function[name].desc for name in candidates]
-    data = {
+    params = {
+        'model': ernie_model,
         'messages': context,
         'top_p': top_p,
         'temperature': temperature,
@@ -618,18 +611,13 @@ def generate_response(
         resp_stream = create_chat_completion(
             _config_={k: v
                       for k, v in auth_config.items() if v},
-            model=ernie_model,
-            **data,
+            **params,
             stream=True,
         )
     except eb.errors.TokenUpdateFailedError as e:
-        handle_exception(e, f"鉴权参数无效，请重新填写", raise_=False)
-        yield get_fallback_return()
-        return
+        raise gr.Error("鉴权参数无效，请重新填写") from e
     except eb.errors.EBError as e:
-        handle_exception(e, f"请求失败。错误信息如下：{str(e)}", raise_=False)
-        yield get_fallback_return()
-        return
+        raise gr.Error(f"请求失败。错误信息如下：{str(e)}") from e
 
     context.append({'role': 'assistant', 'content': None})
     history = None
@@ -645,6 +633,7 @@ def generate_response(
                 # formatted JSON. In this case we use the raw string.
                 func_args = function_call['arguments']
             context[-1]['function_call'] = function_call
+            assert history is None
             history = extract_history(context)
             state['context'] = context
             yield (
@@ -658,32 +647,24 @@ def generate_response(
                 gr.update(open=True), )
             break
         else:
-            if context[-1]['content'] is None:
-                context[-1]['content'] = resp.result
-            else:
-                context[-1]['content'] += resp.result
             if history is None:
-                old_content = ""
-            else:
-                old_content = history[-1][1]
-            history = extract_history(context, history)
-            new_content = history[-1][1]
-            temp_history = copy.copy(history)
-            # Partial deep copy
-            temp_history[-1] = history[-1][:]
+                history = extract_history(context)
+            if context[-1]['content'] is None:
+                context[-1]['content'] = ""
+            old_content = context[-1]['content']
+            delta = resp.result
+            context[-1]['content'] += delta
             for content in stream_output_smoother(
                     old_content,
-                    new_content,
-                    min_num_chars=1,
-                    max_num_chars=4,
-                    delay=0.1,
+                    delta,
             ):
-                temp_history[-1][1] = content
+                history[-1][1] = content
                 yield (
                     state,
-                    temp_history,
+                    history,
                     None,
                     *replicate_gradio_update(5), )
+            assert history[-1][1] == context[-1]['content']
     else:
         state['context'] = context
         yield (
@@ -694,28 +675,9 @@ def generate_response(
             *replicate_gradio_update(4), )
 
 
-def extract_history(context, old_history=None):
-    if old_history is not None:
-        history = old_history
-    else:
-        history = []
-
-    len_history = len(history)
-    len_context = len(context)
-    diff = len_history - (len(context) + 1) // 2
-    if diff > 0:
-        for _ in range(diff):
-            history.pop()
-        return history
-
-    if diff == 0:
-        if len_history > 0:
-            history.pop()
-        start = len_context - 1 - (len_context % 2 == 0)
-    else:
-        start = len_history * 2
-
-    for round_idx in range(start, len_context, 2):
+def extract_history(context):
+    history = []
+    for round_idx in range(0, len(context), 2):
         user_message = context[round_idx]
         pair = []
         if user_message['role'] == 'function':
@@ -742,30 +704,15 @@ def extract_history(context, old_history=None):
 
         assert len(pair) == 2
         history.append(pair)
-
     return history
 
 
-def get_fallback_return():
-    return replicate_gradio_update(8)
-
-
-def stream_output_smoother(old_content,
-                           new_content,
-                           *,
-                           min_num_chars=1,
-                           max_num_chars=16,
-                           delay=0.03,
-                           add_cursor=True):
-    end = len(new_content)
-    pos = len(old_content)
-    while pos < end:
-        offset = random.randint(min_num_chars, max_num_chars)
-        pos += offset
-        curr = new_content[:pos]
-        if add_cursor:
-            curr += "▌"
-        yield curr
+def stream_output_smoother(old_content, delta, *, delay=0.03):
+    content = old_content
+    yield content
+    for char in delta:
+        content += char
+        yield content
         time.sleep(delay)
 
 
@@ -793,7 +740,7 @@ def remove_old_custom_function(state, candidates):
     return state, candidates
 
 
-def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
+def update_custom_func_desc(custom_func_code, custom_func_desc_str):
     try:
         func = code_to_function(custom_func_code, CUSTOM_FUNC_NAME)
         sig = inspect.signature(func)
@@ -821,8 +768,7 @@ def try_update_custom_func_desc(custom_func_code, custom_func_desc_str):
             new_params_desc['properties'][name] = param_desc
         custom_func_desc['parameters'] = new_params_desc
     except Exception as e:
-        handle_exception(e, f"更新函数描述失败，错误信息如下：{str(e)}", raise_=False)
-        return gr.update()
+        raise gr.Error(f"更新函数描述失败，错误信息如下：{str(e)}") from e
     else:
         return to_pretty_json(custom_func_desc)
 
@@ -840,25 +786,21 @@ def make_custom_function(code, desc_str):
 def call_function(state, candidates, func_name, func_args):
     name2function = state['name2function']
     if text_is_empty(func_name):
-        gr.Warning(f"函数名称不能为空")
-        return None
+        raise gr.Error("函数名称不能为空")
     if func_name not in name2function:
-        gr.Warning(f"函数`{func_name}`不存在")
-        return None
+        raise gr.Error(f"函数`{func_name}`不存在")
     if func_name not in candidates:
-        gr.Warning(f"函数`{func_name}`不是候选函数")
-        return None
+        raise gr.Error(f"函数`{func_name}`不是候选函数")
     func = name2function[func_name].func
     if text_is_empty(func_args):
         func_args = '{}'
     func_args = json_to_obj(func_args)
     if not isinstance(func_args, dict):
-        gr.Warning(f"无法将{reprlib.repr(func_args)}解析为字典")
-        return None
+        raise gr.Error(f"无法将{reprlib.repr(func_args)}解析为字典")
     try:
         res = func(**func_args)
     except Exception as e:
-        handle_exception(e, f"函数{func_name}调用失败，错误信息如下：{str(e)}", raise_=True)
+        raise gr.Error(f"函数{func_name}调用失败，错误信息如下：{str(e)}") from e
     return to_pretty_json(res, from_json=False)
 
 
@@ -1047,11 +989,11 @@ def to_pretty_json(obj, *, from_json=False):
 
 
 def handle_exception(exception, message, *, raise_=False):
-    traceback.print_exception(
-        type(exception), exception, exception.__traceback__)
     if raise_:
         raise gr.Error(message)
     else:
+        traceback.print_exception(
+            type(exception), exception, exception.__traceback__)
         gr.Warning(message)
 
 
