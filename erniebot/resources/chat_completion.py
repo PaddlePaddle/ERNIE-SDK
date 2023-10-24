@@ -21,9 +21,7 @@ import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import (FilesType, HeadersType, ParamsType, ResponseT)
-from erniebot.utils.logging import logger
 from erniebot.utils.misc import transform
-from erniebot.utils.token_helper import approx_num_tokens
 from .abc import Creatable
 from .resource import EBResource
 
@@ -131,10 +129,6 @@ class ChatCompletion(EBResource, Creatable):
             if top_p < 0. or top_p > 1.:
                 raise errors.InvalidArgumentError(
                     "`top_p` must be in the range [0, 1].")
-            if 'temperature' in params:
-                logger.warning(
-                    "It is not recommended to specify both `temperature` and `top_p`."
-                )
             params['top_p'] = top_p
         if 'penalty_score' in kwargs:
             penalty_score = kwargs['penalty_score']
@@ -168,11 +162,10 @@ class ChatCompletion(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(ChatResponse.from_response, resp)
+        return transform(ChatResponse.from_mapping, resp)
 
     @classmethod
     def _validate_messages(cls, messages: List[dict]) -> None:
-        # TODO: Optionally check the total number of tokens
         if len(messages) % 2 != 1:
             raise errors.InvalidArgumentError(
                 "`messages` must have an odd number of elements.")
@@ -195,9 +188,6 @@ class ChatCompletion(EBResource, Creatable):
                 if 'name' not in message:
                     raise errors.InvalidArgumentError(
                         f"Message {idx} does not contain the function name.")
-        if approx_num_tokens(messages[-1]['content']) > 3000:
-            raise errors.InvalidArgumentError(
-                f"The last message has more than 3000 tokens.")
 
     @classmethod
     def _validate_functions(cls, functions: List[dict]) -> None:

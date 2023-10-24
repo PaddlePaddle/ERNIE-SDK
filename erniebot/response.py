@@ -62,11 +62,8 @@ class EBResponse(Mapping):
             self._update_from_dict(rbody)
 
     @classmethod
-    def from_response(cls, response: 'EBResponse') -> Self:
-        resp_type = response.__class__
-        if resp_type is not EBResponse:
-            raise TypeError(f"`response` has type `{resp_type.__name__}`.")
-        return cls(response.rcode, response.rbody, response.rheaders)
+    def from_mapping(cls, mapping: Mapping) -> Self:
+        return cls(mapping['rcode'], mapping['rbody'], mapping['rheaders'])
 
     def __getitem__(self, key: str) -> Any:
         if key in self._dict:

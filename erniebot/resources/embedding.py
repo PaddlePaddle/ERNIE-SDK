@@ -110,7 +110,7 @@ class Embedding(EBResource, Creatable):
         return url, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(EmbeddingResponse.from_response, resp)
+        return transform(EmbeddingResponse.from_mapping, resp)
 
 
 class EmbeddingResponse(EBResponse):

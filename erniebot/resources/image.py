@@ -303,7 +303,7 @@ class ImageV2(_Image):
         return url, params, headers
 
     def _postprocess(self, resp_f: EBResponse) -> EBResponse:
-        return ImageV2Response.from_response(resp_f)
+        return ImageV2Response.from_mapping(resp_f)
 
     @staticmethod
     def _check_status(resp: EBResponse) -> bool:

@@ -34,6 +34,7 @@ models = erniebot.Model.list()
 print(models)
 # ernie-bot             文心一言旗舰版
 # ernie-bot-turbo       文心一言轻量版
+# ernie-bot-4           基于文心大模型4.0版本的文心一言
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
 
@@ -72,7 +73,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ### 对话补全（Chat Completion）
 
-ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot和文心一言迅捷版模型ernie-bot-turbo。
+ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot、文心一言迅捷版模型ernie-bot-turbo以及基于文心大模型4.0版本的文心一言ernie-bot-4。
 
 旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
 
