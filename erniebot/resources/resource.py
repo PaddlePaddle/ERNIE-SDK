@@ -76,7 +76,7 @@ class EBResource(object):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[False],
             *,
             params: Optional[ParamsType]=...,
@@ -90,7 +90,7 @@ class EBResource(object):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[True],
             *,
             params: Optional[ParamsType]=...,
@@ -104,7 +104,7 @@ class EBResource(object):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             *,
             params: Optional[ParamsType]=...,
@@ -120,7 +120,7 @@ class EBResource(object):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             *,
             params: Optional[ParamsType]=None,
@@ -133,7 +133,7 @@ class EBResource(object):
         if self.timeout is None:
             return self._request(
                 method=method,
-                url=url,
+                path=path,
                 stream=stream,
                 params=params,
                 headers=headers,
@@ -146,7 +146,7 @@ class EBResource(object):
                 try:
                     return self._request(
                         method=method,
-                        url=url,
+                        path=path,
                         stream=stream,
                         params=params,
                         headers=headers,
@@ -164,7 +164,7 @@ class EBResource(object):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[False],
         *,
         params: Optional[ParamsType]=...,
@@ -178,7 +178,7 @@ class EBResource(object):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[True],
         *,
         params: Optional[ParamsType]=...,
@@ -192,7 +192,7 @@ class EBResource(object):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         *,
         params: Optional[ParamsType]=...,
@@ -208,7 +208,7 @@ class EBResource(object):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         *,
         params: Optional[ParamsType]=None,
@@ -221,7 +221,7 @@ class EBResource(object):
         if self.timeout is None:
             return await self._arequest(
                 method=method,
-                url=url,
+                path=path,
                 stream=stream,
                 params=params,
                 headers=headers,
@@ -234,7 +234,7 @@ class EBResource(object):
                 try:
                     return await self._arequest(
                         method=method,
-                        url=url,
+                        path=path,
                         stream=stream,
                         params=params,
                         headers=headers,
@@ -253,7 +253,7 @@ class EBResource(object):
             self,
             until: Callable[[EBResponse], bool],
             method: str,
-            url: str,
+            path: str,
             *,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
@@ -262,7 +262,7 @@ class EBResource(object):
         for _ in range(self.MAX_POLLING_RETRIES):
             resp = self._request(
                 method=method,
-                url=url,
+                path=path,
                 stream=False,
                 params=params,
                 headers=headers,
@@ -282,7 +282,7 @@ class EBResource(object):
         self,
         until: Callable[[EBResponse], bool],
         method: str,
-        url: str,
+        path: str,
         *,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
@@ -291,7 +291,7 @@ class EBResource(object):
         for _ in range(self.MAX_POLLING_RETRIES):
             resp = await self._arequest(
                 method=method,
-                url=url,
+                path=path,
                 stream=False,
                 params=params,
                 headers=headers,
@@ -310,7 +310,7 @@ class EBResource(object):
     def _request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[False],
             params: Optional[ParamsType],
             headers: Optional[HeadersType],
@@ -323,7 +323,7 @@ class EBResource(object):
     def _request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[True],
             params: Optional[ParamsType],
             headers: Optional[HeadersType],
@@ -336,7 +336,7 @@ class EBResource(object):
     def _request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType],
             headers: Optional[HeadersType],
@@ -351,7 +351,7 @@ class EBResource(object):
     def _request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType],
             headers: Optional[HeadersType],
@@ -362,7 +362,7 @@ class EBResource(object):
                ]:
         resp = self._backend.request(
             method,
-            url,
+            path,
             stream,
             params=params,
             headers=headers,
@@ -384,7 +384,7 @@ class EBResource(object):
     async def _arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[False],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
@@ -397,7 +397,7 @@ class EBResource(object):
     async def _arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[True],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
@@ -410,7 +410,7 @@ class EBResource(object):
     async def _arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
@@ -425,7 +425,7 @@ class EBResource(object):
     async def _arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
@@ -436,7 +436,7 @@ class EBResource(object):
                ]:
         resp = await self._backend.arequest(
             method,
-            url,
+            path,
             stream,
             params=params,
             headers=headers,

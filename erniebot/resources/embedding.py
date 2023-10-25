@@ -76,16 +76,14 @@ class Embedding(EBResource, Creatable):
         if 'input' not in kwargs:
             raise errors.ArgumentNotFoundError("`input` is not found.")
         input = kwargs['input']
-        if len(input) > 16:
-            raise errors.InvalidArgumentError("`input` has too many elements.")
 
-        # url
+        # path
         if self.api_type in self.SUPPORTED_API_TYPES:
             api_info = self._API_INFO_DICT[self.api_type]
             if model not in api_info['models']:
                 raise errors.InvalidArgumentError(
                     f"{repr(model)} is not a supported model.")
-            url = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"
+            path = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -107,7 +105,7 @@ class Embedding(EBResource, Creatable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, files, stream, request_timeout
+        return path, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
         return transform(EmbeddingResponse.from_mapping, resp)

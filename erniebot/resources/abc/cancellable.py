@@ -41,11 +41,11 @@ class Cancellable(Resource):
         return resp
 
     def cancel_resource(self, **cancel_kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_cancel(
+        path, params, headers, request_timeout = self._prepare_cancel(
             cancel_kwargs)
         resp = self.request(
             method='POST',
-            url=url,
+            path=path,
             params=params,
             stream=False,
             headers=headers,
@@ -54,11 +54,11 @@ class Cancellable(Resource):
         return resp
 
     async def acancel_resource(self, **cancel_kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_cancel(
+        path, params, headers, request_timeout = self._prepare_cancel(
             cancel_kwargs)
         resp = await self.arequest(
             method='POST',
-            url=url,
+            path=path,
             params=params,
             stream=False,
             headers=headers,

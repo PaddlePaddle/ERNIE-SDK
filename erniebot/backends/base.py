@@ -41,7 +41,7 @@ class EBBackend(object):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
@@ -55,7 +55,7 @@ class EBBackend(object):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
@@ -66,5 +66,5 @@ class EBBackend(object):
                ]:
         raise NotImplementedError
 
-    def _get_full_url(self, path: str) -> str:
+    def _get_url(self, path: str) -> str:
         return f"{self.base_url}{path}"
