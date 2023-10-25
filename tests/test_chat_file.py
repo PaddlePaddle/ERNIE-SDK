@@ -41,5 +41,5 @@ if __name__ == '__main__':
             'role': 'user',
             'content': "应对未来的技术挑战，AI框架有哪些独特的技术特色？"
         }],
-        stream=False)
+    )
     print(response.get_result())
