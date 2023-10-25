@@ -41,11 +41,11 @@ class Queryable(Resource):
         return resp
 
     def query_resource(self, **query_kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_query(
+        path, params, headers, request_timeout = self._prepare_query(
             query_kwargs)
         resp = self.request(
             method='POST',
-            url=url,
+            path=path,
             params=params,
             stream=False,
             headers=headers,
@@ -54,11 +54,11 @@ class Queryable(Resource):
         return resp
 
     async def aquery_resource(self, **query_kwargs: Any) -> EBResponse:
-        url, params, headers, request_timeout = self._prepare_query(
+        path, params, headers, request_timeout = self._prepare_query(
             query_kwargs)
         resp = await self.arequest(
             method='POST',
-            url=url,
+            path=path,
             params=params,
             stream=False,
             headers=headers,

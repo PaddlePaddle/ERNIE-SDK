@@ -53,9 +53,9 @@ class FineTuningTask(EBResource, Creatable):
             raise errors.ArgumentNotFoundError("`description` is not found.")
         description = kwargs['description']
 
-        # url
+        # path
         if self.api_type is APIType.QIANFAN_SFT:
-            url = "/finetune/createTask"
+            path = "/finetune/createTask"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -77,7 +77,7 @@ class FineTuningTask(EBResource, Creatable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, files, stream, request_timeout
+        return path, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
         return transform(FineTuningResponse.from_mapping, resp)
@@ -135,9 +135,9 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # train_set_rate
         train_set_rate = _get_required_arg('train_set_rate')
 
-        # url
+        # path
         if self.api_type is APIType.QIANFAN_SFT:
-            url = "/finetune/createJob"
+            path = "/finetune/createJob"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -167,7 +167,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, files, stream, request_timeout
+        return path, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
         return transform(FineTuningResponse.from_mapping, resp)
@@ -196,9 +196,9 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
             raise errors.ArgumentNotFoundError("`job_id` is not found.")
         job_id = kwargs['job_id']
 
-        # url
+        # path
         if self.api_type is APIType.QIANFAN_SFT:
-            url = "/finetune/jobDetail"
+            path = "/finetune/jobDetail"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -214,7 +214,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, request_timeout
+        return path, params, headers, request_timeout
 
     def _postprocess_query(self, resp: EBResponse) -> EBResponse:
         return FineTuningResponse.from_mapping(resp)
@@ -243,9 +243,9 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
             raise errors.ArgumentNotFoundError("`job_id` is not found.")
         job_id = kwargs['job_id']
 
-        # url
+        # path
         if self.api_type is APIType.QIANFAN_SFT:
-            url = "/finetune/stopJob"
+            path = "/finetune/stopJob"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -261,7 +261,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, request_timeout
+        return path, params, headers, request_timeout
 
     def _postprocess_cancel(self, resp: EBResponse) -> EBResponse:
         return FineTuningResponse.from_mapping(resp)

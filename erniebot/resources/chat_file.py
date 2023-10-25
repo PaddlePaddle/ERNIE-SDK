@@ -49,10 +49,10 @@ class ChatFile(EBResource, Creatable):
             raise errors.ArgumentNotFoundError("`messages` is not found.")
         messages = kwargs['messages']
 
-        # url
+        # path
         assert self.SUPPORTED_API_TYPES == (APIType.QIANFAN, )
         if self.api_type is APIType.QIANFAN:
-            url = "/chat/chatfile_adv"
+            path = "/chat/chatfile_adv"
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}")
@@ -73,7 +73,7 @@ class ChatFile(EBResource, Creatable):
         # request_timeout
         request_timeout = kwargs.get('request_timeout', None)
 
-        return url, params, headers, files, stream, request_timeout
+        return path, params, headers, files, stream, request_timeout
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
         return transform(ChatResponse.from_mapping, resp)

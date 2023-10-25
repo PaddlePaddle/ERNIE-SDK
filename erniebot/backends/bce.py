@@ -22,7 +22,7 @@ from typing import (Any, AsyncIterator, ClassVar, Dict, Iterator, List,
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.auth import build_auth_manager
+from erniebot.auth import build_auth_token_manager
 from erniebot.response import EBResponse
 from erniebot.types import (FilesType, HeadersType, ParamsType)
 from erniebot.utils.logging import logger
@@ -35,7 +35,7 @@ class _BCELegacyBackend(EBBackend):
 
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
-        self._auth_manager = build_auth_manager(
+        self._auth_manager = build_auth_token_manager(
             'bce',
             self.api_type,
             auth_token=self._cfg['access_token'],
@@ -46,7 +46,7 @@ class _BCELegacyBackend(EBBackend):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
@@ -55,7 +55,7 @@ class _BCELegacyBackend(EBBackend):
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,
@@ -94,7 +94,7 @@ class _BCELegacyBackend(EBBackend):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
@@ -103,7 +103,7 @@ class _BCELegacyBackend(EBBackend):
     ) -> Union[EBResponse,
                AsyncIterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,
@@ -152,7 +152,7 @@ class _BCEBackend(EBBackend):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
@@ -161,7 +161,7 @@ class _BCEBackend(EBBackend):
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,
@@ -183,7 +183,7 @@ class _BCEBackend(EBBackend):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
@@ -192,7 +192,7 @@ class _BCEBackend(EBBackend):
     ) -> Union[EBResponse,
                AsyncIterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,

@@ -26,13 +26,14 @@ from .api_types import APIType
 from .utils.logging import logger
 from .utils.misc import Singleton
 
-__all__ = ['build_auth_manager']
+__all__ = ['build_auth_token_manager']
 
 
-def build_auth_manager(manager_type: str, api_type: APIType,
-                       **kwargs: Any) -> 'AuthManager':
+def build_auth_token_manager(manager_type: str,
+                             api_type: APIType,
+                             **kwargs: Any) -> 'AuthTokenManager':
     if manager_type == 'bce':
-        return BCEAuthManager(api_type, **kwargs)
+        return BCEAuthTokenManager(api_type, **kwargs)
     else:
         raise ValueError(f"Unsupported manager type: {manager_type}")
 
@@ -112,7 +113,7 @@ class _GlobalAuthCache(metaclass=Singleton):
         return (key1, key2)
 
 
-class AuthManager(object):
+class AuthTokenManager(object):
     def __init__(self,
                  api_type: APIType,
                  *,
@@ -121,6 +122,7 @@ class AuthManager(object):
         super().__init__()
         self.api_type = api_type
         self._cfg = dict(**kwargs)
+        self._cache = _GlobalAuthCache()
         self._cache_key = self._get_cache_key()
         self._token = self._init_auth_token(auth_token)
 
@@ -162,11 +164,11 @@ class AuthManager(object):
         return new_token
 
     def _retrieve_from_cache(self) -> Optional[str]:
-        return _GlobalAuthCache().retrieve_entry(self.api_type.name,
-                                                 self._cache_key)[1]
+        return self._cache.retrieve_entry(self.api_type.name,
+                                          self._cache_key)[1]
 
     def _update_cache(self, init: bool) -> str:
-        token = _GlobalAuthCache().upsert_entry(
+        token = self._cache.upsert_entry(
             self.api_type.name,
             self._cache_key,
             functools.partial(
@@ -178,7 +180,7 @@ class AuthManager(object):
             return token
 
 
-class BCEAuthManager(AuthManager):
+class BCEAuthTokenManager(AuthTokenManager):
     def __init__(self,
                  api_type: APIType,
                  *,

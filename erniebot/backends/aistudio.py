@@ -63,7 +63,7 @@ class AIStudioBackend(EBBackend):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             params: Optional[ParamsType]=None,
             headers: Optional[HeadersType]=None,
@@ -72,7 +72,7 @@ class AIStudioBackend(EBBackend):
     ) -> Union[EBResponse,
                Iterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,
@@ -95,7 +95,7 @@ class AIStudioBackend(EBBackend):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         params: Optional[ParamsType]=None,
         headers: Optional[HeadersType]=None,
@@ -104,7 +104,7 @@ class AIStudioBackend(EBBackend):
     ) -> Union[EBResponse,
                AsyncIterator[EBResponse],
                ]:
-        url = self._get_full_url(url)
+        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
             url,
