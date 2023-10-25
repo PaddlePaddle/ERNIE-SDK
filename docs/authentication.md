@@ -72,7 +72,7 @@ response = erniebot.ChatCompletion.create(
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
 * 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交申请体验。通常几个小时后会通知申请通过。
 * 登录[千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，进入[控制台](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application)创建千帆应用，可以获取到API key与secret key（如下图）。
-* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择需要用到的服务并开通付费，例如：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务、Embedding-V1公有云在线调用服务等。
+* 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择需要用到的服务并开通付费，例如：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务、Embedding-V1公有云在线调用服务、ERNIE-Bot 4.0大模型公有云在线调用服务等。
 * （非必需）参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用API key和secret key获取access token。
 
 <div align="center">
