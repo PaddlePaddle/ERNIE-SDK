@@ -6,7 +6,7 @@
 
 ```{.py .copy}
 erniebot.Embedding.create(**kwargs: Any)
-	-> Union[EBResponse, Iterator[EBResponse]]
+    -> Union[EBResponse, Iterator[EBResponse]]
 ```
 
 ## 输入参数
@@ -84,7 +84,7 @@ response = erniebot.Embedding.create(
         "2018年深圳市各区GDP"
     ])
 
-for emb_res in response.get_result():
-    embedding = np.array(emb_res['embedding'])
+for embedding in response.get_result():
+    embedding = np.array(embedding)
     print(embedding)
 ```
