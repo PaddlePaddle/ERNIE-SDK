@@ -13,7 +13,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :------- | :---- |
-| model | str | 是 | 模型名称。当前支持`'ernie-bot'`、`'ernie-bot-turbo'`和`'ernie-bot-4'`。 |
+| model | str | 是 | 模型名称。当前支持`'ernie-bot'`、`'ernie-bot-turbo'`、`'ernie-bot-4'`和`'ernie-bot-8k'`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
 | functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。ernie-bot-turbo模型暂不支持此参数。 |
 | top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。 <br>(1) 影响生成文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议只设置此参数和`temperature`中的一个。 |

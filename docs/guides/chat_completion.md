@@ -47,7 +47,8 @@
 | :--- | :--- | :----- |
 | ernie-bot | 具备优秀的知识增强和内容生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model='ernie-bot', ...)` |
 | ernie-bot-turbo | 具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
-| ernie-bot-4 | 基于文心大模型4.0版本的文心一言，具备目前文心一言系列模型中最优的理解和生成能力。 ｜ `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
+| ernie-bot-4 | 基于文心大模型4.0版本的文心一言，具备目前文心一言系列模型中最优的理解和生成能力。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
+| ernie-bot-8k | 在ernie-bot模型的基础上增强了对长对话上下文的支持，输入token数量上限为7000。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
 
 参阅[ChatCompletion API文档](../api_reference/chat_completion.md)了解API的完整使用方式。
 
@@ -57,18 +58,18 @@
 
 模型通常会引入一定的随机性来确保生成结果的多样性，因此，即使在输入相同的情况下，模型每次的输出结果也可能发生变化。可以通过设置`top_p`和`temperature`参数来调节生成结果的随机性，但需要注意的是，随机性始终存在，用户不应该期望从模型处获得完全确定的生成结果。
 
-### 模型的输入输出有什么限制？
+### 模型的输入长度有限制吗？
 
-文心一言模型对于输入和输出的token数量会有限制，通常情况下输入的token数量不能超过3072，输出的token数量不会超过1024。当输入的token数量超过限制时，会有以下几种情况：
+文心一言模型对输入的token数量有限制。对于ernie-bot、ernie-bot-turbo和ernie-bot-4模型，输入的token数量不能超过3000；对于ernie-bot-8k模型，输入token数量的限制是7000。以下分别讨论单轮和多轮对话的情形：
 
-* 单轮对话时，如果输入的token数量超出限制，会直接返回错误；
-* 多轮对话时，如果最近一次输入的token数量超出限制，会直接返回错误；如果最近一次的token数量没有超出限制，则模型会在拼接历史信息时最多拼接到相应的token数上限，并丢弃多余的历史信息。
+* 单轮对话时，输入的token数量不能超出限制。
+* 多轮对话时，最后一条消息的token数量不能超出限制。此外，如果最后一条消息的token数量没有超出限制，而对话上下文（包括历史消息）的token总量超过了限制，则模型会在拼接输入时遗忘较早的历史信息，只保留满足token数限制的最近的对话上下文作为输入。
 
-### 如何计算token数量
+### 如何计算token数量？
 
-目前千帆平台采用`汉字数 + 单词数 * 1.3`估算token总数。使用ERNIE Bot SDK，你可以通过如下代码计算得到token数量：
+目前千帆和AI Studio平台均采用`汉字数 + 单词数 * 1.3`估算token总数。可以通过如下代码估计token数量：
 
 ```{.py .copy}
-import erniebot
-token_num = erniebot.utils.approx_num_tokens("你好，我是文心一言。")
+import erniebot.utils
+num_tokens = erniebot.utils.token_helper.approx_num_tokens("你好，我是文心一言。")
 ```
