@@ -68,7 +68,7 @@ ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-b
 
 不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
 
-以下是调用文心一言旗舰版模型进行多轮对话的示例。
+以下是调用文心一言旗舰版模型进行多轮对话的示例：
 
 ```{.py .copy}
 import erniebot
@@ -95,11 +95,11 @@ print(response.get_result())
 
 ### 语义向量（Embedding）
 
-ERNIE Bot SDK提供用于生成语义向量的ernie-text-embedding模型。
+ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模型。
 
-该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将输入文本转为384维浮点数表示的语义向量。语义向量具备精准的语义表达能力，可用于度量两段文本之间的语义相似度。
+该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将输入文本转为384维浮点数表示的向量。这些向量具备精准的语义表达能力，可用于度量文本之间的语义相似度。
 
-大家可以使用以下代码生成句子的语义向量。
+大家可以使用以下代码生成句子的向量表示：
 
 ```{.py .copy}
 import erniebot

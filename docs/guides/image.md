@@ -4,11 +4,11 @@
 
 文生图是指根据文本提示、图像尺寸等信息，使用文心大模型，自动创作图片。
 
-目前文心提供如下向量表示模型：
+目前文心提供如下文生图模型：
 
 | 模型 | 说明 | API调用方式 |
 | :--- | :---- | :----- |
-| ernie-text-embedding | 支持计算最多384个token的文本的向量表示。 | `erniebot.Image.create(model='ernie-vilg-v2', ...)` |
+| ernie-vilg-v2 | 文心一格模型。 | `erniebot.Image.create(model='ernie-vilg-v2', ...)` |
 
 参阅[Image API文档](../api_reference/image.md)了解API的完整使用方式。
 
