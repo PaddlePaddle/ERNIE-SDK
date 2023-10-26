@@ -44,11 +44,11 @@ class Creatable(Resource):
     def create_resource(
             self,
             **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
-        url, params, headers, files, stream, request_timeout = self._prepare_create(
+        path, params, headers, files, stream, request_timeout = self._prepare_create(
             create_kwargs)
         resp = self.request(
             method='POST',
-            url=url,
+            path=path,
             stream=stream,
             params=params,
             headers=headers,
@@ -61,11 +61,11 @@ class Creatable(Resource):
     async def acreate_resource(
         self,
         **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url, params, headers, files, stream, request_timeout = self._prepare_create(
+        path, params, headers, files, stream, request_timeout = self._prepare_create(
             create_kwargs)
         resp = await self.arequest(
             method='POST',
-            url=url,
+            path=path,
             stream=stream,
             params=params,
             headers=headers,

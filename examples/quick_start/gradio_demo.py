@@ -325,7 +325,7 @@ def create_embedding_tab():
                 with gr.Row():
                     text1 = gr.Textbox(label="第一段文本", placeholder="输入第一段文本")
                     text2 = gr.Textbox(label="第二段文本", placeholder="输入第二段文本")
-                cal_emb = gr.Button("提取向量")
+                cal_emb = gr.Button("生成向量")
                 cos_sim = gr.Markdown("## 余弦相似度: -")
                 with gr.Row():
                     embedding1 = gr.Textbox(label="文本1向量结果")

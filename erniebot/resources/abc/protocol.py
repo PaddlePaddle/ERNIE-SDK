@@ -36,7 +36,7 @@ class Resource(Protocol):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[False],
             *,
             params: Optional[ParamsType]=...,
@@ -50,7 +50,7 @@ class Resource(Protocol):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: Literal[True],
             *,
             params: Optional[ParamsType]=...,
@@ -64,7 +64,7 @@ class Resource(Protocol):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             *,
             params: Optional[ParamsType]=...,
@@ -79,7 +79,7 @@ class Resource(Protocol):
     def request(
             self,
             method: str,
-            url: str,
+            path: str,
             stream: bool,
             *,
             params: Optional[ParamsType]=None,
@@ -93,7 +93,7 @@ class Resource(Protocol):
 
         Args:
             method: HTTP method to use.
-            url: URL to request.
+            path: path to request.
             stream: Whether to enable streaming.
             params: Parameters to send.
             headers: Headers to add to the request.
@@ -110,7 +110,7 @@ class Resource(Protocol):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[False],
         *,
         params: Optional[ParamsType]=...,
@@ -124,7 +124,7 @@ class Resource(Protocol):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: Literal[True],
         *,
         params: Optional[ParamsType]=...,
@@ -138,7 +138,7 @@ class Resource(Protocol):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         *,
         params: Optional[ParamsType]=...,
@@ -153,7 +153,7 @@ class Resource(Protocol):
     async def arequest(
         self,
         method: str,
-        url: str,
+        path: str,
         stream: bool,
         *,
         params: Optional[ParamsType]=None,

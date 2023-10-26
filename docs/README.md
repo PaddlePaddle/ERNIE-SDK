@@ -4,7 +4,7 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 
 ## 快速安装
 
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（推荐Python >= 3.8)。
+执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（要求Python >= 3.8)。
 
 ```{.sh .copy}
 pip install --upgrade erniebot
@@ -12,7 +12,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-大家使用ERNIE Bot SDK之前，请首先申请用户凭证并设置鉴权参数，具体请参考[认证鉴权文档](./authentication.md)。
+使用ERNIE Bot SDK之前，请首先申请用户凭证并设置鉴权参数。具体请参考[认证鉴权文档](./authentication.md)。
 
 ### Python接口
 
@@ -66,9 +66,9 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot、文心一言迅捷版模型ernie-bot-turbo以及基于文心大模型4.0版本的文心一言ernie-bot-4。
 
-旗舰版模型的效果更好，迅捷版模型的响应速度更快、推理时延更低，大家可以根据实际场景的需求选择合适的模型。
+不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
 
-以下是调用文心一言旗舰版模型进行多轮对话的示例。
+以下是调用文心一言旗舰版模型进行多轮对话的示例：
 
 ```{.py .copy}
 import erniebot
@@ -95,11 +95,11 @@ print(response.get_result())
 
 ### 语义向量（Embedding）
 
-ERNIE Bot SDK提供用于提取语义向量的Embedding模型。
+ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模型。
 
-该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将字符串转为384维浮点数表达的语义向量，语义向量具备极其精准的语义表达能力，可以用于度量两个字符串之间的语义相似度。
+该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将输入文本转为384维浮点数表示的向量。这些向量具备精准的语义表达能力，可用于度量文本之间的语义相似度。
 
-大家可以使用以下代码提取句子的语义向量。
+大家可以使用以下代码生成句子的向量表示：
 
 ```{.py .copy}
 import erniebot
@@ -121,7 +121,7 @@ print(response.get_result())
 
 ### 文生图（Image Generation）
 
-ERNIE Bot SDK提供具备文生图能力的ERNIE-ViLG大模型。
+ERNIE Bot SDK提供具备文生图能力的ernie-vilg-v2大模型。
 
 该模型具备丰富的风格与强大的中文理解能力，支持生成多种尺寸的图片。
 

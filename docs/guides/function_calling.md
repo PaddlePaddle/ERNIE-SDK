@@ -84,14 +84,14 @@ erniebot.access_token = '<eb-access-token>'
 messages = [
     {
         'role': 'user',
-        'content': "深圳市今天气温如何？"
+        'content': "深圳市今天气温如何？",
     }
 ]
 
 response = erniebot.ChatCompletion.create(
     model='ernie-bot',
     messages=messages,
-    functions=functions
+    functions=functions,
 )
 assert hasattr(response, 'function_call')
 function_call = response.function_call
@@ -126,19 +126,20 @@ messages.append(
     {
         'role': 'assistant',
         'content': None,
-        'function_call': function_call
+        'function_call': function_call,
     }
 )
 messages.append(
     {
         'role': 'function',
         'name': function_call['name'],
-        'content': json.dumps(res, ensure_ascii=False)
+        'content': json.dumps(res, ensure_ascii=False),
     }
 )
 response = erniebot.ChatCompletion.create(
     model='ernie-bot',
     messages=messages,
+    functions=functions,
 )
 print(response.result)
 ```
@@ -149,4 +150,4 @@ print(response.result)
 深圳市今天的温度是25摄氏度，天气还算舒适，建议穿轻薄的衣服出门。
 ```
 
-需要说明的是，在上述代码中，我们并没有向`erniebot.ChatCompletion.create` API传入`functions`参数，因此模型将返回自然语言形式的回答。在实际生产中，如果需要支持连续多次调用函数的功能，则仍需要传入`functions`参数。此时，模型可能返回自然语言文本，也可能返回另一个`function_call`。
+可以看出，模型根据函数的响应对我们的问题“深圳市今天气温如何？”作出了解答。
