@@ -1,6 +1,6 @@
 # Embedding
 
-将文本转化为用数值表示的向量形式。
+使用文本表示模型，将文本转化为用数值表示的向量形式。
 
 ## Python接口
 
@@ -14,8 +14,8 @@ erniebot.Embedding.create(**kwargs: Any)
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :------- | :---- |
 | model  | str | 是 | 模型名称。当前支持`'ernie-text-embedding'`。 |
-| input | list[str] | 是 | 输入的文本列表。服务可以支持计算多段文本的向量，列表中每个元素即为一段单独的文本。注意， <br>(1) 列表长度不得超过16； <br>(2) 服务在计算向量时，每段文本只支持最多384个token，超长报错（服务采用`汉字数 + 单词数 * 1.3`估算token数量）； <br>(3) 文本内容不能为空。 |
-| user_id | str | 否 | 最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
+| input | list[str] | 是 | 输入的文本列表，列表中每个元素为一段单独的文本。注意： <br>(1) 列表长度不得超过16。 <br>(2) 每段文本的token数量有最大限制，超出限制则报错（采用`汉字数 + 单词数 * 1.3`估算token数量）。对于ernie-text-embedding模型，每段文本支持最多384个token。 <br>(3) 文本内容不能为空。 |
+| user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 
 ## 返回结果
 
@@ -63,8 +63,8 @@ erniebot.Embedding.create(**kwargs: Any)
 | 字段名 | 类型 | 描述 |
 | :--- | :---- | :---- |
 | rcode | int | HTTP响应状态码。 |
-| data | list[dict] | 向量计算结果，列表中元素个数与输入的文本个数一致。列表中的元素均为dict，包含如下键值对： <br>`object`：固定为`'embedding'`； <br>`embedding`：384维的向量结果； <br>`index`：序号。 |
-| usage | dict | 输入输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。 <br>`prompt_tokens/total_tokens`：输入token数量。 |
+| data | list[dict] | 向量列表，列表中元素个数与输入的文本数量一致。列表中的元素均为dict，包含如下键值对： <br>`object`：固定为`'embedding'`。 <br>`embedding`：模型生成的向量。对于ernie-text-embedding模型，向量维度为384。 <br>`index`：序号。 |
+| usage | dict | 输入、输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。 <br>`prompt_tokens/total_tokens`：输入token数量。 |
 
 假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['data']`或`resp.data`均可获取`data`字段的内容。此外，可以使用`resp.get_result()`获取响应中的“主要结果”。对于此接口来说，`resp.get_result()`返回一个Python list，其中顺序包含每段输入文本的向量结果。
 

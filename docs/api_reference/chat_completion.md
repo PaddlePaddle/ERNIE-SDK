@@ -1,6 +1,6 @@
 # ChatCompletion
 
-提供对话上下文与输入文本，由模型给出新的回复，回复中包括生成的文本内容、函数调用信息以及token数量统计信息等。
+提供对话上下文与输入文本，由对话模型给出新的回复，回复中包括生成的文本内容、函数调用信息以及token数量统计信息等。
 
 ## Python接口
 
@@ -16,17 +16,17 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | model | str | 是 | 模型名称。当前支持`'ernie-bot'`、`'ernie-bot-turbo'`和`'ernie-bot-4'`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
 | functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。ernie-bot-turbo模型暂不支持此参数。 |
-| top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。 <br>(1) 影响生成文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议此参数和`temperature`只设置其中一个。 |
-| temperature | float | 否 | 用于调节模型输出概率分布，从而控制生成结果的随机性。 <br>(1) 较高的数值会使生成结果更加随机，而较低的数值会使结果更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议此参数和`top_p`只设置其中一个。 |
+| top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。 <br>(1) 影响生成文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议只设置此参数和`temperature`中的一个。 |
+| temperature | float | 否 | 用于调节模型输出概率分布，从而控制生成结果的随机性。 <br>(1) 较高的数值会使生成结果更加随机，而较低的数值会使结果更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议只设置此参数和`top_p`中的一个。 |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象。此参数值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
-| system | str | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设定此参数。 |
-| user_id | str | 否 | 最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用。 |
+| system | str | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
+| user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 | stream | bool | 否 | 是否流式返回数据，默认`False`。 |
 
 <details>
 <summary><code name="messages">messages</code></summary>
 
-`messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入在`messages`中再继续请求：
+`messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入到`messages`中再继续请求：
 
 ```{.py .copy}
 [
@@ -51,7 +51,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 |:--- | :---- | :--- | :---- |
 | role | str | 是 | `'user'`表示用户，`'assistant'`表示对话助手，`'function'`表示函数。 |
 | content | str or None | 是 | 当`role`不为`'function'`时，表示消息内容，必须设置此参数为非`None`值；当`role`为`'function'`时，表示函数响应参数，可以设置此参数为`None`。 |
-| name | str | 否 | 消息的作者。当`role='function'`时，此参数必填，且是`function_call`中的`name`。 |
+| name | str | 否 | 消息的作者。当`role`为`'function'`时，此参数必填，且是`function_call`中的`name`。 |
 | function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。 |
 
 `function_call`为一个Python dict，其中包含如下键值对：
@@ -122,7 +122,7 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | description | str | 是 | 对函数功能的描述。 |
 | parameters | dict | 是 | 函数请求参数。采用[JSON Schema](https://json-schema.org/)格式。 |
 | responses | dict | 否 | 函数响应参数。采用[JSON Schema](https://json-schema.org/)格式。 |
-| examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。一个例子如下：`[{'role': 'user', 'content': "深圳市今天气温如何？"}, {'role': 'assistant', 'content': None, 'function_call': {'name': 'get_current_temperature', 'arguments': '{"location":"深圳市","unit":"摄氏度"}'}}, {'role': 'function', 'name': 'get_current_temperature', 'content': '{"temperature":25,"unit":"摄氏度"}'}]` |
+| examples | list[dict] | 否 | 函数调用示例。可提供与`messages`类似的对话上下文信息作为函数调用的例子。一个例子如下：`[{'role': 'user', 'content': "深圳市今天气温如何？"}, {'role': 'assistant', 'content': None, 'function_call': {'name': 'get_current_temperature', 'arguments': '{"location":"深圳市","unit":"摄氏度"}'}}, {'role': 'function', 'name': 'get_current_temperature', 'content': '{"temperature":25,"unit":"摄氏度"}'}]`。 |
 | plugin_id | str | 否 | 标记函数关联的插件，便于数据统计。 |
 
 </details>
@@ -159,14 +159,14 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | rcode | int | HTTP响应状态码。 |
 | result | str | 模型生成的回复文本。 |
 | is_truncated | bool | 生成文本是否被长度限制截断。 |
-| sentence_id | int | 当前片段的序号，从`0`开始计数。仅流式模式下返回该字段。 |
-| need_clear_history | bool | 表示用户输入是否存在安全风险，是否应该关闭当前会话、清理历史会话信息。 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息； <br>`False`：否，表示用户输入无安全风险。 |
+| sentence_id | int | 当前片段的序号，从`0`开始计数。仅流式模式下包含该字段。 |
+| need_clear_history | bool | 用户输入是否存在安全风险，是否应该关闭当前会话、清理历史会话信息。 <br>`True`：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息； <br>`False`：否，表示用户输入无安全风险。 |
 | ban_round | int | 当`need_clear_history`为`True`时，此字段表示第几轮对话有敏感信息。如果是当前轮次存在问题，则`ban_round=-1`。 |
-| is_end | bool | 当前片段是否为返回结果的最后一段文本。仅流式模式下返回该字段。 |
+| is_end | bool | 当前片段是否为生成结果的最后一段文本。仅流式模式下包含该字段。 |
 | usage | dict | 输入、输出token统计信息。token数量采用如下公式估算：`token数 = 汉字数 + 单词数 * 1.3`。 <br>`prompt_tokens`：输入token数量（含上下文拼接）； <br>`completion_tokens`：当前生成结果包含的token数量； <br>`total_tokens`：输入与输出的token总数； <br>`plugins`：插件消耗的token数量。 |
 | function_call | dict | 由模型生成的函数调用信息，包含函数名称和请求参数等。详见[`messages`](#messages)中的`function_call`。 |
 
-假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['result']`或`resp.result`均可获取`result`字段的内容。此外，可以使用`resp.get_result()`获取响应中的“主要结果”：当模型返回函数调用信息时（此时，`resp`具有`function_call`字段），`resp.get_result()`的返回结果与`resp.function_call`一致；否则，`resp.get_result()`的返回结果与`resp.result`一致，即模型给出的回复文本。
+假设`resp`为一个`erniebot.response.EBResponse`对象，字段的访问方式有2种：`resp['result']`或`resp.result`均可获取`result`字段的内容。此外，可以使用`resp.get_result()`获取响应中的“主要结果”：当模型给出函数调用信息时（此时，`resp`具有`function_call`字段），`resp.get_result()`的返回结果与`resp.function_call`一致；否则，`resp.get_result()`的返回结果与`resp.result`一致，即模型给出的回复文本。
 
 ## 使用示例
 
