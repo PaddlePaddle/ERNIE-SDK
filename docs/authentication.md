@@ -2,7 +2,7 @@
 
 调用文心大模型可能涉及到收费服务，所以大家使用ERNIE Bot SDK时需要进行认证鉴权。认证鉴权主要包括两步：申请用户凭证，设置鉴权参数。
 
-ERNIE Bot SDK支持多个后端来调用文心大模型（如下表格），大家可以根据实际情况选择。不同后端支持的模型、认证鉴权方式存在差异，下面我们分别介绍。
+ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格），大家可以根据实际情况选择。不同后端平台支持的模型、认证鉴权方式存在差异，下面我们分别介绍。
 
 | 后端 | API_TYPE  | 支持的模型 |
 | :--- | :---- | :--- |
@@ -61,7 +61,7 @@ response = erniebot.ChatCompletion.create(
 )
 ```
 
-如果大家同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数 > 使用全局变量 > 使用环境变量。
+如果同时使用多种方式设置鉴权参数，ERNIE Bot SDK将根据优先级确定配置项的最终取值（其他后端类似）。三种设置方式的优先级从高到低依次为：使用`_config_`参数 > 使用全局变量 > 使用环境变量。
 
 ## 2 千帆大模型平台后端的认证鉴权
 
@@ -70,7 +70,7 @@ response = erniebot.ChatCompletion.create(
 申请流程：
 
 * 进入[百度云](https://cloud.baidu.com/)，完成注册。
-* 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交申请体验。通常几个小时后会通知申请通过。
+* 进入百度云 - [千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，提交体验申请。通常几个小时后会通知申请通过。
 * 登录[千帆大模型平台](https://cloud.baidu.com/product/wenxinworkshop)，进入[控制台](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application)创建千帆应用，可以获取到API key与secret key（如下图）。
 * 进入[计费管理](https://console.bce.baidu.com/qianfan/chargemanage/list)，选择需要用到的服务并开通付费，例如：ERNIE-Bot大模型公有云在线调用服务、ERNIE-Bot-turbo大模型公有云在线调用服务、Embedding-V1公有云在线调用服务、ERNIE-Bot 4.0大模型公有云在线调用服务等。
 * （非必需）参考[access token获取教程](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Ilkkrb0i5)，使用API key和secret key获取access token。
@@ -86,7 +86,7 @@ response = erniebot.ChatCompletion.create(
 
 千帆后端可以使用access token或者API key+secret key进行鉴权。
 
-1）使用access token进行鉴权，千帆后端设置鉴权参数的三种方法和AI Studio后端类似，举例如下：
+(1）使用access token进行鉴权。为千帆后端设置鉴权参数的三种方法和AI Studio后端类似，举例如下。
 
 请注意设置后端参数为`'qianfan'`，并且使用千帆平台申请的access token。
 
@@ -102,7 +102,7 @@ erniebot.api_type = 'qianfan'
 erniebot.access_token = '<access-token-for-qianfan>'
 ```
 
-2）使用API key与secret key进行鉴权，千帆后端同样支持三种参数配置方法，环境变量对应是`EB_AK`和`EB_SK`，Python变量对应是`ak`和`sk`，举例如下：
+(2）使用API key与secret key进行鉴权。千帆后端同样支持三种参数配置方法，与API key和secret key对应的环境变量是`EB_AK`和`EB_SK`、Python变量是`ak`和`sk`。举例如下：
 
 ```{.sh .copy}
 export EB_API_TYPE='qianfan'
@@ -143,7 +143,7 @@ erniebot.sk = '<secret-key-for-qianfan>'
 
 ### 3.2 设置鉴权参数
 
-智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者API key+secret key，举例如下：
+为智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者API key+secret key。举例如下。
 
 请注意设置后端参数为`'yinian'`，并且使用智能创作平台申请的access_token、API key、secret key。
 
