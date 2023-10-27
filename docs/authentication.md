@@ -4,10 +4,10 @@
 
 ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格），大家可以根据实际情况选择。不同后端平台支持的模型、认证鉴权方式存在差异，下面我们分别介绍。
 
-| 后端 | API_TYPE  | 支持的模型 |
+| 后端 | api_type  | 支持的模型 |
 | :--- | :---- | :--- |
-| AI Studio | aistudio | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-text-embedding |
-| 千帆大模型平台 | qianfan | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-text-embedding |
+| AI Studio | aistudio | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-bot-8k，ernie-text-embedding |
+| 千帆大模型平台 | qianfan | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-bot-8k，ernie-text-embedding |
 | 智能创作平台 | yinian | ernie-vilg-v2 |
 
 ## 1 AI Studio后端的认证鉴权

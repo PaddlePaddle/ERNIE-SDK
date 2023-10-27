@@ -46,7 +46,7 @@
 | 模型 | 说明 | API调用方式 |
 | :--- | :--- | :----- |
 | ernie-bot | 具备优秀的知识增强和内容生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model='ernie-bot', ...)` |
-| ernie-bot-turbo | 具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
+| ernie-bot-turbo | 相比erniebot模型具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
 | ernie-bot-4 | 基于文心大模型4.0版本的文心一言，具备目前文心一言系列模型中最优的理解和生成能力。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
 | ernie-bot-8k | 在ernie-bot模型的基础上增强了对长对话上下文的支持，输入token数量上限为7000。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
 
