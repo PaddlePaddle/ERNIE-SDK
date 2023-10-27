@@ -23,7 +23,7 @@ ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格）�
 注意事项：
 
 * AI Studio每个账户的access token，有100万token的免费额度，可以用于ERNIE Bot SDK调用文心一言大模型。
-* 在[token管理页面](https://aistudio.baidu.com/token/manage)可以查看token获取、消耗、过期明细，或者购买更多token。
+* 在[token管理页面](https://aistudio.baidu.com/token/manage)可以查看token获取、消耗明细和过期记录，或者购买更多token。
 * access token是私密信息，切记不要对外公开。
 
 ### 1.2 设置鉴权参数
