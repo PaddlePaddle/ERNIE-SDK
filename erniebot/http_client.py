@@ -51,6 +51,7 @@ from typing import (Any, AsyncIterator, Callable, Dict, Iterator, Mapping,
 import aiohttp
 import requests
 
+import erniebot
 from . import errors
 from .response import EBResponse
 from .types import (FilesType, HeadersType, ParamsType)
@@ -202,7 +203,9 @@ class EBClient(object):
                             extra: HeadersType) -> HeadersType:
         headers = {}
 
-        # TODO: Add User-Agent header and other headers
+        headers['User-Agent'] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
+        # TODO: Add other headers
+
         headers.update(extra)
 
         return headers

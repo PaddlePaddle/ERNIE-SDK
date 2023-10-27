@@ -22,11 +22,11 @@
 
 对于超长文本，可以采用切片方式对文本进行预处理。具体而言：将原始文本切分为多个小段，每个小段满足token数量的限制；然后，分别计算每小段文本的向量，并根据任务灵活使用。例如，在文本相似度计算中，可以计算输入query与每小段文本的余弦相似度，取最大值作为输入query与原始文本的相似度。
 
-### 如何计算token数量
+### 如何计算token数量？
 
-目前千帆平台采用`汉字数 + 单词数 * 1.3`估算token总数。使用ERNIE Bot SDK，你可以通过如下代码计算得到token数量：
+目前千帆和AI Studio平台均采用`汉字数 + 单词数 * 1.3`估算token总数。可以通过如下代码估计token数量：
 
 ```{.py .copy}
-import erniebot
-token_num = erniebot.utils.approx_num_tokens("你好，我是文心一言。")
+import erniebot.utils
+num_tokens = erniebot.utils.token_helper.approx_num_tokens("你好，我是文心一言。")
 ```

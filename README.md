@@ -11,6 +11,34 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 
 </div>
 
+## 最新动态
+
+* 支持文心一言ernie-bot-8k模型，输入token数量上限提升至7000。
+* 支持基于文心大模型4.0版本的文心一言ernie-bot-4，用于对话补全任务。
+* 增加`EBResponse.get_result`方法，支持从响应中取出关键信息。
+
+## 教程与文档
+
+<details>
+<summary>详情</summary>
+
+* **预备步骤**
+  * [安装](./docs/installation.md)
+  * [认证鉴权](./docs/authentication.md)
+  * [参数配置](./docs/configuration.md)
+  * [模型总览](./docs/models.md)
+* **使用指南**
+  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
+  * [语义向量（Embedding）](./docs/guides/embedding.md)
+  * [文生图（Image Generation）](./docs/guides/image.md)
+  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
+* **API文档**
+  * [ChatCompletion](./docs/api_reference/chat_completion.md)
+  * [Embedding](./docs/api_reference/embedding.md)
+  * [Image](./docs/api_reference/image.md)
+
+</details>
+
 ## 快速安装
 
 执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（要求Python >= 3.8)。
@@ -32,9 +60,10 @@ import erniebot
 models = erniebot.Model.list()
 
 print(models)
-# ernie-bot             文心一言旗舰版
-# ernie-bot-turbo       文心一言轻量版
-# ernie-bot-4           基于文心大模型4.0版本的文心一言
+# ernie-bot             文心一言模型（ernie-bot）
+# ernie-bot-turbo       文心一言模型（ernie-bot-turbo）
+# ernie-bot-4           文心一言模型（ernie-bot-4）
+# ernie-bot-8k          文心一言模型（ernie-bot-8k）
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
 
@@ -73,11 +102,11 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ### 对话补全（Chat Completion）
 
-ERNIE Bot SDK提供具备对话补全能力的文心一言旗舰版模型ernie-bot、文心一言迅捷版模型ernie-bot-turbo以及基于文心大模型4.0版本的文心一言ernie-bot-4。
+ERNIE Bot SDK提供具备对话补全能力的ernie-bot、ernie-bot-turbo、ernie-bot-4、ernie-bot-8k等文心一言系列模型。
 
 不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
 
-以下是调用文心一言旗舰版模型进行多轮对话的示例：
+以下是调用ernie-bot模型进行多轮对话的示例：
 
 ```python
 import erniebot
@@ -164,7 +193,7 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 
 借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。
 
-以下是调用文心一言旗舰版模型进行函数调用的示例：
+以下是调用ernie-bot模型进行函数调用的示例：
 
 ```python
 import erniebot
@@ -229,22 +258,6 @@ print(response.get_result())
 为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](./examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
 <img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
-
-## 完整教程文档
-
-* 快速开始
-  * [安装](./docs/installation.md)
-  * [认证鉴权](./docs/authentication.md)
-  * [参数配置](./docs/configuration.md)
-* 使用指南
-  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
-  * [语义向量（Embedding）](./docs/guides/embedding.md)
-  * [文生图（Image Generation）](./docs/guides/image.md)
-  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
-* API文档
-  * [ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [Embedding](./docs/api_reference/embedding.md)
-  * [Image](./docs/api_reference/image.md)
 
 ## Acknowledgement
 

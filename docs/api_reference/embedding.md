@@ -14,7 +14,7 @@ erniebot.Embedding.create(**kwargs: Any)
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :------- | :---- |
 | model  | str | 是 | 模型名称。当前支持`'ernie-text-embedding'`。 |
-| input | list[str] | 是 | 输入的文本列表，列表中每个元素为一段单独的文本。注意： <br>(1) 列表长度不得超过16。 <br>(2) 每段文本的token数量有最大限制，超出限制则报错（采用`汉字数 + 单词数 * 1.3`估算token数量）。对于ernie-text-embedding模型，每段文本支持最多384个token。 <br>(3) 文本内容不能为空。 |
+| input | list[str] | 是 | 输入的文本列表，列表中每个元素为一段单独的文本。注意： <br>(1) 列表长度有最大限制。对于ernie-text-embedding模型，列表长度不能超过16。 <br>(2) 每段文本的token数量有最大限制，超出限制则报错（采用`汉字数 + 单词数 * 1.3`估算token数量）。对于ernie-text-embedding模型，每段文本支持最多384个token。 <br>(3) 文本内容不能为空。 |
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 
 ## 返回结果

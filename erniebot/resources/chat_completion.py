@@ -44,6 +44,9 @@ class ChatCompletion(EBResource, Creatable):
                 'ernie-bot-4': {
                     'model_id': 'completions_pro',
                 },
+                'ernie-bot-8k': {
+                    'model_id': 'ernie_bot_8k',
+                },
             },
         },
         APIType.AISTUDIO: {
@@ -57,6 +60,9 @@ class ChatCompletion(EBResource, Creatable):
                 },
                 'ernie-bot-4': {
                     'model_id': 'completions_pro',
+                },
+                'ernie-bot-8k': {
+                    'model_id': 'ernie_bot_8k',
                 },
             },
         },
