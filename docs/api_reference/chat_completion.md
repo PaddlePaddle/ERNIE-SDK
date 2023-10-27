@@ -14,8 +14,8 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :------- | :---- |
 | model | str | 是 | 模型名称。当前支持`'ernie-bot'`、`'ernie-bot-turbo'`、`'ernie-bot-4'`和`'ernie-bot-8k'`。 |
-| messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[`messages`](#messages)。 |
-| functions | list[dict] | 否 | 可触发函数的描述列表。详见[`functions`](#functions)。ernie-bot-turbo模型暂不支持此参数。 |
+| messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[messages](#messages)。 |
+| functions | list[dict] | 否 | 可触发函数的描述列表。详见[functions](#functions)。ernie-bot-turbo模型暂不支持此参数。 |
 | top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。 <br>(1) 影响生成文本的多样性，取值越大，生成文本的多样性越强； <br>(2) 默认`0.8`，取值范围为`[0, 1.0]`； <br>(3) 建议只设置此参数和`temperature`中的一个。 |
 | temperature | float | 否 | 用于调节模型输出概率分布，从而控制生成结果的随机性。 <br>(1) 较高的数值会使生成结果更加随机，而较低的数值会使结果更加集中和确定； <br>(2) 默认`0.95`，范围为`(0, 1.0]`，不能为`0`； <br>(3) 建议只设置此参数和`top_p`中的一个。 |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象。此参数值越高则惩罚越大。 <br>(1) 值越大表示惩罚越大； <br>(2) 默认`1.0`，取值范围：`[1.0, 2.0]`。 |
@@ -23,8 +23,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 | stream | bool | 否 | 是否流式返回数据，默认`False`。 |
 
+### messages
 <details>
-<summary><code name="messages">messages</code></summary>
+<summary>详情</summary>
 
 `messages`为一个Python list，其中每个元素为一个dict。在如下示例中，为了与模型进行多轮对话，我们将模型的回复结果插入到`messages`中再继续请求：
 
@@ -64,8 +65,9 @@ erniebot.ChatCompletion.create(**kwargs: Any)
 
 </details>
 
+### functions
 <details>
-<summary><code name="functions">functions</code></summary>
+<summary>详情</summary>
 
 `functions`为一个Python list，其中每个元素为一个dict。示例如下：
 

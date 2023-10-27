@@ -20,7 +20,7 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 ## 教程与文档
 
 <details>
-<summary>点击展开</summary>
+<summary>详情</summary>
 
 * 快速开始
   * [安装](./docs/installation.md)
