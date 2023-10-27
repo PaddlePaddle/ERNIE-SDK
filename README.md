@@ -22,17 +22,17 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 <details>
 <summary>详情</summary>
 
-* 预备步骤
+* **预备步骤**
   * [安装](./docs/installation.md)
   * [认证鉴权](./docs/authentication.md)
   * [参数配置](./docs/configuration.md)
   * [模型总览](./docs/models.md)
-* 使用指南
+* **使用指南**
   * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
   * [语义向量（Embedding）](./docs/guides/embedding.md)
   * [文生图（Image Generation）](./docs/guides/image.md)
   * [函数调用（Function Calling）](./docs/guides/function_calling.md)
-* API文档
+* **API文档**
   * [ChatCompletion](./docs/api_reference/chat_completion.md)
   * [Embedding](./docs/api_reference/embedding.md)
   * [Image](./docs/api_reference/image.md)
