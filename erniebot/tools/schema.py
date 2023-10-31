@@ -1,16 +1,33 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
-import ast
-from typing import Any, Callable, List, Optional
-import json
-from loguru import logger
-import docstring_parser
+from typing import List, Optional
 from yaml import safe_dump
 
-from termcolor import colored, cprint
+from docstring_parser import DocstringParam, DocstringReturns
 
 
 def scrub_dict(d):
+    """remove empty Value node
+
+    Args:
+        d (dict): the instance of dictionary
+
+    Returns:
+        dict: the dictionary data after slimming down
+    """
     if type(d) is dict:
         return dict((k, scrub_dict(v)) for k, v in d.items() if not not v and scrub_dict(v))
     else:
@@ -18,7 +35,8 @@ def scrub_dict(d):
 
 @dataclass
 class ParameterView:
-    type: str
+    """function parameter object"""
+    type: Optional[str] = None
     description: Optional[str] = None
     items: dict = field(default_factory=dict)
     name: Optional[str] = None
@@ -35,21 +53,54 @@ class ParameterView:
 
 @dataclass
 class ParametersView:
+    """a set of parameters which can be input or output of function"""
     parameters: List[ParameterView]
     name: Optional[str] = None
     code: int = 200
     type: str = "object"
 
-    @staticmethod
-    def from_openapi_dict(name, schema: dict):
-        """
-        type: object
-        required: [word_number]
-        properties:
-            word_number:
-                type: integer
-                description: 几个单词
 
+    @staticmethod
+    def from_docstring(params: List[DocstringParam] | DocstringReturns | None) -> Optional[ParametersView]:
+        """parse docstring param to ParameterView
+
+        Args:
+            params (List[DocstringParam]): the list of parameter view
+
+        Returns:
+            ParametersView: the instance of ParametersView
+        """
+        if params is None:
+            return None
+
+        parameters = []
+        if isinstance(params, DocstringReturns):
+            # only support one return value
+            return ParametersView(
+                parameters=[ParameterView(
+                    type=params.type_name,
+                    description=params.description,
+                    name=params.return_name
+                )]
+            )
+
+        for param in params:
+            parameter_view = ParameterView(
+                type=param.type_name or "",
+                description=param.description,
+                name=param.arg_name,
+                default_value=param.default,
+                required=not param.is_optional
+            )
+            parameters.append(parameter_view)
+        return ParametersView(
+            parameters=parameters
+        )
+        
+
+    @staticmethod
+    def from_openapi_dict(name, schema: dict) -> ParametersView:
+        """parse openapi component schemas to ParameterView
         Args:
             response_or_returns (dict): the content of status code
 
@@ -64,6 +115,11 @@ class ParametersView:
         return ParametersView(parameters=parameters, name=name)
     
     def to_openapi_dict(self) -> dict:
+        """convert ParametersView to openapi spec dict
+
+        Returns:
+            dict: schema of openapi
+        """
         return {
             "type": "object",
             "required": [parameter_view.name for parameter_view in self.parameters if parameter_view.required],
@@ -71,13 +127,14 @@ class ParametersView:
         }
         
 
-
 @dataclass
 class ToolView:
+    """the view of one tool"""
     name: str
     description: str
     parameters: Optional[ParametersView] = None
     returns: Optional[ParametersView] = None
+
 
 
 @dataclass
