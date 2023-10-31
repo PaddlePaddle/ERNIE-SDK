@@ -11,14 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import errno
 import io
 import os
-import subprocess
 
 import setuptools
-
-PADDLENLP_STABLE_VERSION = "PADDLENLP_STABLE_VERSION"
 
 
 def read_file(filepath):
@@ -26,13 +22,14 @@ def read_file(filepath):
         requirements = fin.read()
     return requirements
 
+
 __version__ = read_file("VERSION")
 
 
 def write_version_py(filename="erniebot_agent/version.py"):
-    cnt = '''# THIS FILE IS GENERATED FROM ERNIEBOT-AGENT SETUP.PY
+    cnt = """# THIS FILE IS GENERATED FROM ERNIEBOT-AGENT SETUP.PY
 VERSION           = '%(version)s'
-'''
+"""
     content = cnt % {"version": __version__}
 
     with open(filename, "w") as f:
@@ -43,7 +40,10 @@ REQUIRED_PACKAGES = read_file("requirements.txt")
 
 
 def read(*names, **kwargs):
-    with io.open(os.path.join(os.path.dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")) as fp:
+    with io.open(
+        os.path.join(os.path.dirname(__file__), *names),
+        encoding=kwargs.get("encoding", "utf8"),
+    ) as fp:
         return fp.read()
 
 
