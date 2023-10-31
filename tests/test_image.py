@@ -17,16 +17,17 @@
 import erniebot
 from erniebot.utils.logging import logger
 
-if __name__ == '__main__':
-    logger.set_level('WARNING')
+if __name__ == "__main__":
+    logger.set_level("WARNING")
 
-    erniebot.api_type = 'yinian'
+    erniebot.api_type = "yinian"
 
     response = erniebot.Image.create(
-        model='ernie-vilg-v2',
+        model="ernie-vilg-v2",
         prompt="请帮我画一只开心的袋熊",
         width=512,
         height=512,
-        version='v2',
-        image_num=1)
+        version="v2",
+        image_num=1,
+    )
     print(response.get_result())
