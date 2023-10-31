@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Optional
 import json
 from loguru import logger
 import docstring_parser
+from yaml import safe_dump
 
 from termcolor import colored, cprint
 
@@ -184,6 +185,7 @@ class EndpointInfo:
 
 @dataclass
 class PluginSchema:
+    """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
     openapi: str
     info: EndpointInfo
     servers: List[Endpoint]
@@ -191,9 +193,8 @@ class PluginSchema:
 
     component_schemas: dict[str, ParametersView]
     
-    
-    def to_openapi_dict(self):
-        # info
+    def to_openapi_dict(self) -> dict:
+        """convert plugin schema to openapi spec dict"""
         spec_dict = {
             "openapi": self.openapi,
             "info": asdict(self.info),
@@ -204,9 +205,19 @@ class PluginSchema:
             }
         }
         return scrub_dict(spec_dict)
+    
+    def to_openapi_file(self, file: str):
+        """generate openapi configuration file
+
+        Args:
+            file (str): the path of the openapi yaml file
+        """
+        spec_dict = self.to_openapi_dict()
+        with open(file, "w+", encoding='utf-8') as f:
+            safe_dump(spec_dict, f, indent=4)
 
     @staticmethod
-    def from_openapi_file(file: str):
+    def from_openapi_file(file: str) -> PluginSchema:
         """only support openapi v3.0.1
 
         Args:
@@ -242,38 +253,3 @@ class PluginSchema:
             paths=paths,
             component_schemas=parameters_views
         )
-
-
-def convert_functions_to_openai_schema(func):
-    pass
-
-file = ".well-known/openapi.yaml"
-plugin_schema = PluginSchema.from_openapi_file(file)
-
-from openapi_spec_validator.readers import read_from_filename
-spec_dict, base_uri = read_from_filename(file)
-spec_dict = scrub_dict(spec_dict)
-
-new_spec_dict = plugin_schema.to_openapi_dict()
-new_spec_dict = scrub_dict(new_spec_dict)
-
-if spec_dict != new_spec_dict:
-
-    # print(spec_dict["components"]["schemas"] == new_spec_dict["components"]["schemas"])
-
-    print(spec_dict["paths"] == new_spec_dict["paths"])
-
-    # print(spec_dict["paths"])
-    import pdb; pdb.set_trace()
-
-    print(spec_dict["paths"]["/get_wordbook"])
-    print(new_spec_dict["paths"]["/get_wordbook"])
-
-    import pdb; pdb.set_trace()
-    
-    print("============================================================")
-    print("spec_dict\n", spec_dict)
-    print("============================================================")
-    print("new_spec_dict\n", new_spec_dict)
-else:
-    print("Done")
