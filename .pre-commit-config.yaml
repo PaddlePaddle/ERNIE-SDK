@@ -1,3 +1,4 @@
+exclude: 'scripts/.*'
 repos:
 # For Python files
 -   repo: https://github.com/psf/black.git
