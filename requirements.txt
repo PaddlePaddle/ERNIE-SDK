@@ -4,4 +4,4 @@ colorlog
 jsonschema >= 4.19
 requests >= 2.20
 typing_extensions
-erniebot-sdk
+erniebot
