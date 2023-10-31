@@ -1,4 +1,4 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .cancellable import Cancellable
-from .creatable import Creatable
-from .queryable import Queryable
+import re
+import subprocess
+import sys
 
-__all__ = ['Cancellable', 'Creatable', 'Queryable']
+fork_point_sha = subprocess.check_output("git merge-base develop HEAD".split()).decode("utf-8")
+modified_files = (
+    subprocess.check_output(f"git diff --diff-filter=d --name-only {fork_point_sha}".split()).decode("utf-8").split()
+)
+
+valid_dirs = "|".join(sys.argv[1:])
+regex = re.compile(rf"^({valid_dirs}).*?\.py$")
+
+relevant_modified_files = [x for x in modified_files if regex.match(x)]
+print(" ".join(relevant_modified_files), end="")

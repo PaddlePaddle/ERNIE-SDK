@@ -1,23 +1,32 @@
 repos:
--   repo: https://github.com/PaddlePaddle/mirrors-yapf.git
-    rev: 0d79c0c469bab64f7229c9aca2b1186ef47f0e37
+# For Python files
+-   repo: https://github.com/psf/black.git
+    rev: 22.8.0
     hooks:
-    -   id: yapf
-        files: \.py$
-
+    -   id: black
+        files: \.(py|pyi)$
+        additional_dependencies: [toml]
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.11.5
+    hooks:
+    -   id: isort
+-   repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: a11d9314b22d8f8c7556443875b731ef05965464
+    rev: v4.1.0
     hooks:
     -   id: check-merge-conflict
     -   id: check-symlinks
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
     -   id: detect-private-key
-    -   id: check-symlinks
-    -   id: check-added-large-files
-
+        files: (?!.*paddle)^.*$
+    -   id: end-of-file-fixer
+        files: \.md$
+    -   id: trailing-whitespace
+        files: \.md$
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.0.1
+    rev: v1.1.14
     hooks:
     -   id: forbid-crlf
         files: \.md$
@@ -27,3 +36,10 @@ repos:
         files: \.md$
     -   id: remove-tabs
         files: \.md$
+-   repo: local
+    hooks:
+    -   id: copyright_checker
+        name: copyright_checker
+        entry: python .copyright.hook
+        language: system
+        files: \.(c|cc|cxx|cpp|cu|h|hpp|hxx|proto|xpu|kps|py|sh)$

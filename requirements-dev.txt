@@ -1,0 +1,10 @@
+pre-commit
+pytest
+parameterized
+pytest-cov
+regex
+pytest-xdist
+pytest-timeout
+ftfy
+yacs
+unidecode
