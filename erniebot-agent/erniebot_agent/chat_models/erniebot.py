@@ -29,9 +29,9 @@ class ERNIEBot(ChatModel):
         """
         Initializes a instance of the ERNIEBot class.
         Args:
-            model(str): Model name.
-            api_type(Optional[str]): The api-type.
-            access_token(Optional[str]): ERNIEBot access token.
+            model(str): The model name. It should be ernie-bot, ernie-bot-turbo or ernie-bot-4. 
+            api_type(Optional[str]): The api-type for ERNIEBot. It should be aistudio or qianfan.
+            access_token(Optional[str]): The access token for ERNIEBot.
         """
         super().__init__(model=model)
         self.api_type = api_type
@@ -43,6 +43,19 @@ class ERNIEBot(ChatModel):
                   stream: Optional[bool] = False,
                   functions: Optional[List[dict]] = None,
                   **kwargs: Any,) -> Union[Message, AsyncIterator[Message]]:
+        """
+        Asynchronously chat with the LLM.
+        
+        Args:
+            messages(List[Message]): A list of messages.
+            stream(Optional[bool]): Whether to use streaming generation. Defaults to False.
+            functions(Optional[List[dict]]): Set the function definitions for the chat model. Defaults to None.
+            kwargs(Any): Keyword arguments, such as 'top_p', 'temperature', 'penalty_score' and 'system'
+        
+        Returns:
+            If stream is False, returns a single message.
+            If stream is True, returns an asynchronous iterator of messages.
+        """
         cfg_dict = {'model': self.model, '_config_': {}}
         if self.api_type is not None:
             cfg_dict['_config_']['api_type'] = self.api_type

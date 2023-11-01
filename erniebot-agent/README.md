@@ -19,6 +19,8 @@ pip install .
 #pip install -e .
 ```
 
+## 快速使用
+
 ## License
 
 ERNIE Bot Agent遵循Apache-2.0开源协议。

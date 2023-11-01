@@ -32,13 +32,13 @@ class ChatModel(ABC):
         Asynchronously chat with the LLM.
         
         Args:
-            messages(List[Message]): A list of messages to be sent.
+            messages(List[Message]): A list of messages.
             stream(Optional[bool]): Whether to use streaming generation. Defaults to False.
             kwargs(Any): Arbitrary keyword arguments.
         
         Returns:
-            If stream is False, returns a single message that represents the result of sending the messages.
-            If stream is True, returns an asynchronous iterator that allows iterating over the messages sent.
+            If stream is False, returns a single message.
+            If stream is True, returns an asynchronous iterator of messages.
         """
         raise NotImplementedError
     
