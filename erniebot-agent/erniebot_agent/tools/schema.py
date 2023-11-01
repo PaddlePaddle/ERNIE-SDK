@@ -29,8 +29,15 @@ def scrub_dict(d):
         dict: the dictionary data after slimming down
     """
     if type(d) is dict:
-        return dict((k, scrub_dict(v)) for k, v in d.items()
-                    if not not v and scrub_dict(v))
+        if len(d) == 0:
+            return {}
+
+        result = {}
+        for k, v in d.items():
+            if v is None:
+                continue
+            result[k] = v
+        return result
     else:
         return d
 
@@ -138,9 +145,12 @@ class ParametersView:
         }
 
     def to_function_inputs(self) -> dict:
+        if not self.parameters:
+            return {"type": "object", "properties": {}}
+
         params = {
             param.name: param.to_openapi_dict()
-            for param in self.parameters
+            for param in self.parameters if param.name
         }
         return {
             "type": "object",
@@ -160,10 +170,6 @@ class ToolView:
     parameters: Optional[ParametersView] = None
     returns: Optional[ParametersView] = None
     examples: Optional[List[dict]] = None
-
-    @property
-    def examples_dict(self):
-        pass
 
 
 @dataclass
