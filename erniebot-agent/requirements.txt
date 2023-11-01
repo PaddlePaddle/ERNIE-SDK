@@ -1,1 +1,4 @@
 erniebot
+PyYAML
+loguru
+docstring_parser
