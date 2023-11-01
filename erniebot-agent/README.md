@@ -10,6 +10,15 @@ ERNIE Bot Agent 可以快速开发智能体。
 
 </div>
 
+## 快速安装
+
+下载源码后执行如下命令，快速安装ERNIE Bot Agent（要求Python >= 3.8)。
+
+```shell
+pip install .
+#pip install -e .
+```
+
 ## License
 
 ERNIE Bot Agent遵循Apache-2.0开源协议。
