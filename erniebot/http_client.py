@@ -45,20 +45,30 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from json import JSONDecodeError
-from typing import (Any, AsyncIterator, Callable, Dict, Iterator, Mapping,
-                    Optional, Tuple, Union)
+from typing import (
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    Iterator,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import aiohttp
 import requests
 
 import erniebot
+
 from . import errors
 from .response import EBResponse
-from .types import (FilesType, HeadersType, ParamsType)
+from .types import FilesType, HeadersType, ParamsType
 from .utils.logging import logger
 from .utils.url import add_query_params, extract_base_url
 
-__all__ = ['EBClient']
+__all__ = ["EBClient"]
 
 _thread_context = threading.local()
 
@@ -72,40 +82,35 @@ class EBClient(object):
     TIMEOUT_SECS: int = 600
 
     def __init__(
-            self,
-            response_handler: Optional[Callable[[EBResponse], EBResponse]]=None,
-            proxy: Optional[str]=None) -> None:
+        self,
+        response_handler: Optional[Callable[[EBResponse], EBResponse]] = None,
+        proxy: Optional[str] = None,
+    ) -> None:
         super().__init__()
         self._resp_handler = response_handler
         self._proxy = proxy
 
     def prepare_request(
-            self,
-            method: str,
-            url: str,
-            supplied_headers: Optional[HeadersType],
-            params: Optional[ParamsType],
-            files: Optional[FilesType],
-    ) -> Tuple[str,
-               HeadersType,
-               Optional[bytes],
-               ]:
+        self,
+        method: str,
+        url: str,
+        supplied_headers: Optional[HeadersType],
+        params: Optional[ParamsType],
+        files: Optional[FilesType],
+    ) -> Tuple[str, HeadersType, Optional[bytes]]:
         headers = self._validate_headers(supplied_headers)
 
         data = None
         method = method.upper()
-        if method == 'GET' or method == 'DELETE':
+        if method == "GET" or method == "DELETE":
             if params:
-                url = add_query_params(url, [(str(k), str(v))
-                                             for k, v in params.items()
-                                             if v is not None])
-        elif method in {'POST', 'PUT'}:
+                url = add_query_params(url, [(str(k), str(v)) for k, v in params.items() if v is not None])
+        elif method in {"POST", "PUT"}:
             if params and not files:
                 data = json.dumps(params).encode()
-                headers['Content-Type'] = 'application/json'
+                headers["Content-Type"] = "application/json"
         else:
-            raise errors.ConnectionError(
-                f"Unrecognized HTTP method {repr(method)}.")
+            raise errors.ConnectionError(f"Unrecognized HTTP method {repr(method)}.")
 
         headers = self.get_request_headers(method, headers)
 
@@ -117,18 +122,16 @@ class EBClient(object):
         return url, headers, data
 
     def send_request(
-            self,
-            method: str,
-            url: str,
-            stream: bool,
-            data: Optional[bytes]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-            base_url: Optional[str]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        url: str,
+        stream: bool,
+        data: Optional[bytes] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+        base_url: Optional[str] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         result = self.send_request_raw(
             method.lower(),
             url,
@@ -153,13 +156,11 @@ class EBClient(object):
         method: str,
         url: str,
         stream: bool,
-        data: Optional[bytes]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        data: Optional[bytes] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         # XXX: Should we consider session reuse?
         ctx = self._make_aiohttp_session()
         session = await ctx.__aenter__()
@@ -173,8 +174,7 @@ class EBClient(object):
                 headers=headers,
                 request_timeout=request_timeout,
             )
-            resp, got_stream = await self._interpret_async_response(result,
-                                                                    stream)
+            resp, got_stream = await self._interpret_async_response(result, stream)
             if stream != got_stream:
                 logger.warning("Unexpected response: %s", resp)
                 logger.warning(
@@ -186,8 +186,7 @@ class EBClient(object):
             raise e
         if isinstance(resp, AsyncIterator):
 
-            async def wrap_resp(
-                resp: AsyncIterator) -> AsyncIterator[EBResponse]:
+            async def wrap_resp(resp: AsyncIterator) -> AsyncIterator[EBResponse]:
                 try:
                     async for r in resp:
                         yield r
@@ -199,11 +198,10 @@ class EBClient(object):
             await ctx.__aexit__(None, None, None)
             return resp
 
-    def get_request_headers(self, method: str,
-                            extra: HeadersType) -> HeadersType:
+    def get_request_headers(self, method: str, extra: HeadersType) -> HeadersType:
         headers = {}
 
-        headers['User-Agent'] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
+        headers["User-Agent"] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
         # TODO: Add other headers
 
         headers.update(extra)
@@ -211,25 +209,23 @@ class EBClient(object):
         return headers
 
     def send_request_raw(
-            self,
-            method: str,
-            url: str,
-            base_url: str,
-            data: Optional[bytes],
-            headers: Optional[HeadersType],
-            files: Optional[FilesType],
-            stream: bool,
-            request_timeout: Optional[float],
+        self,
+        method: str,
+        url: str,
+        base_url: str,
+        data: Optional[bytes],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        stream: bool,
+        request_timeout: Optional[float],
     ) -> requests.Response:
-
-        if not hasattr(_thread_context, 'sessions'):
+        if not hasattr(_thread_context, "sessions"):
             _thread_context.sessions = {}
             _thread_context.session_create_times = {}
         if base_url not in _thread_context.sessions:
             _thread_context.sessions[base_url] = self._make_session()
             _thread_context.session_create_times[base_url] = time.time()
-        elif (time.time() - _thread_context.session_create_times[base_url] >=
-              self.MAX_SESSION_LIFETIME_SECS):
+        elif time.time() - _thread_context.session_create_times[base_url] >= self.MAX_SESSION_LIFETIME_SECS:
             _thread_context.sessions[base_url].close()
             _thread_context.sessions[base_url] = self._make_session()
             _thread_context.session_create_times[base_url] = time.time()
@@ -243,15 +239,13 @@ class EBClient(object):
                 data=data,
                 files=files,
                 stream=stream,
-                timeout=request_timeout
-                if request_timeout else self.TIMEOUT_SECS,
+                timeout=request_timeout if request_timeout else self.TIMEOUT_SECS,
                 proxies=session.proxies,
             )
         except requests.exceptions.Timeout as e:
             raise errors.TimeoutError(f"Request timed out: {e}") from e
         except requests.exceptions.RequestException as e:
-            raise errors.ConnectionError(
-                f"Error communicating with server: {e}") from e
+            raise errors.ConnectionError(f"Error communicating with server: {e}") from e
 
         logger.debug("API response headers: %r", result.headers)
 
@@ -267,37 +261,32 @@ class EBClient(object):
         files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
-
         if files is not None:
             raise TypeError("`files` is currently not supported.")
 
-        timeout = aiohttp.ClientTimeout(total=request_timeout if request_timeout
-                                        else self.TIMEOUT_SECS)
+        timeout = aiohttp.ClientTimeout(total=request_timeout if request_timeout else self.TIMEOUT_SECS)
 
         request_kwargs: dict = {
-            'headers': headers,
-            'data': data,
-            'timeout': timeout,
+            "headers": headers,
+            "data": data,
+            "timeout": timeout,
         }
         proxy = self._proxy
         if proxy is not None:
-            request_kwargs['proxy'] = proxy
+            request_kwargs["proxy"] = proxy
 
         try:
-            result = await session.request(
-                method=method, url=url, **request_kwargs)
+            result = await session.request(method=method, url=url, **request_kwargs)
         except (aiohttp.ServerTimeoutError, asyncio.TimeoutError) as e:
             raise errors.TimeoutError(f"Request timed out: {e}") from e
         except aiohttp.ClientError as e:
-            raise errors.ConnectionError(
-                f"Error communicating with server: {e}") from e
+            raise errors.ConnectionError(f"Error communicating with server: {e}") from e
 
         logger.debug("API response headers: %r", result.headers)
 
         return result
 
-    def _validate_headers(
-            self, supplied_headers: Optional[HeadersType]) -> HeadersType:
+    def _validate_headers(self, supplied_headers: Optional[HeadersType]) -> HeadersType:
         headers: dict = {}
 
         if supplied_headers is None:
@@ -318,8 +307,8 @@ class EBClient(object):
     def _parse_line(self, line: bytes) -> Optional[str]:
         if line:
             if line.startswith(b"data: "):
-                line = line[len(b"data: "):]
-                return line.decode('utf-8')
+                line = line[len(b"data: ") :]
+                return line.decode("utf-8")
             else:
                 # Filter out other lines
                 return None
@@ -331,40 +320,41 @@ class EBClient(object):
             if _line is not None:
                 yield _line
 
-    async def _parse_stream_async(
-        self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
+    async def _parse_stream_async(self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
         async for line in rbody:
             _line = self._parse_line(line)
             if _line is not None:
                 yield _line
 
     def _interpret_response(
-            self, result: requests.Response,
-            stream: bool) -> Tuple[Union[EBResponse, Iterator[EBResponse]],
-                                   bool,
-                                   ]:
-        if stream and result.headers['Content-Type'].startswith(
-                'text/event-stream'):
-            return self._interpret_stream_response(
-                result.iter_lines(), result.status_code, result.headers), True
+        self, result: requests.Response, stream: bool
+    ) -> Tuple[Union[EBResponse, Iterator[EBResponse]], bool]:
+        if stream and result.headers["Content-Type"].startswith("text/event-stream"):
+            return (
+                self._interpret_stream_response(result.iter_lines(), result.status_code, result.headers),
+                True,
+            )
         else:
-            return self._interpret_response_line(
-                result.content.decode('utf-8'),
-                result.status_code,
-                result.headers,
-                stream=False), False
+            return (
+                self._interpret_response_line(
+                    result.content.decode("utf-8"),
+                    result.status_code,
+                    result.headers,
+                    stream=False,
+                ),
+                False,
+            )
 
     async def _interpret_async_response(
         self,
         result: aiohttp.ClientResponse,
         stream: bool,
-    ) -> Tuple[Union[EBResponse, AsyncIterator[EBResponse]],
-               bool,
-               ]:
-        if stream and result.headers['Content-Type'].startswith(
-                'text/event-stream'):
-            return self._interpret_async_stream_response(
-                result.content, result.status, result.headers), True
+    ) -> Tuple[Union[EBResponse, AsyncIterator[EBResponse]], bool]:
+        if stream and result.headers["Content-Type"].startswith("text/event-stream"):
+            return (
+                self._interpret_async_stream_response(result.content, result.status, result.headers),
+                True,
+            )
         else:
             try:
                 await result.read()
@@ -373,21 +363,24 @@ class EBClient(object):
             except aiohttp.ClientError as e:
                 logger.warning("Ignoring exception.", exc_info=e)
                 logger.warning("API response body: %r", result.content)
-            return self._interpret_response_line(
-                (await result.read()).decode("utf-8"),
-                result.status,
-                result.headers,
-                stream=False), False
+            return (
+                self._interpret_response_line(
+                    (await result.read()).decode("utf-8"),
+                    result.status,
+                    result.headers,
+                    stream=False,
+                ),
+                False,
+            )
 
     def _interpret_stream_response(
-            self,
-            rbody: Iterator[bytes],
-            rcode: int,
-            rheaders: Mapping[str, Any],
+        self,
+        rbody: Iterator[bytes],
+        rcode: int,
+        rheaders: Mapping[str, Any],
     ) -> Iterator[EBResponse]:
         for line in self._parse_stream(rbody):
-            resp = self._interpret_response_line(
-                line, rcode, rheaders, stream=True)
+            resp = self._interpret_response_line(line, rcode, rheaders, stream=True)
             yield resp
 
     async def _interpret_async_stream_response(
@@ -397,53 +390,53 @@ class EBClient(object):
         rheaders: Mapping[str, Any],
     ) -> AsyncIterator[EBResponse]:
         async for line in self._parse_stream_async(rbody):
-            resp = self._interpret_response_line(
-                line, rcode, rheaders, stream=True)
+            resp = self._interpret_response_line(line, rcode, rheaders, stream=True)
             yield resp
 
     def _interpret_response_line(
-            self,
-            rbody: str,
-            rcode: int,
-            rheaders: Mapping[str, Any],
-            stream: bool,
+        self,
+        rbody: str,
+        rcode: int,
+        rheaders: Mapping[str, Any],
+        stream: bool,
     ) -> EBResponse:
-        content_type = rheaders.get('Content-Type', '')
-        if content_type.startswith('text/plain'):
+        content_type = rheaders.get("Content-Type", "")
+        if content_type.startswith("text/plain"):
             decoded_rbody = rbody
-        elif content_type.startswith(
-                'application/json') or content_type.startswith(
-                    'text/event-stream'):
+        elif content_type.startswith("application/json") or content_type.startswith("text/event-stream"):
             try:
                 decoded_rbody = json.loads(rbody)
             except (JSONDecodeError, UnicodeDecodeError) as e:
                 raise errors.HTTPRequestError(
-                    f"Cannot decode response body.",
+                    "Cannot decode response body.",
                     rcode=rcode,
                     rbody=rbody,
-                    rheaders=rheaders) from e
+                    rheaders=rheaders,
+                ) from e
             if not isinstance(decoded_rbody, (str, dict)):
                 raise errors.HTTPRequestError(
                     f"Decoded response body has an unsupported type: {type(decoded_rbody)}",
                     rcode=rcode,
                     rbody=rbody,
-                    rheaders=rheaders)
+                    rheaders=rheaders,
+                )
         else:
             raise errors.HTTPRequestError(
                 f"Unexpected content type: {content_type}",
                 rcode=rcode,
                 rbody=rbody,
-                rheaders=rheaders)
+                rheaders=rheaders,
+            )
 
-        resp = EBResponse(
-            rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
+        resp = EBResponse(rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
 
         if rcode != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
                 f"Status code is not {http.HTTPStatus.OK}.",
                 rcode=resp.rcode,
                 rbody=str(resp.rbody),
-                rheaders=resp.rheaders)
+                rheaders=resp.rheaders,
+            )
 
         if self._resp_handler is not None:
             resp = self._resp_handler(resp)
@@ -456,9 +449,9 @@ class EBClient(object):
             logger.debug("Use proxies: %r", proxies)
             s.proxies = proxies
         s.mount(
-            'https://',
-            requests.adapters.HTTPAdapter(
-                max_retries=self.MAX_CONNECTION_RETRIES))
+            "https://",
+            requests.adapters.HTTPAdapter(max_retries=self.MAX_CONNECTION_RETRIES),
+        )
         return s
 
     @staticmethod
@@ -466,7 +459,7 @@ class EBClient(object):
         if proxy is None:
             return None
         else:
-            return {'http': proxy, 'https': proxy}
+            return {"http": proxy, "https": proxy}
 
     @staticmethod
     @asynccontextmanager

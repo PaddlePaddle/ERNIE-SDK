@@ -1,24 +1,29 @@
 from __future__ import annotations
 
+import json
+import unittest
 from datetime import datetime
-import erniebot
+
 from erniebot_agent.tools.base import CalculatorTool, CurrentTimeTool, Tool
 
-import unittest
-
-import json
+import erniebot
 
 
 class ToolTestMixin:
+    tool: Tool
+
     def run_query(self, query: str):
         response = erniebot.ChatCompletion.create(
-            model='ernie-bot',
-            messages=[{
-                'role': 'user',
-                'content': query,
-            }],
+            model="ernie-bot",
+            messages=[
+                {
+                    "role": "user",
+                    "content": query,
+                }
+            ],
             functions=[self.tool.function_input()],
-            stream=False)
+            stream=False,
+        )
 
         result = response.get_result()
         if not response.is_function_response:

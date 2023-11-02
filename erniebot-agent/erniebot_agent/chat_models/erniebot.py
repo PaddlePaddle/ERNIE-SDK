@@ -12,23 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Any, List, Union, AsyncIterator, Literal, overload, Dict
-
-import erniebot
-from erniebot.resources.chat_completion import ChatResponse
+from typing import Any, AsyncIterator, Dict, List, Literal, Optional, Union, overload
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message, response_to_message
 
+import erniebot
+
 
 class ERNIEBot(ChatModel):
-    def __init__(self,
-                 model: str,
-                 api_type: Optional[str]=None,
-                 access_token: Optional[str]=None) -> None:
+    def __init__(
+        self, model: str, api_type: Optional[str] = None, access_token: Optional[str] = None
+    ) -> None:
         """
         Args:
-            model (str): Model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or "ernie-bot-4".
+            model (str): Model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or
+                "ernie-bot-4".
             api_type (Optional[str]): API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): Access token for erniebot.
         """
@@ -37,38 +36,39 @@ class ERNIEBot(ChatModel):
         self.access_token = access_token
 
     @overload
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: Literal[False]=...,
-                  functions: Optional[List[dict]]=...,
-                  **kwargs: Any) -> Message:
+    async def run(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[False] = ...,
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> Message:
         ...
 
     @overload
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: Literal[True],
-                  functions: Optional[List[dict]]=...,
-                  **kwargs: Any) -> AsyncIterator[Message]:
+    async def run(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[True],
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> AsyncIterator[Message]:
         ...
 
     @overload
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: bool,
-                  functions: Optional[List[dict]]=...,
-                  **kwargs: Any) -> Union[Message, AsyncIterator[Message]]:
+    async def run(
+        self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
+    ) -> Union[Message, AsyncIterator[Message]]:
         ...
 
     async def run(
         self,
         messages: List[Message],
         *,
-        stream: bool=False,
-        functions: Optional[List[dict]]=None,
+        stream: bool = False,
+        functions: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> Union[Message, AsyncIterator[Message]]:
         """
@@ -84,27 +84,25 @@ class ERNIEBot(ChatModel):
             If `stream` is False, returns a single message.
             If `stream` is True, returns an asynchronous iterator of messages.
         """
-        cfg_dict: Dict[str, Any] = {'model': self.model, '_config_': {}}
+        cfg_dict: Dict[str, Any] = {"model": self.model, "_config_": {}}
         if self.api_type is not None:
-            cfg_dict['_config_']['api_type'] = self.api_type
+            cfg_dict["_config_"]["api_type"] = self.api_type
         if self.access_token is not None:
-            cfg_dict['_config_']['access_token'] = self.access_token
+            cfg_dict["_config_"]["access_token"] = self.access_token
 
         # TODO: process system message
-        cfg_dict['messages'] = [m.to_dict() for m in messages]
+        cfg_dict["messages"] = [m.to_dict() for m in messages]
         if functions is not None:
-            cfg_dict['functions'] = functions
+            cfg_dict["functions"] = functions
 
-        name_list = ['top_p', 'temperature', 'penalty_score', 'system']
+        name_list = ["top_p", "temperature", "penalty_score", "system"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
         if stream:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=True, **cfg_dict)
+            response = await erniebot.ChatCompletion.acreate(stream=True, **cfg_dict)
             return (response_to_message(d) async for d in response)
         else:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=False, **cfg_dict)
+            response = await erniebot.ChatCompletion.acreate(stream=False, **cfg_dict)
             return response_to_message(response)

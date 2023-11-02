@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import abc
-from typing import (Any, Dict, Optional, Tuple)
+from typing import Any, Dict, Optional, Tuple
 
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType)
+from erniebot.types import HeadersType, ParamsType
+
 from .protocol import Resource
 
 
@@ -26,7 +27,7 @@ class Queryable(Resource):
     @classmethod
     def query(cls, **kwargs: Any) -> EBResponse:
         """Query a resource."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         query_kwargs = kwargs
         return resource.query_resource(**query_kwargs)
@@ -34,45 +35,42 @@ class Queryable(Resource):
     @classmethod
     async def aquery(cls, **kwargs: Any) -> EBResponse:
         """Asynchronous version of `query`."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         query_kwargs = kwargs
         resp = await resource.aquery_resource(**query_kwargs)
         return resp
 
     def query_resource(self, **query_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_query(
-            query_kwargs)
+        path, params, headers, request_timeout = self._prepare_query(query_kwargs)
         resp = self.request(
-            method='POST',
+            method="POST",
             path=path,
             params=params,
             stream=False,
             headers=headers,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp = self._postprocess_query(resp)
         return resp
 
     async def aquery_resource(self, **query_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_query(
-            query_kwargs)
+        path, params, headers, request_timeout = self._prepare_query(query_kwargs)
         resp = await self.arequest(
-            method='POST',
+            method="POST",
             path=path,
             params=params,
             stream=False,
             headers=headers,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp = self._postprocess_query(resp)
         return resp
 
     @abc.abstractmethod
-    def _prepare_query(self,
-                       kwargs: Dict[str, Any]) -> Tuple[str,
-                                                        Optional[ParamsType],
-                                                        Optional[HeadersType],
-                                                        Optional[float],
-                                                        ]:
+    def _prepare_query(
+        self, kwargs: Dict[str, Any]
+    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
         ...
 
     def _postprocess_query(self, resp: EBResponse) -> EBResponse:

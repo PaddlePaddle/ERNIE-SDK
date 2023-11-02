@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, AsyncIterator, ClassVar, Dict, Iterator, Optional,
-                    Union)
+from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
 
 from erniebot.api_types import APIType
 from erniebot.http_client import EBClient
 from erniebot.response import EBResponse
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.types import FilesType, HeadersType, ParamsType
 
 
 class EBBackend(object):
@@ -29,27 +28,24 @@ class EBBackend(object):
         super().__init__()
 
         self.api_type = self.API_TYPE
-        self.base_url = config_dict.get('api_base_url', None) or self.BASE_URL
+        self.base_url = config_dict.get("api_base_url", None) or self.BASE_URL
 
         self._cfg = config_dict
-        self._client = EBClient(
-            self.handle_response, proxy=self._cfg.get('proxy', None))
+        self._client = EBClient(self.handle_response, proxy=self._cfg.get("proxy", None))
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         raise NotImplementedError
 
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         raise NotImplementedError
 
     async def arequest(
@@ -57,13 +53,11 @@ class EBBackend(object):
         method: str,
         path: str,
         stream: bool,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         raise NotImplementedError
 
     def _get_url(self, path: str) -> str:

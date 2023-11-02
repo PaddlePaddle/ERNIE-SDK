@@ -14,16 +14,13 @@
 from __future__ import annotations
 
 import json
-import ast
 from datetime import datetime
-from loguru import logger
-from typing import Optional, Any
-from erniebot_agent.tools.schema import (ToolView, ParametersView,
-                                         ParameterView, RemoteToolView,
-                                         PluginSchema, scrub_dict)
+from typing import Any, Optional
 
 import docstring_parser
-from docstring_parser import Docstring, DocstringParam, DocstringReturns
+from docstring_parser import Docstring
+from erniebot_agent.tools.schema import ParametersView, ToolView, scrub_dict
+from loguru import logger
 
 
 class Tool:
@@ -59,19 +56,17 @@ class Tool:
 
         docstring: Docstring = docstring_parser.parse_from_object(self.__call__)
         examples_raws = [
-            example.strip()
-            for example in docstring.examples[0].description.split(">>>")
-            if example.strip()
+            example.strip() for example in docstring.examples[0].description.split(">>>") if example.strip()
         ]
         examples_raws = [json.loads(example) for example in examples_raws]
 
         return ToolView(
             name=self.tool_name,
-            description=docstring.short_description or
-            docstring.long_description or "",
+            description=docstring.short_description or docstring.long_description or "",
             parameters=ParametersView.from_docstring(docstring.params),
             returns=ParametersView.from_docstring(docstring.returns),
-            examples=examples_raws)
+            examples=examples_raws,
+        )
 
     def function_input(self):
         view = self.view()
@@ -80,7 +75,7 @@ class Tool:
             "description": view.description,
             "parameters": view.parameters.to_function_inputs(),
             "responses": view.returns.to_function_inputs(),
-            "examples": view.examples
+            "examples": view.examples,
         }
         return scrub_dict(inputs)
 
@@ -107,7 +102,7 @@ class CalculatorTool(Tool):
 
         Returns:
             int: 数学公式计算的结果
-        """
+        """  # noqa: E501
 
         return eval(math_formula)
 

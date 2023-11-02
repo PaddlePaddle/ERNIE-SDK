@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
+
+from dataclasses import asdict, dataclass, field
 from typing import List, Optional
-from yaml import safe_dump
 
 from docstring_parser import DocstringParam, DocstringReturns
+from yaml import safe_dump
 
 
 def scrub_dict(d):
@@ -45,6 +46,7 @@ def scrub_dict(d):
 @dataclass
 class ParameterView:
     """function parameter object"""
+
     type: Optional[str] = None
     description: Optional[str] = None
     items: dict = field(default_factory=dict)
@@ -70,14 +72,14 @@ class ParameterView:
 @dataclass
 class ParametersView:
     """a set of parameters which can be input or output of function"""
+
     parameters: List[ParameterView]
     name: Optional[str] = None
     code: int = 200
     type: str = "object"
 
     @staticmethod
-    def from_docstring(params: List[DocstringParam] | DocstringReturns |
-                       None) -> Optional[ParametersView]:
+    def from_docstring(params: List[DocstringParam] | DocstringReturns | None) -> Optional[ParametersView]:
         """parse docstring param to ParameterView
 
         Args:
@@ -92,12 +94,13 @@ class ParametersView:
         parameters = []
         if isinstance(params, DocstringReturns):
             # only support one return value
-            return ParametersView(parameters=[
-                ParameterView(
-                    type=params.type_name,
-                    description=params.description,
-                    name=params.return_name)
-            ])
+            return ParametersView(
+                parameters=[
+                    ParameterView(
+                        type=params.type_name, description=params.description, name=params.return_name
+                    )
+                ]
+            )
 
         for param in params:
             parameter_view = ParameterView(
@@ -105,7 +108,8 @@ class ParametersView:
                 description=param.description,
                 name=param.arg_name,
                 default_value=param.default,
-                required=not param.is_optional)
+                required=not param.is_optional,
+            )
             parameters.append(parameter_view)
         return ParametersView(parameters=parameters)
 
@@ -119,8 +123,7 @@ class ParametersView:
             _type_: _description_
         """
         parameters = []
-        for parameter_name, parameter_info in schema.get("properties",
-                                                         {}).items():
+        for parameter_name, parameter_info in schema.get("properties", {}).items():
             parameter = ParameterView(name=parameter_name, **parameter_info)
             parameter.required = parameter_name in schema.get("required", [])
             parameters.append(parameter)
@@ -135,36 +138,31 @@ class ParametersView:
         return {
             "type": "object",
             "required": [
-                parameter_view.name for parameter_view in self.parameters
-                if parameter_view.required
+                parameter_view.name for parameter_view in self.parameters if parameter_view.required
             ],
             "properties": {
                 parameter_view.name: parameter_view.to_openapi_dict()
-                for parameter_view in self.parameters if parameter_view.required
-            }
+                for parameter_view in self.parameters
+                if parameter_view.required
+            },
         }
 
     def to_function_inputs(self) -> dict:
         if not self.parameters:
             return {"type": "object", "properties": {}}
 
-        params = {
-            param.name: param.to_openapi_dict()
-            for param in self.parameters if param.name
-        }
+        params = {param.name: param.to_openapi_dict() for param in self.parameters if param.name}
         return {
             "type": "object",
             "properties": params,
-            "required": [
-                param.name for param in self.parameters
-                if param.required and param.name
-            ]
+            "required": [param.name for param in self.parameters if param.required and param.name],
         }
 
 
 @dataclass
 class ToolView:
     """the view of one tool"""
+
     name: str
     description: str
     parameters: Optional[ParametersView] = None
@@ -194,12 +192,9 @@ class RemoteToolView:
                     "description": self.returns_description,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/" +
-                                (self.returns.name or "")
-                            }
+                            "schema": {"$ref": "#/components/schemas/" + (self.returns.name or "")}
                         }
-                    }
+                    },
                 }
             }
             result["responses"] = response
@@ -209,60 +204,54 @@ class RemoteToolView:
                 "required": True,
                 "content": {
                     "application/json": {
-                        "schema": {
-                            "$ref": "#/components/schemas/" +
-                            (self.parameters.name or "")
-                        }
+                        "schema": {"$ref": "#/components/schemas/" + (self.parameters.name or "")}
                     }
-                }
+                },
             }
             result["requestBody"] = parameters
         return {self.method: result}
 
     @staticmethod
     def from_openapi_dict(
-            uri: str,
-            method: str,
-            path_info: dict,
-            parameters_views: dict[str, ParametersView]) -> RemoteToolView:
+        uri: str, method: str, path_info: dict, parameters_views: dict[str, ParametersView]
+    ) -> RemoteToolView:
         """construct RemoteToolView from openapi spec-dict info
 
         Args:
             uri (str): the url path of remote tool
             method (str): http method: one of [get, post, put, delete]
             path_info (dict): the spec info of remote tool
-            parameters_views (dict[str, ParametersView]): the dict of parameters views which are the schema of input/output of tool
+            parameters_views (dict[str, ParametersView]):
+                the dict of parameters views which are the schema of input/output of tool
 
         Returns:
             RemoteToolView: the instance of remote tool view
         """
         parameters, parameters_description = None, None
         if "requestBody" in path_info:
-            request_ref = path_info["requestBody"]["content"][
-                "application/json"]["schema"]["$ref"]
+            request_ref = path_info["requestBody"]["content"]["application/json"]["schema"]["$ref"]
             request_ref_uri = request_ref.split("/")[-1]
             assert request_ref_uri in parameters_views
             parameters = parameters_views[request_ref_uri]
-            parameters_description = path_info["requestBody"].get("description",
-                                                                  None)
+            parameters_description = path_info["requestBody"].get("description", None)
 
         returns, returns_description = None, None
         if "responses" in path_info:
-            response_ref = list(path_info["responses"].values())[0]["content"][
-                "application/json"]["schema"]["$ref"]
+            response_ref = list(path_info["responses"].values())[0]["content"]["application/json"]["schema"][
+                "$ref"
+            ]
             response_ref_uri = response_ref.split("/")[-1]
             assert response_ref_uri in parameters_views
             returns = parameters_views[response_ref_uri]
-            returns_description = list(path_info["responses"].values())[0].get(
-                "description", None)
+            returns_description = list(path_info["responses"].values())[0].get("description", None)
 
         return RemoteToolView(
-            name=path_info['operationId'],
+            name=path_info["operationId"],
             parameters=parameters,
             parameters_description=parameters_description,
             returns=returns,
             returns_description=returns_description,
-            description=path_info['summary'],
+            description=path_info["summary"],
             method=method,
             uri=uri,
         )
@@ -283,6 +272,7 @@ class EndpointInfo:
 @dataclass
 class PluginSchema:
     """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
+
     openapi: str
     info: EndpointInfo
     servers: List[Endpoint]
@@ -296,16 +286,13 @@ class PluginSchema:
             "openapi": self.openapi,
             "info": asdict(self.info),
             "servers": [asdict(server) for server in self.servers],
-            "paths": {
-                tool_view.uri: tool_view.to_openapi_dict()
-                for tool_view in self.paths
-            },
+            "paths": {tool_view.uri: tool_view.to_openapi_dict() for tool_view in self.paths},
             "components": {
                 "schemas": {
                     uri: parameters_view.to_openapi_dict()
                     for uri, parameters_view in self.component_schemas.items()
                 }
-            }
+            },
         }
         return scrub_dict(spec_dict)
 
@@ -316,7 +303,7 @@ class PluginSchema:
             file (str): the path of the openapi yaml file
         """
         spec_dict = self.to_openapi_dict()
-        with open(file, "w+", encoding='utf-8') as f:
+        with open(file, "w+", encoding="utf-8") as f:
             safe_dump(spec_dict, f, indent=4)
 
     @staticmethod
@@ -328,14 +315,13 @@ class PluginSchema:
         """
         from openapi_spec_validator import validate
         from openapi_spec_validator.readers import read_from_filename
+
         spec_dict, base_uri = read_from_filename(file)
         validate(spec_dict)
 
         # info
         info = EndpointInfo(**spec_dict["info"])
-        servers = [
-            Endpoint(**server) for server in spec_dict.get("servers", [])
-        ]
+        servers = [Endpoint(**server) for server in spec_dict.get("servers", [])]
 
         # components
         component_schemas = spec_dict["components"]["schemas"]
@@ -353,10 +339,13 @@ class PluginSchema:
                         uri=path,
                         method=method,
                         path_info=path_method_info,
-                        parameters_views=parameters_views))
+                        parameters_views=parameters_views,
+                    )
+                )
         return PluginSchema(
             openapi=spec_dict["openapi"],
             info=info,
             servers=servers,
             paths=paths,
-            component_schemas=parameters_views)
+            component_schemas=parameters_views,
+        )

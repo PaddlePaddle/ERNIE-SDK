@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import abc
-from typing import (Any, AsyncIterator, Dict, Iterator, Optional, Tuple, Union)
+from typing import Any, AsyncIterator, Dict, Iterator, Optional, Tuple, Union
 
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType, FilesType, ResponseT)
+from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
+
 from .protocol import Resource
 
 
@@ -26,63 +27,60 @@ class Creatable(Resource):
     @classmethod
     def create(cls, **kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
         """Create a resource."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         return resource.create_resource(**create_kwargs)
 
     @classmethod
-    async def acreate(
-        cls, **kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+    async def acreate(cls, **kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `create`."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         create_kwargs = kwargs
         resp = await resource.acreate_resource(**create_kwargs)
         return resp
 
-    def create_resource(
-            self,
-            **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
-        path, params, headers, files, stream, request_timeout = self._prepare_create(
-            create_kwargs)
+    def create_resource(self, **create_kwargs: Any) -> Union[EBResponse, Iterator[EBResponse]]:
+        path, params, headers, files, stream, request_timeout = self._prepare_create(create_kwargs)
         resp = self.request(
-            method='POST',
+            method="POST",
             path=path,
             stream=stream,
             params=params,
             headers=headers,
             files=files,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         # See https://github.com/python/mypy/issues/1533
         resp = self._postprocess_create(resp)  # type: ignore
         return resp
 
-    async def acreate_resource(
-        self,
-        **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        path, params, headers, files, stream, request_timeout = self._prepare_create(
-            create_kwargs)
+    async def acreate_resource(self, **create_kwargs: Any) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        path, params, headers, files, stream, request_timeout = self._prepare_create(create_kwargs)
         resp = await self.arequest(
-            method='POST',
+            method="POST",
             path=path,
             stream=stream,
             params=params,
             headers=headers,
             files=files,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp = self._postprocess_create(resp)  # type: ignore
         return resp
 
     @abc.abstractmethod
-    def _prepare_create(self,
-                        kwargs: Dict[str, Any]) -> Tuple[str,
-                                                         Optional[ParamsType],
-                                                         Optional[HeadersType],
-                                                         Optional[FilesType],
-                                                         bool,
-                                                         Optional[float],
-                                                         ]:
+    def _prepare_create(
+        self, kwargs: Dict[str, Any]
+    ) -> Tuple[
+        str,
+        Optional[ParamsType],
+        Optional[HeadersType],
+        Optional[FilesType],
+        bool,
+        Optional[float],
+    ]:
         ...
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:

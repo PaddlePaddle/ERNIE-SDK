@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import abstractmethod, ABCMeta
-from typing import Any, List, Union, AsyncIterator, overload, Literal
+from abc import ABCMeta, abstractmethod
+from typing import Any, AsyncIterator, List, Literal, Union, overload
 
 from erniebot_agent.messages import Message
 
@@ -21,38 +21,29 @@ from erniebot_agent.messages import Message
 class ChatModel(metaclass=ABCMeta):
     """The base class of chat-optimized LLM."""
 
-    model: str
-
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str):
         self.model = model
 
     @overload
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: Literal[False]=...,
-                  **kwargs: Any) -> Message:
+    async def run(self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any) -> Message:
         ...
 
     @overload
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: Literal[True],
-                  **kwargs: Any) -> AsyncIterator[Message]:
+    async def run(
+        self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
+    ) -> AsyncIterator[Message]:
         ...
 
     @overload
-    async def run(self, messages: List[Message], *, stream: bool,
-                  **kwargs: Any) -> Union[Message, AsyncIterator[Message]]:
+    async def run(
+        self, messages: List[Message], *, stream: bool, **kwargs: Any
+    ) -> Union[Message, AsyncIterator[Message]]:
         ...
 
     @abstractmethod
-    async def run(self,
-                  messages: List[Message],
-                  *,
-                  stream: bool=False,
-                  **kwargs: Any) -> Union[Message, AsyncIterator[Message]]:
+    async def run(
+        self, messages: List[Message], *, stream: bool = False, **kwargs: Any
+    ) -> Union[Message, AsyncIterator[Message]]:
         """
         Asynchronously chat with the LLM.
 

@@ -12,56 +12,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, Mapping, Optional)
+from typing import Any, Mapping, Optional
 
 __all__ = [
-    'ArgumentNotFoundError', 'InvalidArgumentError', 'MaxRetriesExceededError',
-    'TokenUpdateFailedError', 'UnsupportedAPITypeError', 'HTTPRequestError',
-    'ConnectionError', 'TimeoutError', 'APIError', 'InvalidParameterError',
-    'InvalidTokenError', 'PermissionError', 'RequestLimitError',
-    'ServiceUnavailableError', 'TokenExpiredError', 'TryAgain'
+    "ArgumentNotFoundError",
+    "InvalidArgumentError",
+    "MaxRetriesExceededError",
+    "TokenUpdateFailedError",
+    "UnsupportedAPITypeError",
+    "HTTPRequestError",
+    "ConnectionError",
+    "TimeoutError",
+    "APIError",
+    "InvalidParameterError",
+    "InvalidTokenError",
+    "PermissionError",
+    "RequestLimitError",
+    "ServiceUnavailableError",
+    "TokenExpiredError",
+    "TryAgain",
 ]
 
 
 class EBError(Exception):
     """Base exception class for the erniebot library."""
+
     pass
 
 
 class ArgumentNotFoundError(EBError):
     """Exception that's raised when an argument is not found."""
+
     pass
 
 
 class InvalidArgumentError(EBError):
     """Exception that's raised when an argument is invalid."""
+
     pass
 
 
 class MaxRetriesExceededError(EBError):
     """Exception that's raised when the maximum number of retries is
     exceeded."""
+
     pass
 
 
 class TokenUpdateFailedError(EBError):
     """Exception that's raised when the security token cannot be updated."""
+
     pass
 
 
 class UnsupportedAPITypeError(EBError):
     """Exception that's raised when an unsupported API type is used."""
+
     pass
 
 
 class HTTPRequestError(EBError):
     """Exception that's raised when an HTTP request fails."""
 
-    def __init__(self,
-                 message: Optional[str]=None,
-                 rcode: Optional[int]=None,
-                 rbody: Optional[str]=None,
-                 rheaders: Optional[Mapping[str, Any]]=None) -> None:
+    def __init__(
+        self,
+        message: Optional[str] = None,
+        rcode: Optional[int] = None,
+        rbody: Optional[str] = None,
+        rheaders: Optional[Mapping[str, Any]] = None,
+    ) -> None:
         """Initialize the instance based on an error message and an HTTP
         response.
 
@@ -71,15 +90,16 @@ class HTTPRequestError(EBError):
             rbody: HTTP response body.
             rheaders: HTTP response headers.
         """
-        message = self._construct_full_message(
-            message, rcode=rcode, rbody=rbody, rheaders=rheaders)
+        message = self._construct_full_message(message, rcode=rcode, rbody=rbody, rheaders=rheaders)
         super().__init__(message)
 
-    def _construct_full_message(self,
-                                msg: Optional[str],
-                                rcode: Optional[int],
-                                rbody: Optional[str],
-                                rheaders: Optional[Mapping[str, Any]]) -> str:
+    def _construct_full_message(
+        self,
+        msg: Optional[str],
+        rcode: Optional[int],
+        rbody: Optional[str],
+        rheaders: Optional[Mapping[str, Any]],
+    ) -> str:
         parts = []
         msg = msg or ""
         if rcode is not None:
@@ -90,7 +110,7 @@ class HTTPRequestError(EBError):
             parts.append(f"headers: {rheaders}")
         full_msg = f"{msg}"
         if len(parts) > 0:
-            full_msg += f" \nResponse:"
+            full_msg += " \nResponse:"
             for part in parts:
                 full_msg += f"\n  {part}"
         return full_msg
@@ -98,62 +118,72 @@ class HTTPRequestError(EBError):
 
 class ConnectionError(HTTPRequestError):
     """Exception that's raised when failing to connect to the server."""
+
     pass
 
 
 class TimeoutError(HTTPRequestError):
     """Excpetion that's raised when the request times out."""
+
     pass
 
 
 class APIError(HTTPRequestError):
     """Exception that's raised when the API responds with an error code."""
 
-    def __init__(self,
-                 message: Optional[str]=None,
-                 rcode: Optional[int]=None,
-                 rbody: Optional[str]=None,
-                 rheaders: Optional[Mapping[str, Any]]=None,
-                 ecode: Optional[int]=None) -> None:
-        super().__init__(
-            message=message, rcode=rcode, rbody=rbody, rheaders=rheaders)
+    def __init__(
+        self,
+        message: Optional[str] = None,
+        rcode: Optional[int] = None,
+        rbody: Optional[str] = None,
+        rheaders: Optional[Mapping[str, Any]] = None,
+        ecode: Optional[int] = None,
+    ) -> None:
+        super().__init__(message=message, rcode=rcode, rbody=rbody, rheaders=rheaders)
         self.ecode = ecode
 
 
 class InvalidParameterError(APIError):
     """Exception that's raised when at least one of the passed parameters is
     invalid."""
+
     pass
 
 
 class InvalidTokenError(APIError):
     """Exception that's raised when the security token is invalid."""
+
     pass
 
 
 class PermissionError(APIError):
     """Exception that's raised when an API request is denied due to lack of
     permission."""
+
     pass
 
 
 class RequestLimitError(APIError):
     """Exception that's raised when the maximum number of API requests is
     exceeded."""
+
     pass
 
 
 class ServiceUnavailableError(APIError):
     """Exception that's raised when the service is unavailable."""
+
     pass
 
 
 class TokenExpiredError(APIError):
     """Exception that's raised when the security token is expired."""
+
     pass
 
 
 class TryAgain(APIError):
     """Exception that's raised when the API prompts the caller to try again
     later."""
+
     pass

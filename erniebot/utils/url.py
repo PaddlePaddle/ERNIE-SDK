@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (List, Tuple)
+from typing import List, Tuple
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
-__all__ = ['add_query_params', 'extract_base_url']
+__all__ = ["add_query_params", "extract_base_url"]
 
 
 def add_query_params(url: str, params: List[Tuple[str, str]]) -> str:
@@ -34,4 +34,4 @@ def add_query_params(url: str, params: List[Tuple[str, str]]) -> str:
 
 def extract_base_url(url: str) -> str:
     scheme, netloc, _, _, _ = urlsplit(url)
-    return urlunsplit((scheme, netloc, '', '', ''))
+    return urlunsplit((scheme, netloc, "", "", ""))

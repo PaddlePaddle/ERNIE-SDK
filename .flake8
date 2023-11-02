@@ -1,0 +1,17 @@
+[flake8]
+ignore = 
+    # Whitespace before ‘,’, ‘;’, or ‘:’, it is not compatible with black
+    E203,
+    # Module level import not at top of file
+    E402,
+    # Do not assign a lambda expression, use a def
+    E731,
+    # Line break before binary operator, it is not compatible with black
+    W503
+max-line-length = 109
+
+per-file-ignores =
+    # Ignore unused imports for __init__.py files
+    __init__.py:F401,
+    # Allow long lines for CLI due to argparser
+    erniebot/cli.py:E501,
