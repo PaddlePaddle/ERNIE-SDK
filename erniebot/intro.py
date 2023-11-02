@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (List, Tuple)
+from typing import List, Tuple
 
-__all__ = ['Model']
+__all__ = ["Model"]
 
 
 class Model(object):
@@ -24,10 +24,10 @@ class Model(object):
     def list() -> List[Tuple[str, str]]:
         """List the available models."""
         return [
-            ('ernie-bot', "文心一言模型（ernie-bot）"),
-            ('ernie-bot-turbo', "文心一言模型（ernie-bot-turbo）"),
-            ('ernie-bot-4', "文心一言模型（ernie-bot-4）"),
-            ('ernie-bot-8k', "文心一言模型（ernie-bot-8k）"),
-            ('ernie-text-embedding', "文心百中语义模型"),
-            ('ernie-vilg-v2', "文心一格模型"),
+            ("ernie-bot", "文心一言模型（ernie-bot）"),
+            ("ernie-bot-turbo", "文心一言模型（ernie-bot-turbo）"),
+            ("ernie-bot-4", "文心一言模型（ernie-bot-4）"),
+            ("ernie-bot-8k", "文心一言模型（ernie-bot-8k）"),
+            ("ernie-text-embedding", "文心百中语义模型"),
+            ("ernie-vilg-v2", "文心一格模型"),
         ]

@@ -1,10 +1,23 @@
 repos:
--   repo: https://github.com/PaddlePaddle/mirrors-yapf.git
-    rev: 0d79c0c469bab64f7229c9aca2b1186ef47f0e37
+-   repo: https://github.com/psf/black.git
+    rev: 23.3.0
     hooks:
-    -   id: yapf
-        files: \.py$
-
+    -   id: black
+        files: (.*\.(py|pyi|bzl)|BUILD|.*\.BUILD|WORKSPACE)$
+-   repo: https://github.com/pycqa/isort
+    rev: 5.11.5
+    hooks:
+    -   id: isort
+-   repo: https://github.com/PyCQA/flake8
+    rev: 5.0.4
+    hooks:
+    -   id: flake8
+        args: ["--config=.flake8"]
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.6.1
+    hooks:
+    -   id: mypy
+        additional_dependencies: ['types-requests']
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: a11d9314b22d8f8c7556443875b731ef05965464
     hooks:

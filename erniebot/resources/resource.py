@@ -15,17 +15,29 @@
 import asyncio
 import operator
 import time
-from typing import (Any, AsyncIterator, Callable, cast, ClassVar, Dict,
-                    Iterator, List, Optional, overload, Tuple, Union)
+from typing import (
+    Any,
+    AsyncIterator,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
-from typing_extensions import final, Literal, Self
+from typing_extensions import Literal, Self, final
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType, convert_str_to_api_type
 from erniebot.backends import build_backend
 from erniebot.config import GlobalConfig
 from erniebot.response import EBResponse
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.types import FilesType, HeadersType, ParamsType
 from erniebot.utils.logging import logger
 
 
@@ -55,8 +67,8 @@ class EBResource(object):
 
         self._cfg = self._create_config_dict(config)
 
-        self.api_type = self._cfg['api_type']
-        self.timeout = self._cfg['timeout']
+        self.api_type = self._cfg["api_type"]
+        self.timeout = self._cfg["timeout"]
 
         self._backend = build_backend(
             self.api_type,
@@ -70,66 +82,62 @@ class EBResource(object):
 
     @classmethod
     def get_supported_api_type_names(cls) -> List[str]:
-        return list(map(operator.attrgetter('name'), cls.SUPPORTED_API_TYPES))
+        return list(map(operator.attrgetter("name"), cls.SUPPORTED_API_TYPES))
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[False],
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
+        self,
+        method: str,
+        path: str,
+        stream: Literal[False],
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[True],
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
+        self,
+        method: str,
+        path: str,
+        stream: Literal[True],
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> Iterator[EBResponse]:
         ...
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
 
     @final
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            *,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         if self.timeout is None:
             return self._request(
                 method=method,
@@ -153,7 +161,7 @@ class EBResource(object):
                         files=files,
                         request_timeout=request_timeout,
                     )
-                except errors.TryAgain as e:
+                except errors.TryAgain:
                     if time.time() > st_time + self.timeout:
                         logger.info("Operation timed out. No more attempts.")
                         raise
@@ -167,10 +175,10 @@ class EBResource(object):
         path: str,
         stream: Literal[False],
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
 
@@ -181,10 +189,10 @@ class EBResource(object):
         path: str,
         stream: Literal[True],
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> AsyncIterator[EBResponse]:
         ...
 
@@ -195,13 +203,11 @@ class EBResource(object):
         path: str,
         stream: bool,
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
 
     @final
@@ -211,13 +217,11 @@ class EBResource(object):
         path: str,
         stream: bool,
         *,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         if self.timeout is None:
             return await self._arequest(
                 method=method,
@@ -241,7 +245,7 @@ class EBResource(object):
                         files=files,
                         request_timeout=request_timeout,
                     )
-                except errors.TryAgain as e:
+                except errors.TryAgain:
                     if time.time() > st_time + self.timeout:
                         logger.info("Operation timed out. No more attempts.")
                         raise
@@ -250,14 +254,14 @@ class EBResource(object):
 
     @final
     def poll(
-            self,
-            until: Callable[[EBResponse], bool],
-            method: str,
-            path: str,
-            *,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            request_timeout: Optional[float]=None,
+        self,
+        until: Callable[[EBResponse], bool],
+        method: str,
+        path: str,
+        *,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
     ) -> EBResponse:
         for _ in range(self.MAX_POLLING_RETRIES):
             resp = self._request(
@@ -271,10 +275,10 @@ class EBResource(object):
             )
             if until(resp):
                 return resp
-            logger.info(f"Waiting...")
+            logger.info("Waiting...")
             time.sleep(self.POLLING_INTERVAL)
         else:
-            logger.error(f"Max retries exceeded while polling.")
+            logger.error("Max retries exceeded while polling.")
             raise errors.MaxRetriesExceededError
 
     @final
@@ -284,9 +288,9 @@ class EBResource(object):
         method: str,
         path: str,
         *,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        request_timeout: Optional[float]=None,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
     ) -> EBResponse:
         for _ in range(self.MAX_POLLING_RETRIES):
             resp = await self._arequest(
@@ -300,66 +304,62 @@ class EBResource(object):
             )
             if until(resp):
                 return resp
-            logger.info(f"Waiting...")
+            logger.info("Waiting...")
             await asyncio.sleep(self.POLLING_INTERVAL)
         else:
-            logger.error(f"Max retries exceeded while polling.")
+            logger.error("Max retries exceeded while polling.")
             raise errors.MaxRetriesExceededError
 
     @overload
     def _request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[False],
-            params: Optional[ParamsType],
-            headers: Optional[HeadersType],
-            files: Optional[FilesType],
-            request_timeout: Optional[float],
+        self,
+        method: str,
+        path: str,
+        stream: Literal[False],
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
     ) -> EBResponse:
         ...
 
     @overload
     def _request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[True],
-            params: Optional[ParamsType],
-            headers: Optional[HeadersType],
-            files: Optional[FilesType],
-            request_timeout: Optional[float],
+        self,
+        method: str,
+        path: str,
+        stream: Literal[True],
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
     ) -> Iterator[EBResponse]:
         ...
 
     @overload
     def _request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            params: Optional[ParamsType],
-            headers: Optional[HeadersType],
-            files: Optional[FilesType],
-            request_timeout: Optional[float],
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
 
     @final
     def _request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            params: Optional[ParamsType],
-            headers: Optional[HeadersType],
-            files: Optional[FilesType],
-            request_timeout: Optional[float],
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        params: Optional[ParamsType],
+        headers: Optional[HeadersType],
+        files: Optional[FilesType],
+        request_timeout: Optional[float],
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         resp = self._backend.request(
             method,
             path,
@@ -416,9 +416,7 @@ class EBResource(object):
         headers: Optional[HeadersType],
         files: Optional[FilesType],
         request_timeout: Optional[float],
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
 
     @final
@@ -431,9 +429,7 @@ class EBResource(object):
         headers: Optional[HeadersType],
         files: Optional[FilesType],
         request_timeout: Optional[float],
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         resp = await self._backend.arequest(
             method,
             path,
@@ -456,9 +452,9 @@ class EBResource(object):
 
     def _create_config_dict(self, overrides: Any) -> Dict[str, Any]:
         cfg_dict = cast(Dict[str, Any], GlobalConfig().create_dict(**overrides))
-        api_type_str = cfg_dict['api_type']
+        api_type_str = cfg_dict["api_type"]
         if not isinstance(api_type_str, str):
             raise TypeError
         api_type = convert_str_to_api_type(api_type_str)
-        cfg_dict['api_type'] = api_type
+        cfg_dict["api_type"] = api_type
         return cfg_dict

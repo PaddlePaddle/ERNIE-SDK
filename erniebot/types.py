@@ -14,17 +14,23 @@
 
 from __future__ import annotations
 
-from typing import (Any, AsyncIterator, Dict, IO, Iterator, Optional,
-                    TYPE_CHECKING, TypeVar)
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Dict,
+    Iterator,
+    Optional,
+    TypeVar,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
 from .response import EBResponse
 
-__all__ = [
-    'ConfigDictType', 'ParamsType', 'HeadersType', 'FilesType', 'ResponseT'
-]
+__all__ = ["ConfigDictType", "ParamsType", "HeadersType", "FilesType", "ResponseT"]
 
 ConfigDictType: TypeAlias = Dict[str, Optional[Any]]
 
@@ -32,5 +38,4 @@ ParamsType: TypeAlias = Dict[str, Any]
 HeadersType: TypeAlias = Dict[str, str]
 FilesType: TypeAlias = Dict[str, IO]
 
-ResponseT = TypeVar('ResponseT', EBResponse, Iterator[EBResponse],
-                    AsyncIterator[EBResponse])
+ResponseT = TypeVar("ResponseT", EBResponse, Iterator[EBResponse], AsyncIterator[EBResponse])

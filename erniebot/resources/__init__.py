@@ -15,9 +15,7 @@
 from .chat_completion import ChatCompletion
 from .chat_file import ChatFile
 from .embedding import Embedding
-from .fine_tuning import FineTuningTask, FineTuningJob
+from .fine_tuning import FineTuningJob, FineTuningTask
 from .image import Image, ImageV1, ImageV2
 
-__all__ = [
-    'ChatCompletion', 'ChatFile', 'Embedding', 'Image', 'ImageV1', 'ImageV2'
-]
+__all__ = ["ChatCompletion", "ChatFile", "Embedding", "Image", "ImageV1", "ImageV2"]

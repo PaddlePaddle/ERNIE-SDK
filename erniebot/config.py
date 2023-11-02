@@ -12,28 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import numbers
+import os
 import pathlib
 import re
 import sys
 import types
-from typing import (Any, Callable, Dict, Generic, Optional, Type, TypeVar)
+from typing import Any, Callable, Dict, Generic, Optional, Type, TypeVar
 
-from .types import (ConfigDictType)
+from .types import ConfigDictType
 from .utils.misc import Singleton
 
-__all__ = ['GlobalConfig', 'init_global_config']
+__all__ = ["GlobalConfig", "init_global_config"]
 
 
 class BaseConfig(object):
-    def __init__(self,
-                 cfg_dict: Optional[Dict[str, '_ConfigItem']]=None) -> None:
+    def __init__(self, cfg_dict: Optional[Dict[str, "_ConfigItem"]] = None) -> None:
         super().__init__()
-        self._cfg_dict: Dict[
-            str, '_ConfigItem'] = cfg_dict if cfg_dict is not None else dict()
+        self._cfg_dict: Dict[str, "_ConfigItem"] = cfg_dict if cfg_dict is not None else dict()
 
-    def add_item(self, cfg: '_ConfigItem') -> None:
+    def add_item(self, cfg: "_ConfigItem") -> None:
         if not isinstance(cfg, _ConfigItem):
             raise TypeError
         self._cfg_dict[cfg.key] = cfg
@@ -68,38 +66,33 @@ def init_global_config() -> None:
 
     # Authentication settings
     # Access token
-    cfg.add_item(StringItem(key='access_token', env_key='EB_ACCESS_TOKEN'))
+    cfg.add_item(StringItem(key="access_token", env_key="EB_ACCESS_TOKEN"))
     # API key or access key ID
-    cfg.add_item(StringItem(key='ak', env_key='EB_AK'))
+    cfg.add_item(StringItem(key="ak", env_key="EB_AK"))
     # Secret key or secret access key
-    cfg.add_item(StringItem(key='sk', env_key='EB_SK'))
+    cfg.add_item(StringItem(key="sk", env_key="EB_SK"))
 
     # API backend settings
     # API base URL
-    cfg.add_item(URLItem(key='api_base_url', env_key='EB_BASE_URL'))
+    cfg.add_item(URLItem(key="api_base_url", env_key="EB_BASE_URL"))
     # API type
-    cfg.add_item(
-        StringItem(
-            key='api_type', env_key='EB_API_TYPE', default='qianfan'))
+    cfg.add_item(StringItem(key="api_type", env_key="EB_API_TYPE", default="qianfan"))
 
     # Miscellaneous settings
     # Proxy to use
-    cfg.add_item(URLItem(key='proxy', env_key='EB_PROXY'))
+    cfg.add_item(URLItem(key="proxy", env_key="EB_PROXY"))
     # Timeout for retrying
-    cfg.add_item(PositiveNumberItem(key='timeout', env_key='EB_TIMEOUT'))
+    cfg.add_item(PositiveNumberItem(key="timeout", env_key="EB_TIMEOUT"))
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class _ConfigItem(Generic[_T]):
     DATA_TYPE: Optional[Type[_T]]
     _FACTORY: Callable[[str], _T]
 
-    def __init__(self,
-                 key: str,
-                 env_key: Optional[str]=None,
-                 default: Optional[_T]=None) -> None:
+    def __init__(self, key: str, env_key: Optional[str] = None, default: Optional[_T] = None) -> None:
         super().__init__()
         self._key: str = key
         self._env_key: Optional[str] = env_key
@@ -122,7 +115,7 @@ class _ConfigItem(Generic[_T]):
         if self._val is not None:
             return self._val
         else:
-            mod = sys.modules['erniebot']
+            mod = sys.modules["erniebot"]
             if self._key in mod.__dict__:
                 val = mod.__dict__[self._key]
                 assert not isinstance(val, types.ModuleType)
@@ -159,9 +152,7 @@ class PositiveNumberItem(NumberItem):
     def validate(self, val: float) -> None:
         super().validate(val)
         if val < 0.0:
-            raise ValueError(
-                f"Invalid value ({val}) for {self.key}, which should be a positive value."
-            )
+            raise ValueError(f"Invalid value ({val}) for {self.key}, which should be a positive value.")
 
 
 class StringItem(_ConfigItem[str]):
@@ -184,7 +175,7 @@ class URLItem(StringItem):
     def validate(self, val: str) -> None:
         super().validate(val)
         # Allow both HTTP and HTTPS
-        pat = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+        pat = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"  # noqa: E501
         res = re.match(pat, val)
         if res is None:
             raise ValueError(f"Invalid URL: {val}")

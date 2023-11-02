@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import threading
-from typing import (ClassVar)
 from collections.abc import AsyncIterator, Iterator
+from typing import ClassVar
 
-__all__ = ['Constant', 'Singleton', 'transform']
+__all__ = ["Constant", "Singleton", "transform"]
 
 
 class Constant(object):

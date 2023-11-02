@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, ClassVar, Dict, Optional, Tuple)
+from typing import Any, ClassVar, Dict, Optional, Tuple
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import (FilesType, HeadersType, ParamsType, ResponseT)
+from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
 from erniebot.utils.misc import transform
+
 from .abc import Creatable
 from .chat_completion import ChatResponse
 from .resource import EBResource
@@ -26,43 +27,45 @@ from .resource import EBResource
 class ChatFile(EBResource, Creatable):
     """Chat with the model about the content of a given file."""
 
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, )
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,)
 
-    def _prepare_create(self,
-                        kwargs: Dict[str, Any]) -> Tuple[str,
-                                                         Optional[ParamsType],
-                                                         Optional[HeadersType],
-                                                         Optional[FilesType],
-                                                         bool,
-                                                         Optional[float],
-                                                         ]:
-        VALID_KEYS = {'messages', 'headers', 'request_timeout'}
+    def _prepare_create(
+        self, kwargs: Dict[str, Any]
+    ) -> Tuple[
+        str,
+        Optional[ParamsType],
+        Optional[HeadersType],
+        Optional[FilesType],
+        bool,
+        Optional[float],
+    ]:
+        VALID_KEYS = {"messages", "headers", "request_timeout"}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
         if len(invalid_keys) > 0:
-            raise errors.InvalidArgumentError(
-                f"Invalid keys found in `kwargs`: {list(invalid_keys)}")
+            raise errors.InvalidArgumentError(f"Invalid keys found in `kwargs`: {list(invalid_keys)}")
 
         # messages
-        if 'messages' not in kwargs:
+        if "messages" not in kwargs:
             raise errors.ArgumentNotFoundError("`messages` is not found.")
-        messages = kwargs['messages']
+        messages = kwargs["messages"]
 
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.QIANFAN, )
+        assert self.SUPPORTED_API_TYPES == (APIType.QIANFAN,)
         if self.api_type is APIType.QIANFAN:
             path = "/chat/chatfile_adv"
         else:
             raise errors.UnsupportedAPITypeError(
-                f"Supported API types: {self.get_supported_api_type_names()}")
+                f"Supported API types: {self.get_supported_api_type_names()}"
+            )
 
         # params
         params = {}
-        params['messages'] = messages
+        params["messages"] = messages
 
         # headers
-        headers = kwargs.get('headers', None)
+        headers = kwargs.get("headers", None)
 
         # files
         files = None
@@ -71,7 +74,7 @@ class ChatFile(EBResource, Creatable):
         stream = False
 
         # request_timeout
-        request_timeout = kwargs.get('request_timeout', None)
+        request_timeout = kwargs.get("request_timeout", None)
 
         return path, params, headers, files, stream, request_timeout
 
