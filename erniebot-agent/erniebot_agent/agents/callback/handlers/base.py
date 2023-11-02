@@ -16,48 +16,38 @@ from __future__ import annotations
 
 from typing import List, Union
 
-from erniebot_agent.agents import Agent
-from erniebot_agent.agents.agent_step import AgentStep
-from erniebot_agent.agents.llms import LLM
+from erniebot_agent.agents.base import Agent
+from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
-from erniebot_agent.tools import Tool
+from erniebot_agent.tools.base import Tool
 
 
-class CallbackHandler(AgentCallbackHandlerMixin, LLMCallbackHandlerMixin,
-                      ToolCallbackHandlerMixin):
+class CallbackHandler(object):
     """"""
 
     async def on_agent_start(self, agent: Agent, prompt: str) -> None:
         """"""
 
-    async def on_llm_start(self,
-                           agent: Agent,
-                           llm: LLM,
-                           messages: List[Message]) -> None:
+    async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         """"""
 
-    async def on_llm_end(self, agent: Agent, llm: LLM,
-                         response: Message) -> None:
+    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
         """"""
 
-    async def on_llm_error(self,
-                           agent: Agent,
-                           llm: LLM,
-                           error: Union[Exception, KeyboardInterrupt]) -> None:
+    async def on_llm_error(
+        self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
+    ) -> None:
         """"""
 
-    async def on_tool_start(self, agent: Agent, tool: Tool,
-                            input_args: str) -> None:
+    async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         """"""
 
-    async def on_tool_end(self, agent: Agent, tool: Tool,
-                          response: str) -> None:
+    async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
         """"""
 
-    async def on_tool_error(self,
-                            agent: Agent,
-                            tool: Tool,
-                            error: Union[Exception, KeyboardInterrupt]) -> None:
+    async def on_tool_error(
+        self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
+    ) -> None:
         """"""
 
     async def on_agent_end(self, agent: Agent, response: str) -> None:
