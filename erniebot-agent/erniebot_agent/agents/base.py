@@ -17,22 +17,34 @@ import inspect
 import json
 from typing import Any, Dict, List, Optional
 
+from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.tools.base import Tool
+from erniebot_agent.messages import Message
+from erniebot_agents.memory.base import Memory
+from erniebot_agent.agents.callback.default import get_default_callbacks
+from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
-from erniebot_agent.utils.json import to_pretty_json
+from erniebot_agent.utils.json import to_compact_json, to_pretty_json
+
 
 class Agent(metaclass=abc.ABCMeta):
-    llm: LLM
+    llm: ChatModel
     tools: List[Tool]
     memory: Memory
     _callback_manager: CallbackManager
 
-    def __init__(self, llm: LLM, tools: List[Tool], memory: Memory, *, callbacks=Optional[List[CallbackHandler]]=None) -> None:
+    def __init__(self,
+                 llm: ChatModel,
+                 tools: List[Tool],
+                 memory: Memory,
+                 *,
+                 callbacks: Optional[List[CallbackHandler]]=None) -> None:
         super().__init__()
         self.llm = llm
         self.memory = memory
         self._tool_manager = ToolManager(tools)
-        self._callback_manager = CallbackManager(callbacks or self._get_default_callbacks())
+        self._callback_manager = CallbackManager(callbacks or
+                                                 get_default_callbacks())
 
     async def run(self, prompt: str) -> str:
         self._callback_manager.on_agent_start(agent=self, prompt=prompt)
@@ -42,19 +54,23 @@ class Agent(metaclass=abc.ABCMeta):
 
     async def run_tool(self, tool_name: str, tool_args: str) -> str:
         tool = self._tool_manager.get_tool(tool_name)
-        self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+        self._callback_manager.on_tool_start(
+            agent=self, tool=tool, input_args=tool_args)
         tool_resp = await self._run_tool(tool, tool_args)
-        self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
+        self._callback_manager.on_tool_end(
+            agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
     async def run_llm(self, messages: List[Message]) -> Message:
-        self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
+        self._callback_manager.on_llm_start(
+            agent=self, llm=self.llm, messages=messages)
         llm_resp = await self._run_llm(messages)
-        self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
+        self._callback_manager.on_llm_end(
+            agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
     def import_tool(self, tool: Tool) -> None:
-        self.tool_manager.add_tool(tool)
+        self._tool_manager.add_tool(tool)
 
     def reset(self):
         self.memory.forget()
@@ -66,19 +82,21 @@ class Agent(metaclass=abc.ABCMeta):
     async def _run_tool(self, tool: Tool, tool_args: str) -> str:
         tool_args = json.loads(tool_args)
         tool_args = self._validate_tool_args(tool, tool_args)
-        await tool(tool_args)
+        await tool.run(tool_args)
         tool_resp = to_pretty_json(tool_resp)
         return tool_resp
 
     async def _run_llm(self, messages: List[Message]) -> Message:
-        pass
+        llm_resp = await self.llm.run(messages, stream=False)
+        return llm_resp
 
     def _validate_tool_args(self, tool: Tool, tool_args: str) -> dict:
         inspect.signature(tool)
 
 
 class ToolManager(object):
-    """
+    """A `ToolManager` instance manages tools for an agent.
+
     This implementation is based on `ToolsManager` in https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
     """
 
@@ -111,4 +129,5 @@ class ToolManager(object):
         return ', '.join(self._tools.keys())
 
     def get_tool_names_with_descriptions(self) -> str:
-        pass
+        return '\n'.join(f"{name}:{to_compact_json(tool.function_input())}"
+                         for name, tool in self._tools.items())
