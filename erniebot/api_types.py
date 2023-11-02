@@ -16,7 +16,7 @@ import enum
 
 from . import errors
 
-__all__ = ['APIType', 'convert_str_to_api_type']
+__all__ = ["APIType", "convert_str_to_api_type"]
 
 
 class APIType(enum.Enum):
@@ -28,14 +28,13 @@ class APIType(enum.Enum):
 
 def convert_str_to_api_type(api_type_str: str) -> APIType:
     s = api_type_str.lower()
-    if s == 'qianfan':
+    if s == "qianfan":
         return APIType.QIANFAN
-    elif s == 'yinian':
+    elif s == "yinian":
         return APIType.YINIAN
-    elif s in ('aistudio', 'ai_studio'):
+    elif s in ("aistudio", "ai_studio"):
         return APIType.AISTUDIO
-    elif s in ('qianfan_sft', 'qianfan-sft'):
+    elif s in ("qianfan_sft", "qianfan-sft"):
         return APIType.QIANFAN_SFT
     else:
-        raise errors.UnsupportedAPITypeError(
-            f"{repr(api_type_str)} cannot be recognized as an API type.")
+        raise errors.UnsupportedAPITypeError(f"{repr(api_type_str)} cannot be recognized as an API type.")

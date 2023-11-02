@@ -16,13 +16,13 @@ import copy
 import inspect
 import json
 from collections.abc import Mapping
-from typing import (Any, Dict, Iterator, Union)
+from typing import Any, Dict, Iterator, Union
 
 from typing_extensions import Self
 
 from .utils.misc import Constant
 
-__all__ = ['EBResponse']
+__all__ = ["EBResponse"]
 
 
 class EBResponse(Mapping):
@@ -35,17 +35,14 @@ class EBResponse(Mapping):
     """
 
     _INNER_DICT_TYPE = Constant(dict)
-    _INSTANCE_ATTRS = Constant(('_dict', ))
-    _RESERVED_KEYS = Constant(('rcode', 'rbody', 'rheaders'))
+    _INSTANCE_ATTRS = Constant(("_dict",))
+    _RESERVED_KEYS = Constant(("rcode", "rbody", "rheaders"))
 
     rcode: int
     rbody: Union[str, Dict[str, Any]]
     rheaders: Dict[str, Any]
 
-    def __init__(self,
-                 rcode: int,
-                 rbody: Union[str, Dict[str, Any]],
-                 rheaders: Dict[str, Any]) -> None:
+    def __init__(self, rcode: int, rbody: Union[str, Dict[str, Any]], rheaders: Dict[str, Any]) -> None:
         """Initialize the instance based on response code, body, and headers.
 
         Args:
@@ -56,19 +53,18 @@ class EBResponse(Mapping):
             rheaders: Response headers.
         """
         super().__init__()
-        self._dict = self._INNER_DICT_TYPE(
-            rcode=rcode, rbody=rbody, rheaders=rheaders)
+        self._dict = self._INNER_DICT_TYPE(rcode=rcode, rbody=rbody, rheaders=rheaders)
         if isinstance(rbody, dict):
             self._update_from_dict(rbody)
 
     @classmethod
     def from_mapping(cls, mapping: Mapping) -> Self:
-        return cls(mapping['rcode'], mapping['rbody'], mapping['rheaders'])
+        return cls(mapping["rcode"], mapping["rbody"], mapping["rheaders"])
 
     def __getitem__(self, key: str) -> Any:
         if key in self._dict:
             return self._dict[key]
-        if hasattr(self.__class__, '__missing__'):
+        if hasattr(self.__class__, "__missing__"):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
 
@@ -83,45 +79,44 @@ class EBResponse(Mapping):
         return f"{self.__class__.__name__}({params})"
 
     def __str__(self) -> str:
-        def _format(obj: object, level: int=0) -> str:
+        def _format(obj: object, level: int = 0) -> str:
             INDENT = 2
-            LEADING_SPACES = ' ' * INDENT * level
-            LEADING_SPACES_FOR_NEXT_LEVEL = LEADING_SPACES + ' ' * INDENT
+            LEADING_SPACES = " " * INDENT * level
+            LEADING_SPACES_FOR_NEXT_LEVEL = LEADING_SPACES + " " * INDENT
             if isinstance(obj, (dict, EBResponse)):
                 items = []
                 keys_to_ignore = []
                 if isinstance(obj, EBResponse):
-                    items.append(('rcode', _format(
-                        self.rcode, level=level + 1)))
+                    items.append(("rcode", _format(self.rcode, level=level + 1)))
                     if not isinstance(self.rbody, dict):
-                        items.append(('rbody', _format(
-                            self.rbody, level=level + 1)))
-                    items.append(('rheaders', _format(
-                        self.rheaders, level=level + 1)))
-                    keys_to_ignore.extend(['rcode', 'rbody', 'rheaders'])
+                        items.append(("rbody", _format(self.rbody, level=level + 1)))
+                    items.append(("rheaders", _format(self.rheaders, level=level + 1)))
+                    keys_to_ignore.extend(["rcode", "rbody", "rheaders"])
                 for k, v in obj.items():
                     if k in keys_to_ignore:
                         continue
                     items.append((k, _format(v, level=level + 1)))
-                s = ',\n'.join(
-                    map(lambda item: f"{LEADING_SPACES_FOR_NEXT_LEVEL}{repr(item[0])}: {item[1]}",
-                        items))
+                s = ",\n".join(
+                    map(
+                        lambda item: f"{LEADING_SPACES_FOR_NEXT_LEVEL}{repr(item[0])}: {item[1]}",
+                        items,
+                    )
+                )
                 return f"{{\n{s}\n{LEADING_SPACES}}}"
             elif isinstance(obj, (list, tuple)):
                 if isinstance(obj, list):
-                    left = '['
-                    right = ']'
+                    left = "["
+                    right = "]"
                 else:
-                    left = '('
-                    right = ')'
+                    left = "("
+                    right = ")"
                 if len(obj) < 5:
-                    s = ',\n'.join(LEADING_SPACES_FOR_NEXT_LEVEL + _format(
-                        item, level=level + 1) for item in obj)
+                    s = ",\n".join(
+                        LEADING_SPACES_FOR_NEXT_LEVEL + _format(item, level=level + 1) for item in obj
+                    )
                     return f"{left}\n{s}\n{LEADING_SPACES}{right}"
                 else:
-                    s = ', '.join(
-                        _format(
-                            item, level=level + 1) for item in obj)
+                    s = ", ".join(_format(item, level=level + 1) for item in obj)
                     return f"{left}{s}{right}"
             else:
                 return repr(obj)
@@ -143,9 +138,9 @@ class EBResponse(Mapping):
 
     def __reduce__(self) -> tuple:
         state = copy.copy(self._dict)
-        rcode = state.pop('rcode')
-        rbody = state.pop('rbody')
-        rheaders = state.pop('rheaders')
+        rcode = state.pop("rcode")
+        rbody = state.pop("rbody")
+        rheaders = state.pop("rheaders")
         return (self.__class__, (rcode, rbody, rheaders), state)
 
     def __setstate__(self, state: dict) -> None:
@@ -154,7 +149,7 @@ class EBResponse(Mapping):
     def get_result(self) -> Any:
         return self.rbody
 
-    def to_dict(self, deep_copy: bool=False) -> Dict[str, Any]:
+    def to_dict(self, deep_copy: bool = False) -> Dict[str, Any]:
         if deep_copy:
             return copy.deepcopy(self._dict)
         else:
