@@ -194,6 +194,13 @@ class ChatCompletion(EBResource, Creatable):
                 if 'name' not in message:
                     raise errors.InvalidArgumentError(
                         f"Message {idx} does not contain the function name.")
+            if 'function_call' in message and message['role'] != 'assistant':
+                raise errors.InvalidArgumentError(
+                    f"Message {idx} contains a function call, but its role is not 'assistant'."
+                )
+            if message['content'] is None and 'function_call' not in message:
+                raise errors.InvalidArgumentError(
+                    f"Message {idx} has invalid content.")
 
     @classmethod
     def _validate_functions(cls, functions: List[dict]) -> None:
