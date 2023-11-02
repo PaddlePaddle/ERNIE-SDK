@@ -19,5 +19,4 @@ jobs:
           python -m pip install -r tests/requirements.txt
           pre-commit install
       - name: run the command
-        # TODO: enable for all files
-        run: pre-commit run --files erniebot/* erniebot/*/*
+        run: pre-commit run --all-files
