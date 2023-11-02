@@ -13,33 +13,31 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, List, Union, AsyncIterator
+from typing import Any, AsyncIterator, List, Optional, Union
 
 from erniebot_agent.message import Message
 
+
 class ChatModel(ABC):
     """The base class of chat-optimized LLM."""
+
     def __init__(self, model: str):
         self.model = model
 
     @abstractmethod
     def async_chat(
-                  self,
-                  messages: List[Message],
-                  stream: Optional[bool]=False,
-                  **kwargs: Any) -> Union[Message, AsyncIterator[Message]]:
+        self, messages: List[Message], stream: Optional[bool] = False, **kwargs: Any
+    ) -> Union[Message, AsyncIterator[Message]]:
         """
         Asynchronously chat with the LLM.
-        
+
         Args:
             messages(List[Message]): A list of messages.
             stream(Optional[bool]): Whether to use streaming generation. Defaults to False.
             kwargs(Any): Arbitrary keyword arguments.
-        
+
         Returns:
             If stream is False, returns a single message.
             If stream is True, returns an asynchronous iterator of messages.
         """
         raise NotImplementedError
-    
- 
