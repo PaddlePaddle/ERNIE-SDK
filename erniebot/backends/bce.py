@@ -17,16 +17,26 @@ import datetime
 import hashlib
 import hmac
 import urllib.parse
-from typing import (Any, AsyncIterator, ClassVar, Dict, Iterator, List,
-                    Optional, Tuple, Union)
+from typing import (
+    Any,
+    AsyncIterator,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.auth import build_auth_token_manager
 from erniebot.response import EBResponse
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.types import FilesType, HeadersType, ParamsType
 from erniebot.utils.logging import logger
 from erniebot.utils.url import add_query_params
+
 from .base import EBBackend
 
 
@@ -36,25 +46,23 @@ class _BCELegacyBackend(EBBackend):
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
         self._auth_manager = build_auth_token_manager(
-            'bce',
+            "bce",
             self.api_type,
-            auth_token=self._cfg['access_token'],
-            ak=self._cfg['ak'],
-            sk=self._cfg['sk'],
+            auth_token=self._cfg["access_token"],
+            ak=self._cfg["ak"],
+            sk=self._cfg["sk"],
         )
 
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
@@ -67,8 +75,7 @@ class _BCELegacyBackend(EBBackend):
         attempts = 0
         access_token = self._auth_manager.get_auth_token()
         while True:
-            url_with_token = add_query_params(url,
-                                              [('access_token', access_token)])
+            url_with_token = add_query_params(url, [("access_token", access_token)])
             try:
                 return self._client.send_request(
                     method,
@@ -85,7 +92,8 @@ class _BCELegacyBackend(EBBackend):
                 if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
                     logger.warning(
                         "The access token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying.")
+                        "An automatic update will be performed before retrying."
+                    )
                     access_token = self._auth_manager.update_auth_token()
                     continue
                 else:
@@ -96,13 +104,11 @@ class _BCELegacyBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
@@ -115,8 +121,7 @@ class _BCELegacyBackend(EBBackend):
         attempts = 0
         access_token = self._auth_manager.get_auth_token()
         while True:
-            url_with_token = add_query_params(url,
-                                              [('access_token', access_token)])
+            url_with_token = add_query_params(url, [("access_token", access_token)])
             try:
                 return await self._client.asend_request(
                     method,
@@ -132,10 +137,10 @@ class _BCELegacyBackend(EBBackend):
                 if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
                     logger.warning(
                         "The access token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying.")
+                        "An automatic update will be performed before retrying."
+                    )
                     loop = asyncio.get_running_loop()
-                    access_token = await loop.run_in_executor(
-                        None, self._auth_manager.update_auth_token)
+                    access_token = await loop.run_in_executor(None, self._auth_manager.update_auth_token)
                     continue
                 else:
                     raise
@@ -146,21 +151,19 @@ class _BCEBackend(EBBackend):
 
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
-        if self._cfg.get('ak') is None or self._cfg.get('sk') is None:
+        if self._cfg.get("ak") is None or self._cfg.get("sk") is None:
             raise RuntimeError("Invalid access key ID or secret access key")
 
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
@@ -185,13 +188,11 @@ class _BCEBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
@@ -211,16 +212,13 @@ class _BCEBackend(EBBackend):
             request_timeout=request_timeout,
         )
 
-    def _add_bce_fields_to_headers(self,
-                                   headers: HeadersType,
-                                   method: str,
-                                   url: str) -> HeadersType:
+    def _add_bce_fields_to_headers(self, headers: HeadersType, method: str, url: str) -> HeadersType:
         host, path, query_params = self._get_url_parts(url)
-        headers['Host'] = urllib.parse.quote(host)
+        headers["Host"] = urllib.parse.quote(host)
         x_bce_date = self._get_canonical_time()
-        headers['x-bce-date'] = x_bce_date
-        credentials = {'ak': self._cfg['ak'], 'sk': self._cfg['sk']}
-        headers['Authorization'] = self._sign(
+        headers["x-bce-date"] = x_bce_date
+        credentials = {"ak": self._cfg["ak"], "sk": self._cfg["sk"]}
+        headers["Authorization"] = self._sign(
             credentials=credentials,
             method=method,
             path=path,
@@ -232,62 +230,77 @@ class _BCEBackend(EBBackend):
         return headers
 
     def _sign(
-            self,
-            credentials: Dict[str, str],
-            method: str,
-            path: str,
-            headers: HeadersType,
-            params: Dict[str, List[str]],
-            timestamp: str,
-            headers_to_sign: Optional[List[str]]=None,
+        self,
+        credentials: Dict[str, str],
+        method: str,
+        path: str,
+        headers: HeadersType,
+        params: Dict[str, List[str]],
+        timestamp: str,
+        headers_to_sign: Optional[List[str]] = None,
     ) -> str:
-        auth_str_prefix = 'bce-auth-v1' + '/' + credentials[
-            'ak'] + '/' + timestamp + '/' + str(self._SIG_EXPIRATION_IN_SECS)
+        auth_str_prefix = (
+            "bce-auth-v1"
+            + "/"
+            + credentials["ak"]
+            + "/"
+            + timestamp
+            + "/"
+            + str(self._SIG_EXPIRATION_IN_SECS)
+        )
 
         method = method.upper()
         canonical_uri = urllib.parse.quote(path)
         if headers_to_sign is None:
-            headers_to_sign = ['content-type', 'host', 'x-bce-date']
+            headers_to_sign = ["content-type", "host", "x-bce-date"]
         canonical_header_list = []
         for key, val in headers.items():
             key = key.lower()
             if key in headers_to_sign:
                 val = val.strip()
                 if len(val) > 0:
-                    key = urllib.parse.quote(key, safe='')
-                    val = urllib.parse.quote(val, safe='')
-                    header = key + ':' + val
+                    key = urllib.parse.quote(key, safe="")
+                    val = urllib.parse.quote(val, safe="")
+                    header = key + ":" + val
                     canonical_header_list.append(header)
         canonical_header_list.sort()
-        canonical_headers = '\n'.join(canonical_header_list)
-        signed_headers = ';'.join(headers_to_sign)
+        canonical_headers = "\n".join(canonical_header_list)
+        signed_headers = ";".join(headers_to_sign)
         canonical_query_list = []
         for key, val_list in params.items():
             if len(val_list) > 1:
                 raise ValueError(f"Name {repr(key)} has multiple values.")
-            key = urllib.parse.quote(key, safe='')
-            val = urllib.parse.quote(val_list[0], safe='')
-            canonical_query_list.append(key + '=' + val)
+            key = urllib.parse.quote(key, safe="")
+            val = urllib.parse.quote(val_list[0], safe="")
+            canonical_query_list.append(key + "=" + val)
         canonical_query_list.sort()
-        canonical_query_str = '&'.join(canonical_query_list)
-        canonical_request = method + '\n' + canonical_uri + '\n' + canonical_query_str + '\n' + canonical_headers
-
-        signing_key = hmac.new(credentials['sk'].encode('utf-8'),
-                               auth_str_prefix.encode('utf-8'), hashlib.sha256)
-        signature = hmac.new(signing_key.hexdigest().encode('utf-8'),
-                             canonical_request.encode('utf-8'), hashlib.sha256)
-
-        return auth_str_prefix + '/' + signed_headers + '/' + signature.hexdigest(
+        canonical_query_str = "&".join(canonical_query_list)
+        canonical_request = (
+            method + "\n" + canonical_uri + "\n" + canonical_query_str + "\n" + canonical_headers
         )
 
-    def _get_canonical_time(self, timestamp: int=0) -> str:
+        signing_key = hmac.new(
+            credentials["sk"].encode("utf-8"), auth_str_prefix.encode("utf-8"), hashlib.sha256
+        )
+        signature = hmac.new(
+            signing_key.hexdigest().encode("utf-8"), canonical_request.encode("utf-8"), hashlib.sha256
+        )
+
+        return auth_str_prefix + "/" + signed_headers + "/" + signature.hexdigest()
+
+    def _get_canonical_time(self, timestamp: int = 0) -> str:
         if timestamp == 0:
             utctime = datetime.datetime.utcnow()
         else:
             utctime = datetime.datetime.utcfromtimestamp(timestamp)
         return "%04d-%02d-%02dT%02d:%02d:%02dZ" % (
-            utctime.year, utctime.month, utctime.day, utctime.hour,
-            utctime.minute, utctime.second)
+            utctime.year,
+            utctime.month,
+            utctime.day,
+            utctime.hour,
+            utctime.minute,
+            utctime.second,
+        )
 
     def _get_url_parts(self, url: str) -> Tuple[str, str, Dict[str, List[str]]]:
         res = urllib.parse.urlparse(url)
@@ -295,8 +308,7 @@ class _BCEBackend(EBBackend):
         path = res.path
         query = res.query
         if len(query) > 0:
-            params = urllib.parse.parse_qs(
-                query, keep_blank_values=True, strict_parsing=True)
+            params = urllib.parse.parse_qs(query, keep_blank_values=True, strict_parsing=True)
         else:
             params = {}
         return host, path, params
@@ -304,13 +316,12 @@ class _BCEBackend(EBBackend):
 
 class QianfanLegacyBackend(_BCELegacyBackend):
     API_TYPE: ClassVar[APIType] = APIType.QIANFAN
-    BASE_URL: ClassVar[
-        str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if 'error_code' in resp and 'error_msg' in resp:
-            ecode = resp['error_code']
-            emsg = resp['error_msg']
+        if "error_code" in resp and "error_msg" in resp:
+            ecode = resp["error_code"]
+            emsg = resp["error_msg"]
             if ecode == 2:
                 raise errors.ServiceUnavailableError(emsg, ecode=ecode)
             elif ecode == 6:
@@ -336,9 +347,9 @@ class YinianBackend(_BCELegacyBackend):
     BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if 'error_code' in resp and 'error_msg' in resp:
-            ecode = resp['error_code']
-            emsg = resp['error_msg']
+        if "error_code" in resp and "error_msg" in resp:
+            ecode = resp["error_code"]
+            emsg = resp["error_msg"]
             if ecode in (4, 13, 15, 17, 18):
                 raise errors.RequestLimitError(emsg, ecode=ecode)
             elif ecode == 6:
@@ -360,9 +371,9 @@ class QianfanBackend(_BCEBackend):
     BASE_URL: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if 'error_code' in resp and 'error_msg' in resp:
-            ecode = resp['error_code']
-            emsg = resp['error_msg']
+        if "error_code" in resp and "error_msg" in resp:
+            ecode = resp["error_code"]
+            emsg = resp["error_msg"]
             if ecode == 500001:
                 raise errors.InvalidParameterError(emsg, ecode=ecode)
             elif ecode == 500002:

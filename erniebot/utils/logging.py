@@ -16,28 +16,18 @@ import contextlib
 import logging
 import threading
 import time
-from typing import (Any, Generator, Optional, Union)
+from typing import Any, Generator, Optional, Union
 
 import colorlog
 
-__all__ = ['logger']
+__all__ = ["logger"]
 
 _LOG_CONFIG = {
-    'DEBUG': {
-        'color': 'purple'
-    },
-    'INFO': {
-        'color': 'green'
-    },
-    'WARNING': {
-        'color': 'yellow'
-    },
-    'ERROR': {
-        'color': 'red'
-    },
-    'CRITICAL': {
-        'color': 'bold_red'
-    },
+    "DEBUG": {"color": "purple"},
+    "INFO": {"color": "green"},
+    "WARNING": {"color": "yellow"},
+    "ERROR": {"color": "red"},
+    "CRITICAL": {"color": "bold_red"},
 }
 
 
@@ -47,9 +37,9 @@ class Logger(object):
     No thread-safety guarantees.
     """
 
-    _DEFAULT_NAME: str = 'erniebot'
+    _DEFAULT_NAME: str = "erniebot"
 
-    def __init__(self, name: Optional[str]=None) -> None:
+    def __init__(self, name: Optional[str] = None) -> None:
         """Initialize the instance based on a given name.
 
         Args:
@@ -62,10 +52,7 @@ class Logger(object):
 
         self.format = colorlog.ColoredFormatter(
             "%(log_color)s[%(asctime)-15s] [%(levelname)8s]%(reset)s - %(message)s",
-            log_colors={
-                key: conf['color']
-                for key, conf in _LOG_CONFIG.items()
-            },
+            log_colors={key: conf["color"] for key, conf in _LOG_CONFIG.items()},
         )
 
         self.handler = logging.StreamHandler()
@@ -76,30 +63,26 @@ class Logger(object):
         self.logger.propagate = False
         self._is_enabled = True
 
-    def __call__(self,
-                 log_level: int,
-                 msg: object,
-                 *args: object,
-                 **kwargs: Any) -> None:
+    def __call__(self, log_level: int, msg: object, *args: object, **kwargs: Any) -> None:
         if not self.is_enabled:
             return
 
         self.logger.log(log_level, msg, *args, **kwargs)
 
     def debug(self, msg: object, *args: object, **kwargs: Any) -> None:
-        return self(logging.getLevelName('DEBUG'), msg, *args, **kwargs)
+        return self(logging.getLevelName("DEBUG"), msg, *args, **kwargs)
 
     def info(self, msg: object, *args: object, **kwargs: Any) -> None:
-        return self(logging.getLevelName('INFO'), msg, *args, **kwargs)
+        return self(logging.getLevelName("INFO"), msg, *args, **kwargs)
 
     def warning(self, msg: object, *args: object, **kwargs: Any) -> None:
-        return self(logging.getLevelName('WARNING'), msg, *args, **kwargs)
+        return self(logging.getLevelName("WARNING"), msg, *args, **kwargs)
 
     def error(self, msg: object, *args: object, **kwargs: Any) -> None:
-        return self(logging.getLevelName('ERROR'), msg, *args, **kwargs)
+        return self(logging.getLevelName("ERROR"), msg, *args, **kwargs)
 
     def critical(self, msg: object, *args: object, **kwargs: Any) -> None:
-        return self(logging.getLevelName('CRITICAL'), msg, *args, **kwargs)
+        return self(logging.getLevelName("CRITICAL"), msg, *args, **kwargs)
 
     def disable(self) -> None:
         self._is_enabled = False
@@ -115,8 +98,7 @@ class Logger(object):
         self.logger.setLevel(log_level)
 
     @contextlib.contextmanager
-    def processing(self, msg: str,
-                   interval: float=0.1) -> Generator[None, None, None]:
+    def processing(self, msg: str, interval: float = 0.1) -> Generator[None, None, None]:
         """Display a message with spinners.
 
         Args:
@@ -127,10 +109,10 @@ class Logger(object):
 
         def _printer() -> None:
             index = 0
-            flags = ['\\', '|', '/', '-']
+            flags = ["\\", "|", "/", "-"]
             while not end:
                 flag = flags[index % len(flags)]
-                with self.use_terminator('\r'):
+                with self.use_terminator("\r"):
                     self.info(f"{msg}: {flag}")
                 time.sleep(interval)
                 index += 1

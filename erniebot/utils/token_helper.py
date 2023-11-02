@@ -15,7 +15,7 @@
 import math
 import re
 
-__all__ = ['approx_num_tokens']
+__all__ = ["approx_num_tokens"]
 
 
 def approx_num_tokens(text: str) -> int:
@@ -25,15 +25,15 @@ def approx_num_tokens(text: str) -> int:
 
     res = []
     for char in text:
-        if re.match(r'[\u4e00-\u9fff]', char):
+        if re.match(r"[\u4e00-\u9fff]", char):
             cnt_han += 1
-            res.append(' ')
-        elif re.match(r'[^\w\s]', char):
-            res.append(' ')
+            res.append(" ")
+        elif re.match(r"[^\w\s]", char):
+            res.append(" ")
         else:
             res.append(char)
 
-    res_text = ''.join(res)
+    res_text = "".join(res)
     cnt_word = len(res_text.split())
 
     return cnt_han + int(math.floor(cnt_word * 1.3))
