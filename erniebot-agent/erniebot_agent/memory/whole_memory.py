@@ -29,7 +29,7 @@ class WholeMemory(Memory):
         assert (max_token_limit is None) or max_token_limit > 0, "max_token_limit should be None or positive integer, but got {max_token_limit}".format(max_token_limit=max_token_limit)    
     
     def add_message(self, message: List[Message]):
-        super().add_message()
+        super().add_message(message)
         self.prune_message(message)
     
     def prune_message(self, message):
@@ -37,8 +37,9 @@ class WholeMemory(Memory):
             self.token_length += len(m.content)
         if self.max_token_limit is not None:
             while self.token_length > self.max_token_limit:
-                deleted_message = self.chat_history.delete_message()
+                deleted_message = self.chat_history.pop_message()
                 self.token_length -= len(deleted_message.content)
+            else:
             # if delete all 
-            if len(self.get_messages()) == 0:
-                raise RuntimeError('The messsage is now empty. It indicates {} exeeded {} tokens.'.format(deleted_message, self.max_token_limit))
+                if len(self.get_messages()) == 0:
+                    raise RuntimeError('The messsage is now empty. It indicates {} which takes up {} tokens and exeeded {} tokens.'.format(deleted_message, len(deleted_message.content), self.max_token_limit))

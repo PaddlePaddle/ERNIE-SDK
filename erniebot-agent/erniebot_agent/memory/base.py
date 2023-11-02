@@ -24,8 +24,8 @@ class MessageManager:
     def add_message(self, message: List[Message]):
         self.messages.extend(message)
     
-    def delete_message(self):
-        return self.message.pop(0)
+    def pop_message(self):
+        return self.messages.pop(0)
     
     def clear_messages(self) -> None:
         self.messages = []

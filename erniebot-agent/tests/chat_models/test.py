@@ -1,3 +1,4 @@
+import os
 import asyncio
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
@@ -5,7 +6,7 @@ from erniebot_agent.message import HumanMessage, AIMessage
 
 async def test_ernie_bot(model='ernie-bot-turbo', stream=False):
     api_type = 'aistudio'
-    #access_token = 'your access token'
+    access_token = os.getenv('ACCESS_TOKEN') # set your access token as an environment variable
     eb = ERNIEBot(model=model, api_type=api_type, access_token=access_token)
     messages = [
         HumanMessage(content="我在深圳，周末可以去哪里玩？"),

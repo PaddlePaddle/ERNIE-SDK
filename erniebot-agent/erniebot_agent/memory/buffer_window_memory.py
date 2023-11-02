@@ -19,7 +19,7 @@ from typing import List
 
 class BufferWindowMemory(Memory):
     """This class controls max number of messages."""
-    def __init__(self, max_num_messages):
+    def __init__(self, max_num_messages: int):
         super().__init__()
         self.max_num_messages = max_num_messages
 
@@ -30,5 +30,8 @@ class BufferWindowMemory(Memory):
         self.prune_message()
     
     def prune_message(self):
-        while len(self.get_messages())>=self.max_num_messages:
-            self.chat_history.deleted_message()
+        while len(self.get_messages())>self.max_num_messages:
+            self.chat_history.pop_message() 
+            # `messages` must have an odd number of elements. 
+            if len(self.get_messages()) % 2 == 0:   
+                self.chat_history.pop_message() 

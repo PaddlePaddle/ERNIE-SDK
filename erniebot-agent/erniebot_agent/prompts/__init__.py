@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from base import BasePromptTemplate
-from prompt_template import PromptTemplate
+from .base import BasePromptTemplate
+from .prompt_template import PromptTemplate

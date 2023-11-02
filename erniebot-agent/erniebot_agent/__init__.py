@@ -13,5 +13,7 @@
 # limitations under the License.
 
 
-from message import HumanMessage, Message, AIMessage
-from memory import *
+from .message import HumanMessage, Message, AIMessage, FunctionMessage
+from .memory import *
+from .chat_models import ERNIEBot
+from .prompts import PromptTemplate

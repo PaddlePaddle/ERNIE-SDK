@@ -19,7 +19,7 @@ from typing import List
 
 class BasePromptTemplate(ABC):
     
-    def __init__(self, input_variables):
+    def __init__(self, input_variables: List[str]):
         self.input_variables: List[str] = input_variables
     
     @abstractmethod
