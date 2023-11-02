@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import List
 from erniebot.resources.chat_completion import ChatResponse
 
 class Message:
@@ -21,7 +19,7 @@ class Message:
         self.role = role
         self.content = content
 
-    def to_dict(self) -> list:
+    def to_dict(self) -> dict:
         return {'role': self.role, 'content': self.content}
     
     def __str__(self) -> str:
@@ -47,7 +45,7 @@ class FunctionMessage(Message):
         super().__init__(role='assistant', content='null')
         self.function_call = function_call
 
-    def to_dict(self) -> list:
+    def to_dict(self) -> dict:
         return {'role': self.role, 'content': self.content, 'function_call': self.function_call}
     
     def __str__(self) -> str:

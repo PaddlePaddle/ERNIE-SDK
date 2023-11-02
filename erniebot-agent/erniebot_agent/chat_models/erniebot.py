@@ -15,7 +15,6 @@
 from typing import Optional, Any, List, Union, AsyncIterator
 
 import erniebot
-# from erniebot.resources.chat_completion import ChatResponse
 
 from erniebot_agent.chat_models.base import  ChatModel
 from erniebot_agent.message import Message, response_to_message

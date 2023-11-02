@@ -56,7 +56,7 @@ class TestMemory(unittest.TestCase):
             
             # human message
             for _ in range(2):
-                # 10 times of human message
+                # 2 times of human message
                 memory.add_message([HumanMessage('OK, what else?')]) 
 
                 message = await self.llm.async_chat(memory.get_messages())
