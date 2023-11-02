@@ -14,13 +14,13 @@
 
 from typing import Dict
 
-from erniebot.resources.chat_completion import ChatResponse
+from erniebot.response import EBResponse
 
 
 class Message:
     """The base class of message."""
 
-    def __init__(self, role, content):
+    def __init__(self, role: str, content: str):
         self.role = role
         self.content = content
 
@@ -34,14 +34,14 @@ class Message:
 class HumanMessage(Message):
     """A Message from human."""
 
-    def __init__(self, content):
+    def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
 
 class AIMessage(Message):
     """A Message from assistant."""
 
-    def __init__(self, content):
+    def __init__(self, content: str):
         super().__init__(role="assistant", content=content)
 
 
@@ -59,7 +59,7 @@ class FunctionMessage(Message):
         return f"role:{self.role}, content: {self.content}, function_call: {self.function_call}"
 
 
-def response_to_message(response: ChatResponse):
+def response_to_message(response: EBResponse) -> Message:
     """Convert the response from assistant to AIMessage or FunctionMessage."""
     if hasattr(response, "function_call"):
         return FunctionMessage(function_call=response.get_result())

@@ -76,8 +76,7 @@ class ERNIEBot(ChatModel):
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
-        response = await erniebot.ChatCompletion.acreate(**cfg_dict)
-
+        response: Any = await erniebot.ChatCompletion.acreate(**cfg_dict)
         if stream:
             return (response_to_message(d) async for d in response)
         else:

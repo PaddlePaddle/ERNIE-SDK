@@ -17,10 +17,9 @@ from typing import Optional
 
 from setuptools import setup
 
+git_version: Optional[str]
 try:
-    git_version: Optional[str] = (
-        subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
-    )
+    git_version = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
 except (OSError, subprocess.CalledProcessError):
     git_version = None
 

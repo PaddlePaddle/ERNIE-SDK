@@ -25,7 +25,7 @@ class ChatModel(ABC):
         self.model = model
 
     @abstractmethod
-    def async_chat(
+    async def async_chat(
         self, messages: List[Message], stream: Optional[bool] = False, **kwargs: Any
     ) -> Union[Message, AsyncIterator[Message]]:
         """
