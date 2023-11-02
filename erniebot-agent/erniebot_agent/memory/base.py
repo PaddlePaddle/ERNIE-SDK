@@ -13,15 +13,15 @@
 # limitations under the License.
 
 from erniebot_agent import Message
-
+from typing import List
 
 class MessageManager:
-    """manage messages"""
+    """Manage messages"""
     
     def __init__(self):
-        self.messages: list[Message] = []
+        self.messages: List[Message] = []
     
-    def add_message(self, message: list[Message]):
+    def add_message(self, message: List[Message]):
         self.messages.extend(message)
     
     def delete_message(self):
@@ -38,10 +38,10 @@ class Memory:
     def __init__(self):
         self.chat_history = MessageManager()
     
-    def add_message(self, message: list[Message]):
+    def add_message(self, message: List[Message]):
         self.chat_history.add_message(message)
     
-    def get_messages(self) ->list[Message]:
+    def get_messages(self) ->List[Message]:
         return self.chat_history.retrieve_messages()
     
     def clear_chat_history(self):

@@ -15,9 +15,12 @@
 
 from erniebot_agent.memory import Memory
 from erniebot_agent.message import Message
+from typing import List
 
 class WholeMemory(Memory):
-    """set max_token_length, if memory exceed this value, pop memory."""
+    """This class controls max tokens less than max_token_limit.
+        If tokens >= max_token_limit, pop message from memory.
+    """
     def __init__(self, max_token_limit=None):
         super().__init__()
         self.max_token_limit = max_token_limit
@@ -25,7 +28,7 @@ class WholeMemory(Memory):
 
         assert (max_token_limit is None) or max_token_limit > 0, "max_token_limit should be None or positive integer, but got {max_token_limit}".format(max_token_limit=max_token_limit)    
     
-    def add_message(self, message: list[Message]):
+    def add_message(self, message: List[Message]):
         super().add_message()
         self.prune_message(message)
     

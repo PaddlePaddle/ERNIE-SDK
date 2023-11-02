@@ -29,8 +29,8 @@ def jinja2_formatter(template: str, **kwargs: any) -> str:
     
 class PromptTemplate(BasePromptTemplate):
     """format the prompt for llm input."""
-    def __init__(self, template, input_variabels, name=None):
-        super().__init__(input_variabels)
+    def __init__(self, template, input_variables, name=None):
+        super().__init__(input_variables)
         self.name = name
         self.template = template
         self.validate_template=None # todo，评估template中的合法性，langchain中评估变量是否符合预期 yes

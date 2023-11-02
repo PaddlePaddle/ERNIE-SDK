@@ -11,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from erniebot_agent.memory import Memory
 from erniebot_agent.message import Message
+from typing import List
 
 
 class BufferWindowMemory(Memory):
-    """This class considers number messages."""
+    """This class controls max number of messages."""
     def __init__(self, max_num_messages):
         super().__init__()
         self.max_num_messages = max_num_messages
 
         assert (isinstance(max_num_messages, int)) and (max_num_messages > 0), "max_num_messages should be positive integer, but got {max_token_limit}".format(max_token_limit=max_num_messages)    
 
-    
-    def add_message(self, message: list[Message]):
+    def add_message(self, message: List[Message]):
         super().add_message(message=message)
         self.prune_message()
     
