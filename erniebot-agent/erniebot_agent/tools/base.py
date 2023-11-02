@@ -44,6 +44,9 @@ class Tool:
         """
         raise NotImplementedError
 
+    async def run(self, *args: Any, **kwds: Any) -> Any:
+        raise NotImplementedError
+
     def validate_args(self):
         pass
 
@@ -107,6 +110,9 @@ class CalculatorTool(Tool):
         """
 
         return eval(math_formula)
+
+    async def run(self, math_formula: str) -> float:
+        return self.__call__(math_formula=math_formula)
 
 
 class CurrentTimeTool(Tool):
