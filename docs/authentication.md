@@ -85,6 +85,7 @@ response = erniebot.ChatCompletion.create(
 </div>
 
 注意事项：
+
 * 千帆的API key和secret key长期有效，而access token的默认有效期是30天，失效后需要重新获取access token。
 
 ### 2.2 设置鉴权参数

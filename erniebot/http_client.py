@@ -430,7 +430,7 @@ class EBClient(object):
                     rheaders=rheaders)
         else:
             raise errors.HTTPRequestError(
-                f"Unexpected content type: {repr(content_type)}",
+                f"Unexpected content type: {content_type}",
                 rcode=rcode,
                 rbody=rbody,
                 rheaders=rheaders)
