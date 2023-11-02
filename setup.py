@@ -17,8 +17,7 @@ import subprocess
 from setuptools import setup
 
 try:
-    git_version = subprocess.check_output(
-        ['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+    git_version = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
 except (OSError, subprocess.CalledProcessError):
     git_version = None
 
