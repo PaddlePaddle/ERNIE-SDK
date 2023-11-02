@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
+from typing import AsyncIterator, ClassVar, Iterator, Optional, Union
 
 from erniebot.api_types import APIType
 from erniebot.http_client import EBClient
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
 
 
 class EBBackend(object):
     API_TYPE: ClassVar[APIType]
     BASE_URL: ClassVar[str]
 
-    def __init__(self, config_dict: Dict[str, Any]) -> None:
+    def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__()
 
         self.api_type = self.API_TYPE

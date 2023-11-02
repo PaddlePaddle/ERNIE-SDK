@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from erniebot.api_types import APIType, convert_str_to_api_type
+from erniebot.types import ConfigDictType
 
 from .aistudio import AIStudioBackend
 from .base import EBBackend
@@ -23,7 +24,7 @@ from .bce import QianfanBackend, QianfanLegacyBackend, YinianBackend
 __all__ = ["build_backend"]
 
 
-def build_backend(api_type: Union[str, APIType], config_dict: Dict[str, Any], **opts: Any) -> EBBackend:
+def build_backend(api_type: Union[str, APIType], config_dict: ConfigDictType, **opts: Any) -> EBBackend:
     if isinstance(api_type, str):
         api_type = convert_str_to_api_type(api_type)
     if api_type is APIType.QIANFAN:

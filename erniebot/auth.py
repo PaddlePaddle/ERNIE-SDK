@@ -17,7 +17,8 @@ import http
 import json
 import threading
 import time
-from typing import Any, Callable, Dict, Hashable, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Hashable, Optional, Tuple
 
 import requests
 
@@ -36,75 +37,63 @@ def build_auth_token_manager(manager_type: str, api_type: APIType, **kwargs: Any
         raise ValueError(f"Unsupported manager type: {manager_type}")
 
 
-class _GlobalAuthCache(metaclass=Singleton):
-    _MIN_UPDATE_INTERVAL: int = 60
+class _GlobalAuthTokenCache(metaclass=Singleton):
+    _MIN_UPDATE_INTERVAL: int = 3600
+
+    @dataclass
+    class _Record(object):
+        updated_at: Optional[float]
+        auth_token: Optional[str]
+        lock: threading.Lock
 
     def __init__(self) -> None:
         super().__init__()
-        self._cache: Dict[Tuple[str, Hashable], str] = dict()
-        self._last_update_time: Dict[Tuple[str, Hashable], float] = dict()
+        self._cache: Dict[Tuple[str, Hashable], _GlobalAuthTokenCache._Record] = dict()
+        self._lock = threading.Lock()
 
-        # Following condition variable, flag, and counters are used to implement a writer-preferring RW lock.
-        # We use an object-level lock for simplicity.
-        # For higher concurrency performance, per-key locks can be used instead.
-        self._cond = threading.Condition(threading.Lock())
-        self._is_writing = False
-        self._reads = 0
-        self._writes = 0
-
-    def retrieve_entry(self, api_type: str, key: Hashable) -> Tuple[Hashable, Optional[str]]:
-        with self._cond:
-            while self._writes > 0 or self._is_writing:
-                self._cond.wait()
-            self._reads += 1
-
+    def retrieve_auth_token(self, api_type: str, key: Hashable) -> Optional[str]:
         key_pair = self._constr_key_pair(api_type, key)
-        val = self._cache.get(key_pair, None)
 
-        with self._cond:
-            self._reads -= 1
-            self._cond.notify_all()
+        with self._lock:
+            record = self._cache.get(key_pair, None)
 
-        return key, val
-
-    def upsert_entry(
-        self, api_type: str, key: Hashable, value: Union[str, Callable[[], str]]
-    ) -> Optional[str]:
-        with self._cond:
-            self._writes += 1
-            while self._reads > 0 or self._is_writing:
-                self._cond.wait()
-            self._writes -= 1
-            self._is_writing = True
-
-        timestamp = time.time()
-        key_pair = self._constr_key_pair(api_type, key)
-        if (
-            timestamp - self._last_update_time.get(key_pair, -self._MIN_UPDATE_INTERVAL)
-            > self._MIN_UPDATE_INTERVAL
-        ):
-            if callable(value):
-                try:
-                    val = value()
-                except Exception as e:
-                    logger.error(
-                        "An error was encountered while computing the value.",
-                        exc_info=e,
-                    )
-                    val = None
-            else:
-                val = value
-            if val is not None:
-                self._cache[key_pair] = val
-                self._last_update_time[key_pair] = time.time()
+        if record is not None:
+            with record.lock:
+                auth_token = record.auth_token
         else:
-            val = self._cache[key_pair]
+            auth_token = None
 
-        with self._cond:
-            self._is_writing = False
-            self._cond.notify_all()
+        return auth_token
 
-        return val
+    def upsert_auth_token(
+        self, api_type: str, key: Hashable, token_requestor: Callable[[], str]
+    ) -> Tuple[str, bool]:
+        key_pair = self._constr_key_pair(api_type, key)
+
+        with self._lock:
+            record = self._cache.get(key_pair, None)
+            if record is None:
+                self._cache[key_pair] = _GlobalAuthTokenCache._Record(
+                    auth_token=None, updated_at=None, lock=threading.Lock()
+                )
+                record = self._cache[key_pair]
+
+        with record.lock:
+            timestamp = time.time()
+            if record.updated_at is None or timestamp - record.updated_at > self._MIN_UPDATE_INTERVAL:
+                try:
+                    auth_token = token_requestor()
+                except Exception as e:
+                    raise errors.TokenUpdateFailedError from e
+                record.auth_token = auth_token
+                record.updated_at = time.time()
+                upserted = True
+            else:
+                assert record.auth_token is not None
+                auth_token = record.auth_token
+                upserted = False
+
+        return auth_token, upserted
 
     def _constr_key_pair(self, key1: str, key2: Hashable) -> Tuple[str, Hashable]:
         return (key1, key2)
@@ -115,15 +104,17 @@ class AuthTokenManager(object):
         super().__init__()
         self.api_type = api_type
         self._cfg = dict(**kwargs)
-        self._cache = _GlobalAuthCache()
+        self._cache = _GlobalAuthTokenCache()
         self._cache_key = self._get_cache_key()
-        self._token = self._init_auth_token(auth_token)
+        self._token = auth_token
 
     def get_auth_token(self) -> str:
+        if self._token is None:
+            self._token = self._init_auth_token()
         return self._token
 
     def update_auth_token(self) -> str:
-        new_token = self._update_auth_token(self._token)
+        new_token = self._update_cache(init=False)
         self._token = new_token
         logger.info("Security token is updated.")
         return self._token
@@ -134,42 +125,30 @@ class AuthTokenManager(object):
     def _get_cache_key(self) -> Hashable:
         raise NotImplementedError
 
-    def _init_auth_token(self, token: Optional[str]) -> str:
-        if token is None:
-            cached_token = self._retrieve_from_cache()
-            if cached_token is not None:
-                logger.info("Cached security token will be used.")
-                token = cached_token
-            else:
-                logger.info(
-                    "Security token is not set. "
-                    "It will be retrieved or generated based on other parameters."
-                )
-                token = self._update_cache(init=True)
+    def _init_auth_token(self) -> str:
+        cached_token = self._retrieve_from_cache()
+        if cached_token is not None:
+            logger.info("Cached security token will be used.")
+            token = cached_token
+        else:
+            logger.info(
+                "Security token is not set. " "It will be retrieved or generated based on other parameters."
+            )
+            token = self._update_cache(init=True)
         return token
 
-    def _update_auth_token(self, old_token: str) -> str:
-        cached_token = self._retrieve_from_cache()
-        if cached_token is not None and cached_token != old_token:
-            new_token = cached_token
-        else:
-            new_token = self._update_cache(init=False)
-        return new_token
-
     def _retrieve_from_cache(self) -> Optional[str]:
-        return self._cache.retrieve_entry(self.api_type.name, self._cache_key)[1]
+        return self._cache.retrieve_auth_token(self.api_type.name, self._cache_key)
 
     def _update_cache(self, init: bool) -> str:
-        token = self._cache.upsert_entry(
+        token, upserted = self._cache.upsert_auth_token(
             self.api_type.name,
             self._cache_key,
             functools.partial(self._request_auth_token, init=init),
         )
-        if token is None:
-            raise errors.TokenUpdateFailedError
-        else:
+        if upserted:
             logger.debug("Cache is updated.")
-            return token
+        return token
 
 
 class BCEAuthTokenManager(AuthTokenManager):
@@ -196,7 +175,7 @@ class BCEAuthTokenManager(AuthTokenManager):
             "client_id": ak,
             "client_secret": sk,
         }
-        result = requests.request(method="GET", url=url, params=params)
+        result = requests.request(method="GET", url=url, params=params, timeout=3)
         if result.status_code != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
                 f"Status code is not {http.HTTPStatus.OK}.",

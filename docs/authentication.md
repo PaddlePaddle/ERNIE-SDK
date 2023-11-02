@@ -33,8 +33,8 @@ AI Studio后端可以使用access token进行鉴权，支持如下三种方法�
 (1) 使用环境变量：
 
 ```{.sh .copy}
-export EB_API_TYPE='aistudio'
-export EB_ACCESS_TOKEN='<access-token-for-aistudio>'
+export EB_API_TYPE="aistudio"
+export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 ```
 
 (2) 使用全局变量：
@@ -42,8 +42,8 @@ export EB_ACCESS_TOKEN='<access-token-for-aistudio>'
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 ```
 
 (3) 使用`_config_`参数：
@@ -53,11 +53,11 @@ import erniebot
 
 response = erniebot.ChatCompletion.create(
     _config_=dict(
-        api_type='aistudio',
-        access_token='<access-token-for-aistudio>',
+        api_type="aistudio",
+        access_token="<access-token-for-aistudio>",
     ),
-    model='ernie-bot',
-    messages=[{'role': 'user', 'content': "你好，请介绍下你自己",
+    model="ernie-bot",
+    messages=[{"role": "user", "content": "你好，请介绍下你自己",
     }],
 )
 ```
@@ -94,34 +94,34 @@ response = erniebot.ChatCompletion.create(
 
 (1）使用access token进行鉴权。为千帆后端设置鉴权参数的三种方法和AI Studio后端类似，举例如下。
 
-请注意设置后端参数为`'qianfan'`，并且使用千帆平台申请的access token。
+请注意设置后端参数为`"qianfan"`，并且使用千帆平台申请的access token。
 
 ```{.sh .copy}
-export EB_API_TYPE='qianfan'
-export EB_ACCESS_TOKEN='<access-token-for-qianfan>'
+export EB_API_TYPE="qianfan"
+export EB_ACCESS_TOKEN="<access-token-for-qianfan>"
 ```
 
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'qianfan'
-erniebot.access_token = '<access-token-for-qianfan>'
+erniebot.api_type = "qianfan"
+erniebot.access_token = "<access-token-for-qianfan>"
 ```
 
 (2）使用API key与secret key进行鉴权。千帆后端同样支持三种参数配置方法，与API key和secret key对应的环境变量是`EB_AK`和`EB_SK`、Python变量是`ak`和`sk`。举例如下：
 
 ```{.sh .copy}
-export EB_API_TYPE='qianfan'
-export EB_AK='<api-key-for-qianfan>'
-export EB_SK='<secret-key-for-qianfan>'
+export EB_API_TYPE="qianfan"
+export EB_AK="<api-key-for-qianfan>"
+export EB_SK="<secret-key-for-qianfan>"
 ```
 
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'qianfan'
-erniebot.ak = '<api-key-for-qianfan>'
-erniebot.sk = '<secret-key-for-qianfan>'
+erniebot.api_type = "qianfan"
+erniebot.ak = "<api-key-for-qianfan>"
+erniebot.sk = "<secret-key-for-qianfan>"
 ```
 
 ## 3 智能创作平台后端的认证鉴权
@@ -152,34 +152,34 @@ erniebot.sk = '<secret-key-for-qianfan>'
 
 为智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者API key+secret key。举例如下。
 
-请注意设置后端参数为`'yinian'`，并且使用智能创作平台申请的access_token、API key、secret key。
+请注意设置后端参数为`"yinian"`，并且使用智能创作平台申请的access_token、API key、secret key。
 
 (1) 使用access token的例子：
 
 ```{.sh .copy}
-export EB_API_TYPE='yinian'
-export EB_ACCESS_TOKEN='<access-token-for-yinian>'
+export EB_API_TYPE="yinian"
+export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 ```
 
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'yinian'
-erniebot.access_token = '<access-token-for-yinian>'
+erniebot.api_type = "yinian"
+erniebot.access_token = "<access-token-for-yinian>"
 ```
 
 (2) 使用API key和secret key的例子：
 
 ```{.sh .copy}
-export EB_API_TYPE='yinian'
-export EB_AK='<api-key-for-yinian>'
-export EB_SK='<secret-key-for-yinian>'
+export EB_API_TYPE="yinian"
+export EB_AK="<api-key-for-yinian>"
+export EB_SK="<secret-key-for-yinian>"
 ```
 
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'yinian'
-erniebot.ak = '<api-key-for-yinian>'
-erniebot.sk = '<secret-key-for-yinian>'
+erniebot.api_type = "yinian"
+erniebot.ak = "<api-key-for-yinian>"
+erniebot.sk = "<secret-key-for-yinian>"
 ```

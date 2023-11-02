@@ -8,7 +8,7 @@
 
 | 模型 | 说明 | API调用方式 |
 | :--- | :---- | :----- |
-| ernie-vilg-v2 | 文心一格模型。 | `erniebot.Image.create(model='ernie-vilg-v2', ...)` |
+| ernie-vilg-v2 | 文心一格模型。 | `erniebot.Image.create(model="ernie-vilg-v2", ...)` |
 
 参阅[Image API文档](../api_reference/image.md)了解API的完整使用方式。
 
@@ -23,10 +23,10 @@
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'yinian'
-erniebot.access_token = '<access-token-for-yinian>'
+erniebot.api_type = "yinian"
+erniebot.access_token = "<access-token-for-yinian>"
 
-response = erniebot.Image.create(model='ernie-vilg-v2', prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version='v2', image_num=1)
+response = erniebot.Image.create(model="ernie-vilg-v2", prompt="请帮我画一只可爱的大猫咪", width=512, height=512, version="v2", image_num=1)
 
 print(response.get_result())
 ```

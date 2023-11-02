@@ -19,50 +19,35 @@ from typing_extensions import TypeAlias
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, Request
+from erniebot.utils.misc import filter_args
 
 from .resource import EBResource
 
 
 class _Image(EBResource):
-    @classmethod
-    def create(cls, **kwargs: Any) -> EBResponse:
-        """Create a resource."""
-        config = kwargs.pop("_config_", {})
-        resource = cls.new_object(**config)
-        create_kwargs = kwargs
-        return resource.create_resource(**create_kwargs)
-
-    @classmethod
-    async def acreate(cls, **kwargs: Any) -> EBResponse:
-        """Asynchronous version of `create`."""
-        config = kwargs.pop("_config_", {})
-        resource = cls.new_object(**config)
-        create_kwargs = kwargs
-        resp = await resource.acreate_resource(**create_kwargs)
-        return resp
-
     def create_resource(self, **create_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_paint(create_kwargs)
+        req = self._prepare_paint(create_kwargs)
+        timeout = req.timeout
         resp_p = self.request(
             method="POST",
-            path=path,
+            path=req.path,
             stream=False,
-            params=params,
-            headers=headers,
-            files=None,
-            request_timeout=request_timeout,
+            params=req.params,
+            headers=req.headers,
+            files=req.files,
+            request_timeout=timeout,
         )
 
-        path, params, headers = self._prepare_fetch(resp_p)
+        req = self._prepare_fetch(resp_p)
         resp_f = self.poll(
             until=self._check_status,
             method="POST",
-            path=path,
-            params=params,
-            headers=headers,
-            # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
-            request_timeout=request_timeout,
+            path=req.path,
+            params=req.params,
+            headers=req.headers,
+            # XXX: Reuse `timeout`. Should we implement finer-grained control?
+            request_timeout=timeout,
         )
 
         resp_f = self._postprocess(resp_f)
@@ -70,38 +55,36 @@ class _Image(EBResource):
         return resp_f
 
     async def acreate_resource(self, **create_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_paint(create_kwargs)
+        req = self._prepare_paint(create_kwargs)
+        timeout = req.timeout
         resp_p = await self.arequest(
             method="POST",
-            path=path,
+            path=req.path,
             stream=False,
-            params=params,
-            headers=headers,
-            files=None,
-            request_timeout=request_timeout,
+            params=req.params,
+            headers=req.headers,
+            files=req.files,
+            request_timeout=timeout,
         )
 
-        path, params, headers = self._prepare_fetch(resp_p)
+        req = self._prepare_fetch(resp_p)
         resp_f = await self.apoll(
             until=self._check_status,
             method="POST",
-            path=path,
-            params=params,
-            headers=headers,
-            # XXX: Reuse `request_timeout`. Should we implement finer-grained control?
-            request_timeout=request_timeout,
+            path=req.path,
+            params=req.params,
+            headers=req.headers,
+            request_timeout=timeout,
         )
 
         resp_f = self._postprocess(resp_f)
 
         return resp_f
 
-    def _prepare_paint(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
+    def _prepare_paint(self, kwargs: Dict[str, Any]) -> Request:
         raise NotImplementedError
 
-    def _prepare_fetch(self, resp_p: EBResponse) -> Tuple[str, Optional[ParamsType], Optional[HeadersType]]:
+    def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         raise NotImplementedError
 
     def _postprocess(self, resp_f: EBResponse) -> EBResponse:
@@ -117,14 +100,69 @@ class ImageV1(_Image):
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
-    def _prepare_paint(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
+    @classmethod
+    def create(
+        cls,
+        text: str,
+        resolution: str,
+        style: str,
+        *,
+        num: int = 1,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.create_resource(
+            **filter_args(
+                text=text,
+                resolution=resolution,
+                style=style,
+                num=num,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def acreate(
+        cls,
+        text: str,
+        resolution: str,
+        style: str,
+        *,
+        num: int = 1,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.acreate_resource(
+            **filter_args(
+                text=text,
+                resolution=resolution,
+                style=style,
+                num=num,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    def _prepare_paint(self, kwargs: Dict[str, Any]) -> Request:
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
             if key in src:
                 dst[key] = src[key]
 
-        VALID_KEYS = {"text", "resolution", "style", "num", "headers", "request_timeout"}
+        VALID_KEYS = {
+            "text",
+            "resolution",
+            "style",
+            "num",
+            "headers",
+            "request_timeout",
+        }
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -168,9 +206,14 @@ class ImageV1(_Image):
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _prepare_fetch(self, resp_p: EBResponse) -> Tuple[str, Optional[ParamsType], Optional[HeadersType]]:
+    def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
         assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
@@ -187,7 +230,11 @@ class ImageV1(_Image):
         # headers
         headers = {"Accept": "application/json"}
 
-        return path, params, headers
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+        )
 
     def _postprocess(self, resp_f: EBResponse) -> EBResponse:
         return resp_f
@@ -203,9 +250,65 @@ class ImageV2(_Image):
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
-    def _prepare_paint(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
+    @classmethod
+    def create(
+        cls,
+        model: str,
+        prompt: str,
+        width: int,
+        height: int,
+        *,
+        version: str = "v2",
+        image_num: int = 1,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.create_resource(
+            **filter_args(
+                model=model,
+                prompt=prompt,
+                width=width,
+                height=height,
+                version=version,
+                image_num=image_num,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def acreate(
+        cls,
+        model: str,
+        prompt: str,
+        width: int,
+        height: int,
+        *,
+        version: str = "v1",
+        image_num: int = 1,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.acreate_resource(
+            **filter_args(
+                model=model,
+                prompt=prompt,
+                width=width,
+                height=height,
+                version=version,
+                image_num=image_num,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    def _prepare_paint(self, kwargs: Dict[str, Any]) -> Request:
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
             if key in src:
                 dst[key] = src[key]
@@ -271,9 +374,14 @@ class ImageV2(_Image):
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _prepare_fetch(self, resp_p: EBResponse) -> Tuple[str, Optional[ParamsType], Optional[HeadersType]]:
+    def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
         assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
@@ -290,7 +398,11 @@ class ImageV2(_Image):
         # headers
         headers = {"Accept": "application/json"}
 
-        return path, params, headers
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+        )
 
     def _postprocess(self, resp_f: EBResponse) -> EBResponse:
         return ImageV2Response.from_mapping(resp_f)

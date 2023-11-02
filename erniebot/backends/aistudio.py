@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import os
-from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
+from typing import AsyncIterator, ClassVar, Iterator, Optional, Union
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
 from erniebot.utils.logging import logger
 
 from .base import EBBackend
@@ -28,7 +28,7 @@ class AIStudioBackend(EBBackend):
     API_TYPE: ClassVar[APIType] = APIType.AISTUDIO
     BASE_URL: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
 
-    def __init__(self, config_dict: Dict[str, Any]) -> None:
+    def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
         access_token = self._cfg.get("access_token", None)
         if access_token is None:
@@ -121,6 +121,9 @@ class AIStudioBackend(EBBackend):
 
     def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
         if "Authorization" in headers:
-            logger.warning("Key 'Authorization' already exists in `headers`: %r", headers["Authorization"])
+            logger.warning(
+                "Key 'Authorization' already exists in `headers`: %r",
+                headers["Authorization"],
+            )
         headers["Authorization"] = f"token {self._access_token}"
         return headers

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, List, Optional, Tuple
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
-from erniebot.utils.misc import transform
+from erniebot.types import ConfigDictType, HeadersType, Request
+from erniebot.utils.misc import filter_args
 
 from .abc import Creatable
 from .resource import EBResource
@@ -27,7 +27,10 @@ from .resource import EBResource
 class Embedding(EBResource, Creatable):
     """Get the embeddings of a given text input."""
 
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, APIType.AISTUDIO)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.AISTUDIO,
+    )
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "embeddings",
@@ -47,21 +50,65 @@ class Embedding(EBResource, Creatable):
         },
     }
 
-    def _prepare_create(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[
-        str,
-        Optional[ParamsType],
-        Optional[HeadersType],
-        Optional[FilesType],
-        bool,
-        Optional[float],
-    ]:
+    @classmethod
+    def create(
+        cls,
+        model: str,
+        input: List[str],
+        *,
+        user_id: Optional[str] = None,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = resource.create_resource(
+            **filter_args(
+                model=model,
+                input=input,
+                user_id=user_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    @classmethod
+    async def acreate(
+        cls,
+        model: str,
+        input: List[str],
+        *,
+        user_id: Optional[str] = None,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = await resource.acreate_resource(
+            **filter_args(
+                model=model,
+                input=input,
+                user_id=user_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
             if key in src:
                 dst[key] = src[key]
 
-        VALID_KEYS = {"model", "input", "headers", "request_timeout"}
+        VALID_KEYS = {
+            "model",
+            "input",
+            "headers",
+            "request_timeout",
+        }
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -93,23 +140,25 @@ class Embedding(EBResource, Creatable):
         params = {}
         params["input"] = input
         _set_val_if_key_exists(kwargs, params, "input")
+        if self.api_type is not APIType.AISTUDIO:
+            # The AI Studio backend automatically injects `user_id`.
+            _set_val_if_key_exists(kwargs, params, "user_id")
 
         # headers
         headers = kwargs.get("headers", None)
 
-        # files
-        files = None
-
-        # stream
-        stream = False
-
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, files, stream, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(EmbeddingResponse.from_mapping, resp)
+    def _postprocess_create(self, resp: EBResponse) -> EBResponse:
+        return EmbeddingResponse.from_mapping(resp)
 
 
 class EmbeddingResponse(EBResponse):

@@ -12,83 +12,74 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Any, AsyncIterator, Iterator, Optional, overload, Union)
+from typing import AsyncIterator, Iterator, Optional, Union, overload
 
-from typing_extensions import Literal, Protocol, runtime_checkable, Self
+from typing_extensions import Literal, Protocol, runtime_checkable
 
 from erniebot.response import EBResponse
-from erniebot.types import (FilesType, HeadersType, ParamsType)
+from erniebot.types import FilesType, HeadersType, ParamsType
 
 
 @runtime_checkable
 class Resource(Protocol):
     """Resource protocol.
 
-    Any class that implements all attributes and methods defined in this
-    protocol is a resource class.
+    Any class that implements all attributes and methods defined in this protocol is a resource class.
     """
-
-    @classmethod
-    def new_object(cls, **config: Any) -> Self:
-        ...
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[False],
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
+        self,
+        method: str,
+        path: str,
+        stream: Literal[False],
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: Literal[True],
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
+        self,
+        method: str,
+        path: str,
+        stream: Literal[True],
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> Iterator[EBResponse]:
         ...
 
     @overload
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            *,
-            params: Optional[ParamsType]=...,
-            headers: Optional[HeadersType]=...,
-            files: Optional[FilesType]=...,
-            request_timeout: Optional[float]=...,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
 
     def request(
-            self,
-            method: str,
-            path: str,
-            stream: bool,
-            *,
-            params: Optional[ParamsType]=None,
-            headers: Optional[HeadersType]=None,
-            files: Optional[FilesType]=None,
-            request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               Iterator[EBResponse],
-               ]:
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
         """Make an HTTP request about the resource to get an API response.
 
         Args:
@@ -101,8 +92,8 @@ class Resource(Protocol):
             request_timeout: Request timeout in seconds.
 
         Returns:
-            If `stream` is True, return an iterator that yields response
-                objects. Otherwise return a response object.
+            If `stream` is True, return an iterator that yields response objects. Otherwise return a response
+                object.
         """
         ...
 
@@ -113,10 +104,10 @@ class Resource(Protocol):
         path: str,
         stream: Literal[False],
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
 
@@ -127,10 +118,10 @@ class Resource(Protocol):
         path: str,
         stream: Literal[True],
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
     ) -> AsyncIterator[EBResponse]:
         ...
 
@@ -141,13 +132,11 @@ class Resource(Protocol):
         path: str,
         stream: bool,
         *,
-        params: Optional[ParamsType]=...,
-        headers: Optional[HeadersType]=...,
-        files: Optional[FilesType]=...,
-        request_timeout: Optional[float]=...,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = ...,
+        headers: Optional[HeadersType] = ...,
+        files: Optional[FilesType] = ...,
+        request_timeout: Optional[float] = ...,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
 
     async def arequest(
@@ -156,12 +145,10 @@ class Resource(Protocol):
         path: str,
         stream: bool,
         *,
-        params: Optional[ParamsType]=None,
-        headers: Optional[HeadersType]=None,
-        files: Optional[FilesType]=None,
-        request_timeout: Optional[float]=None,
-    ) -> Union[EBResponse,
-               AsyncIterator[EBResponse],
-               ]:
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        files: Optional[FilesType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `request`."""
         ...

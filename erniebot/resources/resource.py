@@ -26,34 +26,31 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    cast,
     overload,
 )
 
-from typing_extensions import Literal, Self, final
+from typing_extensions import Literal, final
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType, convert_str_to_api_type
 from erniebot.backends import build_backend
 from erniebot.config import GlobalConfig
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
 from erniebot.utils.logging import logger
 
 
 class EBResource(object):
     """Resource class with enhanced features.
 
-    This class implements the resource protocol and provides the following
-    additional functionalities:
+    This class implements the resource protocol and provides the following additional functionalities:
     1. Synchronous and asynchronous HTTP polling.
     2. Support different backends.
     3. Override the global settings.
 
-    This class can be typically used as a mix-in for another resource class to
-    facilitate reuse of concrete implementations. Most methods of this class are
-    marked as final (e.g., `request`, `arequest`), while some methods can be
-    overridden to change the default behavior (e.g., `_create_config_dict`).
+    This class can be typically used as a mix-in for another resource class to facilitate reuse of concrete
+    implementations. Most methods of this class are marked as final (e.g., `request`, `arequest`), while some
+    methods can be overridden to change the default behavior (e.g., `_create_config_dict`).
     """
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = ()
@@ -67,7 +64,10 @@ class EBResource(object):
 
         self._cfg = self._create_config_dict(config)
 
-        self.api_type = self._cfg["api_type"]
+        api_type = self._cfg["api_type"]
+        if api_type is None:
+            raise TypeError("API type is not configured.")
+        self.api_type = api_type
         self.timeout = self._cfg["timeout"]
 
         self._backend = build_backend(
@@ -75,10 +75,6 @@ class EBResource(object):
             self._cfg,
             **self._BUILD_BACKEND_OPTS_DICT.get(self.api_type, {}),
         )
-
-    @classmethod
-    def new_object(cls, **kwargs: Any) -> Self:
-        return cls(**kwargs)
 
     @classmethod
     def get_supported_api_type_names(cls) -> List[str]:
@@ -450,8 +446,8 @@ class EBResource(object):
             else:
                 return resp
 
-    def _create_config_dict(self, overrides: Any) -> Dict[str, Any]:
-        cfg_dict = cast(Dict[str, Any], GlobalConfig().create_dict(**overrides))
+    def _create_config_dict(self, overrides: Any) -> ConfigDictType:
+        cfg_dict = GlobalConfig().create_dict(**overrides)
         api_type_str = cfg_dict["api_type"]
         if not isinstance(api_type_str, str):
             raise TypeError

@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, List, Optional, Tuple
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
-from erniebot.utils.misc import transform
+from erniebot.types import ConfigDictType, EBResponse, HeadersType, Request
+from erniebot.utils.misc import filter_args
 
 from .abc import Creatable
 from .chat_completion import ChatResponse
@@ -29,17 +29,50 @@ class ChatFile(EBResource, Creatable):
 
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN,)
 
-    def _prepare_create(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[
-        str,
-        Optional[ParamsType],
-        Optional[HeadersType],
-        Optional[FilesType],
-        bool,
-        Optional[float],
-    ]:
-        VALID_KEYS = {"messages", "headers", "request_timeout"}
+    @classmethod
+    def create(
+        cls,
+        messages: List[dict],
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.create_resource(
+            **filter_args(
+                messages=messages,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def acreate(
+        cls,
+        messages: List[dict],
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.acreate_resource(
+            **filter_args(
+                messages=messages,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
+        VALID_KEYS = {
+            "messages",
+            "headers",
+            "request_timeout",
+        }
 
         invalid_keys = kwargs.keys() - VALID_KEYS
 
@@ -67,16 +100,15 @@ class ChatFile(EBResource, Creatable):
         # headers
         headers = kwargs.get("headers", None)
 
-        # files
-        files = None
-
-        # stream
-        stream = False
-
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, files, stream, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(ChatResponse.from_mapping, resp)
+    def _postprocess_create(self, resp: EBResponse) -> EBResponse:
+        return ChatResponse.from_mapping(resp)

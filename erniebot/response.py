@@ -26,12 +26,10 @@ __all__ = ["EBResponse"]
 
 
 class EBResponse(Mapping):
-    """A class that encapsulates an HTTP response for more convenient access of
-    response body fields.
+    """A class that encapsulates an HTTP response for more convenient access of response body fields.
 
-    An `EBResponse` object behaves like a read-only dictionary, except that the
-    status code, response body, response headers, and the fields of the response
-    body are accessible through attributes.
+    An `EBResponse` object behaves like a read-only dictionary, except that the status code, response body,
+    response headers, and the fields of the response body are accessible through attributes.
     """
 
     _INNER_DICT_TYPE = Constant(dict)
@@ -47,9 +45,8 @@ class EBResponse(Mapping):
 
         Args:
             rcode: Response status code.
-            rbody: Response body. If `rbody` is a dictionary, the key-value
-                pairs in the dictionary will also get registered, so that they
-                can be accessed from the object using dot notation.
+            rbody: Response body. If `rbody` is a dictionary, the key-value pairs in the dictionary will also
+                get registered, so that they can be accessed from the object using dot notation.
             rheaders: Response headers.
         """
         super().__init__()

@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, List, Optional, Tuple
+from typing import (
+    Any,
+    AsyncIterator,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import jsonschema
 import jsonschema.exceptions
@@ -20,17 +30,20 @@ import jsonschema.exceptions
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
-from erniebot.utils.misc import transform
+from erniebot.types import ConfigDictType, HeadersType, RequestWithStream, ResponseT
+from erniebot.utils.misc import filter_args, transform
 
-from .abc import Creatable
+from .abc import CreatableWithStreaming
 from .resource import EBResource
 
 
-class ChatCompletion(EBResource, Creatable):
+class ChatCompletion(EBResource, CreatableWithStreaming):
     """Given a conversation, get a new reply from the model."""
 
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, APIType.AISTUDIO)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.AISTUDIO,
+    )
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "chat",
@@ -68,16 +81,79 @@ class ChatCompletion(EBResource, Creatable):
         },
     }
 
-    def _prepare_create(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[
-        str,
-        Optional[ParamsType],
-        Optional[HeadersType],
-        Optional[FilesType],
-        bool,
-        Optional[float],
-    ]:
+    @classmethod
+    def create(
+        cls,
+        model: str,
+        messages: List[dict],
+        *,
+        functions: Optional[List[dict]] = None,
+        temperature: float = 0.95,
+        top_p: float = 0.8,
+        penalty_score: float = 1.0,
+        system: Optional[str] = None,
+        user_id: Optional[str] = None,
+        stream: bool = False,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = resource.create_resource(
+            **filter_args(
+                model=model,
+                messages=messages,
+                functions=functions,
+                temperature=temperature,
+                top_p=top_p,
+                penalty_score=penalty_score,
+                system=system,
+                user_id=user_id,
+                stream=stream,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    @classmethod
+    async def acreate(
+        cls,
+        model: str,
+        messages: List[dict],
+        *,
+        functions: Optional[List[dict]] = None,
+        temperature: float = 0.95,
+        top_p: float = 0.8,
+        penalty_score: float = 1.0,
+        system: Optional[str] = None,
+        user_id: Optional[str] = None,
+        stream: bool = False,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = await resource.acreate_resource(
+            **filter_args(
+                model=model,
+                messages=messages,
+                functions=functions,
+                temperature=temperature,
+                top_p=top_p,
+                penalty_score=penalty_score,
+                system=system,
+                user_id=user_id,
+                stream=stream,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    def _prepare_create(self, kwargs: Dict[str, Any]) -> RequestWithStream:
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
             if key in src:
                 dst[key] = src[key]
@@ -161,16 +237,19 @@ class ChatCompletion(EBResource, Creatable):
         # headers
         headers = kwargs.get("headers", None)
 
-        # files
-        files = None
+        # request_timeout
+        request_timeout = kwargs.get("request_timeout", None)
 
         # stream
         stream = kwargs.get("stream", False)
 
-        # request_timeout
-        request_timeout = kwargs.get("request_timeout", None)
-
-        return path, params, headers, files, stream, request_timeout
+        return RequestWithStream(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+            stream=stream,
+        )
 
     def _postprocess_create(self, resp: ResponseT) -> ResponseT:
         return transform(ChatResponse.from_mapping, resp)
@@ -197,12 +276,6 @@ class ChatCompletion(EBResource, Creatable):
             if message["role"] == "function":
                 if "name" not in message:
                     raise errors.InvalidArgumentError(f"Message {idx} does not contain the function name.")
-            if "function_call" in message and message["role"] != "assistant":
-                raise errors.InvalidArgumentError(
-                    f"Message {idx} contains a function call, but its role is not 'assistant'."
-                )
-            if message["content"] is None and "function_call" not in message:
-                raise errors.InvalidArgumentError(f"Message {idx} has invalid content.")
 
     @classmethod
     def _validate_functions(cls, functions: List[dict]) -> None:

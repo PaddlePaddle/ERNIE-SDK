@@ -31,11 +31,11 @@ print(models)
 # ernie-vilg-v2         文心一格模型
 
 # Set authentication params
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 # Create a chat completion
-response = erniebot.ChatCompletion.create(model='ernie-bot', messages=[{'role': 'user', 'content': "你好，请介绍下你自己"}])
+response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
 
 print(response.get_result())
 ```
@@ -47,15 +47,15 @@ print(response.get_result())
 erniebot api model.list
 
 # Set authentication params for chat_completion.create
-export EB_API_TYPE='aistudio'
-export EB_ACCESS_TOKEN='<access-token-for-aistudio>'
+export EB_API_TYPE="aistudio"
+export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 
 # Create a chat completion (using ernie-bot, ernie-bot-turbo, etc.)
 erniebot api chat_completion.create --model ernie-bot --message user "请介绍下你自己"
 
 # Set authentication params for image.create
-export EB_API_TYPE='yinian'
-export EB_ACCESS_TOKEN='<access-token-for-yinian>'
+export EB_API_TYPE="yinian"
+export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 
 # Generate images via ERNIE-ViLG
 erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
@@ -74,21 +74,21 @@ ERNIE Bot SDK提供具备对话补全能力的ernie-bot、ernie-bot-turbo、erni
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model='ernie-bot',
+    model="ernie-bot",
     messages=[{
-        'role': 'user',
-        'content': "请问你是谁？"
+        "role": "user",
+        "content": "请问你是谁？"
     }, {
-        'role': 'assistant',
-        'content':
+        "role": "assistant",
+        "content":
         "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。"
     }, {
-        'role': 'user',
-        'content': "我在深圳，周末可以去哪里玩？"
+        "role": "user",
+        "content": "我在深圳，周末可以去哪里玩？"
     }])
 
 print(response.get_result())
@@ -105,11 +105,11 @@ ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模�
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.Embedding.create(
-    model='ernie-text-embedding',
+    model="ernie-text-embedding",
     input=[
         "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。",
         "2018年深圳市各区GDP"
@@ -129,11 +129,11 @@ ERNIE Bot SDK提供具备文生图能力的ernie-vilg-v2大模型。
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'yinian'
-erniebot.access_token = '<access-token-for-yinian>'
+erniebot.api_type = "yinian"
+erniebot.access_token = "<access-token-for-yinian>"
 
 response = erniebot.Image.create(
-    model='ernie-vilg-v2',
+    model="ernie-vilg-v2",
     prompt="雨后的桃花，8k，辛烷值渲染",
     width=512,
     height=512
@@ -162,51 +162,51 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 ```{.py .copy}
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model='ernie-bot',
+    model="ernie-bot",
     messages=[{
-        'role': 'user',
-        'content': "深圳市今天气温多少摄氏度？",
+        "role": "user",
+        "content": "深圳市今天气温多少摄氏度？",
     }, ],
     functions = [
         {
-            'name': 'get_current_temperature',
-            'description': "获取指定城市的气温",
-            'parameters': {
-                'type': 'object',
-                'properties': {
-                    'location': {
-                        'type': 'string',
-                        'description': "城市名称",
+            "name": "get_current_temperature",
+            "description": "获取指定城市的气温",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "城市名称",
                     },
-                    'unit': {
-                        'type': 'string',
-                        'enum': [
-                            '摄氏度',
-                            '华氏度',
+                    "unit": {
+                        "type": "string",
+                        "enum": [
+                            "摄氏度",
+                            "华氏度",
                         ],
                     },
                 },
-                'required': [
-                    'location',
-                    'unit',
+                "required": [
+                    "location",
+                    "unit",
                 ],
             },
-            'responses': {
-                'type': 'object',
-                'properties': {
-                    'temperature': {
-                        'type': 'integer',
-                        'description': "城市气温",
+            "responses": {
+                "type": "object",
+                "properties": {
+                    "temperature": {
+                        "type": "integer",
+                        "description": "城市气温",
                     },
-                    'unit': {
-                        'type': 'string',
-                        'enum': [
-                            '摄氏度',
-                            '华氏度',
+                    "unit": {
+                        "type": "string",
+                        "enum": [
+                            "摄氏度",
+                            "华氏度",
                         ],
                     },
                 },

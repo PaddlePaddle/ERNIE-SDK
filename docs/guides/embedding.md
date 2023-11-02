@@ -8,7 +8,7 @@
 
 | 模型 | 说明 | API调用方式 |
 | :--- | :---- | :----- |
-| ernie-text-embedding | 支持计算最多384个token的文本的向量表示。 | `erniebot.Embedding.create(model='ernie-text-embedding', ...)` |
+| ernie-text-embedding | 支持计算最多384个token的文本的向量表示。 | `erniebot.Embedding.create(model="ernie-text-embedding", ...)` |
 
 参阅[Embedding API文档](../api_reference/embedding.md)了解API的完整使用方式。
 

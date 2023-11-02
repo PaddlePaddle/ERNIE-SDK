@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .cancellable import Cancellable
-from .creatable import Creatable
+from .creatable import Creatable, CreatableWithStreaming
 from .queryable import Queryable
 
-__all__ = ['Cancellable', 'Creatable', 'Queryable']
+__all__ = ["Cancellable", "Creatable", "CreatableWithStreaming", "Queryable"]

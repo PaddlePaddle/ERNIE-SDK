@@ -17,23 +17,13 @@ import datetime
 import hashlib
 import hmac
 import urllib.parse
-from typing import (
-    Any,
-    AsyncIterator,
-    ClassVar,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import AsyncIterator, ClassVar, Dict, Iterator, List, Optional, Tuple, Union
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.auth import build_auth_token_manager
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
 from erniebot.utils.logging import logger
 from erniebot.utils.url import add_query_params
 
@@ -41,9 +31,7 @@ from .base import EBBackend
 
 
 class _BCELegacyBackend(EBBackend):
-    _MAX_TOKEN_UPDATE_RETRIES: int = 3
-
-    def __init__(self, config_dict: Dict[str, Any]) -> None:
+    def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
         self._auth_manager = build_auth_token_manager(
             "bce",
@@ -72,32 +60,36 @@ class _BCELegacyBackend(EBBackend):
             files=files,
         )
 
-        attempts = 0
         access_token = self._auth_manager.get_auth_token()
-        while True:
+        url_with_token = add_query_params(url, [("access_token", access_token)])
+        try:
+            return self._client.send_request(
+                method,
+                url_with_token,
+                stream,
+                data=data,
+                headers=headers,
+                files=files,
+                request_timeout=request_timeout,
+                base_url=self.base_url,
+            )
+        except (errors.TokenExpiredError, errors.InvalidTokenError):
+            logger.warning(
+                "The access token provided is invalid or has expired. "
+                "An automatic update will be performed before retrying."
+            )
+            access_token = self._auth_manager.update_auth_token()
             url_with_token = add_query_params(url, [("access_token", access_token)])
-            try:
-                return self._client.send_request(
-                    method,
-                    url_with_token,
-                    stream,
-                    data=data,
-                    headers=headers,
-                    files=files,
-                    request_timeout=request_timeout,
-                    base_url=self.base_url,
-                )
-            except (errors.TokenExpiredError, errors.InvalidTokenError):
-                attempts += 1
-                if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
-                    logger.warning(
-                        "The access token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying."
-                    )
-                    access_token = self._auth_manager.update_auth_token()
-                    continue
-                else:
-                    raise
+            return self._client.send_request(
+                method,
+                url_with_token,
+                stream,
+                data=data,
+                headers=headers,
+                files=files,
+                request_timeout=request_timeout,
+                base_url=self.base_url,
+            )
 
     async def arequest(
         self,
@@ -118,41 +110,50 @@ class _BCELegacyBackend(EBBackend):
             files=files,
         )
 
-        attempts = 0
-        access_token = self._auth_manager.get_auth_token()
-        while True:
+        loop = asyncio.get_running_loop()
+        # XXX: The default executor is used.
+        access_token = await loop.run_in_executor(None, self._auth_manager.get_auth_token)
+        url_with_token = add_query_params(url, [("access_token", access_token)])
+        try:
+            return await self._client.asend_request(
+                method,
+                url_with_token,
+                stream,
+                data=data,
+                headers=headers,
+                files=files,
+                request_timeout=request_timeout,
+            )
+        except (errors.TokenExpiredError, errors.InvalidTokenError):
+            logger.warning(
+                "The access token provided is invalid or has expired. "
+                "An automatic update will be performed before retrying."
+            )
+            # XXX: The default executor is used.
+            access_token = await loop.run_in_executor(None, self._auth_manager.update_auth_token)
             url_with_token = add_query_params(url, [("access_token", access_token)])
-            try:
-                return await self._client.asend_request(
-                    method,
-                    url_with_token,
-                    stream,
-                    data=data,
-                    headers=headers,
-                    files=files,
-                    request_timeout=request_timeout,
-                )
-            except (errors.TokenExpiredError, errors.InvalidTokenError):
-                attempts += 1
-                if attempts <= self._MAX_TOKEN_UPDATE_RETRIES:
-                    logger.warning(
-                        "The access token provided is invalid or has expired. "
-                        "An automatic update will be performed before retrying."
-                    )
-                    loop = asyncio.get_running_loop()
-                    access_token = await loop.run_in_executor(None, self._auth_manager.update_auth_token)
-                    continue
-                else:
-                    raise
+            return await self._client.asend_request(
+                method,
+                url_with_token,
+                stream,
+                data=data,
+                headers=headers,
+                files=files,
+                request_timeout=request_timeout,
+            )
 
 
 class _BCEBackend(EBBackend):
     _SIG_EXPIRATION_IN_SECS: int = 1800
 
-    def __init__(self, config_dict: Dict[str, Any]) -> None:
+    def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
-        if self._cfg.get("ak") is None or self._cfg.get("sk") is None:
+        ak = self._cfg.get("ak")
+        sk = self._cfg.get("sk")
+        if ak is None or sk is None:
             raise RuntimeError("Invalid access key ID or secret access key")
+        self._ak = ak
+        self._sk = sk
 
     def request(
         self,
@@ -217,7 +218,7 @@ class _BCEBackend(EBBackend):
         headers["Host"] = urllib.parse.quote(host)
         x_bce_date = self._get_canonical_time()
         headers["x-bce-date"] = x_bce_date
-        credentials = {"ak": self._cfg["ak"], "sk": self._cfg["sk"]}
+        credentials = {"ak": self._ak, "sk": self._sk}
         headers["Authorization"] = self._sign(
             credentials=credentials,
             method=method,
@@ -280,10 +281,14 @@ class _BCEBackend(EBBackend):
         )
 
         signing_key = hmac.new(
-            credentials["sk"].encode("utf-8"), auth_str_prefix.encode("utf-8"), hashlib.sha256
+            credentials["sk"].encode("utf-8"),
+            auth_str_prefix.encode("utf-8"),
+            hashlib.sha256,
         )
         signature = hmac.new(
-            signing_key.hexdigest().encode("utf-8"), canonical_request.encode("utf-8"), hashlib.sha256
+            signing_key.hexdigest().encode("utf-8"),
+            canonical_request.encode("utf-8"),
+            hashlib.sha256,
         )
 
         return auth_str_prefix + "/" + signed_headers + "/" + signature.hexdigest()

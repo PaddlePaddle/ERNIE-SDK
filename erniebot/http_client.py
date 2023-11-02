@@ -74,8 +74,7 @@ _thread_context = threading.local()
 
 
 class EBClient(object):
-    """A client class that provides low-level APIs to handle HTTP requests and
-    responses."""
+    """A client class that provides low-level APIs to handle HTTP requests and responses."""
 
     MAX_CONNECTION_RETRIES: int = 2
     MAX_SESSION_LIFETIME_SECS: int = 180
@@ -142,7 +141,7 @@ class EBClient(object):
             stream=stream,
             request_timeout=request_timeout,
         )
-        resp, got_stream = self._interpret_response(result, stream)
+        resp, got_stream = self._interpret_response(result)
         if stream != got_stream:
             logger.warning("Unexpected response: %s", resp)
             logger.warning(
@@ -174,7 +173,7 @@ class EBClient(object):
                 headers=headers,
                 request_timeout=request_timeout,
             )
-            resp, got_stream = await self._interpret_async_response(result, stream)
+            resp, got_stream = await self._interpret_async_response(result)
             if stream != got_stream:
                 logger.warning("Unexpected response: %s", resp)
                 logger.warning(
@@ -327,9 +326,9 @@ class EBClient(object):
                 yield _line
 
     def _interpret_response(
-        self, result: requests.Response, stream: bool
+        self, result: requests.Response
     ) -> Tuple[Union[EBResponse, Iterator[EBResponse]], bool]:
-        if stream and result.headers["Content-Type"].startswith("text/event-stream"):
+        if result.headers["Content-Type"].startswith("text/event-stream"):
             return (
                 self._interpret_stream_response(result.iter_lines(), result.status_code, result.headers),
                 True,
@@ -348,9 +347,8 @@ class EBClient(object):
     async def _interpret_async_response(
         self,
         result: aiohttp.ClientResponse,
-        stream: bool,
     ) -> Tuple[Union[EBResponse, AsyncIterator[EBResponse]], bool]:
-        if stream and result.headers["Content-Type"].startswith("text/event-stream"):
+        if result.headers["Content-Type"].startswith("text/event-stream"):
             return (
                 self._interpret_async_stream_response(result.content, result.status, result.headers),
                 True,

@@ -18,47 +18,12 @@ import pathlib
 import re
 import sys
 import types
-from typing import Any, Callable, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Dict, Optional
 
 from .types import ConfigDictType
 from .utils.misc import Singleton
 
 __all__ = ["GlobalConfig", "init_global_config"]
-
-
-class BaseConfig(object):
-    def __init__(self, cfg_dict: Optional[Dict[str, "_ConfigItem"]] = None) -> None:
-        super().__init__()
-        self._cfg_dict: Dict[str, "_ConfigItem"] = cfg_dict if cfg_dict is not None else dict()
-
-    def add_item(self, cfg: "_ConfigItem") -> None:
-        if not isinstance(cfg, _ConfigItem):
-            raise TypeError
-        self._cfg_dict[cfg.key] = cfg
-
-    def get_value(self, key: str) -> Optional[Any]:
-        cfg = self._cfg_dict[key]
-        return cfg.value
-
-    def set_value(self, key: str, value: Optional[Any]) -> None:
-        cfg = self._cfg_dict[key]
-        cfg.value = value
-
-
-class GlobalConfig(BaseConfig, metaclass=Singleton):
-    def create_dict(self, **overrides: Optional[Any]) -> ConfigDictType:
-        dict_ = {}
-        for key, cfg in self._cfg_dict.items():
-            if key in overrides:
-                val = overrides.pop(key)
-            else:
-                val = cfg.value
-            if val is not None:
-                cfg.validate(val)
-            dict_[key] = val
-        if len(overrides) != 0:
-            raise KeyError(f"Unexpected keys: {list(overrides.keys())}")
-        return dict_
 
 
 def init_global_config() -> None:
@@ -85,33 +50,59 @@ def init_global_config() -> None:
     cfg.add_item(PositiveNumberItem(key="timeout", env_key="EB_TIMEOUT"))
 
 
-_T = TypeVar("_T")
-
-
-class _ConfigItem(Generic[_T]):
-    DATA_TYPE: Optional[Type[_T]]
-    _FACTORY: Callable[[str], _T]
-
-    def __init__(self, key: str, env_key: Optional[str] = None, default: Optional[_T] = None) -> None:
+class _BaseConfig(object):
+    def __init__(self, cfg_dict: Optional[Dict[str, "_ConfigItem"]] = None) -> None:
         super().__init__()
-        self._key: str = key
-        self._env_key: Optional[str] = env_key
-        self._def_val: Optional[_T] = default
+        self._cfg_dict: Dict[str, "_ConfigItem"] = cfg_dict if cfg_dict is not None else dict()
 
-        self.data_type: Optional[Type[_T]] = self.DATA_TYPE
-        self._env_val: Optional[_T] = None
+    def add_item(self, cfg: "_ConfigItem") -> None:
+        if not isinstance(cfg, _ConfigItem):
+            raise TypeError
+        self._cfg_dict[cfg.key] = cfg
+
+    def get_value(self, key: str) -> Any:
+        cfg = self._cfg_dict[key]
+        return cfg.value
+
+    def set_value(self, key: str, value: Any) -> None:
+        cfg = self._cfg_dict[key]
+        cfg.value = value
+
+
+class GlobalConfig(_BaseConfig, metaclass=Singleton):
+    def create_dict(self, **overrides: Any) -> ConfigDictType:
+        dict_: ConfigDictType = {}
+        for key, cfg in self._cfg_dict.items():
+            if key in overrides:
+                val = overrides.pop(key)
+                cfg.validate(val)
+            else:
+                val = cfg.value
+            dict_[key] = val
+        if len(overrides) != 0:
+            raise KeyError(f"Unexpected keys: {list(overrides.keys())}")
+        return dict_
+
+
+class _ConfigItem(object):
+    def __init__(self, key: str, env_key: Optional[str] = None, default: Any = None) -> None:
+        super().__init__()
+        self._key = key
+        self._env_key = env_key
+        self._def_val = default
+
+        self._env_val: Optional[str] = None
         if self._env_key is not None:
             env_val = os.environ.get(self._env_key, None)
-            if env_val is not None:
-                self._env_val = type(self)._FACTORY(env_val)
-        self._val: Optional[_T] = None
+            self._env_val = env_val
+        self._val: Any = None
 
     @property
     def key(self) -> str:
         return self._key
 
     @property
-    def value(self) -> Optional[_T]:
+    def value(self) -> Any:
         if self._val is not None:
             return self._val
         else:
@@ -119,61 +110,68 @@ class _ConfigItem(Generic[_T]):
             if self._key in mod.__dict__:
                 val = mod.__dict__[self._key]
                 assert not isinstance(val, types.ModuleType)
-                return val
             else:
                 if self._env_val is not None:
-                    return self._env_val
+                    val = self.factory(self._env_val)
                 else:
-                    return self._def_val
+                    val = self._def_val
+            self.validate(val)
+            return val
 
     @value.setter
-    def value(self, new_value: Optional[_T]) -> None:
-        if new_value is not None:
-            self.validate(new_value)
+    def value(self, new_value: Any) -> None:
+        self.validate(new_value)
         self._val = new_value
 
-    def validate(self, val: _T) -> None:
+    def factory(self, env_val: str) -> Any:
+        raise NotImplementedError
+
+    def validate(self, val: Any) -> None:
+        if val is not None:
+            self._validate(val)
+
+    def _validate(self, val: Any) -> None:
         raise NotImplementedError
 
     def __str__(self) -> str:
         return f"{{{repr(self.key)}: {self.value}}}"
 
 
-class NumberItem(_ConfigItem[float]):
-    DATA_TYPE = float
-    _FACTORY = float
+class NumberItem(_ConfigItem):
+    def factory(self, env_val: str) -> Any:
+        return float(env_val)
 
-    def validate(self, val: float) -> None:
+    def _validate(self, val: Any) -> None:
         if not isinstance(val, numbers.Real):
             raise TypeError
 
 
 class PositiveNumberItem(NumberItem):
-    def validate(self, val: float) -> None:
-        super().validate(val)
+    def _validate(self, val: Any) -> None:
+        super()._validate(val)
         if val < 0.0:
             raise ValueError(f"Invalid value ({val}) for {self.key}, which should be a positive value.")
 
 
-class StringItem(_ConfigItem[str]):
-    DATA_TYPE = str
-    _FACTORY = str
+class StringItem(_ConfigItem):
+    def factory(self, env_val: str) -> Any:
+        return str(env_val)
 
-    def validate(self, val: str) -> None:
+    def _validate(self, val: Any) -> None:
         if not isinstance(val, str):
             raise TypeError
 
 
 class PathItem(StringItem):
-    def validate(self, val: str) -> None:
-        super().validate(val)
+    def _validate(self, val: Any) -> None:
+        super()._validate(val)
         if not pathlib.Path(val).exists():
             raise ValueError(f"{val} does not exist.")
 
 
 class URLItem(StringItem):
-    def validate(self, val: str) -> None:
-        super().validate(val)
+    def _validate(self, val: Any) -> None:
+        super()._validate(val)
         # Allow both HTTP and HTTPS
         pat = r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"  # noqa: E501
         res = re.match(pat, val)

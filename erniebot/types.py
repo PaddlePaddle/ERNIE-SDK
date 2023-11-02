@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import (
     IO,
     TYPE_CHECKING,
@@ -30,12 +31,34 @@ if TYPE_CHECKING:
 
 from .response import EBResponse
 
-__all__ = ["ConfigDictType", "ParamsType", "HeadersType", "FilesType", "ResponseT"]
+__all__ = [
+    "ConfigDictType",
+    "FilesType",
+    "HeadersType",
+    "ParamsType",
+    "Request",
+    "RequestWithStream",
+    "ResponseT",
+]
 
 ConfigDictType: TypeAlias = Dict[str, Optional[Any]]
 
-ParamsType: TypeAlias = Dict[str, Any]
-HeadersType: TypeAlias = Dict[str, str]
 FilesType: TypeAlias = Dict[str, IO]
+HeadersType: TypeAlias = Dict[str, str]
+ParamsType: TypeAlias = Dict[str, Any]
 
 ResponseT = TypeVar("ResponseT", EBResponse, Iterator[EBResponse], AsyncIterator[EBResponse])
+
+
+@dataclass
+class Request(object):
+    path: str
+    params: ParamsType
+    headers: HeadersType
+    files: Optional[FilesType] = None
+    timeout: Optional[float] = None
+
+
+@dataclass
+class RequestWithStream(Request):
+    stream: bool = False

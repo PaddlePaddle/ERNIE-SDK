@@ -16,7 +16,7 @@ import threading
 from collections.abc import AsyncIterator, Iterator
 from typing import ClassVar
 
-__all__ = ["Constant", "Singleton", "transform"]
+__all__ = ["Constant", "filter_args", "Singleton", "transform"]
 
 
 class Constant(object):
@@ -41,6 +41,10 @@ class Singleton(type):
                 if cls not in cls._insts:
                     cls._insts[cls] = super().__call__(*args, **kwargs)
         return cls._insts[cls]
+
+
+def filter_args(**kwargs):
+    return {k: v for k, v in kwargs.items() if v is not None}
 
 
 def transform(func, data):

@@ -7,14 +7,14 @@ ERNIE Bot SDK支持3种参数配置的方法：(1）使用环境变量，(2）�
 (1) 使用环境变量：
 
 ```{.sh .copy}
-export EB_API_TYPE='<eb-api-type>'
+export EB_API_TYPE="<eb-api-type>"
 ```
 
 (2) 使用全局变量：
 
 ```{.py .copy}
 import erniebot
-erniebot.api_type = '<eb-api-type>'
+erniebot.api_type = "<eb-api-type>"
 ```
 
 (3) 使用`_config_`参数：
@@ -24,12 +24,12 @@ import erniebot
 
 response = erniebot.ChatCompletion.create(
     _config_=dict(
-        api_type='<eb-api-type>',
+        api_type="<eb-api-type>",
     ),
-    model='ernie-bot',
+    model="ernie-bot",
     messages=[{
-        'role': 'user',
-        'content': "你好，请介绍下你自己",
+        "role": "user",
+        "content": "你好，请介绍下你自己",
     }],
 )
 ```
@@ -40,7 +40,7 @@ ERNIE Bot SDK支持的参数，具体介绍如下：
 
 | API参数名称   | 环境变量名称  |  类型   |  必须设置 |  描述   |
 | :---         | :----       | :----  | :---- |  :---- |
-| api_type     | EB_API_TYPE | str | 否 | 后端平台的类型。支持`'qianfan'`、`'yinian'`和`'aistudio'`，默认是`'qianfan'`。|
+| api_type     | EB_API_TYPE | str | 否 | 后端平台的类型。支持`"qianfan"`、`"yinian"`和`"aistudio"`，默认是`"qianfan"`。|
 | access_token | EB_ACCESS_TOKEN | str | 否 | 认证鉴权的access token。具体参见[认证鉴权文档](./authentication.md)。|
 | ak           | EB_AK       | str | 否 | 认证鉴权的API key或access key ID。必须和`sk`同时设置。 |
 | sk           | EB_SK       | str | 否 | 认证鉴权的secret key或secret access key。必须和`ak`同时设置。 |

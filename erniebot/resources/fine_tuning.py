@@ -12,31 +12,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, List, Optional, Tuple
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType, ResponseT
-from erniebot.utils.misc import transform
+from erniebot.types import ConfigDictType, HeadersType, Request
+from erniebot.utils.misc import filter_args
 
 from .abc import Cancellable, Creatable, Queryable
 from .resource import EBResource
 
 
 class FineTuningTask(EBResource, Creatable):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT, APIType.AISTUDIO)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN_SFT,
+        APIType.AISTUDIO,
+    )
 
-    def _prepare_create(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[
-        str,
-        Optional[ParamsType],
-        Optional[HeadersType],
-        Optional[FilesType],
-        bool,
-        Optional[float],
-    ]:
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        description: str,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = resource.create_resource(
+            **filter_args(
+                name=name,
+                description=description,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    @classmethod
+    async def acreate(
+        cls,
+        name: str,
+        description: str,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        resp = await resource.acreate_resource(
+            **filter_args(
+                name=name,
+                description=description,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+        return resp
+
+    def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
         VALID_KEYS = {"name", "description", "headers", "request_timeout"}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
@@ -70,34 +108,170 @@ class FineTuningTask(EBResource, Creatable):
         # headers
         headers = kwargs.get("headers", None)
 
-        # files
-        files = None
-
-        # stream
-        stream = False
-
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, files, stream, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(FineTuningResponse.from_mapping, resp)
+    def _postprocess_create(self, resp: EBResponse) -> EBResponse:
+        return FineTuningResponse.from_mapping(resp)
 
 
 class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,)
 
-    def _prepare_create(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[
-        str,
-        Optional[ParamsType],
-        Optional[HeadersType],
-        Optional[FilesType],
-        bool,
-        Optional[float],
-    ]:
+    @classmethod
+    def create(
+        cls,
+        task_id: int,
+        train_mode: str,
+        peft_type: str,
+        train_config: dict,
+        train_set: List[dict],
+        train_set_rate: float,
+        *,
+        description: Optional[str] = None,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.create_resource(
+            **filter_args(
+                task_id=task_id,
+                train_mode=train_mode,
+                peft_type=peft_type,
+                train_config=train_config,
+                train_set=train_set,
+                train_set_rate=train_set_rate,
+                description=description,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def acreate(
+        cls,
+        task_id: int,
+        train_mode: str,
+        peft_type: str,
+        train_config: dict,
+        train_set: List[dict],
+        train_set_rate: float,
+        *,
+        description: Optional[str] = None,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.acreate_resource(
+            **filter_args(
+                task_id=task_id,
+                train_mode=train_mode,
+                peft_type=peft_type,
+                train_config=train_config,
+                train_set=train_set,
+                train_set_rate=train_set_rate,
+                description=description,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    def query(
+        cls,
+        task_id: int,
+        job_id: int,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.query_resource(
+            **filter_args(
+                task_id=task_id,
+                job_id=job_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def aquery(
+        cls,
+        task_id: int,
+        job_id: int,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.aquery_resource(
+            **filter_args(
+                task_id=task_id,
+                job_id=job_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    def cancel(
+        cls,
+        task_id: int,
+        job_id: int,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return resource.cancel_resource(
+            **filter_args(
+                task_id=task_id,
+                job_id=job_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    @classmethod
+    async def acancel(
+        cls,
+        task_id: int,
+        job_id: int,
+        *,
+        _config_: Optional[ConfigDictType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> EBResponse:
+        config = _config_ or {}
+        resource = cls(**config)
+        return await resource.acancel_resource(
+            **filter_args(
+                task_id=task_id,
+                job_id=job_id,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        )
+
+    def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
         def _get_required_arg(key: str) -> Any:
             if key not in kwargs:
                 raise errors.ArgumentNotFoundError(f"`{key}` is not found.")
@@ -162,23 +336,20 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # headers
         headers = kwargs.get("headers", None)
 
-        # files
-        files = None
-
-        # stream
-        stream = False
-
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, files, stream, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
-    def _postprocess_create(self, resp: ResponseT) -> ResponseT:
-        return transform(FineTuningResponse.from_mapping, resp)
+    def _postprocess_create(self, resp: EBResponse) -> EBResponse:
+        return FineTuningResponse.from_mapping(resp)
 
-    def _prepare_query(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
+    def _prepare_query(self, kwargs: Dict[str, Any]) -> Request:
         VALID_KEYS = {"task_id", "job_id", "headers", "request_timeout"}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
@@ -215,14 +386,17 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
     def _postprocess_query(self, resp: EBResponse) -> EBResponse:
         return FineTuningResponse.from_mapping(resp)
 
-    def _prepare_cancel(
-        self, kwargs: Dict[str, Any]
-    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
+    def _prepare_cancel(self, kwargs: Dict[str, Any]) -> Request:
         VALID_KEYS = {"task_id", "job_id", "headers", "request_timeout"}
 
         invalid_keys = kwargs.keys() - VALID_KEYS
@@ -259,7 +433,12 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
-        return path, params, headers, request_timeout
+        return Request(
+            path=path,
+            params=params,
+            headers=headers,
+            timeout=request_timeout,
+        )
 
     def _postprocess_cancel(self, resp: EBResponse) -> EBResponse:
         return FineTuningResponse.from_mapping(resp)

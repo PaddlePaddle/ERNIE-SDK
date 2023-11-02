@@ -53,8 +53,7 @@ class InvalidArgumentError(EBError):
 
 
 class MaxRetriesExceededError(EBError):
-    """Exception that's raised when the maximum number of retries is
-    exceeded."""
+    """Exception that's raised when the maximum number of retries is exceeded."""
 
     pass
 
@@ -81,8 +80,7 @@ class HTTPRequestError(EBError):
         rbody: Optional[str] = None,
         rheaders: Optional[Mapping[str, Any]] = None,
     ) -> None:
-        """Initialize the instance based on an error message and an HTTP
-        response.
+        """Initialize the instance based on an error message and an HTTP response.
 
         Args:
             message: Description of the error.
@@ -144,8 +142,7 @@ class APIError(HTTPRequestError):
 
 
 class InvalidParameterError(APIError):
-    """Exception that's raised when at least one of the passed parameters is
-    invalid."""
+    """Exception that's raised when at least one of the passed parameters is invalid."""
 
     pass
 
@@ -157,15 +154,13 @@ class InvalidTokenError(APIError):
 
 
 class PermissionError(APIError):
-    """Exception that's raised when an API request is denied due to lack of
-    permission."""
+    """Exception that's raised when an API request is denied due to lack of permission."""
 
     pass
 
 
 class RequestLimitError(APIError):
-    """Exception that's raised when the maximum number of API requests is
-    exceeded."""
+    """Exception that's raised when the maximum number of API requests is exceeded."""
 
     pass
 
@@ -183,7 +178,6 @@ class TokenExpiredError(APIError):
 
 
 class TryAgain(APIError):
-    """Exception that's raised when the API prompts the caller to try again
-    later."""
+    """Exception that's raised when the API prompts the caller to try again later."""
 
     pass
