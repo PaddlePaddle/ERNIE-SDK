@@ -17,7 +17,7 @@ from typing import Any, List, Optional
 from erniebot_agent.message import Message
 
 
-class MarkErnieBot:
+class MockErnieBot:
     """Looks like a LLM but only return what you say. For test only"""
 
     def __init__(

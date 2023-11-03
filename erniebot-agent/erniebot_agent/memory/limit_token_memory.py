@@ -14,11 +14,11 @@
 
 from typing import List
 
-from erniebot_agent.memory import Memory
+from erniebot_agent.memory import WholeMemory
 from erniebot_agent.message import Message
 
 
-class WholeMemory(Memory):
+class LimitTokenMemory(WholeMemory):
     """This class controls max tokens less than max_token_limit.
     If tokens >= max_token_limit, pop message from memory.
     """

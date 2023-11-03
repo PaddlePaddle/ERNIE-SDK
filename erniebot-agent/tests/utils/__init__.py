@@ -1,1 +1,1 @@
-from .mark_erniebot import MarkErnieBot
+from .mock_erniebot import MockErnieBot

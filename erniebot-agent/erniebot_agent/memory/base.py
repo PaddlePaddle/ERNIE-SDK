@@ -36,7 +36,7 @@ class MessageManager:
         return self.messages
 
 
-class Memory:
+class WholeMemory:
     def __init__(self):
         self.msg_manager = MessageManager()
 
