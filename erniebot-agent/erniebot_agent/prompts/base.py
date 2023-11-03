@@ -18,11 +18,11 @@ from typing import List
 class BasePromptTemplate(ABC):
     def __init__(self, input_variables: List[str]):
         self.input_variables: List[str] = input_variables
-    
+
     @abstractmethod
     def format(self, **kwargs):
         raise NotImplementedError
-    
-    @abstractmethod    
+
+    @abstractmethod
     def format_prompt(self):
         raise NotImplementedError

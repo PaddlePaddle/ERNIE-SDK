@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import MessageManager, Memory
-from .whole_memory import WholeMemory
+from .base import Memory, MessageManager
 from .buffer_window_memory import BufferWindowMemory
+from .whole_memory import WholeMemory

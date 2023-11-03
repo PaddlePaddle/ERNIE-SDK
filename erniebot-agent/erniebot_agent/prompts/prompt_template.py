@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.prompts import BasePromptTemplate
 from typing import Any
+
+from erniebot_agent.prompts import BasePromptTemplate
 
 
 def jinja2_formatter(template: str, **kwargs: Any) -> str:
@@ -27,17 +28,19 @@ def jinja2_formatter(template: str, **kwargs: Any) -> str:
         )
 
     return Template(template).render(**kwargs)
-    
+
+
 class PromptTemplate(BasePromptTemplate):
     """format the prompt for llm input."""
+
     def __init__(self, template, input_variables, name=None):
         super().__init__(input_variables)
         self.name = name
         self.template = template
-        self.validate_template=None # todo，评估template中的合法性，langchain中评估变量是否符合预期 yes
-        
+        self.validate_template = None  # todo，评估template中的合法性，langchain中评估变量是否符合预期 yes
+
     def format(self, **kwargs) -> str:
         return jinja2_formatter(self.template, **kwargs)
 
-    def format_prompt(self): # todo：确定是否需要，用于转换prompt为str/Message。 yes to user message
-        raise NotImplementedError('format_prompt is not implemented yet.')
+    def format_prompt(self):  # todo：确定是否需要，用于转换prompt为str/Message。 yes to user message
+        raise NotImplementedError("format_prompt is not implemented yet.")
