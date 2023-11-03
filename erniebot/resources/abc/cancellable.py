@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import abc
-from typing import (Any, Dict, Optional, Tuple)
+from typing import Any, Dict, Optional, Tuple
 
 from erniebot.response import EBResponse
-from erniebot.types import (ParamsType, HeadersType)
+from erniebot.types import HeadersType, ParamsType
+
 from .protocol import Resource
 
 
@@ -26,7 +27,7 @@ class Cancellable(Resource):
     @classmethod
     def cancel(cls, **kwargs: Any) -> EBResponse:
         """Cancel a long-running operation."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         cancel_kwargs = kwargs
         return resource.cancel_resource(**cancel_kwargs)
@@ -34,45 +35,42 @@ class Cancellable(Resource):
     @classmethod
     async def acancel(cls, **kwargs: Any) -> EBResponse:
         """Asynchronous version of `cancel`."""
-        config = kwargs.pop('_config_', {})
+        config = kwargs.pop("_config_", {})
         resource = cls.new_object(**config)
         cancel_kwargs = kwargs
         resp = await resource.acancel_resource(**cancel_kwargs)
         return resp
 
     def cancel_resource(self, **cancel_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_cancel(
-            cancel_kwargs)
+        path, params, headers, request_timeout = self._prepare_cancel(cancel_kwargs)
         resp = self.request(
-            method='POST',
+            method="POST",
             path=path,
             params=params,
             stream=False,
             headers=headers,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp = self._postprocess_cancel(resp)
         return resp
 
     async def acancel_resource(self, **cancel_kwargs: Any) -> EBResponse:
-        path, params, headers, request_timeout = self._prepare_cancel(
-            cancel_kwargs)
+        path, params, headers, request_timeout = self._prepare_cancel(cancel_kwargs)
         resp = await self.arequest(
-            method='POST',
+            method="POST",
             path=path,
             params=params,
             stream=False,
             headers=headers,
-            request_timeout=request_timeout)
+            request_timeout=request_timeout,
+        )
         resp = self._postprocess_cancel(resp)
         return resp
 
     @abc.abstractmethod
-    def _prepare_cancel(self,
-                        kwargs: Dict[str, Any]) -> Tuple[str,
-                                                         Optional[ParamsType],
-                                                         Optional[HeadersType],
-                                                         Optional[float],
-                                                         ]:
+    def _prepare_cancel(
+        self, kwargs: Dict[str, Any]
+    ) -> Tuple[str, Optional[ParamsType], Optional[HeadersType], Optional[float]]:
         ...
 
     def _postprocess_cancel(self, resp: EBResponse) -> EBResponse:

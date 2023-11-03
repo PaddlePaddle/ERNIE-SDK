@@ -14,8 +14,10 @@
 from __future__ import annotations
 
 import unittest
-from erniebot.tools.schema import PluginSchema
+
 from openapi_spec_validator.readers import read_from_filename
+
+from erniebot.tools.schema import PluginSchema
 
 
 class TestToolSchema(unittest.TestCase):
@@ -23,16 +25,13 @@ class TestToolSchema(unittest.TestCase):
 
     def test_plugin_schema(self):
         schema = PluginSchema.from_openapi_file(self.openapi_file)
-        
+
         self.assertEqual(schema.info.title, "单词本")
         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8081")
-    
+
     def test_load_and_save(self):
         spec_dict = read_from_filename(self.openapi_file)
-        
+
         schema = PluginSchema.from_openapi_file(self.openapi_file)
         saved_spec_dict = schema.to_openapi_dict()
-        self.assertEqual(
-            spec_dict,
-            saved_spec_dict
-        )
+        self.assertEqual(spec_dict, saved_spec_dict)

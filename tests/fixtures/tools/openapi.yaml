@@ -18,7 +18,7 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/getWordbook"
     /generate_sentences:
-        post:        
+        post:
             operationId: generateSentences
             summary: 背单词，生成句子
             requestBody:
