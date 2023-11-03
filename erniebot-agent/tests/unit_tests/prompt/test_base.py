@@ -1,6 +1,6 @@
 import unittest
 
-from erniebot_agent.prompts.prompt_template import PromptTemplate
+from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 
 class TestPrompt(unittest.TestCase):

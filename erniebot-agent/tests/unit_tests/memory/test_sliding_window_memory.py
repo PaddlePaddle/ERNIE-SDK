@@ -3,8 +3,7 @@ import unittest
 
 from erniebot_agent.memory import SlidingWindowMemory
 from erniebot_agent.message import HumanMessage
-
-from tests.utils import MockErnieBot
+from erniebot_agent.tests.utils import MockErnieBot
 
 
 class TestSlidingWindowMemory(unittest.TestCase):

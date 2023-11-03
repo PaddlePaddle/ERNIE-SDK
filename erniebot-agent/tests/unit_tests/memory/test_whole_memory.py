@@ -3,8 +3,7 @@ import unittest
 
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.message import HumanMessage
-
-from tests.utils import MockErnieBot
+from erniebot_agent.tests.utils import MockErnieBot
 
 
 class TestWholeMemory(unittest.TestCase):
