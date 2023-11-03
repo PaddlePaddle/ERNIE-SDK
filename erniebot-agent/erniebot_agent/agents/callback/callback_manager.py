@@ -13,12 +13,17 @@
 # limitations under the License.
 
 import inspect
-from typing import List, Any
+from typing import Any, List, Union, final
 
+from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.callback.events import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.messages import Message
+from erniebot_agent.tools.base import Tool
 
 
+@final
 class CallbackManager(object):
     def __init__(self, handlers: List[CallbackHandler]):
         super().__init__()
@@ -62,19 +67,19 @@ class CallbackManager(object):
 
     async def on_llm_start(self,
                            agent: Agent,
-                           llm: LLM,
+                           llm: ChatModel,
                            messages: List[Message]) -> None:
         await self.handle_event(
             EventType.LLM_START, agent=agent, llm=llm, messages=messages)
 
-    async def on_llm_end(self, agent: Agent, llm: LLM,
+    async def on_llm_end(self, agent: Agent, llm: ChatModel,
                          response: Message) -> None:
         await self.handle_event(
             EventType.LLM_END, agent=agent, llm=llm, response=response)
 
     async def on_llm_error(self,
                            agent: Agent,
-                           llm: LLM,
+                           llm: ChatModel,
                            error: Union[Exception, KeyboardInterrupt]) -> None:
         await self.handle_event(
             EventType.AGENT_START, agent=agent, llm=llm, error=error)

@@ -15,7 +15,8 @@
 import abc
 import inspect
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union, final
+from xxlimited import Str
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
@@ -23,10 +24,10 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.utils.json import to_compact_json, to_pretty_json
 from erniebot_agents.memory.base import Memory
 
 
+@final
 class ToolManager(object):
     """A `ToolManager` instance manages tools for an agent.
 
@@ -63,55 +64,52 @@ class ToolManager(object):
 
     def get_tool_names_with_descriptions(self) -> str:
         return "\n".join(
-            f"{name}:{to_compact_json(tool.function_input())}" for name, tool in self._tools.items()
+            f"{name}:{json.dumps(tool.function_input())}" for name, tool in self._tools.items()
         )
 
+    def get_tool_function_inputs(self):
+        return [tool.function_input() for tool in self._tools.values()]
 
-class Agent(metaclass=abc.ABCMeta):
+
+class BaseAgent(metaclass=abc.ABCMeta):
     llm: ChatModel
     memory: Memory
     _tool_manager: ToolManager
     _callback_manager: CallbackManager
 
+    @abc.abstractmethod
+    async def run(self, prompt: str) -> str:
+        raise NotImplementedError
 
-class Agent(metaclass=abc.ABCMeta):
-    llm: ChatModel
-    memory: Memory
-    _tool_manager: ToolManager
-    _callback_manager: CallbackManager
 
+class Agent(BaseAgent):
     def __init__(
         self,
         llm: ChatModel,
         tools: Union[ToolManager, List[Tool]],
         memory: Memory,
         *,
-        callbacks: Optional[List[CallbackHandler]] = None,
+        callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
         self.memory = memory
-        self._tool_manager = ToolManager(tools)
-        self._callback_manager = CallbackManager(callbacks or get_default_callbacks())
+        if isinstance(tools, ToolManager):
+            self._tool_manager = tools
+        else:
+            self._tool_manager = ToolManager(tools)
+        if callbacks is None:
+            callbacks = get_default_callbacks()
+        if isinstance(callbacks, CallbackManager):
+            self._callback_manager = callbacks
+        else:
+            self._callback_manager = CallbackManager(callbacks)
 
     async def run(self, prompt: str) -> str:
         self._callback_manager.on_agent_start(agent=self, prompt=prompt)
         output = await self._run(prompt)
         self._callback_manager.on_agent_end(agent=self, output=output)
         return output
-
-    async def run_tool(self, tool_name: str, tool_args: str) -> str:
-        tool = self._tool_manager.get_tool(tool_name)
-        self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
-        tool_resp = await self._run_tool(tool, tool_args)
-        self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
-        return tool_resp
-
-    async def run_llm(self, messages: List[Message]) -> Message:
-        self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
-        llm_resp = await self._run_llm(messages)
-        self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
-        return llm_resp
 
     def import_tool(self, tool: Tool) -> None:
         self._tool_manager.add_tool(tool)
@@ -120,19 +118,37 @@ class Agent(metaclass=abc.ABCMeta):
         self.memory.forget()
 
     @abc.abstractmethod
-    def _run(self, prompt: str) -> str:
+    async def _run(self, prompt: str) -> str:
         raise NotImplementedError
 
-    async def _run_tool(self, tool: Tool, tool_args: str) -> str:
-        tool_args = json.loads(tool_args)
-        tool_args = self._validate_tool_args(tool, tool_args)
-        await tool.run(tool_args)
-        tool_resp = to_pretty_json(tool_resp)
+    async def _run_tool(self, tool_name: str, tool_args: Str) -> str:
+        tool = self._tool_manager.get_tool(tool_name)
+        self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+        try:
+            tool_resp = await self._run_tool_without_hooks(tool, tool_args)
+        except
+        self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
-    async def _run_llm(self, messages: List[Message]) -> Message:
-        llm_resp = await self.llm.run(messages, stream=False)
+    async def _run_llm(self, messages: List[Message], **opts: Any) -> Message:
+        self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
+        llm_resp = await self._run_llm_without_hooks(messages, **opts)
+        self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
-    def _validate_tool_args(self, tool: Tool, tool_args: str) -> dict:
-        inspect.signature(tool)
+    async def _run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
+        args_dict = self._parse_tool_args(tool, tool_args)
+        await tool.run(**args_dict)
+        tool_resp = json.dumps(tool_resp)
+        return tool_resp
+
+    async def _run_llm_without_hooks(self, messages: List[Message], functions=None, **opts: Any) -> Message:
+        llm_resp = await self.llm.run(messages, functions=functions, stream=False, **opts)
+        return llm_resp
+
+    def _parse_tool_args(self, tool: Tool, tool_args: str) -> dict:
+        args_dict = json.loads(tool_args)
+        if not isinstance(args_dict, dict):
+            raise ValueError("`tool_args` cannot be interpreted as a dict.")
+        sig = inspect.signature(tool.run)
+        return args_dict

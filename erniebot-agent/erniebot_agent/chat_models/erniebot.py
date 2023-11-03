@@ -24,12 +24,13 @@ class ERNIEBot(ChatModel):
     def __init__(
         self, model: str, api_type: Optional[str] = None, access_token: Optional[str] = None
     ) -> None:
-        """
+        """Initializes an instance of the `ERNIEBot` class.
+
         Args:
-            model (str): Model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or
+            model (str): The model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or
                 "ernie-bot-4".
-            api_type (Optional[str]): API type for erniebot. It should be "aistudio" or "qianfan".
-            access_token (Optional[str]): Access token for erniebot.
+            api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
+            access_token (Optional[str]): The access token for erniebot.
         """
         super().__init__(model=model)
         self.api_type = api_type
@@ -71,14 +72,13 @@ class ERNIEBot(ChatModel):
         functions: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> Union[Message, AsyncIterator[Message]]:
-        """
-        Asynchronously chat with the LLM.
+        """Asynchronously chats with the ERNIE Bot model.
 
         Args:
             messages (List[Message]): A list of messages.
             stream (bool): Whether to use streaming generation. Defaults to False.
-            functions (Optional[List[dict]]): Function definitions to be used by the model. Defaults to None.
-            **kwargs (Any): Keyword arguments, such as `top_p`, `temperature`, `penalty_score`, and `system`.
+            functions (Optional[List[dict]]): The function definitions to be used by the model. Defaults to None.
+            **kwargs: Keyword arguments, such as `top_p`, `temperature`, `penalty_score`, and `system`.
 
         Returns:
             If `stream` is False, returns a single message.

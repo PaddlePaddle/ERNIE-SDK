@@ -44,13 +44,12 @@ class ChatModel(metaclass=ABCMeta):
     async def run(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
     ) -> Union[Message, AsyncIterator[Message]]:
-        """
-        Asynchronously chat with the LLM.
+        """Asynchronously chats with the LLM.
 
         Args:
             messages (List[Message]): A list of messages.
             stream (bool): Whether to use streaming generation. Defaults to False.
-            kwargs (Any): Arbitrary keyword arguments.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             If stream is False, returns a single message.

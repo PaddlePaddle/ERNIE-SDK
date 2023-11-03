@@ -13,15 +13,29 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 
 
 @dataclass
-class Action(object):
+class AgentAction(object):
+    """An action for an agent to execute."""
+
     tool_name: str
     tool_args: str
 
 
 @dataclass
-class Plan(object):
-    actions: List[Action]
+class AgentResponse(object):
+    """The final response of an agent."""
+
+    content: str
+
+
+@dataclass
+class AgentPlan(object):
+    """A plan that contains a list of actions."""
+
+    actions: List[AgentAction]
+
+
+AgentStep = Union[AgentAction, AgentResponse]
