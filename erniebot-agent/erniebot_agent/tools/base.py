@@ -77,33 +77,6 @@ class Tool:
         return scrub_dict(inputs)
 
 
-class CalculatorTool(Tool):
-    """"""
-
-    def __call__(self, math_formula: str) -> float:
-        """你非常擅长将口语化的数学公式描述语言转化标准可执行的数学公式计算
-
-        Args:
-            math_formula (str): 标准的数学公式，例如："2+3"、"3 - 4 * 6", "(3 + 4) * (6 + 4)" 等。
-
-        Examples:
-            >>> {"role": "user", "content": "请告诉我三加六等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'3+6'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':9}"}
-            >>> {"role": "user", "content": "五乘以一加八等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'5*(1+8)'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':45}"}
-            >>> {"role": "user", "content": "我想知道十二除以 4 再加 5 等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'12/4+5'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':8}"}
-
-        Returns:
-            int: 数学公式计算的结果
-        """  # noqa: E501
-
-        return eval(math_formula)
-
-
 class CurrentTimeTool(Tool):
     def __init__(self) -> None:
         super().__init__()
