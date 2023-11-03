@@ -23,8 +23,11 @@ class MessageManager:
     def __init__(self):
         self.messages: List[Message] = []
 
-    def add_messages(self, message: List[Message]):
-        self.messages.extend(message)
+    def add_messages(self, messages: List[Message]):
+        self.messages.extend(messages)
+
+    def add_message(self, message: Message):
+        self.messages.append(message)
 
     def pop_message(self):
         return self.messages.pop(0)
@@ -40,11 +43,11 @@ class WholeMemory:
     def __init__(self):
         self.msg_manager = MessageManager()
 
-    def add_messages(self, message: List[Message]):
-        self.msg_manager.add_messages(message)
+    def add_messages(self, messages: List[Message]):
+        self.msg_manager.add_messages(messages)
 
     def add_message(self, message: Message):
-        self.msg_manager.add_messages([message])
+        self.msg_manager.add_message(message)
 
     def get_messages(self) -> List[Message]:
         return self.msg_manager.retrieve_messages()

@@ -35,12 +35,12 @@ class LimitTokenMemory(WholeMemory):
             max_token_limit=max_token_limit
         )
 
-    def add_messages(self, message: List[Message]):
-        super().add_messages(message)
-        self.prune_message(message)
+    def add_messages(self, messages: List[Message]):
+        super().add_messages(messages)
+        self.prune_message(messages)
 
-    def prune_message(self, message):
-        for m in message:
+    def prune_message(self, messages):
+        for m in messages:
             self.token_length += len(m.content)
         if self.max_token_limit is not None:
             while self.token_length > self.max_token_limit:
