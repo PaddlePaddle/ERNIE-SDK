@@ -1,9 +1,9 @@
-name: Agent Unit Test
+name: AgentUnitTest
 
 on: [push, pull_request]
 
 jobs:
-  Agent Unit Test:
+  AgentUnitTest:
     name: Agent Unit Test
     runs-on: ubuntu-20.04
     steps:
