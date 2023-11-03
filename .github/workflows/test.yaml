@@ -19,4 +19,4 @@ jobs:
           python -m pip install -e erniebot-agent/
           python -m pip install -r tests/requirements.txt
       - name: Run the command
-        run: pytest tests/unit_test
+        run: pytest tests/unit_tests
