@@ -1,0 +1,6 @@
+[tool.isort]
+profile = 'black'
+
+[tool.black]
+line-length = 109
+target_version = ['py37', 'py38', 'py39', 'py310']

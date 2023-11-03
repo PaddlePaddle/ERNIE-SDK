@@ -12,37 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.message import Message
 from typing import List
+
+from erniebot_agent.message import Message
+
 
 class MessageManager:
     """Manage messages"""
-    
+
     def __init__(self):
         self.messages: List[Message] = []
-    
-    def add_message(self, message: List[Message]):
+
+    def add_messages(self, message: List[Message]):
         self.messages.extend(message)
-    
+
     def pop_message(self):
         return self.messages.pop(0)
-    
+
     def clear_messages(self) -> None:
         self.messages = []
-   
+
     def retrieve_messages(self):
         return self.messages
 
 
 class Memory:
     def __init__(self):
-        self.chat_history = MessageManager()
-    
-    def add_message(self, message: List[Message]):
-        self.chat_history.add_message(message)
-    
-    def get_messages(self) ->List[Message]:
-        return self.chat_history.retrieve_messages()
-    
+        self.msg_manager = MessageManager()
+
+    def add_messages(self, message: List[Message]):
+        self.msg_manager.add_messages(message)
+
+    def add_message(self, message: Message):
+        self.msg_manager.add_messages([message])
+
+    def get_messages(self) -> List[Message]:
+        return self.msg_manager.retrieve_messages()
+
     def clear_chat_history(self):
-        self.chat_history.clear_messages()
+        self.msg_manager.clear_messages()

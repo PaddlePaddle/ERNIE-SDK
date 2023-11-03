@@ -14,4 +14,4 @@
 
 from .erniebot import ERNIEBot
 
-__all__ = ['ERNIEBot']
+__all__ = ["ERNIEBot"]

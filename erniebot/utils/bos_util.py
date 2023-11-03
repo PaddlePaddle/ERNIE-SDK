@@ -12,28 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (Optional)
+from typing import Optional
 
-__all__ = ['upload_file_to_bos']
+__all__ = ["upload_file_to_bos"]
 
 
-def upload_file_to_bos(origin_file: str,
-                       upload_file_name: str,
-                       category_dir: str='erniebot',
-                       bos_host: str='bj.bcebos.com',
-                       bos_bucket: str='ernie-bot-sdk',
-                       access_key_id: Optional[str]=None,
-                       secret_access_key: Optional[str]=None) -> str:
-    from baidubce.bce_client_configuration import BceClientConfiguration  # type: ignore
+def upload_file_to_bos(
+    origin_file: str,
+    upload_file_name: str,
+    category_dir: str = "erniebot",
+    bos_host: str = "bj.bcebos.com",
+    bos_bucket: str = "ernie-bot-sdk",
+    access_key_id: Optional[str] = None,
+    secret_access_key: Optional[str] = None,
+) -> str:
     from baidubce.auth.bce_credentials import BceCredentials  # type: ignore
+    from baidubce.bce_client_configuration import BceClientConfiguration  # type: ignore
     from baidubce.services.bos.bos_client import BosClient  # type: ignore
+
     b_config = BceClientConfiguration(
-        credentials=BceCredentials(access_key_id, secret_access_key),
-        endpoint=bos_host)
+        credentials=BceCredentials(access_key_id, secret_access_key), endpoint=bos_host
+    )
     bos_client = BosClient(b_config)
-    with open(origin_file, 'rb') as f:
-        bos_client.put_object_from_string(bos_bucket,
-                                          f"{category_dir}/{upload_file_name}",
-                                          f.read())
+    with open(origin_file, "rb") as f:
+        bos_client.put_object_from_string(bos_bucket, f"{category_dir}/{upload_file_name}", f.read())
     url = f"https://bj.bcebos.com/{bos_bucket}/{category_dir}/{upload_file_name}"
     return url
