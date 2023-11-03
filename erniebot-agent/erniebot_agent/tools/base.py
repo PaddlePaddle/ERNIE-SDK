@@ -14,16 +14,13 @@
 from __future__ import annotations
 
 import json
-import ast
 from datetime import datetime
-from loguru import logger
-from typing import Optional, Any
-from erniebot_agent.tools.schema import (ToolView, ParametersView,
-                                         ParameterView, RemoteToolView,
-                                         PluginSchema, scrub_dict)
+from typing import Any, Optional
 
 import docstring_parser
-from docstring_parser import Docstring, DocstringParam, DocstringReturns
+from docstring_parser import Docstring
+from erniebot_agent.tools.schema import ParametersView, ToolView, scrub_dict
+from loguru import logger
 
 
 class Tool:
@@ -56,19 +53,17 @@ class Tool:
 
         docstring: Docstring = docstring_parser.parse_from_object(self.__call__)
         examples_raws = [
-            example.strip()
-            for example in docstring.examples[0].description.split(">>>")
-            if example.strip()
+            example.strip() for example in docstring.examples[0].description.split(">>>") if example.strip()
         ]
         examples_raws = [json.loads(example) for example in examples_raws]
 
         return ToolView(
             name=self.tool_name,
-            description=docstring.short_description or
-            docstring.long_description or "",
+            description=docstring.short_description or docstring.long_description or "",
             parameters=ParametersView.from_docstring(docstring.params),
             returns=ParametersView.from_docstring(docstring.returns),
-            examples=examples_raws)
+            examples=examples_raws,
+        )
 
     def function_input(self):
         view = self.view()
@@ -77,36 +72,9 @@ class Tool:
             "description": view.description,
             "parameters": view.parameters.to_function_inputs(),
             "responses": view.returns.to_function_inputs(),
-            "examples": view.examples
+            "examples": view.examples,
         }
         return scrub_dict(inputs)
-
-
-class CalculatorTool(Tool):
-    """"""
-
-    def __call__(self, math_formula: str) -> float:
-        """你非常擅长将口语化的数学公式描述语言转化标准可执行的数学公式计算
-
-        Args:
-            math_formula (str): 标准的数学公式，例如："2+3"、"3 - 4 * 6", "(3 + 4) * (6 + 4)" 等。
-
-        Examples:
-            >>> {"role": "user", "content": "请告诉我三加六等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'3+6'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':9}"}
-            >>> {"role": "user", "content": "五乘以一加八等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'5*(1+8)'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':45}"}
-            >>> {"role": "user", "content": "我想知道十二除以 4 再加 5 等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'12/4+5'}"}}
-            >>> {"role": "function", "name": "CalculatorTool", "content": "{'result':8}"}
-
-        Returns:
-            int: 数学公式计算的结果
-        """
-
-        return eval(math_formula)
 
 
 class CurrentTimeTool(Tool):

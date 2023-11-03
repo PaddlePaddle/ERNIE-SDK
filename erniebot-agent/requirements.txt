@@ -2,3 +2,4 @@ erniebot
 PyYAML
 loguru
 docstring_parser
+openapi_spec_validator
