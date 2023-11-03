@@ -3,7 +3,8 @@ import unittest
 
 from erniebot_agent.memory import LimitTokenMemory
 from erniebot_agent.message import HumanMessage
-from erniebot_agent.tests.utils import MockErnieBot
+
+from tests.utils import MockErnieBot
 
 
 class Testlimit_tokenMemory(unittest.TestCase):
