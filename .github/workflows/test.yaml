@@ -1,10 +1,10 @@
-name: UnitTest
+name: Agent Unit Test
 
 on: [push, pull_request]
 
 jobs:
-  UnitTest:
-    name: UnitTest
+  Agent Unit Test:
+    name: Agent Unit Test
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -15,8 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
           python -m pip install -e erniebot-agent/
-          python -m pip install -r tests/requirements.txt
+          python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Run the command
-        run: pytest tests/unit_tests
+        run: pytest erniebot-agent/tests/unit_tests
