@@ -42,9 +42,6 @@ class Tool:
         """
         raise NotImplementedError
 
-    def validate_args(self):
-        pass
-
     def function_call_schema(self) -> dict:
         inputs = {
             "name": self.tool_name,
