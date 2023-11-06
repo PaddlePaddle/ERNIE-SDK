@@ -35,13 +35,17 @@ def get_typing_list_type(type):
     return json_type(arg_type)
 
 
-def json_type(type: Type[object] | None = None):
+def json_type(type: Optional[Type[object]] = None):
     if type is None:
         return "object"
 
     mapping = {int: "integer", str: "string", list: "array", List: "array", float: "number"}
     if type in mapping:
         return mapping[type]
+
+    # List[int], List[str], List[...]
+    if getattr(type, "_name", None) == "List":
+        return "array"
 
     return str(type)
 

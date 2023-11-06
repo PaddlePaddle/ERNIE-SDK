@@ -13,17 +13,16 @@
 # limitations under the License.
 from __future__ import annotations
 
-from datetime import datetime
+from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Type
 
 from erniebot_agent.message import Message
 from erniebot_agent.tools.schema import ToolParameterView, scrub_dict
-from loguru import logger
 
 
-class Tool:
+class Tool(ABC):
+    description: str
     name: Optional[str] = None
-    description: str = "CalculatorTool用于执行数学公式计算"
     inputs: Optional[Type[ToolParameterView]] = None
     ouptuts: Optional[Type[ToolParameterView]] = None
 
@@ -31,9 +30,7 @@ class Tool:
     def tool_name(self):
         return self.name or self.__class__.__name__
 
-    def __init__(self) -> None:
-        self.logger = logger
-
+    @abstractmethod
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         """the body of tools
 
@@ -58,33 +55,3 @@ class Tool:
     @property
     def examples(self) -> List[Message]:
         return []
-
-
-class CurrentTimeTool(Tool):
-    def __init__(self) -> None:
-        super().__init__()
-        self.llm = None
-
-    def __call__(self) -> datetime:
-        """你是一个功能强大的个人助手，擅长回复当前时间信息，比如：现在是几点钟、现在是几点几分等
-
-        Examples:
-            >>> {"role": "user", "content": "现在几点钟？"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CurrentTimeTool"}}
-            >>> {"role": "function", "name": "CurrentTimeTool", "content": "{'result': '现在是下午五点钟'}"}
-            >>> {"role": "user", "content": "麻烦告诉我现在详细的时间信息"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CurrentTimeTool"}}
-            >>> {"role": "function", "name": "CurrentTimeTool", "content": "{'result':'现在是下午五点三十二分'}"}
-
-        Returns:
-            datetime: 当前时间
-        """
-
-        return datetime.now()
-
-    def _get_examples(self) -> list[dict]:
-        return [
-            {"role": "user", "content": "麻烦告诉我现在详细的时间信息"},
-            {"role": "assistant", "content": None, "function_call": {"name": "CurrentTimeTool"}},
-            {"role": "function", "name": "CurrentTimeTool", "content": "{'result':'现在是下午五点三十二分'}"},
-        ]

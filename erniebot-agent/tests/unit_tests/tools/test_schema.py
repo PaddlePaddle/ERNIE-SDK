@@ -14,8 +14,9 @@
 from __future__ import annotations
 
 import unittest
+from typing import List
 
-from erniebot_agent.tools.schema import PluginSchema
+from erniebot_agent.tools.schema import PluginSchema, get_typing_list_type, json_type
 from openapi_spec_validator.readers import read_from_filename
 
 
@@ -39,3 +40,26 @@ class TestToolSchema(unittest.TestCase):
             a = spec_dict[0][key] == saved_spec_dict[key]
             print(a)
         self.assertEqual(spec_dict[0], saved_spec_dict)
+
+    def test_get_typing_list_type(self):
+        result = get_typing_list_type(List[int])
+        self.assertEqual(result, "integer")
+
+        result = get_typing_list_type(List[str])
+        self.assertEqual(result, "string")
+
+        result = get_typing_list_type(int)
+        self.assertEqual(result, None)
+
+        result = get_typing_list_type(dict)
+        self.assertEqual(result, None)
+
+    def test_json_type(self):
+        result = json_type(List[int])
+        self.assertEqual(result, "array")
+
+        result = json_type(int)
+        self.assertEqual(result, "integer")
+
+        result = json_type(float)
+        self.assertEqual(result, "number")
