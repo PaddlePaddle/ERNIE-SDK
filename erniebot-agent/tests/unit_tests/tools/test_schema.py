@@ -35,4 +35,7 @@ class TestToolSchema(unittest.TestCase):
         spec_dict = read_from_filename(self.openapi_file)
         schema = PluginSchema.from_openapi_file(self.openapi_file)
         saved_spec_dict = schema.to_openapi_dict()
+        for key in ["openapi", "info", "servers", "paths", "components"]:
+            a = spec_dict[0][key] == saved_spec_dict[key]
+            print(a)
         self.assertEqual(spec_dict[0], saved_spec_dict)

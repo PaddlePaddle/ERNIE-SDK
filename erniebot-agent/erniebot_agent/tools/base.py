@@ -13,18 +13,19 @@
 # limitations under the License.
 from __future__ import annotations
 
-import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, List, Optional, Type
 
-import docstring_parser
-from docstring_parser import Docstring
-from erniebot_agent.tools.schema import ParametersView, ToolView, scrub_dict
+from erniebot_agent.message import Message
+from erniebot_agent.tools.schema import ToolParameterView, scrub_dict
 from loguru import logger
 
 
 class Tool:
     name: Optional[str] = None
+    description: str = "CalculatorTool用于执行数学公式计算"
+    inputs: Optional[Type[ToolParameterView]] = None
+    ouptuts: Optional[Type[ToolParameterView]] = None
 
     @property
     def tool_name(self):
@@ -44,37 +45,22 @@ class Tool:
     def validate_args(self):
         pass
 
-    def view(self) -> ToolView:
-        """get tool-view object from Tool
-
-        Returns:
-            ToolView: the instance of ToolView
-        """
-
-        docstring: Docstring = docstring_parser.parse_from_object(self.__call__)
-        examples_raws = [
-            example.strip() for example in docstring.examples[0].description.split(">>>") if example.strip()
-        ]
-        examples_raws = [json.loads(example) for example in examples_raws]
-
-        return ToolView(
-            name=self.tool_name,
-            description=docstring.short_description or docstring.long_description or "",
-            parameters=ParametersView.from_docstring(docstring.params, self.tool_name),
-            returns=ParametersView.from_docstring(docstring.returns, self.tool_name),
-            examples=examples_raws,
-        )
-
-    def function_call_schema(self):
-        view = self.view()
+    def function_call_schema(self) -> dict:
         inputs = {
-            "name": view.name,
-            "description": view.description,
-            "parameters": view.parameters.function_call_schema(),
-            "responses": view.returns.function_call_schema(),
-            "examples": view.examples,
+            "name": self.tool_name,
+            "description": self.description,
+            "examples": [example.to_dict() for example in self.examples],
         }
-        return scrub_dict(inputs)
+        if self.inputs is not None:
+            inputs["parameters"] = self.inputs.function_call_schema()
+        if self.ouptuts is not None:
+            inputs["responses"] = self.ouptuts.function_call_schema()
+
+        return scrub_dict(inputs) or {}
+
+    @property
+    def examples(self) -> List[Message]:
+        return []
 
 
 class CurrentTimeTool(Tool):
