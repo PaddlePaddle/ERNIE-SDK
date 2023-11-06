@@ -12,8 +12,14 @@ class TestCalculatorTool(unittest.TestCase):
 
     def test_schema(self):
         calculator = CalculatorTool()
-        function_input = calculator.function_input()
-        self.assertEqual(function_input["description"], "CalculatorTool用于执行数学公式计算")
-        self.assertIn("math_formula", function_input["parameters"]["properties"])
-        self.assertEqual(function_input["parameters"]["properties"]["math_formula"]["type"], "string")
-        # TODO(wj-MCat): check responses
+        function_call_schema = calculator.function_call_schema()
+        self.assertEqual(function_call_schema["description"], "CalculatorTool用于执行数学公式计算")
+        self.assertIn("math_formula", function_call_schema["parameters"]["properties"])
+        self.assertEqual(function_call_schema["parameters"]["properties"]["math_formula"]["type"], "string")
+
+        self.assertEqual(function_call_schema["parameters"]["properties"]["math_formula"]["type"], "string")
+
+        self.assertEqual(
+            function_call_schema["responses"]["properties"]["return_value_of_CalculatorTool"]["type"],
+            "integer",
+        )

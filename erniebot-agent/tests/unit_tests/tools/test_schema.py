@@ -16,12 +16,11 @@ from __future__ import annotations
 import unittest
 
 from erniebot_agent.tools.schema import PluginSchema
-
-# from openapi_spec_validator.readers import read_from_filename
+from openapi_spec_validator.readers import read_from_filename
 
 
 class TestToolSchema(unittest.TestCase):
-    openapi_file = "./tests/fixtures/tools/openapi.yaml"
+    openapi_file = "./tests/fixtures/openapi.yaml"
 
     def test_plugin_schema(self):
         schema = PluginSchema.from_openapi_file(self.openapi_file)
@@ -29,9 +28,11 @@ class TestToolSchema(unittest.TestCase):
         self.assertEqual(schema.info.title, "单词本")
         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8081")
 
-    # TODO(wj-Mcat): fix this test
-    # def test_load_and_save(self):
-    #     spec_dict = read_from_filename(self.openapi_file)
-    #     schema = PluginSchema.from_openapi_file(self.openapi_file)
-    #     saved_spec_dict = schema.to_openapi_dict()
-    # self.assertEqual(spec_dict[0], saved_spec_dict)
+    def test_load_and_save(self):
+        """function_call requires empty fields, eg: items: {}, but yaml file doesn't
+        contain any empty field
+        """
+        spec_dict = read_from_filename(self.openapi_file)
+        schema = PluginSchema.from_openapi_file(self.openapi_file)
+        saved_spec_dict = schema.to_openapi_dict()
+        self.assertEqual(spec_dict[0], saved_spec_dict)

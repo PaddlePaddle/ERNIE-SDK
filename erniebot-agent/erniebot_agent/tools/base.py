@@ -60,18 +60,18 @@ class Tool:
         return ToolView(
             name=self.tool_name,
             description=docstring.short_description or docstring.long_description or "",
-            parameters=ParametersView.from_docstring(docstring.params),
-            returns=ParametersView.from_docstring(docstring.returns),
+            parameters=ParametersView.from_docstring(docstring.params, self.tool_name),
+            returns=ParametersView.from_docstring(docstring.returns, self.tool_name),
             examples=examples_raws,
         )
 
-    def function_input(self):
+    def function_call_schema(self):
         view = self.view()
         inputs = {
             "name": view.name,
             "description": view.description,
-            "parameters": view.parameters.to_function_inputs(),
-            "responses": view.returns.to_function_inputs(),
+            "parameters": view.parameters.function_call_schema(),
+            "responses": view.returns.function_call_schema(),
             "examples": view.examples,
         }
         return scrub_dict(inputs)
@@ -98,3 +98,10 @@ class CurrentTimeTool(Tool):
         """
 
         return datetime.now()
+
+    def _get_examples(self) -> list[dict]:
+        return [
+            {"role": "user", "content": "麻烦告诉我现在详细的时间信息"},
+            {"role": "assistant", "content": None, "function_call": {"name": "CurrentTimeTool"}},
+            {"role": "function", "name": "CurrentTimeTool", "content": "{'result':'现在是下午五点三十二分'}"},
+        ]

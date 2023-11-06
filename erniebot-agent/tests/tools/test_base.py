@@ -21,7 +21,7 @@ class ToolTestMixin:
                     "content": query,
                 }
             ],
-            functions=[self.tool.function_input()],
+            functions=[self.tool.function_call_schema()],
             stream=False,
         )
 

@@ -20,24 +20,29 @@ from docstring_parser import DocstringParam, DocstringReturns
 from yaml import safe_dump
 
 
-def scrub_dict(d):
-    """remove empty Value node
+def scrub_dict(d, remove_empty_dict: bool = False):
+    """remove empty Value node,
+
+        function_call_schema: require
 
     Args:
         d (dict): the instance of dictionary
+        remove_empty_dict (bool): whether remove empty dict
 
     Returns:
         dict: the dictionary data after slimming down
     """
     if type(d) is dict:
-        if len(d) == 0:
-            return {}
-
         result = {}
         for k, v in d.items():
-            if v is None:
-                continue
-            result[k] = v
+            v = scrub_dict(v, remove_empty_dict)
+            if v is not None:
+                result[k] = v
+
+        if len(d) == 0:
+            if not remove_empty_dict:
+                return {}
+            return None
         return result
     else:
         return d
@@ -77,13 +82,17 @@ class ParametersView:
     name: Optional[str] = None
     code: int = 200
     type: str = "object"
+    is_response: bool = False
 
     @staticmethod
-    def from_docstring(params: List[DocstringParam] | DocstringReturns | None) -> Optional[ParametersView]:
+    def from_docstring(
+        params: List[DocstringParam] | DocstringReturns | None, tool_name: str
+    ) -> Optional[ParametersView]:
         """parse docstring param to ParameterView
 
         Args:
             params (List[DocstringParam]): the list of parameter view
+            tool_name (str): the name of tool
 
         Returns:
             ParametersView: the instance of ParametersView
@@ -97,9 +106,12 @@ class ParametersView:
             return ParametersView(
                 parameters=[
                     ParameterView(
-                        type=params.type_name, description=params.description, name=params.return_name
+                        type=params.type_name,
+                        description=params.description,
+                        name="return_value_of_" + tool_name,
                     )
-                ]
+                ],
+                is_response=True,
             )
 
         for param in params:
@@ -147,7 +159,12 @@ class ParametersView:
             },
         }
 
-    def to_function_inputs(self) -> dict:
+    def function_call_schema(self) -> dict:
+        """get function_call schame
+
+        Returns:
+            dict: the schema of function_call
+        """
         if not self.parameters:
             return {"type": "object", "properties": {}}
 
@@ -294,7 +311,7 @@ class PluginSchema:
                 }
             },
         }
-        return scrub_dict(spec_dict)
+        return scrub_dict(spec_dict, remove_empty_dict=True)
 
     def to_openapi_file(self, file: str):
         """generate openapi configuration file
