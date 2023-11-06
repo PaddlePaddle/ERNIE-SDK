@@ -23,7 +23,7 @@ from erniebot_agent.tools.base import Tool
 
 
 class CallbackHandler(object):
-    async def on_agent_start(self, agent: Agent, prompt: str， **kwargs: Any) -> None:
+    async def on_agent_start(self, agent: Agent, prompt: str) -> None:
         """"""
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:

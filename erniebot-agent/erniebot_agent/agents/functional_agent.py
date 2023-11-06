@@ -21,6 +21,8 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import FunctionMessage, HumanMessage, AIMessage
 from erniebot_agent.tools.base import Tool
+from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory.whole_memory import WholeMemory
 
 _MAX_STEPS = 50
 
@@ -39,7 +41,7 @@ class FunctionalAgent(Agent):
 
     async def _run(self, prompt: str) -> str:
         # TODO: Memory when 
-        temp_memory = WholeConversationMemory()
+        temp_memory = WholeMemory()
         # Copy memory
         ...
         step = await self._create_first_step(prompt, temp_memory)

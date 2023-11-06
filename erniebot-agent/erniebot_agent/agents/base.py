@@ -16,7 +16,6 @@ import abc
 import inspect
 import json
 from typing import Any, Dict, List, Optional, Union, final
-from xxlimited import Str
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
@@ -24,7 +23,7 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
-from erniebot_agents.memory.base import Memory
+from erniebot_agent.memory.base import Memory
 
 
 @final
@@ -121,24 +120,30 @@ class Agent(BaseAgent):
     async def _run(self, prompt: str) -> str:
         raise NotImplementedError
 
-    async def _run_tool(self, tool_name: str, tool_args: Str) -> str:
+    async def _run_tool(self, tool_name: str, tool_args: str) -> str:
         tool = self._tool_manager.get_tool(tool_name)
         self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
         try:
             tool_resp = await self._run_tool_without_hooks(tool, tool_args)
-        except
+        except (Exception, KeyboardInterrupt) as e:
+            self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
+            raise
         self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
     async def _run_llm(self, messages: List[Message], **opts: Any) -> Message:
         self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
-        llm_resp = await self._run_llm_without_hooks(messages, **opts)
+        try:
+            llm_resp = await self._run_llm_without_hooks(messages, **opts)
+        except (Exception, KeyboardInterrupt) as e:
+            self._callback_manager.on_llm_error(agent=self, llm=self.llm, error=e)
+            raise
         self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
     async def _run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
-        args_dict = self._parse_tool_args(tool, tool_args)
-        await tool.run(**args_dict)
+        bnd_args = self._parse_tool_args(tool, tool_args)
+        await tool.run(*bnd_args.args, **bnd_args.kwargs)
         tool_resp = json.dumps(tool_resp)
         return tool_resp
 
@@ -146,9 +151,12 @@ class Agent(BaseAgent):
         llm_resp = await self.llm.run(messages, functions=functions, stream=False, **opts)
         return llm_resp
 
-    def _parse_tool_args(self, tool: Tool, tool_args: str) -> dict:
+    def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
         args_dict = json.loads(tool_args)
         if not isinstance(args_dict, dict):
             raise ValueError("`tool_args` cannot be interpreted as a dict.")
+        # TODO: Check types
         sig = inspect.signature(tool.run)
-        return args_dict
+        bnd_args = sig.bind(**args_dict)
+        bnd_args.apply_defaults()
+        return bnd_args
