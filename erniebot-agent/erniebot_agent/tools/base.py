@@ -31,7 +31,7 @@ class Tool(ABC):
         return self.name or self.__class__.__name__
 
     @abstractmethod
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
+    async def __call__(self, *args: Any, **kwds: Any) -> Any:
         """the body of tools
 
         Returns:
