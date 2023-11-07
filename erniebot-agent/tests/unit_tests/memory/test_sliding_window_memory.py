@@ -18,11 +18,11 @@ class TestSlidingWindowMemory(unittest.TestCase):
 
             for _ in range(k):
                 # 2 times of human message
-                memory.add_messages([HumanMessage(content="What is the purpose of model regularization?")])
+                memory.add_message(HumanMessage(content="What is the purpose of model regularization?"))
 
                 # AI message
                 message = await self.llm.async_chat(memory.get_messages())
-                memory.add_messages([message])
+                memory.add_message(message)
 
             self.assertTrue(len(memory.get_messages()) <= k)
 

@@ -14,3 +14,4 @@
 
 from .base import BasePromptTemplate
 from .prompt_template import PromptTemplate
+from .templates import get_predefined_prompt_templates

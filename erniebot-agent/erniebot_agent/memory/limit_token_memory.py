@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 
-from erniebot_agent.memory import WholeMemory
-from erniebot_agent.message import Message
+from erniebot_agent.memory import Memory
+from erniebot_agent.message import AIMessage, MessageWithTokenLen
 
 
-class LimitTokenMemory(WholeMemory):
+class LimitTokensMemory(Memory):
     """This class controls max tokens less than max_token_limit.
     If tokens >= max_token_limit, pop message from memory.
     """
@@ -35,17 +34,18 @@ class LimitTokenMemory(WholeMemory):
             max_token_limit=max_token_limit
         )
 
-    def add_messages(self, messages: List[Message]):
-        super().add_messages(messages)
-        self.prune_message(messages)
+    def add_message(self, message: MessageWithTokenLen):
+        super().add_message(message)
+        if isinstance(message, AIMessage):
+            self.prune_message(message)
 
-    def prune_message(self, messages):
-        for m in messages:
-            self.token_length += len(m.content)
+    def prune_message(self, message):
+        self.token_length += message.get_token_len()
+        self.token_length += message.query_tokens_len  # add human message token length
         if self.max_token_limit is not None:
             while self.token_length > self.max_token_limit:
                 deleted_message = self.msg_manager.pop_message()
-                self.token_length -= len(deleted_message.content)
+                self.token_length -= deleted_message.get_token_len()
             else:
                 # if delete all
                 if len(self.get_messages()) == 0:

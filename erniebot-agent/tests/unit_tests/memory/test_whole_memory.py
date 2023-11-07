@@ -13,15 +13,13 @@ class TestWholeMemory(unittest.TestCase):
 
     def test_whole_memory(self):
         async def run_whole_memory():
-            messages = [
-                HumanMessage(content="What is the purpose of model regularization?"),
-            ]
+            message = (HumanMessage(content="What is the purpose of model regularization?"),)
+
             memory = WholeMemory()
-            # memory =
-            memory.add_messages(messages)
-            message = await self.llm.async_chat(messages)
-            memory.add_messages([message])
-            memory.add_messages([HumanMessage("OK, what else?")])
+            memory.add_message(message)
+            message = await self.llm.async_chat(message)
+            memory.add_message(message)
+            memory.add_message(HumanMessage("OK, what else?"))
             message = await self.llm.async_chat(memory.get_messages())
             self.assertTrue(message is not None)
 
