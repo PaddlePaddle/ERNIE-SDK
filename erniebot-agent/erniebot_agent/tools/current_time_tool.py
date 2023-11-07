@@ -25,9 +25,9 @@ class CurrentTimeTool(Tool):
     def examples(self) -> List[Message]:
         return [
             HumanMessage("现在几点钟了"),
-            FunctionMessage({"name": self.tool_name}),
+            FunctionMessage(name=self.tool_name, content=""),
             HumanMessage("现在是什么时候？"),
-            FunctionMessage({"name": self.tool_name}),
+            FunctionMessage(name=self.tool_name, content=""),
             HumanMessage("请问现在是什么时间"),
-            FunctionMessage({"name": self.tool_name}),
+            FunctionMessage(name=self.tool_name, content=""),
         ]

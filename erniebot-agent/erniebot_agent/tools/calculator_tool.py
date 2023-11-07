@@ -29,9 +29,9 @@ class CalculatorTool(Tool):
     def examples(self) -> List[Message]:
         return [
             HumanMessage("请告诉我三加六等于多少？"),
-            FunctionMessage({"name": self.tool_name, "arguments": {"math_formula": "3+6"}}),
+            FunctionMessage(name=self.tool_name, content='{"math_formula": "3+6"}'),
             HumanMessage("一加八再乘以5是多少？"),
-            FunctionMessage({"name": self.tool_name, "arguments": {"math_formula": "(1+8)*5"}}),
+            FunctionMessage(name=self.tool_name, content='{"math_formula": "(1+8)*5"}'),
             HumanMessage("我想知道十二除以四再加五等于多少？"),
-            FunctionMessage({"name": self.tool_name, "arguments": {"math_formula": "12/4+5"}}),
+            FunctionMessage(name=self.tool_name, content='{"math_formula": "12/4+5"}'),
         ]
