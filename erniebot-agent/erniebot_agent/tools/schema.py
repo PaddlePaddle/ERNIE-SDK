@@ -259,16 +259,6 @@ class RemoteToolView:
             result["requestBody"] = parameters
         return {self.method: result}
 
-    @classmethod
-    def parse_schem(cls, schema: dict, parameters_views: dict[str, ToolParameterView]):
-        if "$ref" in schema:
-            ref = schema["$ref"]
-            ref_uri = ref.split("/")[-1]
-            assert ref_uri in parameters_views
-            return ref_uri
-
-        return ToolParameterView.from_openapi_dict(INVALID_FIELD_NAME, schema)
-
     @staticmethod
     def from_openapi_dict(
         uri: str, method: str, path_info: dict, parameters_views: dict[str, Type[ToolParameterView]]
