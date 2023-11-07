@@ -1,3 +1,4 @@
 pre-commit
 pytest
 jinja2
+pytest-asyncio
