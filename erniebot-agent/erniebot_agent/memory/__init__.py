@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import WholeMemory
 from .limit_token_memory import LimitTokenMemory
 from .sliding_window_memory import SlidingWindowMemory
+from .whole_memory import WholeMemory

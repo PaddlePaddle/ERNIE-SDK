@@ -10,56 +10,74 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License
 
-from erniebot.resources.chat_completion import ChatResponse
+from dataclasses import dataclass
+from typing import Dict, Optional, TypedDict
 
 
 class Message:
-    """The base class of message."""
+    """The base class of a message."""
 
-    def __init__(self, role, content):
+    def __init__(self, role: str, content: str):
         self.role = role
         self.content = content
+        self._param_names = ["role", "content"]
 
-    def to_dict(self) -> dict:
-        return {"role": self.role, "content": self.content}
+    def to_dict(self) -> Dict[str, str]:
+        res = {}
+        for name in self._param_names:
+            res[name] = getattr(self, name)
+        return res
 
     def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}"
+        res = ""
+        for name in self._param_names:
+            value = getattr(self, name)
+            if value is not None and value != "":
+                res += f"{name}: {value}, "
+        return res[:-2]
+
+
+class SystemMessage(Message):
+    """A message from human to set system information."""
+
+    def __init__(self, content: str):
+        super().__init__(role="system", content=content)
 
 
 class HumanMessage(Message):
-    """A Message from human."""
+    """A message from human."""
 
-    def __init__(self, content):
+    def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
 
-class AIMessage(Message):
-    """A Message from assistant."""
+class FunctionCall(TypedDict):
+    name: str
+    thoughts: str
+    arguments: str
 
-    def __init__(self, content):
+
+class AIMessage(Message):
+    """A message from the assistant."""
+
+    def __init__(self, content: str, function_call: Optional[FunctionCall] = None):
         super().__init__(role="assistant", content=content)
+        self.function_call = function_call
+        self._param_names = ["role", "content", "function_call"]
 
 
 class FunctionMessage(Message):
-    """A Message from assistant for function calling."""
+    """A message from human that contains the result of a function call."""
 
-    def __init__(self, function_call):
-        super().__init__(role="assistant", content="null")
-        self.function_call = function_call
-
-    def to_dict(self) -> dict:
-        return {"role": self.role, "content": self.content, "function_call": self.function_call}
-
-    def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}, function_call: {self.function_call}"
+    def __init__(self, name: str, content: str):
+        super().__init__(role="function", content=content)
+        self.name = name
+        self._param_names = ["role", "name", "content"]
 
 
-def response_to_message(response: ChatResponse) -> Message:
-    """Convert the response from assistant to AIMessage or FunctionMessage."""
-    if hasattr(response, "function_call"):
-        return FunctionMessage(function_call=response.get_result())
-    else:
-        return AIMessage(content=response.get_result())
+@dataclass
+class AIMessageChunk(object):
+    content: str
+    function_call: Optional[FunctionCall]

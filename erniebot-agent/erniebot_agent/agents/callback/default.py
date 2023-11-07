@@ -15,7 +15,8 @@
 from typing import List
 
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.callback.handlers.logging_handler import LoggingHandler
 
 
 def get_default_callbacks() -> List[CallbackHandler]:
-    return []
+    return [LoggingHandler()]

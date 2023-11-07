@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.message import HumanMessage
+from erniebot_agent.messages import HumanMessage
 
 
 async def test_ernie_bot(model="ernie-bot-turbo", stream=False):

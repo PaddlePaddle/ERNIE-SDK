@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import docstring_parser
 from docstring_parser import Docstring
@@ -41,7 +41,7 @@ class Tool:
         """
         raise NotImplementedError
 
-    async def run(self, *args: Any, **kwds: Any) -> Any:
+    async def async_run(self, *args: Any, **kwds: Any) -> Any:
         raise NotImplementedError
 
     def validate_args(self):
@@ -55,17 +55,21 @@ class Tool:
         """
 
         docstring: Docstring = docstring_parser.parse_from_object(self.__call__)
-        examples_raws = [
-            example.strip() for example in docstring.examples[0].description.split(">>>") if example.strip()
-        ]
-        examples_raws = [json.loads(example) for example in examples_raws]
+        examples_raw: List[dict] = []
+        examples_desc = docstring.examples[0].description
+        if examples_desc is not None:
+            for example in examples_desc.split(">>>"):
+                example = example.strip()
+                if example:
+                    example_raw = json.loads(example)
+                    examples_raw.append(example_raw)
 
         return ToolView(
             name=self.tool_name,
             description=docstring.short_description or docstring.long_description or "",
             parameters=ParametersView.from_docstring(docstring.params),
             returns=ParametersView.from_docstring(docstring.returns),
-            examples=examples_raws,
+            examples=examples_raw,
         )
 
     def function_input(self):
@@ -106,7 +110,7 @@ class CalculatorTool(Tool):
 
         return eval(math_formula)
 
-    async def run(self, math_formula: str) -> float:
+    async def async_run(self, math_formula: str) -> float:
         return self.__call__(math_formula=math_formula)
 
 

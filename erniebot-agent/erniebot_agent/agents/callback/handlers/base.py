@@ -14,12 +14,15 @@
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
+
+if TYPE_CHECKING:
+    from erniebot_agent.agents.base import Agent
 
 
 class CallbackHandler(object):
@@ -48,5 +51,5 @@ class CallbackHandler(object):
     ) -> None:
         """"""
 
-    async def on_agent_end(self, agent: Agent, response: str) -> None:
+    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
         """"""

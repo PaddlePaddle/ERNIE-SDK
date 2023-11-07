@@ -14,14 +14,17 @@
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
-from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.utils.json import to_pretty_json
+
+if TYPE_CHECKING:
+    from erniebot_agent.agents.base import Agent
 
 
 class LoggingHandler(CallbackHandler):
@@ -41,12 +44,14 @@ class LoggingHandler(CallbackHandler):
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         print(
-            f"[tool][start] Tool {tool} starts running with input: \n{to_pretty_json(input_args, from_json=True)}"
+            f"[tool][start] Tool {tool} starts running with input: "
+            f"\n{to_pretty_json(input_args, from_json=True)}"
         )
 
     async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
         print(
-            f"[tool][end] Tool {tool} finished running with output: \n{to_pretty_json(response, from_json=True)}",
+            f"[tool][end] Tool {tool} finished running with output: "
+            f"\n{to_pretty_json(response, from_json=True)}",
         )
 
     async def on_tool_error(
@@ -54,5 +59,5 @@ class LoggingHandler(CallbackHandler):
     ) -> None:
         pass
 
-    async def on_agent_end(self, agent: Agent, response: str) -> None:
+    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
         print(f"[agent][end] Agent {agent} finished running with output: {response}")

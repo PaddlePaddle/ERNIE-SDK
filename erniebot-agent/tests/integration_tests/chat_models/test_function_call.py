@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.message import FunctionMessage, HumanMessage
+from erniebot_agent.messages import FunctionMessage, HumanMessage
 
 
 async def test_function_call(model="ernie-bot"):

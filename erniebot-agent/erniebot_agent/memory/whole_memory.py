@@ -12,33 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from typing import List, TypeAlias, Union
-
-from erniebot_agent.messages import Message
+from erniebot_agent.memory.base import Memory
 
 
-@dataclass
-class AgentAction(object):
-    """An action for an agent to execute."""
-
-    tool_name: str
-    tool_args: str
-
-
-@dataclass
-class AgentResponse(object):
-    """The final response of an agent."""
-
-    content: str
-    intermediate_messages: List[Message]
-
-
-@dataclass
-class AgentPlan(object):
-    """A plan that contains a list of actions."""
-
-    actions: List[AgentAction]
-
-
-AgentStep: TypeAlias = Union[AgentAction, AgentResponse]
+class WholeMemory(Memory):
+    """"""

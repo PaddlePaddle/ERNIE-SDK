@@ -2,7 +2,7 @@ import asyncio
 import unittest
 
 from erniebot_agent.memory import SlidingWindowMemory
-from erniebot_agent.message import HumanMessage
+from erniebot_agent.messages import HumanMessage
 
 from tests.unit_tests.utils import MockErnieBot
 

@@ -14,11 +14,11 @@
 
 from typing import List
 
-from erniebot_agent.memory import WholeMemory
-from erniebot_agent.message import Message
+from erniebot_agent.memory.base import Memory
+from erniebot_agent.messages import Message
 
 
-class SlidingWindowMemory(WholeMemory):
+class SlidingWindowMemory(Memory):
     """This class controls max number of messages."""
 
     def __init__(self, max_num_message: int):

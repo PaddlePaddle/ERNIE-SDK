@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
-from typing import Any, List, Union, final
+from __future__ import annotations
 
-from erniebot_agent.agents.base import Agent
+import inspect
+from typing import TYPE_CHECKING, Any, List, Union, final
+
 from erniebot_agent.agents.callback.events import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
+
+if TYPE_CHECKING:
+    from erniebot_agent.agents.base import Agent
 
 
 @final
@@ -31,16 +36,14 @@ class CallbackManager(object):
 
     def add_handler(self, handler: CallbackHandler):
         if handler in self._handlers:
-            raise ValueError(
-                f"The callback handler {handler} is already registered.")
+            raise ValueError(f"The callback handler {handler} is already registered.")
         self._handlers.append(handler)
 
     def remove_handler(self, handler):
         try:
             self._handlers.remove(handler)
         except ValueError as e:
-            raise ValueError(
-                f"The callback handler {handler} is not registered.") from e
+            raise ValueError(f"The callback handler {handler} is not registered.") from e
 
     def set_handlers(self, handlers: List[CallbackHandler]):
         self._handlers = []
@@ -50,60 +53,38 @@ class CallbackManager(object):
     def remove_all_handlers(self):
         self._handlers = []
 
-    async def handle_event(self,
-                           event_type: EventType,
-                           *args: Any,
-                           **kwargs: Any) -> None:
-        callback_name = 'on_' + event_type.name
+    async def handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
+        callback_name = "on_" + event_type.value
         for handler in self._handlers:
             callback = getattr(handler, callback_name, None)
             if not inspect.iscoroutinefunction(callback):
-                raise TypeError(f"Callback must be a coroutine function.")
+                raise TypeError("Callback must be a coroutine function.")
             await callback(*args, **kwargs)
 
     async def on_agent_start(self, agent: Agent, prompt: str) -> None:
-        await self.handle_event(
-            EventType.AGENT_START, agent=agent, prompt=prompt)
+        await self.handle_event(EventType.AGENT_START, agent=agent, prompt=prompt)
 
-    async def on_llm_start(self,
-                           agent: Agent,
-                           llm: ChatModel,
-                           messages: List[Message]) -> None:
-        await self.handle_event(
-            EventType.LLM_START, agent=agent, llm=llm, messages=messages)
+    async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
+        await self.handle_event(EventType.LLM_START, agent=agent, llm=llm, messages=messages)
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel,
-                         response: Message) -> None:
-        await self.handle_event(
-            EventType.LLM_END, agent=agent, llm=llm, response=response)
+    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
+        await self.handle_event(EventType.LLM_END, agent=agent, llm=llm, response=response)
 
-    async def on_llm_error(self,
-                           agent: Agent,
-                           llm: ChatModel,
-                           error: Union[Exception, KeyboardInterrupt]) -> None:
-        await self.handle_event(
-            EventType.AGENT_START, agent=agent, llm=llm, error=error)
+    async def on_llm_error(
+        self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
+    ) -> None:
+        await self.handle_event(EventType.LLM_ERROR, agent=agent, llm=llm, error=error)
 
-    async def on_tool_start(self, agent: Agent, tool: Tool,
-                            input_args: str) -> None:
-        await self.handle_event(
-            EventType.AGENT_START,
-            agent=agent,
-            tool=tool,
-            input_args=input_args)
+    async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
+        await self.handle_event(EventType.TOOL_START, agent=agent, tool=tool, input_args=input_args)
 
-    async def on_tool_end(self, agent: Agent, tool: Tool,
-                          response: str) -> None:
-        await self.handle_event(
-            EventType.AGENT_START, agent=agent, tool=tool, response=response)
+    async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
+        await self.handle_event(EventType.TOOL_END, agent=agent, tool=tool, response=response)
 
-    async def on_tool_error(self,
-                            agent: Agent,
-                            tool: Tool,
-                            error: Union[Exception, KeyboardInterrupt]) -> None:
-        await self.handle_event(
-            EventType.AGENT_START, agent=agent, tool=tool, error=error)
+    async def on_tool_error(
+        self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
+    ) -> None:
+        await self.handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 
-    async def on_agent_end(self, agent: Agent, response: str) -> None:
-        await self.handle_event(
-            EventType.AGENT_START, agent=agent, response=response)
+    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
+        await self.handle_event(EventType.AGENT_END, agent=agent, response=response)

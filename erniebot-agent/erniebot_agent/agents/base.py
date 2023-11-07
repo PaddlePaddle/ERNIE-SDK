@@ -20,17 +20,19 @@ from typing import Any, Dict, List, Optional, Union, final
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import Message
-from erniebot_agent.tools.base import Tool
 from erniebot_agent.memory.base import Memory
+from erniebot_agent.messages import AIMessage, Message
+from erniebot_agent.tools.base import Tool
 
 
 @final
 class ToolManager(object):
     """A `ToolManager` instance manages tools for an agent.
 
-    This implementation is based on `ToolsManager` in https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
+    This implementation is based on `ToolsManager` in
+    https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
     """
 
     def __init__(self, tools: List[Tool]) -> None:
@@ -62,9 +64,7 @@ class ToolManager(object):
         return ", ".join(self._tools.keys())
 
     def get_tool_names_with_descriptions(self) -> str:
-        return "\n".join(
-            f"{name}:{json.dumps(tool.function_input())}" for name, tool in self._tools.items()
-        )
+        return "\n".join(f"{name}:{json.dumps(tool.function_input())}" for name, tool in self._tools.items())
 
     def get_tool_function_inputs(self):
         return [tool.function_input() for tool in self._tools.values()]
@@ -77,7 +77,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
     _callback_manager: CallbackManager
 
     @abc.abstractmethod
-    async def run(self, prompt: str) -> str:
+    async def async_run(self, prompt: str) -> AgentResponse:
         raise NotImplementedError
 
 
@@ -104,51 +104,53 @@ class Agent(BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
 
-    async def run(self, prompt: str) -> str:
-        self._callback_manager.on_agent_start(agent=self, prompt=prompt)
-        output = await self._run(prompt)
-        self._callback_manager.on_agent_end(agent=self, output=output)
-        return output
+    async def async_run(self, prompt: str) -> AgentResponse:
+        await self._callback_manager.on_agent_start(agent=self, prompt=prompt)
+        agent_resp = await self._async_run(prompt)
+        await self._callback_manager.on_agent_end(agent=self, response=agent_resp)
+        return agent_resp
 
     def import_tool(self, tool: Tool) -> None:
         self._tool_manager.add_tool(tool)
 
-    def reset(self):
-        self.memory.forget()
+    def reset(self) -> None:
+        self.memory.clear_chat_history()
 
     @abc.abstractmethod
-    async def _run(self, prompt: str) -> str:
+    async def _async_run(self, prompt: str) -> AgentResponse:
         raise NotImplementedError
 
-    async def _run_tool(self, tool_name: str, tool_args: str) -> str:
+    async def _async_run_tool(self, tool_name: str, tool_args: str) -> str:
         tool = self._tool_manager.get_tool(tool_name)
-        self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+        await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
         try:
-            tool_resp = await self._run_tool_without_hooks(tool, tool_args)
+            tool_resp = await self._async_run_tool_without_hooks(tool, tool_args)
         except (Exception, KeyboardInterrupt) as e:
-            self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
+            await self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
             raise
-        self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
+        await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
-    async def _run_llm(self, messages: List[Message], **opts: Any) -> Message:
-        self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
+    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> AIMessage:
+        await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:
-            llm_resp = await self._run_llm_without_hooks(messages, **opts)
+            llm_resp = await self._async_run_llm_without_hooks(messages, **opts)
         except (Exception, KeyboardInterrupt) as e:
-            self._callback_manager.on_llm_error(agent=self, llm=self.llm, error=e)
+            await self._callback_manager.on_llm_error(agent=self, llm=self.llm, error=e)
             raise
-        self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
+        await self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
-    async def _run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
+    async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
         bnd_args = self._parse_tool_args(tool, tool_args)
-        await tool.run(*bnd_args.args, **bnd_args.kwargs)
+        tool_resp = await tool.async_run(*bnd_args.args, **bnd_args.kwargs)
         tool_resp = json.dumps(tool_resp)
         return tool_resp
 
-    async def _run_llm_without_hooks(self, messages: List[Message], functions=None, **opts: Any) -> Message:
-        llm_resp = await self.llm.run(messages, functions=functions, stream=False, **opts)
+    async def _async_run_llm_without_hooks(
+        self, messages: List[Message], functions=None, **opts: Any
+    ) -> AIMessage:
+        llm_resp = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
         return llm_resp
 
     def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
@@ -156,7 +158,7 @@ class Agent(BaseAgent):
         if not isinstance(args_dict, dict):
             raise ValueError("`tool_args` cannot be interpreted as a dict.")
         # TODO: Check types
-        sig = inspect.signature(tool.run)
+        sig = inspect.signature(tool.async_run)
         bnd_args = sig.bind(**args_dict)
         bnd_args.apply_defaults()
         return bnd_args

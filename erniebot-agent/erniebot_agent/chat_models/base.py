@@ -15,7 +15,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any, AsyncIterator, List, Literal, Union, overload
 
-from erniebot_agent.messages import Message
+from erniebot_agent.messages import AIMessage, AIMessageChunk, Message
 
 
 class ChatModel(metaclass=ABCMeta):
@@ -25,25 +25,27 @@ class ChatModel(metaclass=ABCMeta):
         self.model = model
 
     @overload
-    async def run(self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any) -> Message:
+    async def async_chat(
+        self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any
+    ) -> AIMessage:
         ...
 
     @overload
-    async def run(
+    async def async_chat(
         self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
-    ) -> AsyncIterator[Message]:
+    ) -> AsyncIterator[AIMessageChunk]:
         ...
 
     @overload
-    async def run(
+    async def async_chat(
         self, messages: List[Message], *, stream: bool, **kwargs: Any
-    ) -> Union[Message, AsyncIterator[Message]]:
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
     @abstractmethod
-    async def run(
+    async def async_chat(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
-    ) -> Union[Message, AsyncIterator[Message]]:
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         """Asynchronously chats with the LLM.
 
         Args:
@@ -53,6 +55,6 @@ class ChatModel(metaclass=ABCMeta):
 
         Returns:
             If stream is False, returns a single message.
-            If stream is True, returns an asynchronous iterator of messages.
+            If stream is True, returns an asynchronous iterator of message chunks.
         """
         raise NotImplementedError
