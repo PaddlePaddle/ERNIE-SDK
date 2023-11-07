@@ -77,9 +77,7 @@ class ERNIEBot(ChatModel):
                 cfg_dict[name] = kwargs[name]
 
         response: Any = await erniebot.ChatCompletion.acreate(**cfg_dict)
-        import pdb
 
-        pdb.set_trace()
         if stream:
             return (AIMessage.from_response(d) async for d in response)
         else:

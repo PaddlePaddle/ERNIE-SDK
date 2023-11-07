@@ -13,7 +13,7 @@ class Testlimit_tokenMemory(unittest.TestCase):
 
     def test_limit_token_memory(self):
         async def run_limit_token_memory():
-            messages = (HumanMessage(content="What is the purpose of model regularization?"),)
+            messages = HumanMessage(content="What is the purpose of model regularization?")
 
             memory = LimitTokensMemory(4000)
             memory.add_message(messages)
