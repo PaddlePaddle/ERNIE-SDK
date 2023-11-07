@@ -15,7 +15,7 @@
 from typing import Any, AsyncIterator, Dict, List, Optional, Union
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.message import Message, response_to_message
+from erniebot_agent.message import AIMessage, Message
 
 import erniebot
 
@@ -81,6 +81,6 @@ class ERNIEBot(ChatModel):
 
         pdb.set_trace()
         if stream:
-            return (response_to_message(d) async for d in response)
+            return (AIMessage.from_response(d) async for d in response)
         else:
-            return response_to_message(response)
+            return AIMessage.from_response(response)
