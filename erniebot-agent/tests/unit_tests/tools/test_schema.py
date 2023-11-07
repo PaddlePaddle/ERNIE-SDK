@@ -71,23 +71,3 @@ class TestToolSchema(unittest.TestCase):
 
         result = json_type(ToolParameterView)
         self.assertEqual(result, "object")
-
-
-# class TestSearchOpenAPIYaml(unittest.TestCase):
-#     openapi_file = "./tests/fixtures/openapi-search.yaml"
-
-#     def test_plugin_schema(self):
-#         schema = PluginSchema.from_openapi_file(self.openapi_file)
-
-#         self.assertEqual(schema.info.title, "论文检索工具")
-#         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8082")
-
-#     def test_load_and_save(self):
-#         spec_dict = read_from_filename(self.openapi_file)
-#         schema = PluginSchema.from_openapi_file(self.openapi_file)
-#         saved_spec_dict = schema.to_openapi_dict()
-#         for key in ["openapi", "info", "servers", "paths", "components"]:
-#             a = spec_dict[0][key] == saved_spec_dict[key]
-#             print(a)
-#         import pdb; pdb.set_trace()
-#         self.assertEqual(spec_dict[0], saved_spec_dict)

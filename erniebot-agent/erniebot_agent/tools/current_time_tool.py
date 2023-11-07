@@ -16,7 +16,7 @@ class CurrentTimeToolOutputView(ToolParameterView):
 
 class CurrentTimeTool(Tool):
     description: str = "CurrentTimeTool 用于获取当前时间"
-    ouptuts: Type[ToolParameterView] = CurrentTimeToolOutputView
+    ouptut_type: Type[ToolParameterView] = CurrentTimeToolOutputView
 
     async def __call__(self) -> str:
         return datetime.strftime(datetime.now(), "%Y年%m月%d号 %点:%分:%秒")

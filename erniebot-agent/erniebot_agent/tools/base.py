@@ -23,8 +23,8 @@ from erniebot_agent.tools.schema import ToolParameterView, scrub_dict
 class Tool(ABC):
     description: str
     name: Optional[str] = None
-    inputs: Optional[Type[ToolParameterView]] = None
-    ouptuts: Optional[Type[ToolParameterView]] = None
+    input_type: Optional[Type[ToolParameterView]] = None
+    ouptut_type: Optional[Type[ToolParameterView]] = None
 
     @property
     def tool_name(self):
@@ -45,10 +45,10 @@ class Tool(ABC):
             "description": self.description,
             "examples": [example.to_dict() for example in self.examples],
         }
-        if self.inputs is not None:
-            inputs["parameters"] = self.inputs.function_call_schema()
-        if self.ouptuts is not None:
-            inputs["responses"] = self.ouptuts.function_call_schema()
+        if self.input_type is not None:
+            inputs["parameters"] = self.input_type.function_call_schema()
+        if self.ouptut_type is not None:
+            inputs["responses"] = self.ouptut_type.function_call_schema()
 
         return scrub_dict(inputs) or {}
 
