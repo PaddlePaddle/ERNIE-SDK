@@ -22,7 +22,7 @@ class CalculatorTool(Tool):
     inputs: Type[ToolParameterView] = CalculatorToolInputView
     ouptuts: Type[ToolParameterView] = CalculatorToolOutputView
 
-    def __call__(self, math_formula: str) -> dict:
+    async def __call__(self, math_formula: str) -> dict:
         return eval(math_formula)
 
     @property

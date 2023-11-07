@@ -16,7 +16,12 @@ from __future__ import annotations
 import unittest
 from typing import List
 
-from erniebot_agent.tools.schema import PluginSchema, get_typing_list_type, json_type
+from erniebot_agent.tools.schema import (
+    PluginSchema,
+    ToolParameterView,
+    get_typing_list_type,
+    json_type,
+)
 from openapi_spec_validator.readers import read_from_filename
 
 
@@ -36,9 +41,6 @@ class TestToolSchema(unittest.TestCase):
         spec_dict = read_from_filename(self.openapi_file)
         schema = PluginSchema.from_openapi_file(self.openapi_file)
         saved_spec_dict = schema.to_openapi_dict()
-        for key in ["openapi", "info", "servers", "paths", "components"]:
-            a = spec_dict[0][key] == saved_spec_dict[key]
-            print(a)
         self.assertEqual(spec_dict[0], saved_spec_dict)
 
     def test_get_typing_list_type(self):
@@ -54,6 +56,9 @@ class TestToolSchema(unittest.TestCase):
         result = get_typing_list_type(dict)
         self.assertEqual(result, None)
 
+        result = get_typing_list_type(List[ToolParameterView])
+        self.assertEqual(result, "object")
+
     def test_json_type(self):
         result = json_type(List[int])
         self.assertEqual(result, "array")
@@ -63,3 +68,26 @@ class TestToolSchema(unittest.TestCase):
 
         result = json_type(float)
         self.assertEqual(result, "number")
+
+        result = json_type(ToolParameterView)
+        self.assertEqual(result, "object")
+
+
+# class TestSearchOpenAPIYaml(unittest.TestCase):
+#     openapi_file = "./tests/fixtures/openapi-search.yaml"
+
+#     def test_plugin_schema(self):
+#         schema = PluginSchema.from_openapi_file(self.openapi_file)
+
+#         self.assertEqual(schema.info.title, "论文检索工具")
+#         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8082")
+
+#     def test_load_and_save(self):
+#         spec_dict = read_from_filename(self.openapi_file)
+#         schema = PluginSchema.from_openapi_file(self.openapi_file)
+#         saved_spec_dict = schema.to_openapi_dict()
+#         for key in ["openapi", "info", "servers", "paths", "components"]:
+#             a = spec_dict[0][key] == saved_spec_dict[key]
+#             print(a)
+#         import pdb; pdb.set_trace()
+#         self.assertEqual(spec_dict[0], saved_spec_dict)

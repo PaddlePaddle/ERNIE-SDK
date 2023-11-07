@@ -9,7 +9,7 @@ paths:
     /get_wordbook:
         get:
             operationId: getWordbook
-            summary: 展示单词列表
+            description: 展示单词列表
             responses:
                 "200":
                     description: 列表展示完成
@@ -20,7 +20,7 @@ paths:
     /generate_sentences:
         post:
             operationId: generateSentences
-            summary: 背单词，生成句子
+            description: 背单词，生成句子
             requestBody:
                 required: true
                 content:
@@ -37,7 +37,7 @@ paths:
     /add_word:
         post:
             operationId: addWord
-            summary: 在单词本中添加一个单词
+            description: 在单词本中添加一个单词
             requestBody:
                 required: true
                 content:
@@ -54,7 +54,7 @@ paths:
     /delete_word:
         delete:
             operationId: deleteWord
-            summary: 从单词本中删除一个单词
+            description: 从单词本中删除一个单词
             requestBody:
                 required: true
                 content:
