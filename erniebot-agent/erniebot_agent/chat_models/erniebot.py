@@ -15,7 +15,7 @@
 from typing import Any, AsyncIterator, Dict, List, Literal, Optional, Union, overload
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import Message, response_to_message
+from erniebot_agent.message import AIMessage, Message
 
 import erniebot
 
@@ -102,7 +102,7 @@ class ERNIEBot(ChatModel):
 
         if stream:
             response = await erniebot.ChatCompletion.acreate(stream=True, **cfg_dict)
-            return (response_to_message(d) async for d in response)
+            return (AIMessage.from_response(d) async for d in response)
         else:
             response = await erniebot.ChatCompletion.acreate(stream=False, **cfg_dict)
-            return response_to_message(response)
+            return AIMessage.from_response(response)
