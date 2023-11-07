@@ -27,9 +27,7 @@ class Message:
     def to_dict(self) -> Dict[str, str]:
         res = {}
         for name in self._param_names:
-            value = getattr(self, name)
-            if value is not None and value != "":
-                res[name] = value
+            res[name] = getattr(self, name)
         return res
 
     def __str__(self) -> str:
