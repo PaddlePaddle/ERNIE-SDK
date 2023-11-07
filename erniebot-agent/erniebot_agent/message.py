@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
-from typing import Dict
+from typing import Dict, Optional
 
 from erniebot.response import EBResponse
 
@@ -19,48 +19,62 @@ from erniebot.response import EBResponse
 class Message:
     """The base class of message."""
 
-    def __init__(self, role: str, content: str):
+    def __init__(self, role: str, content: Optional[str]):
         self.role = role
         self.content = content
+        self._param_names = ["role", "content"]
 
     def to_dict(self) -> Dict[str, str]:
-        return {"role": self.role, "content": self.content}
+        res = {}
+        for name in self._param_names:
+            value = getattr(self, name)
+            if value is not None and value != "":
+                res[name] = value
+        return res
 
     def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}"
+        res = ""
+        for name in self._param_names:
+            value = getattr(self, name)
+            if value is not None and value != "":
+                res += f"{name}: {value}, "
+        return res[:-2]
+
+
+class SystemMessage(Message):
+    """The message from human to set system information."""
+
+    def __init__(self, content: str):
+        super().__init__(role="system", content=content)
 
 
 class HumanMessage(Message):
-    """A Message from human."""
+    """The message from human."""
 
     def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
 
 class AIMessage(Message):
-    """A Message from assistant."""
+    """The message from assistant."""
 
-    def __init__(self, content: str):
+    def __init__(self, content: Optional[str], function_call: Optional[Dict[str, str]]):
         super().__init__(role="assistant", content=content)
+        self.function_call = function_call
+        self._param_names = ["role", "content", "function_call"]
+
+    @classmethod
+    def from_response(cls, response: EBResponse):
+        if hasattr(response, "function_call"):
+            return cls(content=None, function_call=response.function_call)
+        else:
+            return cls(content=response.result, function_call=None)
 
 
 class FunctionMessage(Message):
-    """A Message from assistant for function calling."""
+    """The message from human to set the result of function call."""
 
-    def __init__(self, function_call):
-        super().__init__(role="assistant", content="null")
-        self.function_call = function_call
-
-    def to_dict(self) -> Dict[str, str]:
-        return {"role": self.role, "content": self.content, "function_call": self.function_call}
-
-    def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}, function_call: {self.function_call}"
-
-
-def response_to_message(response: EBResponse) -> Message:
-    """Convert the response from assistant to AIMessage or FunctionMessage."""
-    if hasattr(response, "function_call"):
-        return FunctionMessage(function_call=response.get_result())
-    else:
-        return AIMessage(content=response.get_result())
+    def __init__(self, name: str, content: str):
+        super().__init__(role="function", content=content)
+        self.name = name
+        self._param_names = ["role", "name", "content"]
