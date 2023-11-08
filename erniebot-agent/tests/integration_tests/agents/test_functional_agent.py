@@ -26,47 +26,58 @@ def memory():
 
 @pytest.mark.asyncio
 async def test_functional_agent_run_one_hit(llm, tool, memory):
-    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory, run_memory=WholeMemory())
+    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
     prompt = ONE_HIT_PROMPT
 
     response = await agent.async_run(prompt)
-    interm_messages = response.intermediate_messages
-    assert len(interm_messages) == 4
-    assert isinstance(interm_messages[0], HumanMessage)
-    assert interm_messages[0].content == prompt
-    assert isinstance(interm_messages[1], AIMessage)
-    assert interm_messages[1].function_call is not None
-    assert interm_messages[1].function_call["name"] == tool.tool_name
-    assert isinstance(interm_messages[2], FunctionMessage)
-    assert interm_messages[2].name == interm_messages[1].function_call["name"]
-    assert interm_messages[2].content == "5"
-    assert isinstance(interm_messages[3], AIMessage)
-    assert interm_messages[3].content == response.content
+
+    messages = response.chat_history
+    assert len(messages) == 4
+    assert isinstance(messages[0], HumanMessage)
+    assert messages[0].content == prompt
+    assert isinstance(messages[1], AIMessage)
+    assert messages[1].function_call is not None
+    assert messages[1].function_call["name"] == tool.tool_name
+    assert isinstance(messages[2], FunctionMessage)
+    assert messages[2].name == messages[1].function_call["name"]
+    assert messages[2].content == "5"
+    assert isinstance(messages[3], AIMessage)
+    assert messages[3].content == response.content
+
+    actions = response.actions
+    assert len(actions) == 1
+    assert actions[0].tool_name == tool.tool_name
 
 
 @pytest.mark.asyncio
 async def test_functional_agent_run_no_hit(llm, tool, memory):
-    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory, run_memory=WholeMemory())
+    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
     prompt = NO_HIT_PROMPT
 
     response = await agent.async_run(prompt)
-    interm_messages = response.intermediate_messages
-    assert len(interm_messages) == 2
-    assert isinstance(interm_messages[0], HumanMessage)
-    assert interm_messages[0].content == prompt
-    assert isinstance(interm_messages[1], AIMessage)
-    assert interm_messages[1].content == response.content
+
+    messages = response.chat_history
+    assert len(messages) == 2
+    assert isinstance(messages[0], HumanMessage)
+    assert messages[0].content == prompt
+    assert isinstance(messages[1], AIMessage)
+    assert messages[1].content == response.content
+
+    assert len(response.actions) == 0
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("prompt", [ONE_HIT_PROMPT, NO_HIT_PROMPT])
 async def test_functional_agent_run_no_tool(llm, memory, prompt):
-    agent = FunctionalAgent(llm=llm, tools=[], memory=memory, run_memory=WholeMemory())
+    agent = FunctionalAgent(llm=llm, tools=[], memory=memory)
 
     response = await agent.async_run(prompt)
-    interm_messages = response.intermediate_messages
-    assert len(interm_messages) == 2
-    assert isinstance(interm_messages[0], HumanMessage)
-    assert interm_messages[0].content == prompt
-    assert isinstance(interm_messages[1], AIMessage)
-    assert interm_messages[1].content == response.content
+
+    messages = response.chat_history
+    assert len(messages) == 2
+    assert isinstance(messages[0], HumanMessage)
+    assert messages[0].content == prompt
+    assert isinstance(messages[1], AIMessage)
+    assert messages[1].content == response.content
+
+    assert len(response.actions) == 0

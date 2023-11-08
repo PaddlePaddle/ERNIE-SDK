@@ -127,7 +127,7 @@ class ERNIEBot(ChatModel):
         if hasattr(response, "function_call"):
             function_call = FunctionCall(
                 name=response.function_call["name"],
-                thoughts=response.function_call,
+                thoughts=response.function_call["thoughts"],
                 arguments=response.function_call["arguments"],
             )
             return output_type(content=function_call["thoughts"], function_call=function_call)

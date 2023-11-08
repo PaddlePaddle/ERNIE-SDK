@@ -15,13 +15,14 @@
 import json
 from typing import Any
 
-def to_compact_json(obj: Any, *, from_json: bool=False) -> str:
+
+def to_compact_json(obj: Any, *, from_json: bool = False) -> str:
     if from_json:
         obj = json.loads(obj)
-    return json.dumps(obj, ensure_ascii=False, sort_keys=False, separators=(',', ':'))
+    return json.dumps(obj, ensure_ascii=False, sort_keys=False, separators=(",", ":"))
 
 
-def to_pretty_json(obj: Any, *, from_json: bool=False) -> str:
+def to_pretty_json(obj: Any, *, from_json: bool = False) -> str:
     if from_json:
         obj = json.loads(obj)
     return json.dumps(obj, ensure_ascii=False, sort_keys=False, indent=2)

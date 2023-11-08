@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List, TypeAlias, Union
+from typing import List, Union
 
 from erniebot_agent.messages import Message
+from typing_extensions import Literal
 
 
 @dataclass
@@ -31,7 +32,9 @@ class AgentResponse(object):
     """The final response of an agent."""
 
     content: str
-    intermediate_messages: List[Message]
+    chat_history: List[Message]
+    actions: List[AgentAction]
+    status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
 
 @dataclass
@@ -39,6 +42,3 @@ class AgentPlan(object):
     """A plan that contains a list of actions."""
 
     actions: List[AgentAction]
-
-
-AgentStep: TypeAlias = Union[AgentAction, AgentResponse]

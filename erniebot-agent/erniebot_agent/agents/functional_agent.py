@@ -17,11 +17,10 @@ from typing import List, Optional, Union
 from erniebot_agent.agents.base import Agent, ToolManager
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.schema import AgentAction, AgentResponse, AgentStep
+from erniebot_agent.agents.schema import AgentAction, AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage
+from erniebot_agent.messages import FunctionMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
 
 _MAX_STEPS = 5
@@ -36,7 +35,6 @@ class FunctionalAgent(Agent):
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         max_steps: Optional[int] = None,
-        run_memory: Optional[Memory] = None,
     ) -> None:
         super().__init__(llm=llm, tools=tools, memory=memory, callbacks=callbacks)
         if max_steps is not None:
@@ -45,68 +43,73 @@ class FunctionalAgent(Agent):
             self.max_steps = max_steps
         else:
             self.max_steps = _MAX_STEPS
-        self._run_memory = run_memory
 
     async def _async_run(self, prompt: str) -> AgentResponse:
-        if self._run_memory:
-            run_memory = self._run_memory
-        else:
-            run_memory = self._create_run_memory()
-        self._copy_memory(self.memory, run_memory)
-
+        chat_history: List[Message] = []
+        actions_taken: List[AgentAction] = []
         ask = HumanMessage(content=prompt)
-        step = await self._async_create_first_step(ask, run_memory)
 
         num_steps_taken = 0
+        next_step_input: Message = ask
         while num_steps_taken < self.max_steps:
-            if isinstance(step, AgentAction):
-                tool_resp = await self._async_run_tool(step.tool_name, step.tool_args)
-                step = await self._async_create_next_step(step.tool_name, tool_resp, run_memory)
-            elif isinstance(step, AgentResponse):
-                self.memory.add_message(ask)
-                self.memory.add_message(AIMessage(content=step.content))
-                return step
-            else:
-                raise TypeError("Invalid type of step")
+            curr_step_output = await self._async_step(next_step_input, chat_history, actions_taken)
+            if curr_step_output is None:
+                response = self._create_finished_response(chat_history, actions_taken)
+                self.memory.add_message(chat_history[0])
+                self.memory.add_message(chat_history[-1])
+                return response
             num_steps_taken += 1
-        response = self._create_stopped_response(run_memory)
+            next_step_input = curr_step_output
+        response = self._create_stopped_response(chat_history, actions_taken)
         return response
 
+    async def _async_step(
+        self, step_input, chat_history: List[Message], actions: List[AgentAction]
+    ) -> Optional[Message]:
+        maybe_action = await self._async_plan(step_input, chat_history)
+        if isinstance(maybe_action, AgentAction):
+            action: AgentAction = maybe_action
+            tool_output = await self._async_run_tool(tool_name=action.tool_name, tool_args=action.tool_args)
+            actions.append(action)
+            return FunctionMessage(name=action.tool_name, content=tool_output)
+        else:
+            return None
+
     async def _async_plan(
-        self, message: Union[HumanMessage, FunctionMessage], run_memory: Memory
-    ) -> AgentStep:
-        run_memory.add_message(message)
-        llm_resp = await self._async_run_llm(
-            messages=run_memory.get_messages(),
+        self, input_message: Message, chat_history: List[Message]
+    ) -> Optional[AgentAction]:
+        chat_history.append(input_message)
+        messages = self.memory.get_messages() + chat_history
+        output_message = await self._async_run_llm(
+            messages=messages,
             functions=self._tool_manager.get_tool_function_inputs(),
         )
-        run_memory.add_message(llm_resp)
-        if llm_resp.function_call is not None:
+        chat_history.append(output_message)
+        if output_message.function_call is not None:
             return AgentAction(
-                tool_name=llm_resp.function_call["name"], tool_args=llm_resp.function_call["arguments"]
+                tool_name=output_message.function_call["name"],
+                tool_args=output_message.function_call["arguments"],
             )
         else:
-            return AgentResponse(content=llm_resp.content, intermediate_messages=run_memory.get_messages())
+            return None
 
-    async def _async_create_first_step(self, message: HumanMessage, run_memory: Memory) -> AgentStep:
-        return await self._async_plan(message, run_memory)
-
-    async def _async_create_next_step(
-        self, tool_name: str, tool_response: str, run_memory: Memory
-    ) -> AgentStep:
-        message = FunctionMessage(name=tool_name, content=tool_response)
-        return await self._async_plan(message, run_memory)
-
-    def _create_run_memory(self) -> Memory:
-        return WholeMemory()
-
-    def _create_stopped_response(self, run_memory: Memory) -> AgentResponse:
+    def _create_finished_response(
+        self, chat_history: List[Message], actions: List[AgentAction]
+    ) -> AgentResponse:
+        last_message = chat_history[-1]
         return AgentResponse(
-            content="Agent run stopped early.", intermediate_messages=run_memory.get_messages()
+            content=last_message.content,
+            chat_history=chat_history,
+            actions=actions,
+            status="FINISHED",
         )
 
-    @staticmethod
-    def _copy_memory(src: Memory, dst: Memory):
-        dst.clear_chat_history()
-        messages = src.get_messages()
-        dst.add_messages(messages)
+    def _create_stopped_response(
+        self, chat_history: List[Message], actions: List[AgentAction]
+    ) -> AgentResponse:
+        return AgentResponse(
+            content="Agent run stopped early.",
+            chat_history=chat_history,
+            actions=actions,
+            status="STOPPED",
+        )

@@ -24,8 +24,7 @@ class MessageManager:
         self.messages: List[Message] = []
 
     def add_messages(self, messages: List[Message]) -> None:
-        for message in messages:
-            self.add_message(message)
+        self.messages.extend(messages)
 
     def add_message(self, message: Message) -> None:
         self.messages.append(message)
@@ -45,7 +44,8 @@ class Memory:
         self.msg_manager = MessageManager()
 
     def add_messages(self, messages: List[Message]):
-        self.msg_manager.add_messages(messages)
+        for message in messages:
+            self.add_message(message)
 
     def add_message(self, message: Message):
         self.msg_manager.add_message(message)
