@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.message import Message
 from erniebot_agent.tools.schema import ToolParameterView, scrub_dict
@@ -31,7 +31,7 @@ class Tool(ABC):
         return self.name or self.__class__.__name__
 
     @abstractmethod
-    async def __call__(self, *args: Any, **kwds: Any) -> Any:
+    async def __call__(self, *args: Any, **kwds: Any) -> Dict[str, Any]:
         """the body of tools
 
         Returns:
