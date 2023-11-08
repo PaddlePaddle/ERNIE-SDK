@@ -1,9 +1,11 @@
+import json
+
 import pytest
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage
-from erniebot_agent.tools.base import CalculatorTool
+from erniebot_agent.tools.calculator_tool import CalculatorTool
 
 ONE_HIT_PROMPT = "1+4等于几？"
 NO_HIT_PROMPT = "深圳今天天气怎么样？"
@@ -40,7 +42,7 @@ async def test_functional_agent_run_one_hit(llm, tool, memory):
     assert messages[1].function_call["name"] == tool.tool_name
     assert isinstance(messages[2], FunctionMessage)
     assert messages[2].name == messages[1].function_call["name"]
-    assert messages[2].content == "5"
+    assert json.loads(messages[2].content) == {"formula_result": 5}
     assert isinstance(messages[3], AIMessage)
     assert messages[3].content == response.content
 

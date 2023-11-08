@@ -82,7 +82,7 @@ class FunctionalAgent(Agent):
         messages = self.memory.get_messages() + chat_history
         output_message = await self._async_run_llm(
             messages=messages,
-            functions=self._tool_manager.get_tool_function_inputs(),
+            functions=self._tool_manager.get_tool_schemas(),
         )
         chat_history.append(output_message)
         if output_message.function_call is not None:

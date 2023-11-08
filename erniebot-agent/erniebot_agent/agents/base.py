@@ -64,10 +64,12 @@ class ToolManager(object):
         return ", ".join(self._tools.keys())
 
     def get_tool_names_with_descriptions(self) -> str:
-        return "\n".join(f"{name}:{json.dumps(tool.function_input())}" for name, tool in self._tools.items())
+        return "\n".join(
+            f"{name}:{json.dumps(tool.function_call_schema())}" for name, tool in self._tools.items()
+        )
 
-    def get_tool_function_inputs(self):
-        return [tool.function_input() for tool in self._tools.values()]
+    def get_tool_schemas(self):
+        return [tool.function_call_schema() for tool in self._tools.values()]
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
@@ -143,8 +145,8 @@ class Agent(BaseAgent):
 
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
         bnd_args = self._parse_tool_args(tool, tool_args)
-        tool_resp = await tool.async_run(*bnd_args.args, **bnd_args.kwargs)
-        tool_resp = json.dumps(tool_resp)
+        tool_ret = await tool(*bnd_args.args, **bnd_args.kwargs)
+        tool_resp = json.dumps(tool_ret)
         return tool_resp
 
     async def _async_run_llm_without_hooks(
@@ -158,7 +160,7 @@ class Agent(BaseAgent):
         if not isinstance(args_dict, dict):
             raise ValueError("`tool_args` cannot be interpreted as a dict.")
         # TODO: Check types
-        sig = inspect.signature(tool.async_run)
+        sig = inspect.signature(tool.__call__)
         bnd_args = sig.bind(**args_dict)
         bnd_args.apply_defaults()
         return bnd_args
