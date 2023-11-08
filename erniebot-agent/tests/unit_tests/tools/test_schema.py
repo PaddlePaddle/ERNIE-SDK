@@ -16,8 +16,8 @@ from __future__ import annotations
 import unittest
 from typing import List
 
+from erniebot_agent.tools.base import RemoteToolkit
 from erniebot_agent.tools.schema import (
-    PluginSchema,
     ToolParameterView,
     get_typing_list_type,
     json_type,
@@ -29,7 +29,7 @@ class TestToolSchema(unittest.TestCase):
     openapi_file = "./tests/fixtures/openapi.yaml"
 
     def test_plugin_schema(self):
-        schema = PluginSchema.from_openapi_file(self.openapi_file)
+        schema = RemoteToolkit.from_openapi_file(self.openapi_file)
 
         self.assertEqual(schema.info.title, "单词本")
         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8081")
@@ -39,7 +39,7 @@ class TestToolSchema(unittest.TestCase):
         contain any empty field
         """
         spec_dict = read_from_filename(self.openapi_file)
-        schema = PluginSchema.from_openapi_file(self.openapi_file)
+        schema = RemoteToolkit.from_openapi_file(self.openapi_file)
         saved_spec_dict = schema.to_openapi_dict()
         self.assertEqual(spec_dict[0], saved_spec_dict)
 

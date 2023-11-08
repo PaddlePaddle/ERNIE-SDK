@@ -13,12 +13,11 @@
 # limitations under the License.
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import List, Optional, Type, get_args
 
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
-from yaml import safe_dump
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -319,86 +318,3 @@ class EndpointInfo:
     title: str
     description: str
     version: str
-
-
-@dataclass
-class PluginSchema:
-    """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
-
-    openapi: str
-    info: EndpointInfo
-    servers: List[Endpoint]
-    paths: List[RemoteToolView]
-
-    component_schemas: dict[str, Type[ToolParameterView]]
-
-    def to_openapi_dict(self) -> dict:
-        """convert plugin schema to openapi spec dict"""
-        spec_dict = {
-            "openapi": self.openapi,
-            "info": asdict(self.info),
-            "servers": [asdict(server) for server in self.servers],
-            "paths": {tool_view.uri: tool_view.to_openapi_dict() for tool_view in self.paths},
-            "components": {
-                "schemas": {
-                    uri: parameters_view.to_openapi_dict()
-                    for uri, parameters_view in self.component_schemas.items()
-                }
-            },
-        }
-        return scrub_dict(spec_dict, remove_empty_dict=True) or {}
-
-    def to_openapi_file(self, file: str):
-        """generate openapi configuration file
-
-        Args:
-            file (str): the path of the openapi yaml file
-        """
-        spec_dict = self.to_openapi_dict()
-        with open(file, "w+", encoding="utf-8") as f:
-            safe_dump(spec_dict, f, indent=4)
-
-    @staticmethod
-    def from_openapi_file(file: str) -> PluginSchema:
-        """only support openapi v3.0.1
-
-        Args:
-            file (str): the path of openapi yaml file
-        """
-        from openapi_spec_validator import validate
-        from openapi_spec_validator.readers import read_from_filename
-
-        spec_dict, _ = read_from_filename(file)
-        validate(spec_dict)
-
-        # info
-        info = EndpointInfo(**spec_dict["info"])
-        servers = [Endpoint(**server) for server in spec_dict.get("servers", [])]
-
-        # components
-        component_schemas = spec_dict["components"]["schemas"]
-        fields = {}
-        for name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(name, schema)
-            fields[name] = parameter_view
-
-        # paths
-        paths = []
-        for path, path_info in spec_dict.get("paths", {}).items():
-            for method, path_method_info in path_info.items():
-                paths.append(
-                    RemoteToolView.from_openapi_dict(
-                        uri=path,
-                        method=method,
-                        path_info=path_method_info,
-                        parameters_views=fields,
-                    )
-                )
-
-        return PluginSchema(
-            openapi=spec_dict["openapi"],
-            info=info,
-            servers=servers,
-            paths=paths,
-            component_schemas=fields,
-        )
