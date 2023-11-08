@@ -33,8 +33,7 @@ class CalculatorTool(Tool):
                 None,
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
-                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "thoughts": f"用户想知道3加6等于多少，我可以使用{self.tool_name}工具来计算公式，其中`math_formula`字段的内容为：'3+6'。",
                     "arguments": '{"math_formula": "3+6"}',
                 },
             ),
@@ -43,8 +42,8 @@ class CalculatorTool(Tool):
                 None,
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
-                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "thoughts": f"用户想知道1加8再乘5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'(1+8)*5'。",
                     "arguments": '{"math_formula": "(1+8)*5"}',
                 },
             ),
@@ -53,8 +52,8 @@ class CalculatorTool(Tool):
                 None,
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
-                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "thoughts": f"用户想知道12除以4再加5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'12/4+5'。",
                     "arguments": '{"math_formula": "12/4+5"}',
                 },
             ),

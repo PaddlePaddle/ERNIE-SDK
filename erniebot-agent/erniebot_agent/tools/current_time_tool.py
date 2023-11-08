@@ -29,7 +29,7 @@ class CurrentTimeTool(Tool):
                 None,
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "请求的意图是想知道当前时间",
+                    "thoughts": f"用户想知道现在几点了，我可以使用{self.tool_name}来获取当前时间，并从其中获得当前小时时间。",
                 },
             ),
             HumanMessage("现在是什么时候？"),
@@ -37,15 +37,7 @@ class CurrentTimeTool(Tool):
                 None,
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "请求的意图是想知道当前时间",
-                },
-            ),
-            HumanMessage("请问现在是什么时间"),
-            AIMessage(
-                None,
-                function_call={
-                    "name": self.tool_name,
-                    "thoughts": "请求的意图是想知道当前时间",
+                    "thoughts": f"用户想知道现在几点了，我可以使用{self.tool_name}来获取当前时间",
                 },
             ),
         ]
