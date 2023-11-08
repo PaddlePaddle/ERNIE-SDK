@@ -20,4 +20,4 @@ jobs:
       - name: Run the command
         with:
           AISTUDIO_ACCESS_TOKEN: ${{ secrets.AISTUDIO_ACCESS_TOKEN }}
-        run: cd erniebot-agent && python -m pytest tests/unit_tests/
+        run: cd erniebot-agent && python -m pytest tests/integration_tests/
