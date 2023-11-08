@@ -29,7 +29,7 @@ class TestToolSchema(unittest.TestCase):
     openapi_file = "./tests/fixtures/openapi.yaml"
 
     def test_plugin_schema(self):
-        schema = RemoteToolkit.from_openapi_file(self.openapi_file)
+        schema = RemoteToolkit.from_openapi_file(self.openapi_file, "TestRemoteToolkit")
 
         self.assertEqual(schema.info.title, "单词本")
         self.assertEqual(schema.servers[0].url, "http://127.0.0.1:8081")
@@ -39,19 +39,19 @@ class TestToolSchema(unittest.TestCase):
         contain any empty field
         """
         spec_dict = read_from_filename(self.openapi_file)
-        schema = RemoteToolkit.from_openapi_file(self.openapi_file)
+        schema = RemoteToolkit.from_openapi_file(self.openapi_file, "TestRemoteToolkit")
         saved_spec_dict = schema.to_openapi_dict()
         self.assertEqual(spec_dict[0], saved_spec_dict)
 
     def test_function_call_schemas(self):
-        toolkit = RemoteToolkit.from_openapi_file(self.openapi_file)
+        toolkit = RemoteToolkit.from_openapi_file(self.openapi_file, "TestRemoteToolkit")
         function_call_schemas = toolkit.function_call_schema()
         self.assertEqual(len(function_call_schemas), 4)
 
-        self.assertEqual(function_call_schemas[0]["name"], "getWordbook")
+        self.assertEqual(function_call_schemas[0]["name"], "TestRemoteToolkit-getWordbook")
         self.assertEqual(function_call_schemas[0]["responses"]["required"], ["wordbook"])
         self.assertEqual(function_call_schemas[0]["responses"]["properties"]["wordbook"]["type"], "array")
-        self.assertEqual(function_call_schemas[3]["name"], "deleteWord")
+        self.assertEqual(function_call_schemas[3]["name"], "TestRemoteToolkit-deleteWord")
 
     def test_get_typing_list_type(self):
         result = get_typing_list_type(List[int])

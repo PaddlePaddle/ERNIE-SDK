@@ -140,9 +140,9 @@ class RemoteToolkit:
         # components
         component_schemas = spec_dict["components"]["schemas"]
         fields = {}
-        for name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(name, schema)
-            fields[name] = parameter_view
+        for schema_name, schema in component_schemas.items():
+            parameter_view = ToolParameterView.from_openapi_dict(schema_name, schema)
+            fields[schema_name] = parameter_view
 
         # paths
         paths = []
