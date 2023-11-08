@@ -43,6 +43,16 @@ class TestToolSchema(unittest.TestCase):
         saved_spec_dict = schema.to_openapi_dict()
         self.assertEqual(spec_dict[0], saved_spec_dict)
 
+    def test_function_call_schemas(self):
+        toolkit = RemoteToolkit.from_openapi_file(self.openapi_file)
+        function_call_schemas = toolkit.function_call_schema()
+        self.assertEqual(len(function_call_schemas), 4)
+
+        self.assertEqual(function_call_schemas[0]["name"], "getWordbook")
+        self.assertEqual(function_call_schemas[0]["responses"]["required"], ["wordbook"])
+        self.assertEqual(function_call_schemas[0]["responses"]["properties"]["wordbook"]["type"], "array")
+        self.assertEqual(function_call_schemas[3]["name"], "deleteWord")
+
     def test_get_typing_list_type(self):
         result = get_typing_list_type(List[int])
         self.assertEqual(result, "integer")

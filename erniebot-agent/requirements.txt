@@ -1,5 +1,4 @@
 erniebot
 PyYAML
-loguru
 openapi_spec_validator
 pydantic

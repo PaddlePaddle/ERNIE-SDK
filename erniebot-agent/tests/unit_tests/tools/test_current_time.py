@@ -19,6 +19,9 @@ class TestCalculatorTool(unittest.TestCase):
     def test_schema(self):
         calculator = CurrentTimeTool()
         function_call_schema = calculator.function_call_schema()
+        import pdb
+
+        pdb.set_trace()
 
         self.assertEqual(function_call_schema["description"], CurrentTimeTool.description)
         self.assertEqual(

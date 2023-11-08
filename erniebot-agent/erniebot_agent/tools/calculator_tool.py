@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import List, Type
+from typing import Dict, List, Type
 
-from erniebot_agent.message import FunctionMessage, HumanMessage, Message
+from erniebot_agent.message import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
 
@@ -22,16 +22,39 @@ class CalculatorTool(Tool):
     input_type: Type[ToolParameterView] = CalculatorToolInputView
     ouptut_type: Type[ToolParameterView] = CalculatorToolOutputView
 
-    async def __call__(self, math_formula: str) -> dict:
-        return eval(math_formula)
+    async def __call__(self, math_formula: str) -> Dict[str, float]:
+        return {"formula_result": eval(math_formula)}
 
     @property
     def examples(self) -> List[Message]:
         return [
             HumanMessage("请告诉我三加六等于多少？"),
-            FunctionMessage(name=self.tool_name, content='{"math_formula": "3+6"}'),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道3加6等于多少，我可以使用{self.tool_name}工具来计算公式，其中`math_formula`字段的内容为：'3+6'。",
+                    "arguments": '{"math_formula": "3+6"}',
+                },
+            ),
             HumanMessage("一加八再乘以5是多少？"),
-            FunctionMessage(name=self.tool_name, content='{"math_formula": "(1+8)*5"}'),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道1加8再乘5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'(1+8)*5'。",
+                    "arguments": '{"math_formula": "(1+8)*5"}',
+                },
+            ),
             HumanMessage("我想知道十二除以四再加五等于多少？"),
-            FunctionMessage(name=self.tool_name, content='{"math_formula": "12/4+5"}'),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道12除以4再加5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'12/4+5'。",
+                    "arguments": '{"math_formula": "12/4+5"}',
+                },
+            ),
         ]

@@ -307,6 +307,19 @@ class RemoteToolView:
             parameters_ref_uri=parameters_ref_uri,
         )
 
+    def function_call_schema(self):
+        inputs = {
+            "name": self.name,
+            "description": self.description,
+            # TODO(wj-Mcat): read examples from openapi.yaml
+            # "examples": [example.to_dict() for example in self.examples],
+        }
+        if self.parameters is not None:
+            inputs["parameters"] = self.parameters.function_call_schema()  # type: ignore
+        if self.returns is not None:
+            inputs["responses"] = self.returns.function_call_schema()  # type: ignore
+        return scrub_dict(inputs) or {}
+
 
 @dataclass
 class Endpoint:

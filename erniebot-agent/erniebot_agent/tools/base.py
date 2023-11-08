@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.message import Message
 from erniebot_agent.tools.schema import (
@@ -49,7 +49,7 @@ class Tool(BaseTool, ABC):
         return self.name or self.__class__.__name__
 
     @abstractmethod
-    async def __call__(self, *args: Any, **kwds: Any) -> Any:
+    async def __call__(self, *args: Any, **kwds: Any) -> Dict[str, Any]:
         """the body of tools
 
         Returns:
@@ -76,8 +76,10 @@ class Tool(BaseTool, ABC):
 
 
 @dataclass
-class RemoteToolkit(BaseTool):
+class RemoteToolkit:
     """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
+
+    name: str
 
     openapi: str
     info: EndpointInfo
@@ -85,6 +87,12 @@ class RemoteToolkit(BaseTool):
     paths: List[RemoteToolView]
 
     component_schemas: dict[str, Type[ToolParameterView]]
+
+    async def __call__(self, **kwargs) -> Dict[str, Any]:
+        return {}
+
+    def __post_init__(self):
+        pass
 
     def to_openapi_dict(self) -> dict:
         """convert plugin schema to openapi spec dict"""
@@ -113,7 +121,7 @@ class RemoteToolkit(BaseTool):
             safe_dump(spec_dict, f, indent=4)
 
     @staticmethod
-    def from_openapi_file(file: str) -> RemoteToolkit:
+    def from_openapi_file(file: str, name: str) -> RemoteToolkit:
         """only support openapi v3.0.1
 
         Args:
@@ -150,9 +158,19 @@ class RemoteToolkit(BaseTool):
                 )
 
         return RemoteToolkit(
+            name=name,
             openapi=spec_dict["openapi"],
             info=info,
             servers=servers,
             paths=paths,
             component_schemas=fields,
         )  # type: ignore
+
+    def function_call_schema(self) -> List[dict]:
+        schemas = []
+        for tool_view in self.paths:
+            schema = tool_view.function_call_schema()
+
+            schema["name"] = f"{self.name}-{schema['name']}"
+            schemas.append(schema)
+        return schemas
