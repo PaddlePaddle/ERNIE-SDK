@@ -1,25 +1,60 @@
+from __future__ import annotations
+
+from typing import Dict, List, Type
+
+from erniebot_agent.message import AIMessage, HumanMessage, Message
+from erniebot_agent.tools.schema import ToolParameterView
+from pydantic import Field
+
 from .base import Tool
 
 
+class CalculatorToolInputView(ToolParameterView):
+    math_formula: str = Field(description='标准的数学公式，例如："2+3"、"3 - 4 * 6", "(3 + 4) * (6 + 4)" 等。 ')
+
+
+class CalculatorToolOutputView(ToolParameterView):
+    formula_result: float = Field(description="数学公式计算的结果")
+
+
 class CalculatorTool(Tool):
-    """"""
+    description: str = "CalculatorTool用于执行数学公式计算"
+    input_type: Type[ToolParameterView] = CalculatorToolInputView
+    ouptut_type: Type[ToolParameterView] = CalculatorToolOutputView
 
-    def __call__(self, math_formula: str) -> float:
-        """CalculatorTool用于执行数学公式计算
+    async def __call__(self, math_formula: str) -> Dict[str, float]:
+        return {"formula_result": eval(math_formula)}
 
-        Args:
-            math_formula (str): 标准的数学公式，例如："2+3"、"3 - 4 * 6", "(3 + 4) * (6 + 4)" 等。
-
-        Examples:
-            >>> {"role": "user", "content": "请告诉我三加六等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'3+6'}"}}
-            >>> {"role": "user", "content": "一加八再乘以五是多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'(1+8)*5'}"}}
-            >>> {"role": "user", "content": "我想知道十二除以 4 再加 5 等于多少"}
-            >>> {"role": "assistant", "content": null, "function_call": {"name": "CalculatorTool", "arguments": "{'math_formula':'12/4+5'}"}}
-
-        Returns:
-            int: 数学公式计算的结果
-        """  # noqa: E501
-
-        return eval(math_formula)
+    @property
+    def examples(self) -> List[Message]:
+        return [
+            HumanMessage("请告诉我三加六等于多少？"),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道3加6等于多少，我可以使用{self.tool_name}工具来计算公式，其中`math_formula`字段的内容为：'3+6'。",
+                    "arguments": '{"math_formula": "3+6"}',
+                },
+            ),
+            HumanMessage("一加八再乘以5是多少？"),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道1加8再乘5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'(1+8)*5'。",
+                    "arguments": '{"math_formula": "(1+8)*5"}',
+                },
+            ),
+            HumanMessage("我想知道十二除以四再加五等于多少？"),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想知道12除以4再加5等于多少，我可以使用{self.tool_name}工具来计算公式，"
+                    "其中`math_formula`字段的内容为：'12/4+5'。",
+                    "arguments": '{"math_formula": "12/4+5"}',
+                },
+            ),
+        ]
