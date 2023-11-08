@@ -29,9 +29,33 @@ class CalculatorTool(Tool):
     def examples(self) -> List[Message]:
         return [
             HumanMessage("请告诉我三加六等于多少？"),
-            AIMessage(None, function_call={"math_formula": "3+6"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
+                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "arguments": '{"math_formula": "3+6"}',
+                },
+            ),
             HumanMessage("一加八再乘以5是多少？"),
-            AIMessage(None, function_call={"math_formula": "(1+8)*5"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
+                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "arguments": '{"math_formula": "(1+8)*5"}',
+                },
+            ),
             HumanMessage("我想知道十二除以四再加五等于多少？"),
-            AIMessage(None, function_call={"math_formula": "12/4+5"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想从文本中提取计算公式并计算结果，其中`math_formula`字段就是"
+                    "从文本中提取的可直接让 python 解释器执行的数学表达式，例如：(3+6)*3",
+                    "arguments": '{"math_formula": "12/4+5"}',
+                },
+            ),
         ]

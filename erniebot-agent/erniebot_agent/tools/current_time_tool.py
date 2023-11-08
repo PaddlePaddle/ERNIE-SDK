@@ -25,9 +25,27 @@ class CurrentTimeTool(Tool):
     def examples(self) -> List[Message]:
         return [
             HumanMessage("现在几点钟了"),
-            AIMessage(None, function_call={"current_time": "2023年11月8号 12点:08分:36秒"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想知道当前时间",
+                },
+            ),
             HumanMessage("现在是什么时候？"),
-            AIMessage(None, function_call={"current_time": "2023年11月8号 12点:08分:36秒"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想知道当前时间",
+                },
+            ),
             HumanMessage("请问现在是什么时间"),
-            AIMessage(None, function_call={"current_time": "2023年11月8号 12点:08分:36秒"}),
+            AIMessage(
+                None,
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": "请求的意图是想知道当前时间",
+                },
+            ),
         ]
