@@ -19,5 +19,5 @@ jobs:
           python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Run the command
         env:
-          AISTUDIO_ACCESS_TOKEN: ${{ secrets.AISTUDIO_ACCESS_TOKEN }}
+          access_token: ${{ secrets.AISTUDIO_ACCESS_TOKEN }}
         run: cd erniebot-agent && python -m pytest tests/integration_tests/
