@@ -9,9 +9,7 @@ from erniebot_agent.message import FunctionMessage, HumanMessage
 class TestChatModel(unittest.TestCase):
     @pytest.mark.asyncio
     async def test_chat(self):
-        eb = ERNIEBot(
-            model="ernie-bot-turbo", api_type="aistudio", access_token=os.getenv("AISTUDIO_ACCESS_TOKEN")
-        )
+        eb = ERNIEBot(model="ernie-bot-turbo", api_type="aistudio", access_token=os.environ["access_token"])
         messages = [
             HumanMessage(content="我在深圳，周末可以去哪里玩？"),
         ]
@@ -64,9 +62,7 @@ class TestChatModel(unittest.TestCase):
             }
         ]
 
-        eb = ERNIEBot(
-            model="ernie-bot", api_type="aistudio", access_token=os.getenv("AISTUDIO_ACCESS_TOKEN")
-        )
+        eb = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token=os.environ["access_token"])
         messages = [
             HumanMessage(content="深圳市今天的气温是多少摄氏度？"),
         ]
