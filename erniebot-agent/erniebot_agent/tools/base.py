@@ -78,6 +78,29 @@ class Tool(BaseTool, ABC):
         return []
 
 
+class RemoteTool(BaseTool):
+    def __init__(self, tool_view: RemoteToolView, server_url: str) -> None:
+        self.tool_view = tool_view
+        self.server_url = server_url
+
+    async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
+        url = self.server_url + self.tool_view.uri
+        if self.tool_view.method == "get":
+            result = requests.get(url, params=tool_arguments).json()
+        elif self.tool_view.method == "post":
+            result = requests.post(url, json=tool_arguments).json()
+        elif self.tool_view.method == "put":
+            result = requests.put(url, json=tool_arguments).json()
+        elif self.tool_view.method == "delete":
+            result = requests.delete(url, json=tool_arguments).json()
+        else:
+            raise ValueError(f"method<{self.tool_view.method}> is invalid")
+        return result
+
+    def function_call_schema(self) -> dict:
+        return self.tool_view.function_call_schema()
+
+
 @dataclass
 class RemoteToolkit:
     """RemoteToolkit can be converted by openapi.yaml and endpoint"""
@@ -89,26 +112,13 @@ class RemoteToolkit:
 
     component_schemas: dict[str, Type[ToolParameterView]]
 
-    def get_tool(self, tool_name: str) -> RemoteToolView:
+    def __getitem__(self, tool_name: str):
+        return self.get_tool(tool_name)
+
+    def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
-        return paths[0]
-
-    async def run_tool(self, tool_name: str, tool_arguments: Dict[str, Any]):
-        path = self.get_tool(tool_name)
-        url = self.servers[0].url + path.uri
-        if path.method == "get":
-            result = requests.get(url, params=tool_arguments).json()
-        elif path.method == "post":
-            result = requests.post(url, json=tool_arguments).json()
-        elif path.method == "put":
-            result = requests.put(url, json=tool_arguments).json()
-        elif path.method == "delete":
-            result = requests.delete(url, json=tool_arguments).json()
-        else:
-            raise ValueError(f"method<{path.method}> is invalid")
-
-        return result
+        return RemoteTool(paths[0], self.servers[0].url)
 
     def to_openapi_dict(self) -> dict:
         """convert plugin schema to openapi spec dict"""
@@ -195,10 +205,3 @@ class RemoteToolkit:
 
             toolkit = RemoteToolkit.from_openapi_file(file_path)
         return toolkit
-
-    def function_call_schema(self) -> List[dict]:
-        schemas = []
-        for tool_view in self.paths:
-            schema = tool_view.function_call_schema()
-            schemas.append(schema)
-        return schemas
