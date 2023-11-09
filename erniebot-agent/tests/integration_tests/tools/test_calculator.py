@@ -10,7 +10,8 @@ from erniebot_agent.tools.calculator_tool import CalculatorTool
 import erniebot
 
 erniebot.api_type = "aistudio"
-erniebot.access_token = os.environ["AISTUDIO_ACCESS_TOKEN"]
+erniebot.access_token = os.environ["TEST_SECRET"]
+print(os.environ["TEST_SECRET"])
 
 
 class TestCalculator(unittest.TestCase):
