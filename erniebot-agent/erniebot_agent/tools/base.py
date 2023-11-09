@@ -80,7 +80,7 @@ class Tool(BaseTool, ABC):
 
 @dataclass
 class RemoteToolkit:
-    """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
+    """RemoteToolkit can be converted by openapi.yaml and endpoint"""
 
     openapi: str
     info: EndpointInfo
