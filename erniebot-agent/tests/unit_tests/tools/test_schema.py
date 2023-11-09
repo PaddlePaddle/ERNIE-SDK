@@ -45,7 +45,7 @@ class TestToolSchema(unittest.TestCase):
 
     def test_function_call_schemas(self):
         toolkit = RemoteToolkit.from_openapi_file(self.openapi_file)
-        function_call_schemas = toolkit.function_call_schema()
+        function_call_schemas = [tool.function_call_schema() for tool in toolkit.get_tools()]
         self.assertEqual(len(function_call_schemas), 4)
 
         self.assertEqual(function_call_schemas[0]["name"], "getWordbook")

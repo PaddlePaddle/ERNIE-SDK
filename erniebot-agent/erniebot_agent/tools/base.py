@@ -115,6 +115,9 @@ class RemoteToolkit:
     def __getitem__(self, tool_name: str):
         return self.get_tool(tool_name)
 
+    def get_tools(self) -> List[RemoteTool]:
+        return [RemoteTool(path, self.servers[0].url) for path in self.paths]
+
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
