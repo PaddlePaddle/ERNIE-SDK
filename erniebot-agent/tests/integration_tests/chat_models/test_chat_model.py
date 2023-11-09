@@ -9,7 +9,9 @@ from erniebot_agent.message import AIMessage, FunctionMessage, HumanMessage
 class TestChatModel(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.asyncio
     async def test_chat(self):
-        eb = ERNIEBot(model="ernie-bot-turbo", api_type="aistudio", access_token=os.environ["access_token"])
+        eb = ERNIEBot(
+            model="ernie-bot-turbo", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
+        )
         messages = [
             HumanMessage(content="你好！"),
         ]
@@ -62,7 +64,9 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
             }
         ]
         # use ernie-bot here since ernie-bot-turbo doesn't support function call
-        eb = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token=os.environ["access_token"])
+        eb = ERNIEBot(
+            model="ernie-bot", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
+        )
         messages = [
             HumanMessage(content="深圳市今天的气温是多少摄氏度？"),
         ]
