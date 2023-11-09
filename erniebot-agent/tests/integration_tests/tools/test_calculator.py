@@ -39,11 +39,13 @@ class TestCalculator(unittest.TestCase):
         return result
 
     def test_add(self):
+        print("here")
         print(os.environ["TEST_SECRET"])
         result = self.run_query("3 加四等于多少")
         self.assertEqual(result["formula_result"], 7)
 
     def test_complex_formula(self):
+        print("here")
         print(os.environ["TEST_SECRET"])
         result = self.run_query("3乘以五 再加10等于多少")
         self.assertEqual(result["formula_result"], 25)
