@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
-from typing import Dict, Optional
 
-from erniebot.response import EBResponse
+from dataclasses import dataclass
+from typing import Dict, Optional, TypedDict
 
 
 class Message:
-    """The base class of message."""
+    """The base class of a message."""
 
-    def __init__(self, role: str, content: Optional[str]):
+    def __init__(self, role: str, content: str):
         self.role = role
         self.content = content
         self._param_names = ["role", "content"]
@@ -40,39 +40,44 @@ class Message:
 
 
 class SystemMessage(Message):
-    """The message from human to set system information."""
+    """A message from human to set system information."""
 
     def __init__(self, content: str):
         super().__init__(role="system", content=content)
 
 
 class HumanMessage(Message):
-    """The message from human."""
+    """A message from human."""
 
     def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
 
-class AIMessage(Message):
-    """The message from assistant."""
+class FunctionCall(TypedDict):
+    name: str
+    thoughts: str
+    arguments: str
 
-    def __init__(self, content: Optional[str], function_call: Optional[Dict[str, str]]):
+
+class AIMessage(Message):
+    """A message from the assistant."""
+
+    def __init__(self, content: str, function_call: Optional[FunctionCall] = None):
         super().__init__(role="assistant", content=content)
         self.function_call = function_call
         self._param_names = ["role", "content", "function_call"]
 
-    @classmethod
-    def from_response(cls, response: EBResponse):
-        if hasattr(response, "function_call"):
-            return cls(content=None, function_call=response.function_call)
-        else:
-            return cls(content=response.result, function_call=None)
-
 
 class FunctionMessage(Message):
-    """The message from human to set the result of function call."""
+    """A message from human that contains the result of a function call."""
 
     def __init__(self, name: str, content: str):
         super().__init__(role="function", content=content)
         self.name = name
         self._param_names = ["role", "name", "content"]
+
+
+@dataclass
+class AIMessageChunk(object):
+    content: str
+    function_call: Optional[FunctionCall]
