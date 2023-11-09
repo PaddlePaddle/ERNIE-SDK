@@ -13,6 +13,8 @@
 # limitations under the License.
 from __future__ import annotations
 
+import os
+import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Type
@@ -80,8 +82,6 @@ class Tool(BaseTool, ABC):
 class RemoteToolkit:
     """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
 
-    name: str
-
     openapi: str
     info: EndpointInfo
     servers: List[Endpoint]
@@ -90,8 +90,7 @@ class RemoteToolkit:
     component_schemas: dict[str, Type[ToolParameterView]]
 
     def get_tool(self, tool_name: str) -> RemoteToolView:
-        path_name = tool_name.replace(f"{self.name}-", "")
-        paths = [path for path in self.paths if path.name == path_name]
+        paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
         return paths[0]
 
@@ -138,7 +137,7 @@ class RemoteToolkit:
             safe_dump(spec_dict, f, indent=4)
 
     @staticmethod
-    def from_openapi_file(file: str, name: str) -> RemoteToolkit:
+    def from_openapi_file(file: str) -> RemoteToolkit:
         """only support openapi v3.0.1
 
         Args:
@@ -175,7 +174,6 @@ class RemoteToolkit:
                 )
 
         return RemoteToolkit(
-            name=name,
             openapi=spec_dict["openapi"],
             info=info,
             servers=servers,
@@ -183,11 +181,24 @@ class RemoteToolkit:
             component_schemas=fields,
         )  # type: ignore
 
+    @staticmethod
+    def from_url(url: str) -> RemoteToolkit:
+        # 1. download openapy.yaml file to temp directory
+        if not url.endswith(".well-known/openapi.yaml"):
+            url += ".well-known/openapi.yaml"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_content = requests.get(url).content.decode("utf-8")
+            file_path = os.path.join(temp_dir, "openapi.yaml")
+            with open(file_path, "w+", encoding="utf-8") as f:
+                f.write(file_content)
+
+            toolkit = RemoteToolkit.from_openapi_file(file_path)
+        return toolkit
+
     def function_call_schema(self) -> List[dict]:
         schemas = []
         for tool_view in self.paths:
             schema = tool_view.function_call_schema()
-
-            schema["name"] = f"{self.name}-{schema['name']}"
             schemas.append(schema)
         return schemas
