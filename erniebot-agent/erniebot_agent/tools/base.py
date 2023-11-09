@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Type
 
+import requests
 from erniebot_agent.message import Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -88,11 +89,27 @@ class RemoteToolkit:
 
     component_schemas: dict[str, Type[ToolParameterView]]
 
-    async def __call__(self, **kwargs) -> Dict[str, Any]:
-        return {}
+    def get_tool(self, tool_name: str) -> RemoteToolView:
+        path_name = tool_name.replace(f"{self.name}-", "")
+        paths = [path for path in self.paths if path.name == path_name]
+        assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
+        return paths[0]
 
-    def __post_init__(self):
-        pass
+    async def run_tool(self, tool_name: str, tool_arguments: Dict[str, Any]):
+        path = self.get_tool(tool_name)
+        url = self.servers[0].url + path.uri
+        if path.method == "get":
+            result = requests.get(url, params=tool_arguments).json()
+        elif path.method == "post":
+            result = requests.post(url, json=tool_arguments).json()
+        elif path.method == "put":
+            result = requests.put(url, json=tool_arguments).json()
+        elif path.method == "delete":
+            result = requests.delete(url, json=tool_arguments).json()
+        else:
+            raise ValueError(f"method<{path.method}> is invalid")
+
+        return result
 
     def to_openapi_dict(self) -> dict:
         """convert plugin schema to openapi spec dict"""

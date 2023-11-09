@@ -316,6 +316,9 @@ class RemoteToolView:
         }
         if self.parameters is not None:
             inputs["parameters"] = self.parameters.function_call_schema()  # type: ignore
+        else:
+            inputs["parameters"] = {"type": "object", "properties": {}}
+
         if self.returns is not None:
             inputs["responses"] = self.returns.function_call_schema()  # type: ignore
         return scrub_dict(inputs) or {}
