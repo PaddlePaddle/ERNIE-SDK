@@ -12,32 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, List, Optional, Union
+from abc import ABCMeta, abstractmethod
+from typing import Any, AsyncIterator, List, Literal, Union, overload
 
-from erniebot_agent.message import Message
+from erniebot_agent.messages import AIMessage, AIMessageChunk, Message
 
 
-class ChatModel(ABC):
+class ChatModel(metaclass=ABCMeta):
     """The base class of chat-optimized LLM."""
 
     def __init__(self, model: str):
         self.model = model
 
+    @overload
+    async def async_chat(
+        self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any
+    ) -> AIMessage:
+        ...
+
+    @overload
+    async def async_chat(
+        self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
+    ) -> AsyncIterator[AIMessageChunk]:
+        ...
+
+    @overload
+    async def async_chat(
+        self, messages: List[Message], *, stream: bool, **kwargs: Any
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        ...
+
     @abstractmethod
     async def async_chat(
-        self, messages: List[Message], stream: Optional[bool] = False, **kwargs: Any
-    ) -> Union[Message, AsyncIterator[Message]]:
-        """
-        Asynchronously chat with the LLM.
+        self, messages: List[Message], *, stream: bool = False, **kwargs: Any
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        """Asynchronously chats with the LLM.
 
         Args:
-            messages(List[Message]): A list of messages.
-            stream(Optional[bool]): Whether to use streaming generation. Defaults to False.
-            kwargs(Any): Arbitrary keyword arguments.
+            messages (List[Message]): A list of messages.
+            stream (bool): Whether to use streaming generation. Defaults to False.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             If stream is False, returns a single message.
-            If stream is True, returns an asynchronous iterator of messages.
+            If stream is True, returns an asynchronous iterator of message chunks.
         """
         raise NotImplementedError

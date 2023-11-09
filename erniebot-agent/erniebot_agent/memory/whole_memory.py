@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .limit_token_memory import LimitTokenMemory
-from .sliding_window_memory import SlidingWindowMemory
-from .whole_memory import WholeMemory
+from erniebot_agent.memory.base import Memory
+
+
+class WholeMemory(Memory):
+    """"""
