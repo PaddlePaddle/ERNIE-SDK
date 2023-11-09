@@ -37,4 +37,4 @@ class MockErnieBot:
         functions: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> Message:
-        return messages
+        return messages[0]

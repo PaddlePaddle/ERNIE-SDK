@@ -36,6 +36,10 @@ class CalculatorTool(Tool):
                     "thoughts": f"用户想知道3加6等于多少，我可以使用{self.tool_name}工具来计算公式，其中`math_formula`字段的内容为：'3+6'。",
                     "arguments": '{"math_formula": "3+6"}',
                 },
+                token_usage={
+                    "prompt_tokens": 5,
+                    "completion_tokens": 7,
+                },  # TODO: Functional AIMessage will not add in the memory, will it add token_usage?
             ),
             HumanMessage("一加八再乘以5是多少？"),
             AIMessage(
@@ -46,6 +50,7 @@ class CalculatorTool(Tool):
                     "其中`math_formula`字段的内容为：'(1+8)*5'。",
                     "arguments": '{"math_formula": "(1+8)*5"}',
                 },
+                token_usage={"prompt_tokens": 5, "completion_tokens": 7},  # For test only
             ),
             HumanMessage("我想知道十二除以四再加五等于多少？"),
             AIMessage(
@@ -56,5 +61,6 @@ class CalculatorTool(Tool):
                     "其中`math_formula`字段的内容为：'12/4+5'。",
                     "arguments": '{"math_formula": "12/4+5"}',
                 },
+                token_usage={"prompt_tokens": 5, "completion_tokens": 7},  # For test only
             ),
         ]

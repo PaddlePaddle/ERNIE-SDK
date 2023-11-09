@@ -51,26 +51,21 @@ class MessageWithTokenLen(Message):
 
     def __init__(self, role: str, content: Optional[str], token_len: Union[int, None] = None):
         super().__init__(role=role, content=content)
-        self.content_token_length = token_len
+        self.token_len = token_len
 
     def set_token_len(self, token_len: int):
-        """Set the token length of message."""
-        if self.content_token_length is not None:
+        """Set the number of tokens of the message."""
+        if self.token_len is not None:
             raise ValueError("The token length of message has been set.")
-        self.content_token_length = token_len
+        self.token_len = token_len
 
     def get_token_len(self) -> int:
-        assert self.content_token_length, "The token length of message has not been set."
-        return self.content_token_length
-
-    def to_dict(self) -> Dict[str, str]:
-        attribute_dict = super().to_dict()
-        attribute_dict["token_len"] = str(self.content_token_length)
-
-        return attribute_dict
+        """Get the number of tokens of the message."""
+        assert self.token_len, "The token length of message has not been set before get the token length."
+        return self.token_len
 
     def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}, token_len: {self.content_token_length}"
+        return f"role:{self.role}, content: {self.content}, token_len: {self.token_len}"
 
 
 class HumanMessage(MessageWithTokenLen):
@@ -87,9 +82,9 @@ class AIMessage(MessageWithTokenLen):
         self,
         content: Optional[str],
         function_call: Optional[Dict[str, str]],
-        token_len_infor: Dict[str, int],
+        token_usage: Dict[str, int],
     ):
-        prompt_tokens, completion_tokens = self._parse_token_len(token_len_infor)
+        prompt_tokens, completion_tokens = self._parse_token_len(token_usage)
 
         super().__init__(role="assistant", content=content, token_len=completion_tokens)
 
@@ -97,16 +92,16 @@ class AIMessage(MessageWithTokenLen):
         self.query_tokens_len = prompt_tokens
         self._param_names = ["role", "content", "function_call"]
 
-    def _parse_token_len(self, token_len_infor: Dict[str, int]):
+    def _parse_token_len(self, token_usage: Dict[str, int]):
         """Parse the token length information from LLM."""
-        return token_len_infor["prompt_tokens"], token_len_infor["completion_tokens"]
+        return token_usage["prompt_tokens"], token_usage["completion_tokens"]
 
     @classmethod
     def from_response(cls, response: EBResponse):
         if hasattr(response, "function_call"):
-            return cls(content=None, function_call=response.function_call, token_len_infor=response.usage)
+            return cls(content=None, function_call=response.function_call, token_usage=response.usage)
         else:
-            return cls(content=response.result, function_call=None, token_len_infor=response.usage)
+            return cls(content=response.result, function_call=None, token_usage=response.usage)
 
 
 class FunctionMessage(Message):
