@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 class CallbackHandler(object):
-    async def on_agent_start(self, agent: Agent, prompt: str) -> None:
+    async def on_run_start(self, agent: Agent, prompt: str) -> None:
         """"""
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
@@ -51,5 +51,5 @@ class CallbackHandler(object):
     ) -> None:
         """"""
 
-    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
+    async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
         """"""

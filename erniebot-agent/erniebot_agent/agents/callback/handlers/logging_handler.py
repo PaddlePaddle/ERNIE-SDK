@@ -28,14 +28,14 @@ if TYPE_CHECKING:
 
 
 class LoggingHandler(CallbackHandler):
-    async def on_agent_start(self, agent: Agent, prompt: str) -> None:
-        print(f"[agent][start] Agent {agent} starts running with input: {prompt}")
+    async def on_run_start(self, agent: Agent, prompt: str) -> None:
+        print(f"[Run][Start] Agent {agent} starts running with input: {prompt}")
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
-        print(f"[llm][start] LLM {llm} starts running with input: {messages}")
+        print(f"[LLM][Start] LLM {llm} starts running with input: {messages}")
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
-        print(f"[llm][end] LLM {llm} finished running with output: {response}")
+        print(f"[LLM][End] LLM {llm} finished running with output: {response}")
 
     async def on_llm_error(
         self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
@@ -44,13 +44,13 @@ class LoggingHandler(CallbackHandler):
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         print(
-            f"[tool][start] Tool {tool} starts running with input: "
+            f"[Tool][Start] Tool {tool} starts running with input: "
             f"\n{to_pretty_json(input_args, from_json=True)}"
         )
 
     async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
         print(
-            f"[tool][end] Tool {tool} finished running with output: "
+            f"[Tool][End] Tool {tool} finished running with output: "
             f"\n{to_pretty_json(response, from_json=True)}",
         )
 
@@ -59,5 +59,5 @@ class LoggingHandler(CallbackHandler):
     ) -> None:
         pass
 
-    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
-        print(f"[agent][end] Agent {agent} finished running with output: {response}")
+    async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
+        print(f"[Run][End] Agent {agent} finished running with output: {response}")

@@ -34,6 +34,10 @@ class CallbackManager(object):
         super().__init__()
         self._handlers = handlers
 
+    @property
+    def handlers(self) -> List[CallbackHandler]:
+        return self._handlers
+
     def add_handler(self, handler: CallbackHandler):
         if handler in self._handlers:
             raise ValueError(f"The callback handler {handler} is already registered.")
@@ -61,8 +65,8 @@ class CallbackManager(object):
                 raise TypeError("Callback must be a coroutine function.")
             await callback(*args, **kwargs)
 
-    async def on_agent_start(self, agent: Agent, prompt: str) -> None:
-        await self.handle_event(EventType.AGENT_START, agent=agent, prompt=prompt)
+    async def on_run_start(self, agent: Agent, prompt: str) -> None:
+        await self.handle_event(EventType.RUN_START, agent=agent, prompt=prompt)
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         await self.handle_event(EventType.LLM_START, agent=agent, llm=llm, messages=messages)
@@ -86,5 +90,5 @@ class CallbackManager(object):
     ) -> None:
         await self.handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 
-    async def on_agent_end(self, agent: Agent, response: AgentResponse) -> None:
-        await self.handle_event(EventType.AGENT_END, agent=agent, response=response)
+    async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
+        await self.handle_event(EventType.RUN_END, agent=agent, response=response)

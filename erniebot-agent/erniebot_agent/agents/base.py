@@ -15,7 +15,7 @@
 import abc
 import inspect
 import json
-from typing import Any, Dict, List, Optional, Union, final
+from typing import Any, List, Optional, Union
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
@@ -25,51 +25,7 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import AIMessage, Message
 from erniebot_agent.tools.base import Tool
-
-
-@final
-class ToolManager(object):
-    """A `ToolManager` instance manages tools for an agent.
-
-    This implementation is based on `ToolsManager` in
-    https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
-    """
-
-    def __init__(self, tools: List[Tool]) -> None:
-        super().__init__()
-        self._tools: Dict[str, Tool] = {}
-        for tool in tools:
-            self.add_tool(tool)
-
-    def add_tool(self, tool: Tool) -> None:
-        tool_name = tool.tool_name
-        if tool_name in self._tools:
-            raise ValueError(f"Tool {repr(tool_name)} is already registered.")
-        self._tools[tool_name] = tool
-
-    def remove_tool(self, tool_name: str) -> None:
-        if tool_name not in self._tools:
-            raise ValueError(f"Tool {repr(tool_name)} is not registered.")
-        self._tools.pop(tool_name)
-
-    def get_tool(self, tool_name: str) -> Tool:
-        if tool_name not in self._tools:
-            raise ValueError(f"Tool {repr(tool_name)} is not registered.")
-        return self._tools[tool_name]
-
-    def get_tools(self) -> List[Tool]:
-        return list(self._tools.values())
-
-    def get_tool_names(self) -> str:
-        return ", ".join(self._tools.keys())
-
-    def get_tool_names_with_descriptions(self) -> str:
-        return "\n".join(
-            f"{name}:{json.dumps(tool.function_call_schema())}" for name, tool in self._tools.items()
-        )
-
-    def get_tool_schemas(self):
-        return [tool.function_call_schema() for tool in self._tools.values()]
+from erniebot_agent.tools.tool_manager import ToolManager
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
@@ -107,15 +63,18 @@ class Agent(BaseAgent):
             self._callback_manager = CallbackManager(callbacks)
 
     async def async_run(self, prompt: str) -> AgentResponse:
-        await self._callback_manager.on_agent_start(agent=self, prompt=prompt)
+        await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         agent_resp = await self._async_run(prompt)
-        await self._callback_manager.on_agent_end(agent=self, response=agent_resp)
+        await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    def import_tool(self, tool: Tool) -> None:
+    def load_tool(self, tool: Tool) -> None:
         self._tool_manager.add_tool(tool)
 
-    def reset(self) -> None:
+    def unload_tool(self, tool: Tool) -> None:
+        self._tool_manager.remove_tool(tool)
+
+    def reset_memory(self) -> None:
         self.memory.clear_chat_history()
 
     @abc.abstractmethod
