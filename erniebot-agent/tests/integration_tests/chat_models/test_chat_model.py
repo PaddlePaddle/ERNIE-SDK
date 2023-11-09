@@ -1,26 +1,85 @@
-import asyncio
 import os
+import unittest
 
+import pytest
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.messages import HumanMessage
+from erniebot_agent.message import AIMessage, FunctionMessage, HumanMessage
 
 
-async def test_ernie_bot(model="ernie-bot-turbo", stream=False):
-    api_type = "aistudio"
-    access_token = os.getenv("ACCESS_TOKEN")  # set your access token as an environment variable
+class TestChatModel(unittest.IsolatedAsyncioTestCase):
+    @pytest.mark.asyncio
+    async def test_chat(self):
+        eb = ERNIEBot(
+            model="ernie-bot-turbo", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
+        )
+        messages = [
+            HumanMessage(content="你好！"),
+        ]
+        res = await eb.async_chat(messages, stream=False)
+        self.assertTrue(isinstance(res, AIMessage))
+        self.assertIsNotNone(res.content)
 
-    eb = ERNIEBot(model=model, api_type=api_type, access_token=access_token)
-    messages = [
-        HumanMessage(content="我在深圳，周末可以去哪里玩？"),
-    ]
-    res = await eb.async_chat(messages, stream=stream)
-    if not stream:
-        print(res)
-    else:
-        async for chunk in res:
-            print(chunk)
+    @pytest.mark.asyncio
+    async def test_function_call(self):
+        functions = [
+            {
+                "name": "get_current_temperature",
+                "description": "获取指定城市的气温",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "城市名称",
+                        },
+                        "unit": {
+                            "type": "string",
+                            "enum": [
+                                "摄氏度",
+                                "华氏度",
+                            ],
+                        },
+                    },
+                    "required": [
+                        "location",
+                        "unit",
+                    ],
+                },
+                "responses": {
+                    "type": "object",
+                    "properties": {
+                        "temperature": {
+                            "type": "integer",
+                            "description": "城市气温",
+                        },
+                        "unit": {
+                            "type": "string",
+                            "enum": [
+                                "摄氏度",
+                                "华氏度",
+                            ],
+                        },
+                    },
+                },
+            }
+        ]
+        # use ernie-bot here since ernie-bot-turbo doesn't support function call
+        eb = ERNIEBot(
+            model="ernie-bot", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
+        )
+        messages = [
+            HumanMessage(content="深圳市今天的气温是多少摄氏度？"),
+        ]
+        res = await eb.async_chat(messages, functions=functions)
+        self.assertTrue(isinstance(res, AIMessage))
+        self.assertIsNone(res.content)
+        self.assertIsNotNone(res.function_call)
+        self.assertEqual(res.function_call["name"], "get_current_temperature")
 
-
-if __name__ == "__main__":
-    asyncio.run(test_ernie_bot(stream=False))
-    asyncio.run(test_ernie_bot(stream=True))
+        messages.append(res)
+        messages.append(
+            FunctionMessage(name="get_current_temperature", content='{"temperature":25,"unit":"摄氏度"}')
+        )
+        res = await eb.async_chat(messages, functions=functions)
+        self.assertTrue(isinstance(res, AIMessage))
+        self.assertIsNotNone(res.content)
