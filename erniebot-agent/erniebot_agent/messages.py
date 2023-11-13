@@ -1,4 +1,3 @@
-# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"
 # you may not use this file except in compliance with the License.
@@ -51,6 +50,7 @@ class MessageWithTokenLen(Message):
     def __init__(self, role: str, content: str, token_len: Union[int, None] = None):
         super().__init__(role=role, content=content)
         self.token_len = token_len
+        self._param_names = ["role", "content", "token_len"]
 
     def set_token_len(self, token_len: int):
         """Set the number of tokens of the message."""

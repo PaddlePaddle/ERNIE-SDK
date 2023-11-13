@@ -14,7 +14,7 @@
 
 
 from erniebot_agent.memory import Memory
-from erniebot_agent.message import AIMessage, MessageWithTokenLen
+from erniebot_agent.messages import AIMessage, MessageWithTokenLen
 
 
 class LimitTokensMemory(Memory):

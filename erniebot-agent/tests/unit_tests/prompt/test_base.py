@@ -1,6 +1,6 @@
 import unittest
 
-from erniebot_agent.message import HumanMessage
+from erniebot_agent.messages import HumanMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 

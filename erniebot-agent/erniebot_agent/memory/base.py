@@ -14,7 +14,7 @@
 
 from typing import List
 
-from erniebot_agent.message import AIMessage, MessageWithTokenLen
+from erniebot_agent.messages import AIMessage, MessageWithTokenLen
 
 
 class MessageManager:

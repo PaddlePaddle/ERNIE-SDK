@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 from erniebot_agent.memory import LimitTokensMemory
-from erniebot_agent.message import HumanMessage
+from erniebot_agent.messages import HumanMessage
 
 from tests.unit_tests.testing_utils import MockErnieBot
 
@@ -26,7 +26,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.asyncio
     async def test_limit_token_memory_truncate_tokens(self, k=3):  # truncate through returned message
         # The memory
-        memory = LimitTokensMemory(100)
+        memory = LimitTokensMemory(4)
 
         for _ in range(k):
             # 2 times of human message
@@ -36,7 +36,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
             message = await self.llm.async_chat(memory.get_messages())
             memory.add_message(message)
 
-        self.assertTrue(memory.token_length <= 100)
+        self.assertTrue(memory.token_length <= 4)
 
 
 if __name__ == "__main__":
