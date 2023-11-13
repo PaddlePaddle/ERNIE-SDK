@@ -161,3 +161,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 cookbook/data/olympics_data.csv
+examples/cookbook/data/knowledge_embedding.npy
+examples/cookbook/data/knowledge_embedding.index
+examples/cookbook/data/knowledge.txt
