@@ -69,9 +69,9 @@ def json_type(type: Optional[Type[object]] = None):
         args = [arg for arg in get_args(type) if arg is not None.__class__]
         if len(args) > 1 or len(args) == 0:
             raise ValueError(
-                "only support simple type: base_class_type=int/str/float/ToolParameterView, "
-                "so the target type should be one of: base_class_type, List[base_class_type], "
-                f"Optional[base_class_type], but receive {type}"
+                "only support simple type: FieldType=int/str/float/ToolParameterView, "
+                "so the target type should be one of: FieldType, List[FieldType], "
+                f"Optional[FieldType], but receive {type}"
             )
         type = args[0]
 
