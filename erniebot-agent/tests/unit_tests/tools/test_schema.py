@@ -14,15 +14,17 @@
 from __future__ import annotations
 
 import unittest
-from typing import List
+from typing import List, Optional
 
 from erniebot_agent.tools.base import RemoteToolkit
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_typing_list_type,
+    is_optional_type,
     json_type,
 )
 from openapi_spec_validator.readers import read_from_filename
+from pydantic import Field
 
 
 class TestToolSchema(unittest.TestCase):
@@ -81,3 +83,92 @@ class TestToolSchema(unittest.TestCase):
 
         result = json_type(ToolParameterView)
         self.assertEqual(result, "object")
+
+    def test_list_tool_parameter_view(self):
+        class SearchResponseDocument(ToolParameterView):
+            document: str = Field(description="和query相关的规章片段")
+            filename: str = Field(description="规章名称")
+            page_num: int = Field(description="规章页数")
+
+        class SearchToolOutputView(ToolParameterView):
+            documents: List[SearchResponseDocument] = Field(description="检索结果，内容为住房和城乡建设部规章中和query相关的规章片段")
+
+        open_api_dict = SearchToolOutputView.to_openapi_dict()
+
+        expected_schema = {
+            "type": "object",
+            "required": ["documents"],
+            "properties": {
+                "documents": {
+                    "type": "array",
+                    "description": "检索结果，内容为住房和城乡建设部规章中和query相关的规章片段",
+                    "items": {
+                        "type": "object",
+                        "required": ["document", "filename", "page_num"],
+                        "properties": {
+                            "document": {"type": "string", "description": "和query相关的规章片段"},
+                            "filename": {"type": "string", "description": "规章名称"},
+                            "page_num": {"type": "integer", "description": "规章页数"},
+                        },
+                    },
+                }
+            },
+        }
+        self.assertDictEqual(open_api_dict, expected_schema)
+
+    def test_optional_tool_parameter_view(self):
+        class SearchResponseDocument(ToolParameterView):
+            document: str = Field(description="和query相关的规章片段")
+            filename: str = Field(description="规章名称")
+            page_num: int = Field(description="规章页数")
+
+        class SearchToolOutputView(ToolParameterView):
+            name: str = Field(description="测试名称")
+            documents: Optional[SearchResponseDocument] = Field(
+                description="检索结果，内容为住房和城乡建设部规章中和query相关的规章片段", default_factory=list
+            )
+
+        openapi_dict = SearchToolOutputView.to_openapi_dict()
+        expected_openapi_dict = {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "测试名称",
+                },
+                "documents": {
+                    "type": "object",
+                    "description": "检索结果，内容为住房和城乡建设部规章中和query相关的规章片段",
+                    "required": ["document", "filename", "page_num"],
+                    "properties": {
+                        "document": {
+                            "type": "string",
+                            "description": "和query相关的规章片段",
+                        },
+                        "filename": {
+                            "type": "string",
+                            "description": "规章名称",
+                        },
+                        "page_num": {
+                            "type": "integer",
+                            "description": "规章页数",
+                        },
+                    },
+                },
+            },
+            "required": ["name"],
+        }
+        self.assertDictEqual(openapi_dict, expected_openapi_dict)
+
+    def test_enum_value(self):
+        # TODO(wj-Mcat): to support enum[int/str/float]
+        pass
+
+    def test_is_optional_type(self):
+        self.assertFalse(is_optional_type(List[int]))
+        self.assertFalse(is_optional_type(int))
+        self.assertFalse(is_optional_type(str))
+
+        self.assertTrue(is_optional_type(Optional[int]))
+        self.assertTrue(is_optional_type(Optional[str]))
+        self.assertTrue(is_optional_type(Optional[ToolParameterView]))

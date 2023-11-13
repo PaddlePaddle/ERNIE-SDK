@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Type, get_args
 
@@ -21,6 +22,14 @@ from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
+
+
+def is_optional_type(type: Type):
+    args = get_args(type)
+    if len(args) == 0:
+        return False
+
+    return len([arg for arg in args if arg is None.__class__]) > 0
 
 
 def get_typing_list_type(type):
@@ -49,14 +58,27 @@ def json_type(type: Optional[Type[object]] = None):
         float: "number",
         ToolParameterView: "object",
     }
-    if type in mapping:
-        return mapping[type]
 
-    # List[int], List[str], List[...]
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
+        return "object"
+
     if getattr(type, "_name", None) == "List":
         return "array"
 
-    if issubclass(type, ToolParameterView):
+    if type not in mapping:
+        args = [arg for arg in get_args(type) if arg is not None.__class__]
+        if len(args) > 1 or len(args) == 0:
+            raise ValueError(
+                "only support simple type: base_class_type=int/str/float/ToolParameterView, "
+                "so the target type should be one of: base_class_type, List[base_class_type], "
+                f"Optional[base_class_type], but receive {type}"
+            )
+        type = args[0]
+
+    if type in mapping:
+        return mapping[type]
+
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
         return "object"
 
     return str(type)
@@ -119,7 +141,9 @@ def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
 class OpenAPIProperty(BaseModel):
     type: str
     description: str
+    required: Optional[List[str]] = None
     items: dict = Field(default_factory=dict)
+    properties: dict = Field(default_factory=dict)
 
 
 def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
@@ -134,6 +158,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     typing_list_type = get_typing_list_type(field_info.annotation)
     if typing_list_type is not None:
         field_type = "array"
+    elif is_optional_type(field_info.annotation):
+        field_type = json_type(get_args(field_info.annotation)[0])
     else:
         field_type = json_type(field_info.annotation)
 
@@ -144,9 +170,18 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
     if property["type"] == "array":
         if typing_list_type == "object":
-            property["items"] = {"type": field_info.annotation.to_openapi_dict()}
+            list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+            property["items"] = list_type.to_openapi_dict()
         else:
             property["items"] = {"type": typing_list_type}
+    elif property["type"] == "object":
+        if is_optional_type(field_info.annotation):
+            field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+        else:
+            field_type_class = field_info.annotation
+
+        openapi_dict = field_type_class.to_openapi_dict()
+        property.update(openapi_dict)
 
     return OpenAPIProperty(**property)
 
@@ -190,18 +225,20 @@ class ToolParameterView(BaseModel):
         Returns:
             dict: schema of openapi
         """
+
         required_names, properties = [], {}
         for field_name, field_info in cls.model_fields.items():
-            if field_info.is_required():
+            if field_info.is_required() and not is_optional_type(field_info.annotation):
                 required_names.append(field_name)
 
             properties[field_name] = dict(get_field_openapi_property(field_info))
 
         result = {
             "type": "object",
-            "required": required_names,
             "properties": properties,
         }
+        if len(required_names) > 0:
+            result["required"] = required_names
         result = scrub_dict(result, remove_empty_dict=True)  # type: ignore
         return result or {}
 
