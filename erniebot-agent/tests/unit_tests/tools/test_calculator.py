@@ -4,13 +4,6 @@ from erniebot_agent.tools.calculator_tool import CalculatorTool
 
 
 class TestCalculatorTool(unittest.TestCase):
-    @unittest.skip("for integration testing ...")
-    def test_call(self):
-        calculator = CalculatorTool()
-        self.assertEqual(calculator("2+3"), 5)
-        self.assertEqual(calculator("3 - 4 * 6"), -21)
-        self.assertEqual(calculator("(3 + 4) * (6 + 4)"), 70)
-
     def test_schema(self):
         calculator = CalculatorTool()
         function_call_schema = calculator.function_call_schema()

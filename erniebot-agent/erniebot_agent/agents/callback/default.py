@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Memory
-from .limit_token_memory import LimitTokensMemory
-from .sliding_window_memory import SlidingWindowMemory
-from .whole_memory import WholeMemory
+from typing import List
+
+from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.callback.handlers.logging_handler import LoggingHandler
+
+
+def get_default_callbacks() -> List[CallbackHandler]:
+    return [LoggingHandler()]

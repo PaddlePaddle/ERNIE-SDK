@@ -12,7 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Memory
-from .limit_token_memory import LimitTokensMemory
-from .sliding_window_memory import SlidingWindowMemory
-from .whole_memory import WholeMemory
+import enum
+
+
+class EventType(enum.Enum):
+    RUN_START = "run_start"
+    LLM_START = "llm_start"
+    LLM_END = "llm_end"
+    LLM_ERROR = "llm_error"
+    TOOL_START = "tool_start"
+    TOOL_END = "tool_end"
+    TOOL_ERROR = "tool_error"
+    RUN_END = "run_end"

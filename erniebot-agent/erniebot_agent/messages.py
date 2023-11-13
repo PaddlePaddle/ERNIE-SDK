@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
-from typing import Dict, Optional, Union
-
-from erniebot.response import EBResponse
+from dataclasses import dataclass
+from typing import Dict, Optional, TypedDict, Union
 
 
 class Message:
-    """The base class of message."""
+    """The base class of a message."""
 
-    def __init__(self, role: str, content: Optional[str]):
+    def __init__(self, role: str, content: str):
         self.role = role
         self.content = content
         self._param_names = ["role", "content"]
@@ -40,7 +39,7 @@ class Message:
 
 
 class SystemMessage(Message):
-    """The message from human to set system information."""
+    """A message from human to set system information."""
 
     def __init__(self, content: str):
         super().__init__(role="system", content=content)
@@ -49,7 +48,7 @@ class SystemMessage(Message):
 class MessageWithTokenLen(Message):
     """A Message with token length."""
 
-    def __init__(self, role: str, content: Optional[str], token_len: Union[int, None] = None):
+    def __init__(self, role: str, content: str, token_len: Union[int, None] = None):
         super().__init__(role=role, content=content)
         self.token_len = token_len
 
@@ -75,19 +74,23 @@ class HumanMessage(MessageWithTokenLen):
         super().__init__(role="user", content=content, token_len=token_len)
 
 
+class FunctionCall(TypedDict):
+    name: str
+    thoughts: str
+    arguments: str
+
+
 class AIMessage(MessageWithTokenLen):
     """A Message from assistant."""
 
     def __init__(
         self,
-        content: Optional[str],
-        function_call: Optional[Dict[str, str]],
+        content: str,
+        function_call: Optional[FunctionCall],
         token_usage: Dict[str, int],
     ):
         prompt_tokens, completion_tokens = self._parse_token_len(token_usage)
-
         super().__init__(role="assistant", content=content, token_len=completion_tokens)
-
         self.function_call = function_call
         self.query_tokens_len = prompt_tokens
         self._param_names = ["role", "content", "function_call"]
@@ -96,18 +99,18 @@ class AIMessage(MessageWithTokenLen):
         """Parse the token length information from LLM."""
         return token_usage["prompt_tokens"], token_usage["completion_tokens"]
 
-    @classmethod
-    def from_response(cls, response: EBResponse):
-        if hasattr(response, "function_call"):
-            return cls(content=None, function_call=response.function_call, token_usage=response.usage)
-        else:
-            return cls(content=response.result, function_call=None, token_usage=response.usage)
-
 
 class FunctionMessage(Message):
-    """The message from human to set the result of function call."""
+    """A message from human that contains the result of a function call."""
 
     def __init__(self, name: str, content: str):
         super().__init__(role="function", content=content)
         self.name = name
         self._param_names = ["role", "name", "content"]
+
+
+@dataclass
+class AIMessageChunk(object):
+    content: str
+    function_call: Optional[FunctionCall]
+    token_usage: Dict[str, int]

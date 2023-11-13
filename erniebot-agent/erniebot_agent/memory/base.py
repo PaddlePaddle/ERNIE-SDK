@@ -20,16 +20,16 @@ from erniebot_agent.message import AIMessage, MessageWithTokenLen
 class MessageManager:
     """Manage messages"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.messages: List[MessageWithTokenLen] = []
 
-    def add_messages(self, messages: List[MessageWithTokenLen]):
+    def add_messages(self, messages: List[MessageWithTokenLen]) -> None:
         self.messages.extend(messages)
 
-    def add_message(self, message: MessageWithTokenLen):
+    def add_message(self, message: MessageWithTokenLen) -> None:
         self.messages.append(message)
 
-    def pop_message(self):
+    def pop_message(self) -> MessageWithTokenLen:
         return self.messages.pop(0)
 
     def clear_messages(self) -> None:
@@ -38,7 +38,7 @@ class MessageManager:
     def edit_last_message_token_length(self, token_len: int):
         self.messages[-1].set_token_len(token_len)
 
-    def retrieve_messages(self):
+    def retrieve_messages(self) -> List[MessageWithTokenLen]:
         return self.messages
 
 

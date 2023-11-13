@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict, List, Type
 
-from erniebot_agent.message import AIMessage, HumanMessage, Message
+from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
 
@@ -26,19 +26,21 @@ class CurrentTimeTool(Tool):
         return [
             HumanMessage("现在几点钟了"),
             AIMessage(
-                None,
+                "",
                 function_call={
                     "name": self.tool_name,
                     "thoughts": f"用户想知道现在几点了，我可以使用{self.tool_name}来获取当前时间，并从其中获得当前小时时间。",
+                    "arguments": "{}",
                 },
                 token_usage={"prompt_tokens": 5, "completion_tokens": 7},  # For test only
             ),
             HumanMessage("现在是什么时候？"),
             AIMessage(
-                None,
+                "",
                 function_call={
                     "name": self.tool_name,
                     "thoughts": f"用户想知道现在几点了，我可以使用{self.tool_name}来获取当前时间",
+                    "arguments": "{}",
                 },
                 token_usage={"prompt_tokens": 5, "completion_tokens": 7},  # For test only
             ),

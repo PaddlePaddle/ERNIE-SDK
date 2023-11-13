@@ -4,7 +4,7 @@ import pytest
 from erniebot_agent.memory import LimitTokensMemory
 from erniebot_agent.message import HumanMessage
 
-from tests.unit_tests.utils import MockErnieBot
+from tests.unit_tests.testing_utils import MockErnieBot
 
 
 class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):

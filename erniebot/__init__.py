@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from . import errors
-from .config import GlobalConfig, init_global_config
+from .config import GlobalConfig
+from .config import init_global_config as _init_global_config
 from .intro import Model
 from .resources import (
     ChatCompletion,
@@ -25,7 +26,10 @@ from .resources import (
     ImageV1,
     ImageV2,
 )
+from .response import EBResponse
 from .version import VERSION
+
+__version__ = VERSION
 
 __all__ = [
     "ChatCompletion",
@@ -37,11 +41,13 @@ __all__ = [
     "ImageV1",
     "ImageV2",
     "Model",
+    "errors",
+    "EBResponse",
+    "__version__",
+    "GlobalConfig",
 ]
 
-__version__ = VERSION
-
-init_global_config()
+_init_global_config()
 
 
 def __getattr__(name):

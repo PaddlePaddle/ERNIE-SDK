@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Memory
-from .limit_token_memory import LimitTokensMemory
-from .sliding_window_memory import SlidingWindowMemory
-from .whole_memory import WholeMemory
+import json
+from typing import Any
+
+
+def to_compact_json(obj: Any, *, from_json: bool = False) -> str:
+    if from_json:
+        obj = json.loads(obj)
+    return json.dumps(obj, ensure_ascii=False, sort_keys=False, separators=(",", ":"))
+
+
+def to_pretty_json(obj: Any, *, from_json: bool = False) -> str:
+    if from_json:
+        obj = json.loads(obj)
+    return json.dumps(obj, ensure_ascii=False, sort_keys=False, indent=2)
