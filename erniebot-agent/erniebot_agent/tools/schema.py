@@ -14,14 +14,22 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+import inspect
+from dataclasses import dataclass
 from typing import List, Optional, Type, get_args
 
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
-from yaml import safe_dump
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
+
+
+def is_optional_type(type: Type):
+    args = get_args(type)
+    if len(args) == 0:
+        return False
+
+    return len([arg for arg in args if arg is None.__class__]) > 0
 
 
 def get_typing_list_type(type):
@@ -50,14 +58,27 @@ def json_type(type: Optional[Type[object]] = None):
         float: "number",
         ToolParameterView: "object",
     }
-    if type in mapping:
-        return mapping[type]
 
-    # List[int], List[str], List[...]
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
+        return "object"
+
     if getattr(type, "_name", None) == "List":
         return "array"
 
-    if issubclass(type, ToolParameterView):
+    if type not in mapping:
+        args = [arg for arg in get_args(type) if arg is not None.__class__]
+        if len(args) > 1 or len(args) == 0:
+            raise ValueError(
+                "only support simple type: FieldType=int/str/float/ToolParameterView, "
+                "so the target type should be one of: FieldType, List[FieldType], "
+                f"Optional[FieldType], but receive {type}"
+            )
+        type = args[0]
+
+    if type in mapping:
+        return mapping[type]
+
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
         return "object"
 
     return str(type)
@@ -120,7 +141,9 @@ def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
 class OpenAPIProperty(BaseModel):
     type: str
     description: str
+    required: Optional[List[str]] = None
     items: dict = Field(default_factory=dict)
+    properties: dict = Field(default_factory=dict)
 
 
 def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
@@ -135,6 +158,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     typing_list_type = get_typing_list_type(field_info.annotation)
     if typing_list_type is not None:
         field_type = "array"
+    elif is_optional_type(field_info.annotation):
+        field_type = json_type(get_args(field_info.annotation)[0])
     else:
         field_type = json_type(field_info.annotation)
 
@@ -145,9 +170,18 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
     if property["type"] == "array":
         if typing_list_type == "object":
-            property["items"] = {"type": field_info.annotation.to_openapi_dict()}
+            list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+            property["items"] = list_type.to_openapi_dict()
         else:
             property["items"] = {"type": typing_list_type}
+    elif property["type"] == "object":
+        if is_optional_type(field_info.annotation):
+            field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+        else:
+            field_type_class = field_info.annotation
+
+        openapi_dict = field_type_class.to_openapi_dict()
+        property.update(openapi_dict)
 
     return OpenAPIProperty(**property)
 
@@ -191,18 +225,20 @@ class ToolParameterView(BaseModel):
         Returns:
             dict: schema of openapi
         """
+
         required_names, properties = [], {}
         for field_name, field_info in cls.model_fields.items():
-            if field_info.is_required():
+            if field_info.is_required() and not is_optional_type(field_info.annotation):
                 required_names.append(field_name)
 
             properties[field_name] = dict(get_field_openapi_property(field_info))
 
         result = {
             "type": "object",
-            "required": required_names,
             "properties": properties,
         }
+        if len(required_names) > 0:
+            result["required"] = required_names
         result = scrub_dict(result, remove_empty_dict=True)  # type: ignore
         return result or {}
 
@@ -309,6 +345,22 @@ class RemoteToolView:
             parameters_ref_uri=parameters_ref_uri,
         )
 
+    def function_call_schema(self):
+        inputs = {
+            "name": self.name,
+            "description": self.description,
+            # TODO(wj-Mcat): read examples from openapi.yaml
+            # "examples": [example.to_dict() for example in self.examples],
+        }
+        if self.parameters is not None:
+            inputs["parameters"] = self.parameters.function_call_schema()  # type: ignore
+        else:
+            inputs["parameters"] = {"type": "object", "properties": {}}
+
+        if self.returns is not None:
+            inputs["responses"] = self.returns.function_call_schema()  # type: ignore
+        return scrub_dict(inputs) or {}
+
 
 @dataclass
 class Endpoint:
@@ -320,86 +372,3 @@ class EndpointInfo:
     title: str
     description: str
     version: str
-
-
-@dataclass
-class PluginSchema:
-    """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
-
-    openapi: str
-    info: EndpointInfo
-    servers: List[Endpoint]
-    paths: List[RemoteToolView]
-
-    component_schemas: dict[str, Type[ToolParameterView]]
-
-    def to_openapi_dict(self) -> dict:
-        """convert plugin schema to openapi spec dict"""
-        spec_dict = {
-            "openapi": self.openapi,
-            "info": asdict(self.info),
-            "servers": [asdict(server) for server in self.servers],
-            "paths": {tool_view.uri: tool_view.to_openapi_dict() for tool_view in self.paths},
-            "components": {
-                "schemas": {
-                    uri: parameters_view.to_openapi_dict()
-                    for uri, parameters_view in self.component_schemas.items()
-                }
-            },
-        }
-        return scrub_dict(spec_dict, remove_empty_dict=True) or {}
-
-    def to_openapi_file(self, file: str):
-        """generate openapi configuration file
-
-        Args:
-            file (str): the path of the openapi yaml file
-        """
-        spec_dict = self.to_openapi_dict()
-        with open(file, "w+", encoding="utf-8") as f:
-            safe_dump(spec_dict, f, indent=4)
-
-    @staticmethod
-    def from_openapi_file(file: str) -> PluginSchema:
-        """only support openapi v3.0.1
-
-        Args:
-            file (str): the path of openapi yaml file
-        """
-        from openapi_spec_validator import validate
-        from openapi_spec_validator.readers import read_from_filename
-
-        spec_dict, _ = read_from_filename(file)
-        validate(spec_dict)
-
-        # info
-        info = EndpointInfo(**spec_dict["info"])
-        servers = [Endpoint(**server) for server in spec_dict.get("servers", [])]
-
-        # components
-        component_schemas = spec_dict["components"]["schemas"]
-        fields = {}
-        for name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(name, schema)
-            fields[name] = parameter_view
-
-        # paths
-        paths = []
-        for path, path_info in spec_dict.get("paths", {}).items():
-            for method, path_method_info in path_info.items():
-                paths.append(
-                    RemoteToolView.from_openapi_dict(
-                        uri=path,
-                        method=method,
-                        path_info=path_method_info,
-                        parameters_views=fields,
-                    )
-                )
-
-        return PluginSchema(
-            openapi=spec_dict["openapi"],
-            info=info,
-            servers=servers,
-            paths=paths,
-            component_schemas=fields,
-        )
