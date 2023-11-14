@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Union
 
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
+from erniebot_agent.agents.logging_config import AgentLogger
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
@@ -27,37 +28,51 @@ if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
 
 
-class LoggingHandler(CallbackHandler):
+class LoggingHandler(CallbackHandler, AgentLogger):
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
-        print(f"[Run][Start] Agent {agent} starts running with input: {prompt}")
+        self.agent_info(
+            "Agent %s starts running with input: %s",
+            agent,
+            prompt,
+            level="Run",
+            state="Start",
+        )
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
-        print(f"[LLM][Start] LLM {llm} starts running with input: {messages}")
+        self.agent_info("Agent %s starts running with input: %s", llm, messages, level="LLM", state="Start")
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
-        print(f"[LLM][End] LLM {llm} finished running with output: {response}")
+        self.agent_info("Agent %s starts running with input: %s", llm, response, level="LLM", state="End")
 
     async def on_llm_error(
         self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        pass
+        self.error("[LLM][Error] %s", error)
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
-        print(
-            f"[Tool][Start] Tool {tool} starts running with input: "
-            f"\n{to_pretty_json(input_args, from_json=True)}"
+        self.agent_info(
+            "Tool %s starts running with input: \n %s",
+            tool,
+            to_pretty_json(input_args, from_json=True),
+            level="Tool",
+            state="Start",
         )
 
     async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
-        print(
-            f"[Tool][End] Tool {tool} finished running with output: "
-            f"\n{to_pretty_json(response, from_json=True)}",
+        self.agent_info(
+            "Tool %s finished running with input: \n %s",
+            tool,
+            to_pretty_json(response, from_json=True),
+            level="Tool",
+            state="End",
         )
 
     async def on_tool_error(
         self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        pass
+        self.error("[Tool][Error] %s", error)
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
-        print(f"[Run][End] Agent {agent} finished running with output: {response}")
+        self.agent_info(
+            "Agent %s finished running with output: %s", agent, response, level="Run", state="End"
+        )
