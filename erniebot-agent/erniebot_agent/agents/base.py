@@ -77,6 +77,105 @@ class Agent(BaseAgent):
     def reset_memory(self) -> None:
         self.memory.clear_chat_history()
 
+    def launch_gradio_demo(self, **launch_kwargs: Any):
+        # TODO: Optional dependencies management
+        import gradio as gr
+
+        raw_messages = []
+
+        def _pre_chat(text, history):
+            history.append([text, None])
+            return history, gr.update(value="", interactive=False), gr.update(interactive=False)
+
+        async def _chat(history):
+            prompt = history[-1][0]
+            if len(prompt) == 0:
+                raise gr.Error("Prompt should not be empty.")
+            response = await self.async_run(prompt)
+            history[-1][1] = response.content
+            raw_messages.extend(response.chat_history)
+            return (
+                history,
+                _messages_to_dicts(raw_messages),
+                _messages_to_dicts(self.memory.get_messages()),
+            )
+
+        def _post_chat():
+            return gr.update(interactive=True), gr.update(interactive=True)
+
+        def _clear():
+            raw_messages.clear()
+            self.reset_memory()
+            return None, None, None, None
+
+        def _messages_to_dicts(messages):
+            return [message.to_dict() for message in messages]
+
+        with gr.Blocks(
+            title="ERNIE Bot Agent Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
+        ) as demo:
+            with gr.Column():
+                chatbot = gr.Chatbot(
+                    label="Chat history",
+                    latex_delimiters=[
+                        {"left": "$$", "right": "$$", "display": True},
+                        {"left": "$", "right": "$", "display": False},
+                    ],
+                    bubble_full_width=False,
+                )
+                prompt_textbox = gr.Textbox(label="Prompt", placeholder="Write a prompt here...")
+                with gr.Row():
+                    submit_button = gr.Button("Submit")
+                    clear_button = gr.Button("Clear")
+                with gr.Accordion("Tools", open=False):
+                    attached_tools = self._tool_manager.get_tools()
+                    tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
+                    gr.JSON(value=tool_descriptions)
+                with gr.Accordion("Raw messages", open=False):
+                    all_messages_json = gr.JSON(label="All messages")
+                    agent_memory_json = gr.JSON(label="Messges in memory")
+            prompt_textbox.submit(
+                _pre_chat,
+                inputs=[prompt_textbox, chatbot],
+                outputs=[chatbot, prompt_textbox, submit_button],
+            ).then(
+                _chat,
+                inputs=[chatbot],
+                outputs=[
+                    chatbot,
+                    all_messages_json,
+                    agent_memory_json,
+                ],
+            ).then(
+                _post_chat, outputs=[prompt_textbox, submit_button]
+            )
+            submit_button.click(
+                _pre_chat,
+                inputs=[prompt_textbox, chatbot],
+                outputs=[chatbot, prompt_textbox, submit_button],
+            ).then(
+                _chat,
+                inputs=[chatbot],
+                outputs=[
+                    chatbot,
+                    all_messages_json,
+                    agent_memory_json,
+                ],
+            ).then(
+                _post_chat, outputs=[prompt_textbox, submit_button]
+            )
+            clear_button.click(
+                _clear,
+                outputs=[
+                    chatbot,
+                    prompt_textbox,
+                    all_messages_json,
+                    agent_memory_json,
+                ],
+            )
+
+        demo.launch(**launch_kwargs)
+
     @abc.abstractmethod
     async def _async_run(self, prompt: str) -> AgentResponse:
         raise NotImplementedError
