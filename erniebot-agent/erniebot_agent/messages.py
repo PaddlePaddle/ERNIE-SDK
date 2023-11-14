@@ -11,16 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 from dataclasses import dataclass
-from typing import Dict, Optional, TypedDict, Union
+from typing import Dict, Optional, TypedDict
 
 
 class Message:
     """The base class of a message."""
 
-    def __init__(self, role: str, content: str):
+    def __init__(self, role: str, content: str, token_len: Optional[int] = None):
         self.role = role
         self.content = content
+        self.token_len = token_len
         self._param_names = ["role", "content"]
+
+    def set_token_len(self, token_len: int):
+        """Set the number of tokens of the message."""
+        if self.token_len is not None:
+            raise ValueError("The token length of message has been set.")
+        self.token_len = token_len
+
+    def get_token_len(self) -> int:
+        """Get the number of tokens of the message."""
+        assert self.token_len, "The token length of message has not been set before get the token length."
+        return self.token_len
 
     def to_dict(self) -> Dict[str, str]:
         res = {}
@@ -34,6 +46,8 @@ class Message:
             value = getattr(self, name)
             if value is not None and value != "":
                 res += f"{name}: {value}, "
+        else:
+            res += f"token_len: {self.token_len}"
         return res[:-2]
 
 
@@ -44,34 +58,11 @@ class SystemMessage(Message):
         super().__init__(role="system", content=content)
 
 
-class MessageWithTokenLen(Message):
-    """A Message with token length."""
-
-    def __init__(self, role: str, content: str, token_len: Union[int, None] = None):
-        super().__init__(role=role, content=content)
-        self.token_len = token_len
-        self._param_names = ["role", "content", "token_len"]
-
-    def set_token_len(self, token_len: int):
-        """Set the number of tokens of the message."""
-        if self.token_len is not None:
-            raise ValueError("The token length of message has been set.")
-        self.token_len = token_len
-
-    def get_token_len(self) -> int:
-        """Get the number of tokens of the message."""
-        assert self.token_len, "The token length of message has not been set before get the token length."
-        return self.token_len
-
-    def __str__(self) -> str:
-        return f"role:{self.role}, content: {self.content}, token_len: {self.token_len}"
-
-
-class HumanMessage(MessageWithTokenLen):
+class HumanMessage(Message):
     """The message from human."""
 
-    def __init__(self, content: str, token_len: Union[int, None] = None):
-        super().__init__(role="user", content=content, token_len=token_len)
+    def __init__(self, content: str):
+        super().__init__(role="user", content=content)
 
 
 class FunctionCall(TypedDict):
@@ -80,7 +71,7 @@ class FunctionCall(TypedDict):
     arguments: str
 
 
-class AIMessage(MessageWithTokenLen):
+class AIMessage(Message):
     """A Message from assistant."""
 
     def __init__(

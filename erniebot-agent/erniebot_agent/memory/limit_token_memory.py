@@ -14,7 +14,7 @@
 
 
 from erniebot_agent.memory import Memory
-from erniebot_agent.messages import AIMessage, MessageWithTokenLen
+from erniebot_agent.messages import AIMessage, Message
 
 
 class LimitTokensMemory(Memory):
@@ -34,7 +34,7 @@ class LimitTokensMemory(Memory):
             max_token_limit=max_token_limit
         )
 
-    def add_message(self, message: MessageWithTokenLen):
+    def add_message(self, message: Message):
         super().add_message(message)
         if isinstance(message, AIMessage):
             self.prune_message(message)

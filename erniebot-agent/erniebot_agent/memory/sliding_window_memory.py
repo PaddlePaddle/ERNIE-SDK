@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from erniebot_agent.memory import Memory
-from erniebot_agent.messages import MessageWithTokenLen
+from erniebot_agent.messages import Message
 
 
 class SlidingWindowMemory(Memory):
@@ -29,7 +29,7 @@ class SlidingWindowMemory(Memory):
             max_token_limit=max_num_message
         )
 
-    def add_message(self, message: MessageWithTokenLen):
+    def add_message(self, message: Message):
         super().add_message(message=message)
         self.prune_message()
 

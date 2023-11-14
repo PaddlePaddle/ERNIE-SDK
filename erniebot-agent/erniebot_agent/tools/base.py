@@ -196,13 +196,13 @@ class RemoteToolkit:
         )  # type: ignore
 
     @staticmethod
-    def from_url(url: str) -> RemoteToolkit:
+    def from_url(url: str, headers) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith(".well-known/openapi.yaml"):
             url += ".well-known/openapi.yaml"
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_content = requests.get(url).content.decode("utf-8")
+            file_content = requests.get(url, headers=headers).content.decode("utf-8")
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)

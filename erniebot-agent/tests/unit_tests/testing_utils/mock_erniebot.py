@@ -14,7 +14,7 @@
 
 from typing import Any, List, Optional
 
-from erniebot_agent.messages import AIMessage, MessageWithTokenLen
+from erniebot_agent.messages import AIMessage, Message
 
 
 class MockErnieBot:
@@ -32,11 +32,11 @@ class MockErnieBot:
 
     async def async_chat(
         self,
-        messages: List[MessageWithTokenLen],
+        messages: List[Message],
         stream: Optional[bool] = False,
         functions: Optional[List[dict]] = None,
         **kwargs: Any,
-    ) -> MessageWithTokenLen:
+    ) -> Message:
         return AIMessage(
             content="Text response",
             function_call=None,

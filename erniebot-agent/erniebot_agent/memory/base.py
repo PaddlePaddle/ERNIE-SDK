@@ -14,22 +14,22 @@
 
 from typing import List
 
-from erniebot_agent.messages import AIMessage, MessageWithTokenLen
+from erniebot_agent.messages import AIMessage, Message
 
 
 class MessageManager:
     """Manage messages"""
 
     def __init__(self) -> None:
-        self.messages: List[MessageWithTokenLen] = []
+        self.messages: List[Message] = []
 
-    def add_messages(self, messages: List[MessageWithTokenLen]) -> None:
+    def add_messages(self, messages: List[Message]) -> None:
         self.messages.extend(messages)
 
-    def add_message(self, message: MessageWithTokenLen) -> None:
+    def add_message(self, message: Message) -> None:
         self.messages.append(message)
 
-    def pop_message(self) -> MessageWithTokenLen:
+    def pop_message(self) -> Message:
         return self.messages.pop(0)
 
     def clear_messages(self) -> None:
@@ -38,7 +38,7 @@ class MessageManager:
     def edit_last_message_token_length(self, token_len: int):
         self.messages[-1].set_token_len(token_len)
 
-    def retrieve_messages(self) -> List[MessageWithTokenLen]:
+    def retrieve_messages(self) -> List[Message]:
         return self.messages
 
 
@@ -48,15 +48,15 @@ class Memory:
     def __init__(self):
         self.msg_manager = MessageManager()
 
-    def add_messages(self, messages: List[MessageWithTokenLen]):
+    def add_messages(self, messages: List[Message]):
         self.msg_manager.add_messages(messages)
 
-    def add_message(self, message: MessageWithTokenLen):
+    def add_message(self, message: Message):
         if isinstance(message, AIMessage):
             self.msg_manager.edit_last_message_token_length(message.query_tokens_len)
         self.msg_manager.add_message(message)
 
-    def get_messages(self) -> List[MessageWithTokenLen]:
+    def get_messages(self) -> List[Message]:
         return self.msg_manager.retrieve_messages()
 
     def clear_chat_history(self):
