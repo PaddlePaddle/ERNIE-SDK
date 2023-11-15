@@ -21,6 +21,8 @@ from typing import List, Optional, Type, get_args
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
+from erniebot.utils.logging import logger
+
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
 
@@ -208,7 +210,18 @@ class ToolParameterView(BaseModel):
                 )
                 field_type = List[SubParameterView]  # type: ignore
 
-            field = FieldInfo(annotation=field_type, description=field_dict["description"])
+            # TODO(wj-Mcat): remove supporting for `summary` field
+            if "summary" in field_dict:
+                description = field_dict["summary"]
+                logger.info("`summary` field will be deprecated, please use `description`")
+
+                if "description" in field_dict:
+                    logger.info("`description` field will be used instead of `summary`")
+                    description = field_dict["description"]
+            else:
+                description = field_dict.get("description", None)
+
+            field = FieldInfo(annotation=field_type, description=description)
 
             # TODO(wj-Mcat): to handle list field required & not-required
             # if get_typing_list_type(field_type) is not None:
