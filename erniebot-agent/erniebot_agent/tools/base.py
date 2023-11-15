@@ -217,16 +217,22 @@ class RemoteToolkit:
     @classmethod
     def from_url(cls, url: str, access_token: Optional[str] = None) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
-        if not url.endswith(".well-known/openapi.yaml"):
-            url += ".well-known/openapi.yaml"
+        if not url.endswith("/"):
+            url += "/"
+        openapi_yaml_url = url + ".well-known/openapi.yaml"
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file_content = requests.get(
-                url, headers=cls._get_authorization_headers(access_token)
+                openapi_yaml_url, headers=cls._get_authorization_headers(access_token)
             ).content.decode("utf-8")
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
             toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
+            for server in toolkit.servers:
+                server.url = url
         return toolkit
+
+    def function_call_schemas(self) -> List[dict]:
+        return [tool.function_call_schema() for tool in self.get_tools()]

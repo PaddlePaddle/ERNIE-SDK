@@ -142,7 +142,7 @@ def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
 
 class OpenAPIProperty(BaseModel):
     type: str
-    description: str
+    description: Optional[str] = None
     required: Optional[List[str]] = None
     items: dict = Field(default_factory=dict)
     properties: dict = Field(default_factory=dict)
@@ -185,6 +185,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
         openapi_dict = field_type_class.to_openapi_dict()
         property.update(openapi_dict)
 
+    property["description"] = property.get("description", "")
     return OpenAPIProperty(**property)
 
 
@@ -220,6 +221,8 @@ class ToolParameterView(BaseModel):
                     description = field_dict["description"]
             else:
                 description = field_dict.get("description", None)
+
+            description = description or ""
 
             field = FieldInfo(annotation=field_type, description=description)
 
