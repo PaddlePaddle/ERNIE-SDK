@@ -78,8 +78,14 @@ class Agent(BaseAgent):
         self.memory.clear_chat_history()
 
     def launch_gradio_demo(self, **launch_kwargs: Any):
-        # TODO: Optional dependencies management
-        import gradio as gr
+        # TODO: Unified optional dependencies management
+        try:
+            import gradio as gr
+        except ImportError:
+            raise ImportError(
+                "Could not import gradio, which is required for `launch_gradio_demo()`."
+                " Please run `pip install erniebot-agent[gradio]` to install the optional dependencies."
+            ) from None
 
         raw_messages = []
 
