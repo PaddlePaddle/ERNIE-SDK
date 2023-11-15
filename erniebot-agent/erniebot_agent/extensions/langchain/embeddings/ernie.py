@@ -76,7 +76,7 @@ class ErnieEmbeddings(BaseModel, Embeddings):
             values["client"] = erniebot.Embedding
         except ImportError:
             raise ImportError(
-                "Could not import erniebot python package. " "Please install it with `pip install erniebot`."
+                "Could not import erniebot python package. Please install it with `pip install erniebot`."
             )
         return values
 
