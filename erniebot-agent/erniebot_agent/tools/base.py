@@ -209,7 +209,7 @@ class RemoteToolkit:
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
-            logger.warning("There is not <access_token>, so there are some resources may not be accessible.")
+            logger.warning("<access_token> is not found, so there are some resources may not be accessible.")
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers
