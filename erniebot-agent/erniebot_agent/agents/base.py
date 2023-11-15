@@ -105,7 +105,7 @@ class Agent(BaseAgent):
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> str:
         bnd_args = self._parse_tool_args(tool, tool_args)
         tool_ret = await tool(*bnd_args.args, **bnd_args.kwargs)
-        tool_resp = json.dumps(tool_ret)
+        tool_resp = json.dumps(tool_ret, ensure_ascii=False)
         return tool_resp
 
     async def _async_run_llm_without_hooks(
