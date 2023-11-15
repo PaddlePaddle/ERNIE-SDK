@@ -35,8 +35,8 @@ class MessageManager:
     def clear_messages(self) -> None:
         self.messages = []
 
-    def edit_last_message_token_length(self, token_len: int):
-        self.messages[-1].set_token_len(token_len)
+    def update_last_message_token_count(self, token_count: int):
+        self.messages[-1].token_count = token_count
 
     def retrieve_messages(self) -> List[Message]:
         return self.messages
@@ -49,11 +49,12 @@ class Memory:
         self.msg_manager = MessageManager()
 
     def add_messages(self, messages: List[Message]):
-        self.msg_manager.add_messages(messages)
+        for message in messages:
+            self.add_message(message)
 
     def add_message(self, message: Message):
         if isinstance(message, AIMessage):
-            self.msg_manager.edit_last_message_token_length(message.query_tokens_len)
+            self.msg_manager.update_last_message_token_count(message.query_tokens_count)
         self.msg_manager.add_message(message)
 
     def get_messages(self) -> List[Message]:

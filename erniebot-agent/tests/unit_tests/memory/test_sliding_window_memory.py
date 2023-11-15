@@ -11,6 +11,7 @@ class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.llm = MockErnieBot(None, None, None)
 
+    @pytest.mark.parametrize("k", [1, 2, 4, 5, 10])
     @pytest.mark.asyncio
     async def test_sliding_window_memory(self, k=3):  # asyn pytest
         # The memory

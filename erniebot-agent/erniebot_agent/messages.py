@@ -17,22 +17,24 @@ from typing import Dict, Optional, TypedDict
 class Message:
     """The base class of a message."""
 
-    def __init__(self, role: str, content: str, token_len: Optional[int] = None):
+    def __init__(self, role: str, content: str, token_count: Optional[int] = None):
         self.role = role
         self.content = content
-        self.token_len = token_len
+        self._token_count = token_count
         self._param_names = ["role", "content"]
 
-    def set_token_len(self, token_len: int):
-        """Set the number of tokens of the message."""
-        if self.token_len is not None:
-            raise ValueError("The token length of message has been set.")
-        self.token_len = token_len
-
-    def get_token_len(self) -> int:
+    @property
+    def token_count(self):
         """Get the number of tokens of the message."""
-        assert self.token_len, "The token length of message has not been set before get the token length."
-        return self.token_len
+        assert self._token_count, "The token length of message has not been set before get the token length."
+        return self._token_count
+
+    @token_count.setter
+    def token_count(self, token_count: int):
+        """Set the number of tokens of the message."""
+        if self._token_count is not None:
+            raise ValueError("The token length of message has been set.")
+        self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
         res = {}
@@ -47,7 +49,7 @@ class Message:
             if value is not None and value != "":
                 res += f"{name}: {value}, "
         else:
-            res += f"token_len: {self.token_len}"
+            res += f"token_count: {self._token_count}"
         return res[:-2]
 
 
@@ -71,6 +73,11 @@ class FunctionCall(TypedDict):
     arguments: str
 
 
+class TokenUsage(TypedDict):
+    prompt_tokens: int
+    completion_tokens: int
+
+
 class AIMessage(Message):
     """A Message from assistant."""
 
@@ -78,15 +85,23 @@ class AIMessage(Message):
         self,
         content: str,
         function_call: Optional[FunctionCall],
-        token_usage: Dict[str, int],
+        token_usage: Optional[TokenUsage] = None,
     ):
-        prompt_tokens, completion_tokens = self._parse_token_len(token_usage)
-        super().__init__(role="assistant", content=content, token_len=completion_tokens)
+        if token_usage is None:
+            prompt_tokens = 0
+            completion_tokens = len(content)
+            Warning(
+                "The token usage is not set in AIMessage,\
+                     the token counts of AIMessage and HumanMessage is not correct."
+            )
+        else:
+            prompt_tokens, completion_tokens = self._parse_token_count(token_usage)
+        super().__init__(role="assistant", content=content, token_count=completion_tokens)
         self.function_call = function_call
-        self.query_tokens_len = prompt_tokens
+        self.query_tokens_count = prompt_tokens
         self._param_names = ["role", "content", "function_call"]
 
-    def _parse_token_len(self, token_usage: Dict[str, int]):
+    def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token length information from LLM."""
         return token_usage["prompt_tokens"], token_usage["completion_tokens"]
 
@@ -104,4 +119,4 @@ class FunctionMessage(Message):
 class AIMessageChunk(object):
     content: str
     function_call: Optional[FunctionCall]
-    token_usage: Dict[str, int]
+    token_usage: Optional[TokenUsage]
