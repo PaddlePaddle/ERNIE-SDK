@@ -143,7 +143,7 @@ class ErnieBotChat(BaseChatModel):
             values["client"] = erniebot.ChatCompletion
         except ImportError:
             raise ImportError(
-                "Could not import erniebot python package. " "Please install it with `pip install erniebot`."
+                "Could not import erniebot python package. Please install it with `pip install erniebot`."
             )
         return values
 
@@ -268,7 +268,7 @@ class ErnieBotChat(BaseChatModel):
         for msg in messages:
             if isinstance(msg, SystemMessage):
                 logger.warning(
-                    "Ignoring system messages " "since they are currently not supported for ERNIE Bot."
+                    "Ignoring system messages since they are currently not supported for ERNIE Bot."
                 )
                 continue
             eb_msg = self._convert_message_to_dict(msg)
