@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, Dict, List, Optional
 
 from langchain.pydantic_v1 import BaseModel, root_validator
@@ -15,12 +14,11 @@ class ErnieEmbeddings(BaseModel, Embeddings):
     """ERNIE embedding models.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access
-    token.
+    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
-            from langchain.embeddings import ErnieEmbeddings
+            from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
             ernie_embeddings = ErnieEmbeddings()
     """
 
@@ -42,33 +40,11 @@ class ErnieEmbeddings(BaseModel, Embeddings):
 
     @root_validator()
     def validate_environment(cls, values: Dict) -> Dict:
-        try:
-            aistudio_access_token = get_from_dict_or_env(
-                values,
-                "aistudio_access_token",
-                "EB_ACCESS_TOKEN",
-            )
-        except ValueError as e:
-            if (
-                "ernie_client_id" in values
-                and values["ernie_client_id"]
-                or "ernie_client_secret" in values
-                and values["ernie_client_secret"]
-                or "ERNIE_CLIENT_ID" in os.environ
-                or "ERNIE_CLIENT_SECRET" in os.environ
-            ):
-                raise RuntimeError(
-                    "The authentication parameters "
-                    "`ernie_client_id` and `ernie_client_secret` are deprecated. "
-                    "For AI Studio users, please set "
-                    "`aistudio_access_token` to your AI Studio access token. "
-                    "For Qianfan users, please use "
-                    "`langchain.embeddings.QianfanEmbeddingsEndpoint` instead."
-                ) from e
-            else:
-                raise
-        else:
-            values["aistudio_access_token"] = aistudio_access_token
+        values["aistudio_access_token"] = get_from_dict_or_env(
+            values,
+            "aistudio_access_token",
+            "EB_ACCESS_TOKEN",
+        )
 
         try:
             import erniebot

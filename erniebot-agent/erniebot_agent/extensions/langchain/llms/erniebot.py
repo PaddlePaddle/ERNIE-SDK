@@ -31,13 +31,12 @@ class ErnieBot(LLM):
     """ERNIE Bot large language models.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access
-    token.
+    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
 
-            from langchain.llms import ErnieBot
+            from erniebot_agent.extensions.langchain.llms import ErnieBot
             erniebot = ErnieBot(model="ernie-bot")
     """
 
@@ -98,6 +97,7 @@ class ErnieBot(LLM):
             "aistudio_access_token",
             "EB_ACCESS_TOKEN",
         )
+
         try:
             import erniebot
 
