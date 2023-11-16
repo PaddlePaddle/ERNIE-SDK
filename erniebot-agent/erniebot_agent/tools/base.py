@@ -85,6 +85,7 @@ class Tool(BaseTool, ABC):
 class RemoteTool(BaseTool):
     def __init__(self, tool_view: RemoteToolView, server_url: str, headers: dict) -> None:
         self.tool_view = tool_view
+        self.tool_name = tool_view.name
         self.server_url = server_url
         self.headers = headers
 
@@ -104,6 +105,12 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         return self.tool_view.function_call_schema()
+
+
+headers = {
+    "Authorization": "token 052cf34e334a5c816f501495b102a5b9819cc5ff",
+    "Content-Type": "application/json",
+}
 
 
 @dataclass
