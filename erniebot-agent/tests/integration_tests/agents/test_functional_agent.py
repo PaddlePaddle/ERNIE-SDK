@@ -1,11 +1,16 @@
 import json
 
 import pytest
+
+# import urllib3
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage
 from erniebot_agent.tools.calculator_tool import CalculatorTool
+
+# import logging
+# logging.basicConfig(level="DEBUG", format="%(message)s")
 
 ONE_HIT_PROMPT = "1+4等于几？"
 NO_HIT_PROMPT = "深圳今天天气怎么样？"
@@ -53,6 +58,9 @@ async def test_functional_agent_run_one_hit(llm, tool, memory):
     assert actions[0].tool_name == tool.tool_name
 
 
+# logging.info('完成第一次测试')
+
+
 @pytest.mark.asyncio
 async def test_functional_agent_run_no_hit(llm, tool, memory):
     agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
@@ -70,6 +78,9 @@ async def test_functional_agent_run_no_hit(llm, tool, memory):
     assert len(response.actions) == 0
 
 
+# logging.info('完成第二次测试')
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("prompt", [ONE_HIT_PROMPT, NO_HIT_PROMPT])
 async def test_functional_agent_run_no_tool(llm, memory, prompt):
@@ -85,3 +96,6 @@ async def test_functional_agent_run_no_tool(llm, memory, prompt):
     assert messages[1].content == response.content
 
     assert len(response.actions) == 0
+
+
+# logging.info('完成第三次测试')
