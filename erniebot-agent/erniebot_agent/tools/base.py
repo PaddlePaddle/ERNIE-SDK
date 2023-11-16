@@ -31,6 +31,9 @@ from erniebot_agent.tools.schema import (
 )
 from yaml import safe_dump
 
+import erniebot
+from erniebot.utils.logging import logger
+
 
 class BaseTool(ABC):
     @abstractmethod
@@ -80,20 +83,21 @@ class Tool(BaseTool, ABC):
 
 
 class RemoteTool(BaseTool):
-    def __init__(self, tool_view: RemoteToolView, server_url: str) -> None:
+    def __init__(self, tool_view: RemoteToolView, server_url: str, headers: dict) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
+        self.headers = headers
 
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
         url = self.server_url + self.tool_view.uri
         if self.tool_view.method == "get":
-            result = requests.get(url, params=tool_arguments).json()
+            result = requests.get(url, params=tool_arguments, headers=self.headers).json()
         elif self.tool_view.method == "post":
-            result = requests.post(url, json=tool_arguments).json()
+            result = requests.post(url, json=tool_arguments, headers=self.headers).json()
         elif self.tool_view.method == "put":
-            result = requests.put(url, json=tool_arguments).json()
+            result = requests.put(url, json=tool_arguments, headers=self.headers).json()
         elif self.tool_view.method == "delete":
-            result = requests.delete(url, json=tool_arguments).json()
+            result = requests.delete(url, json=tool_arguments, headers=self.headers).json()
         else:
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
         return result
@@ -112,17 +116,18 @@ class RemoteToolkit:
     paths: List[RemoteToolView]
 
     component_schemas: dict[str, Type[ToolParameterView]]
+    headers: dict
 
     def __getitem__(self, tool_name: str):
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
-        return [RemoteTool(path, self.servers[0].url) for path in self.paths]
+        return [RemoteTool(path, self.servers[0].url, self.headers) for path in self.paths]
 
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
-        return RemoteTool(paths[0], self.servers[0].url)
+        return RemoteTool(paths[0], self.servers[0].url, self.headers)
 
     def to_openapi_dict(self) -> dict:
         """convert plugin schema to openapi spec dict"""
@@ -150,12 +155,13 @@ class RemoteToolkit:
         with open(file, "w+", encoding="utf-8") as f:
             safe_dump(spec_dict, f, indent=4)
 
-    @staticmethod
-    def from_openapi_file(file: str) -> RemoteToolkit:
+    @classmethod
+    def from_openapi_file(cls, file: str, access_token: Optional[str] = None) -> RemoteToolkit:
         """only support openapi v3.0.1
 
         Args:
             file (str): the path of openapi yaml file
+            access_token (Optional[str]): the path of openapi yaml file
         """
         from openapi_spec_validator import validate
         from openapi_spec_validator.readers import read_from_filename
@@ -193,19 +199,41 @@ class RemoteToolkit:
             servers=servers,
             paths=paths,
             component_schemas=fields,
+            headers=cls._get_authorization_headers(access_token),
         )  # type: ignore
 
-    @staticmethod
-    def from_url(url: str, headers) -> RemoteToolkit:
+
+    @classmethod
+    def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
+        if access_token is None:
+            access_token = erniebot.access_token
+
+        headers = {"Content-Type": "application/json"}
+        if access_token is None:
+            logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
+        else:
+            headers["Authorization"] = f"token {access_token}"
+        return headers
+
+    @classmethod
+    def from_url(cls, url: str, access_token: Optional[str] = None) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
-        if not url.endswith(".well-known/openapi.yaml"):
-            url += ".well-known/openapi.yaml"
+        if not url.endswith("/"):
+            url += "/"
+        openapi_yaml_url = url + ".well-known/openapi.yaml"
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_content = requests.get(url, headers=headers).content.decode("utf-8")
+            file_content = requests.get(
+                openapi_yaml_url, headers=cls._get_authorization_headers(access_token)
+            ).content.decode("utf-8")
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
+            for server in toolkit.servers:
+                server.url = url
         return toolkit
+
+    def function_call_schemas(self) -> List[dict]:
+        return [tool.function_call_schema() for tool in self.get_tools()]
