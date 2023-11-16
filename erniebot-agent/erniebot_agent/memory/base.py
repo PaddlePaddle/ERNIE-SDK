@@ -14,37 +14,38 @@
 
 from typing import List
 
-from erniebot_agent.message import Message
+from erniebot_agent.messages import Message
 
 
 class MessageManager:
     """Manage messages"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.messages: List[Message] = []
 
-    def add_messages(self, messages: List[Message]):
+    def add_messages(self, messages: List[Message]) -> None:
         self.messages.extend(messages)
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message) -> None:
         self.messages.append(message)
 
-    def pop_message(self):
+    def pop_message(self) -> Message:
         return self.messages.pop(0)
 
     def clear_messages(self) -> None:
         self.messages = []
 
-    def retrieve_messages(self):
+    def retrieve_messages(self) -> List[Message]:
         return self.messages
 
 
-class WholeMemory:
+class Memory:
     def __init__(self):
         self.msg_manager = MessageManager()
 
     def add_messages(self, messages: List[Message]):
-        self.msg_manager.add_messages(messages)
+        for message in messages:
+            self.add_message(message)
 
     def add_message(self, message: Message):
         self.msg_manager.add_message(message)

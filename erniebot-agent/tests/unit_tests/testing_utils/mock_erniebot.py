@@ -14,7 +14,7 @@
 
 from typing import Any, List, Optional
 
-from erniebot_agent.message import Message
+from erniebot_agent.messages import Message
 
 
 class MockErnieBot:
