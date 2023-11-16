@@ -19,7 +19,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r erniebot-agent/tests/requirements.txt
-          python -m pip install -e erniebot-agent[full]
+          python -m pip install -e erniebot-agent[all]
       - name: Run formatting and linting script
         run: cd erniebot-agent && python scripts/format_and_lint.py
       - name: Run type checking script

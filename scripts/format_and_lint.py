@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 DEFAULT_FILES = (
-    "src",
+    "erniebot",
     "examples",
     "tests",
     "scripts",
