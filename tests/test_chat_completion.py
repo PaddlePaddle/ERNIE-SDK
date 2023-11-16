@@ -16,8 +16,9 @@
 
 import sys
 
-import erniebot
 from erniebot.utils.logging import logger
+
+import erniebot
 
 
 def create_chat_completion(model):

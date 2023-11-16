@@ -16,8 +16,9 @@
 
 import time
 
-import erniebot
 from erniebot.utils.logging import logger
+
+import erniebot
 
 if __name__ == "__main__":
     logger.set_level("WARNING")

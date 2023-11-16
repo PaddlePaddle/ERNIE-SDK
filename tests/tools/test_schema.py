@@ -15,9 +15,8 @@ from __future__ import annotations
 
 import unittest
 
-from openapi_spec_validator.readers import read_from_filename
-
 from erniebot.tools.schema import PluginSchema
+from openapi_spec_validator.readers import read_from_filename
 
 
 class TestToolSchema(unittest.TestCase):

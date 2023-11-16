@@ -21,6 +21,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot.utils.logging import logger
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -32,7 +33,6 @@ from erniebot_agent.tools.schema import (
 from yaml import safe_dump
 
 import erniebot
-from erniebot.utils.logging import logger
 
 
 class BaseTool(ABC):

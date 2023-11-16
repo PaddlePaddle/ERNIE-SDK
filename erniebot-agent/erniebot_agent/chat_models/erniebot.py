@@ -25,11 +25,11 @@ from typing import (
     overload,
 )
 
+from erniebot.response import EBResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
 
 import erniebot
-from erniebot.response import EBResponse
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 

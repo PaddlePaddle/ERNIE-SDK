@@ -17,8 +17,9 @@
 import asyncio
 import sys
 
-import erniebot
 from erniebot.utils.logging import logger
+
+import erniebot
 
 NUM_TASKS = 4
 

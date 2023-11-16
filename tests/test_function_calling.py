@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import erniebot
 from erniebot.utils.logging import logger
+
+import erniebot
 
 
 def test_function_calling():

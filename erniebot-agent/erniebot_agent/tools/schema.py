@@ -16,17 +16,16 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from typing import List, Optional, Type, get_args
-
-from pydantic import BaseModel, Field, create_model
-from pydantic.fields import FieldInfo
+from typing import Any, Dict, List, Optional, Type, get_args
 
 from erniebot.utils.logging import logger
+from pydantic import BaseModel, Field, create_model
+from pydantic.fields import FieldInfo
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
 
-def is_optional_type(type: Type):
+def is_optional_type(type: Type) -> bool:
     args = get_args(type)
     if len(args) == 0:
         return False
@@ -160,12 +159,14 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     typing_list_type = get_typing_list_type(field_info.annotation)
     if typing_list_type is not None:
         field_type = "array"
+    if field_info.annotation is None:
+        raise TypeError
     elif is_optional_type(field_info.annotation):
         field_type = json_type(get_args(field_info.annotation)[0])
     else:
         field_type = json_type(field_info.annotation)
 
-    property = {
+    property: Dict[str, Any] = {
         "type": field_type,
         "description": field_info.description,
     }
@@ -201,7 +202,7 @@ class ToolParameterView(BaseModel):
         """
 
         # TODO(wj-Mcat): to load Optional field
-        fields = {}
+        fields: dict = {}
         for field_name, field_dict in schema.get("properties", {}).items():
             field_type = python_type_from_json_type(field_dict)
 
@@ -244,6 +245,8 @@ class ToolParameterView(BaseModel):
 
         required_names, properties = [], {}
         for field_name, field_info in cls.model_fields.items():
+            if field_info.annotation is None:
+                raise TypeError
             if field_info.is_required() and not is_optional_type(field_info.annotation):
                 required_names.append(field_name)
 
