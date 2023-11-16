@@ -14,10 +14,11 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, List, Union
 
+import erniebot_agent
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.logging_config import AgentLogger
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
@@ -28,7 +29,10 @@ if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
 
 
-class LoggingHandler(CallbackHandler, AgentLogger):
+class LoggingHandler(CallbackHandler):
+    def __init__(self, logger: logging.Logger = erniebot_agent.logger) -> None:
+        self.logger = logger
+
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
             "Agent %s starts running with input: %s",
@@ -47,7 +51,7 @@ class LoggingHandler(CallbackHandler, AgentLogger):
     async def on_llm_error(
         self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        self.error("[LLM][Error] %s", error)
+        self.logger.error("[LLM][Error] %s", error)
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         self.agent_info(
@@ -70,9 +74,13 @@ class LoggingHandler(CallbackHandler, AgentLogger):
     async def on_tool_error(
         self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        self.error("[Tool][Error] %s", error)
+        self.logger.error("[Tool][Error] %s", error)
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
         self.agent_info(
             "Agent %s finished running with output: %s", agent, response, level="Run", state="End"
         )
+
+    def agent_info(self, msg: str, *args, level="Run", state="Start", **kwargs) -> None:
+        msg = f"[{level}][{state}]{msg}"
+        return self.logger.info(msg, *args, **kwargs)
