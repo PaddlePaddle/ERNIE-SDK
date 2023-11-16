@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from typing import Any, Dict, List, Optional
 
 from langchain.pydantic_v1 import BaseModel, root_validator
@@ -40,8 +39,6 @@ class ErnieEmbeddings(BaseModel, Embeddings):
     ernie_client_id: Optional[str] = None
     ernie_client_secret: Optional[str] = None
     """For raising deprecation warnings."""
-
-    sleep_time: float = 0.0
 
     @root_validator()
     def validate_environment(cls, values: Dict) -> Dict:
@@ -97,8 +94,6 @@ class ErnieEmbeddings(BaseModel, Embeddings):
         for chunk in text_in_chunks:
             resp = self.client.create(_config_=self._get_auth_config(), input=chunk, model=self.model)
             lst.extend([res["embedding"] for res in resp["data"]])
-            # To avoid QPS limit to 1
-            time.sleep(self.sleep_time)
         return lst
 
     async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
