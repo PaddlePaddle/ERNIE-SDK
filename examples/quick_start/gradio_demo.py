@@ -19,6 +19,7 @@ import math
 import os
 import time
 from typing import List
+from collections.abc import Iterator
 
 import faiss
 import gradio as gr
@@ -488,11 +489,19 @@ def create_rag_tab():
     }
 
     def split_by_len(texts: List[str], split_token: int = 384) -> List[str]:
-        split_token = split_token  # The max length supported by ernie-text-embedding.
-        idx = 0
+        """
+        Split the knowledge base docs into chunks by length.
+    
+        Args:
+            texts (List[str]): Knowledge Base Texts.
+            split_token (int, optional): The max length supported by ernie-text-embedding. Default to 384. 
+    
+        Returns:
+            List[str]: Doc Chunks.
+        """
         chunk = []
-
         for text in texts:
+            idx = 0
             while idx + split_token < len(text):
                 temp_text = text[idx : idx + split_token]
                 next_idx = temp_text.rfind("。") + 1
@@ -504,10 +513,9 @@ def create_rag_tab():
                     idx = idx + split_token
 
             chunk.append(text[idx:])
-
         return chunk
 
-    def get_embedding(word: List[str]) -> List[float]:
+    def _get_embedding_doc(word: List[str]) -> List[float]:
         """
         Get the embedding of a list of words.
 
@@ -521,16 +529,19 @@ def create_rag_tab():
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
 
         if len(word) <= 16:
-            embedding = eb.Embedding.create(model="ernie-text-embedding", input=word).get_result()
+            
+            embedding = eb.Embedding.create(model="ernie-text-embedding", input=word)
+            assert not isinstance(embedding, Iterator)
+            embedding = embedding.get_result()
         else:
             size = len(word)
             embedding = []
             for i in tqdm(range(math.ceil(size / 16))):
-                embedding.extend(
-                    eb.Embedding.create(
-                        model="ernie-text-embedding", input=word[i * 16 : (i + 1) * 16]
-                    ).get_result()
-                )
+                temp_result = eb.Embedding.create(
+                                    model="ernie-text-embedding", input=word[i * 16 : (i + 1) * 16]
+                                )
+                assert not isinstance(temp_result, Iterator)
+                embedding.extend(temp_result.get_result())
                 time.sleep(1)
         return embedding
 
@@ -557,7 +568,7 @@ def create_rag_tab():
             str, List[int]: The most similar documents and their index.
         """
 
-        D, Idx = index_ip.search(np.array(get_embedding([query])), top_k)
+        D, Idx = index_ip.search(np.array(_get_embedding_doc([query])), top_k)
         top_k_similar = Idx.tolist()[0]
 
         res = ""
@@ -576,14 +587,13 @@ def create_rag_tab():
         _update_config(*args)
 
         content = []
-
         for file in files:
             with open(file, "r") as f:
                 content.append(f.read())
 
         doc_chunk = split_by_len(content)
 
-        doc_embedding = get_embedding(doc_chunk)
+        doc_embedding = _get_embedding_doc(doc_chunk)
         assert len(doc_embedding) == len(doc_chunk), "shape mismatch"
         doc_embedding_arr = l2_normalization(np.array(doc_embedding))
 
@@ -627,7 +637,9 @@ def create_rag_tab():
             messages=[{"role": "user", "content": PROMPT_TEMPLATE.format(DOCS=related_doc, QUERY=query)}],
             top_p=_CONFIG["top_p"],
             temperature=_CONFIG["temperature"],
-        ).get_result()
+        )
+        assert not isinstance(answer, Iterator)
+        answer = answer.get_result()
 
         return answer, "<h3>References (Click to Expand)</h3>" + "\n".join(
             [REF_HTML.format(**item, index=idx + 1) for idx, item in enumerate(refs)]
@@ -701,7 +713,6 @@ def create_rag_tab():
                             minimum=0,
                         )
 
-                        save_button = gr.Button("保存")
 
             with gr.TabItem("问答栏"):
                 with gr.Row():
@@ -719,9 +730,6 @@ def create_rag_tab():
             process_uploaded_file,
             [file_upload, ernie_model, api_type, access_token, access_key, secret_key, top_p, temperature],
             chat_box,
-        )
-        save_button.click(
-            _update_config, [ernie_model, api_type, access_token, access_key, secret_key, top_p, temperature]
         )
 
 
