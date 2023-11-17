@@ -73,6 +73,12 @@ class Tool(BaseTool, ABC):
     input_type: Optional[Type[ToolParameterView]] = None
     ouptut_type: Optional[Type[ToolParameterView]] = None
 
+    def __str__(self) -> str:
+        return "name: {0}, description: {1}".format(self.name, self.description)
+
+    def __repr__(self):
+        return f"<{self.__str__()}>"
+
     @property
     def tool_name(self):
         return self.name or self.__class__.__name__
@@ -105,10 +111,25 @@ class Tool(BaseTool, ABC):
 
 
 class RemoteTool(BaseTool):
-    def __init__(self, tool_view: RemoteToolView, server_url: str, headers: dict) -> None:
+    def __init__(
+        self,
+        tool_view: RemoteToolView,
+        server_url: str,
+        headers: dict,
+        examples: Optional[List[Message]] = None,
+    ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
+        self.examples = examples
+
+    def __str__(self) -> str:
+        return "<name: {0}, server_url: {1}, description: {2}>".format(
+            self.tool_name, self.server_url, self.tool_view.description
+        )
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def tool_name(self):
@@ -134,7 +155,11 @@ class RemoteTool(BaseTool):
         return response.json()
 
     def function_call_schema(self) -> dict:
-        return self.tool_view.function_call_schema()
+        schema = self.tool_view.function_call_schema()
+        if self.examples is not None:
+            schema["examples"] = [example.to_dict() for example in self.examples]
+
+        return schema or {}
 
 
 @dataclass
@@ -154,7 +179,12 @@ class RemoteToolkit:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
-        return [RemoteTool(path, self.servers[0].url, self.headers) for path in self.paths]
+        return [
+            RemoteTool(
+                path, self.servers[0].url, self.headers, examples=self.get_examples_by_name(path.name)
+            )
+            for path in self.paths
+        ]
 
     def get_examples_by_name(self, tool_name: str) -> List[Message]:
         """get examples by tool-name
@@ -169,8 +199,6 @@ class RemoteToolkit:
         tool_examples: List[List[Message]] = []
         examples: List[Message] = []
         for example in self.examples:
-            print("example", example)
-            # import pdb; pdb.set_trace()
             if isinstance(example, HumanMessage):
                 if len(examples) == 0:
                     examples.append(example)
@@ -202,7 +230,9 @@ class RemoteToolkit:
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
-        return RemoteTool(paths[0], self.servers[0].url, self.headers)
+        return RemoteTool(
+            paths[0], self.servers[0].url, self.headers, examples=self.get_examples_by_name(tool_name)
+        )
 
     def to_openapi_dict(self) -> dict:
         """convert plugin schema to openapi spec dict"""

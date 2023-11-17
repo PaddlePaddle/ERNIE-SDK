@@ -36,10 +36,10 @@ class Message:
             value = getattr(self, name)
             if value is not None and value != "":
                 res += f"{name}: {value}, "
-        return res[:-2]
+        return f"<{res[:-2]}>"
 
     def __repr__(self):
-        return f"<{self.__str__()}>"
+        return self.__str__()
 
 
 class SystemMessage(Message):
