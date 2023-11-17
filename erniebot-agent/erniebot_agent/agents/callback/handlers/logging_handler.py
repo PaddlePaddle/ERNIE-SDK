@@ -51,7 +51,7 @@ class LoggingHandler(CallbackHandler):
     async def on_llm_error(
         self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        self.logger.error("[LLM][Error] %s", error)
+        self.agent_error(error, level="LLM")
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         self.agent_info(
@@ -74,13 +74,17 @@ class LoggingHandler(CallbackHandler):
     async def on_tool_error(
         self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        self.logger.error("[Tool][Error] %s", error)
+        self.agent_error(error, level="Tool")
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
         self.agent_info(
             "Agent %s finished running with output: %s", agent, response, level="Run", state="End"
         )
 
-    def agent_info(self, msg: str, *args, level="Run", state="Start", **kwargs) -> None:
+    def agent_info(self, msg: str, *args, level, state, **kwargs) -> None:
         msg = f"[{level}][{state}]{msg}"
-        return self.logger.info(msg, *args, **kwargs)
+        self.logger.info(msg, *args, **kwargs)
+
+    def agent_error(self, error: Union[Exception, KeyboardInterrupt], *args, level, **kwargs) -> None:
+        error_msg = f"[{level}][ERROR]{error}"
+        self.logger.error(error_msg, *args, **kwargs)
