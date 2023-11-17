@@ -107,12 +107,6 @@ class RemoteTool(BaseTool):
         return self.tool_view.function_call_schema()
 
 
-headers = {
-    "Authorization": "token 052cf34e334a5c816f501495b102a5b9819cc5ff",
-    "Content-Type": "application/json",
-}
-
-
 @dataclass
 class RemoteToolkit:
     """RemoteToolkit can be converted by openapi.yaml and endpoint"""
@@ -235,6 +229,7 @@ class RemoteToolkit:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
+            print(file_path)
 
             toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
             for server in toolkit.servers:
