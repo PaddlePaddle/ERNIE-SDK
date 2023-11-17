@@ -38,6 +38,9 @@ class Message:
                 res += f"{name}: {value}, "
         return res[:-2]
 
+    def __repr__(self):
+        return f"<{self.__str__()}>"
+
 
 class SystemMessage(Message):
     """A message from human to set system information."""
@@ -54,7 +57,7 @@ class HumanMessage(Message):
 
 
 class FunctionCall(TypedDict):
-    name: str
+    name: Optional[str]
     thoughts: str
     arguments: str
 

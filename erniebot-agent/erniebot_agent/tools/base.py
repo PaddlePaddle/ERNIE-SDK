@@ -14,14 +14,15 @@
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Type
 
 import requests
-from erniebot_agent.messages import Message
+from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
     EndpointInfo,
@@ -29,10 +30,31 @@ from erniebot_agent.tools.schema import (
     ToolParameterView,
     scrub_dict,
 )
+from erniebot_agent.utils.http_util import url_file_exists
+from openapi_spec_validator import validate
+from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
 import erniebot
 from erniebot.utils.logging import logger
+
+
+def validate_openapi_yaml(yaml_file: str) -> bool:
+    """do validation on the yaml file
+
+    Args:
+        yaml_file (str): the path of yaml file
+
+    Returns:
+        bool: whether yaml file is valid
+    """
+    yaml_dict = read_from_filename(yaml_file)[0]
+    try:
+        validate(yaml_dict)
+        return True
+    except Exception as e:  # type: ignore
+        logger.error(e)
+        return False
 
 
 class BaseTool(ABC):
@@ -88,19 +110,28 @@ class RemoteTool(BaseTool):
         self.server_url = server_url
         self.headers = headers
 
+    @property
+    def tool_name(self):
+        return self.tool_view.name
+
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
         url = self.server_url + self.tool_view.uri
+
         if self.tool_view.method == "get":
-            result = requests.get(url, params=tool_arguments, headers=self.headers).json()
+            response = requests.get(url, params=tool_arguments, headers=self.headers)
         elif self.tool_view.method == "post":
-            result = requests.post(url, json=tool_arguments, headers=self.headers).json()
+            response = requests.post(url, json=tool_arguments, headers=self.headers)
         elif self.tool_view.method == "put":
-            result = requests.put(url, json=tool_arguments, headers=self.headers).json()
+            response = requests.put(url, json=tool_arguments, headers=self.headers)
         elif self.tool_view.method == "delete":
-            result = requests.delete(url, json=tool_arguments, headers=self.headers).json()
+            response = requests.delete(url, json=tool_arguments, headers=self.headers)
         else:
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
-        return result
+
+        if response.status_code != 200:
+            raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+
+        return response.json()
 
     def function_call_schema(self) -> dict:
         return self.tool_view.function_call_schema()
@@ -117,12 +148,56 @@ class RemoteToolkit:
 
     component_schemas: dict[str, Type[ToolParameterView]]
     headers: dict
+    examples: List[Message] = field(default_factory=list)
 
     def __getitem__(self, tool_name: str):
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
         return [RemoteTool(path, self.servers[0].url, self.headers) for path in self.paths]
+
+    def get_examples_by_name(self, tool_name: str) -> List[Message]:
+        """get examples by tool-name
+
+        Args:
+            tool_name (str): the name of the tool
+
+        Returns:
+            List[Message]: the messages
+        """
+        # 1. split messages
+        tool_examples: List[List[Message]] = []
+        examples: List[Message] = []
+        for example in self.examples:
+            print("example", example)
+            # import pdb; pdb.set_trace()
+            if isinstance(example, HumanMessage):
+                if len(examples) == 0:
+                    examples.append(example)
+                else:
+                    tool_examples.append(examples)
+                    examples = [example]
+            else:
+                examples.append(example)
+
+        if len(examples) > 0:
+            tool_examples.append(examples)
+
+        final_exampels: List[Message] = []
+        # 2. find the target tool examples or empty messages
+        for examples in tool_examples:
+            tool_names = [
+                example.function_call.get("name", None)
+                for example in examples
+                if isinstance(example, AIMessage) and example.function_call is not None
+            ]
+            tool_names = [name for name in tool_names if name is not None]
+            if len(tool_names) == 0:
+                final_exampels.extend(examples)
+            elif tool_name in tool_names:
+                final_exampels.extend(examples)
+
+        return final_exampels
 
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
@@ -163,11 +238,10 @@ class RemoteToolkit:
             file (str): the path of openapi yaml file
             access_token (Optional[str]): the path of openapi yaml file
         """
-        from openapi_spec_validator import validate
-        from openapi_spec_validator.readers import read_from_filename
+        if not validate_openapi_yaml(file):
+            raise ValueError(f"invalid openapi yaml file: {file}")
 
         spec_dict, _ = read_from_filename(file)
-        validate(spec_dict)
 
         # info
         info = EndpointInfo(**spec_dict["info"])
@@ -222,9 +296,14 @@ class RemoteToolkit:
         openapi_yaml_url = url + ".well-known/openapi.yaml"
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_content = requests.get(
-                openapi_yaml_url, headers=cls._get_authorization_headers(access_token)
-            ).content.decode("utf-8")
+            response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
+            if response.status_code != 200:
+                raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+
+            file_content = response.content.decode("utf-8")
+            if not file_content.strip():
+                raise ValueError(f"the content is empty from: {openapi_yaml_url}")
+
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
@@ -232,7 +311,81 @@ class RemoteToolkit:
             toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
             for server in toolkit.servers:
                 server.url = url
+
+            toolkit.examples = cls.load_remote_examples_yaml(url, access_token)
+
         return toolkit
+
+    @classmethod
+    def load_remote_examples_yaml(cls, url: str, access_token: Optional[str] = None) -> List[Message]:
+        """load remote examples by url: url/.well-known/examples.yaml
+
+        Args:
+            url (str): the base url of the remote toolkit
+        """
+        if not url.endswith("/"):
+            url += "/"
+        examples_yaml_url = url + ".well-known/examples.yaml"
+        if not url_file_exists(examples_yaml_url, cls._get_authorization_headers(access_token)):
+            return []
+
+        examples = []
+        with tempfile.TemporaryDirectory() as temp_dir:
+            response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
+            if response.status_code != 200:
+                raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+
+            file_content = response.content.decode("utf-8")
+            if not file_content.strip():
+                raise ValueError(f"the content is empty from: {examples_yaml_url}")
+
+            file_path = os.path.join(temp_dir, "examples.yaml")
+            with open(file_path, "w+", encoding="utf-8") as f:
+                f.write(file_content)
+
+            examples = cls.load_examples_yaml(file_path)
+
+        return examples
+
+    @classmethod
+    def load_examples_yaml(cls, file: str) -> List[Message]:
+        """load examples from yaml file
+
+        Args:
+            file (str): the path of examples file
+
+        Returns:
+            List[Message]: the list of messages
+        """
+        content: dict = read_from_filename(file)[0]
+        if len(content) == 0 or "examples" not in content:
+            raise ValueError("invalid examples configuration file")
+
+        messages: List[Message] = []
+        for examples in content["examples"]:
+            examples = examples["context"]
+            for example in examples:
+                if "user" == example["role"]:
+                    messages.append(HumanMessage(example["content"]))
+                elif "bot" in example["role"]:
+                    plugin = example["plugin"]
+                    if "operationId" in plugin:
+                        function_call: FunctionCall = {
+                            "name": plugin["operationId"],
+                            "thoughts": plugin["thoughts"],
+                            "arguments": json.dumps(plugin["requestArguments"], ensure_ascii=False),
+                        }
+                    else:
+                        function_call = {"thoughts": plugin["thoughts"], "arguments": "{}"}  # type: ignore
+                    messages.append(
+                        AIMessage(
+                            "",
+                            function_call=function_call,
+                        )
+                    )
+                else:
+                    raise ValueError(f"invald role: <{example['role']}>")
+        return messages
 
     def function_call_schemas(self) -> List[dict]:
         return [tool.function_call_schema() for tool in self.get_tools()]

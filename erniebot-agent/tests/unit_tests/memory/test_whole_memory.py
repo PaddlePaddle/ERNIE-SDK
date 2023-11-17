@@ -2,7 +2,7 @@ import asyncio
 import unittest
 
 from erniebot_agent.memory import WholeMemory
-from erniebot_agent.messages import HumanMessage
+from erniebot_agent.messages import AIMessage, HumanMessage
 
 from tests.unit_tests.testing_utils import MockErnieBot
 
@@ -26,6 +26,10 @@ class TestWholeMemory(unittest.TestCase):
             self.assertTrue(message is not None)
 
         asyncio.run(run_whole_memory())
+
+    def test_list_message_print_msg(self):
+        messages = [HumanMessage("A"), AIMessage("B")]
+        self.assertEqual(str(messages), "[<role: user, content: A>, <role: assistant, content: B>]")
 
 
 if __name__ == "__main__":
