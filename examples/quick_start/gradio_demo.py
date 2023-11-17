@@ -18,8 +18,8 @@ import argparse
 import math
 import os
 import time
-from typing import List
 from collections.abc import Iterator
+from typing import List
 
 import faiss
 import gradio as gr
@@ -491,11 +491,11 @@ def create_rag_tab():
     def split_by_len(texts: List[str], split_token: int = 384) -> List[str]:
         """
         Split the knowledge base docs into chunks by length.
-    
+
         Args:
             texts (List[str]): Knowledge Base Texts.
-            split_token (int, optional): The max length supported by ernie-text-embedding. Default to 384. 
-    
+            split_token (int, optional): The max length supported by ernie-text-embedding. Default to 384.
+
         Returns:
             List[str]: Doc Chunks.
         """
@@ -528,18 +528,18 @@ def create_rag_tab():
         if (_CONFIG["AK"] == "" or _CONFIG["SK"] == "") and _CONFIG["access_token"] == "":
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
 
+        embedding: list[float]
         if len(word) <= 16:
-            
-            embedding = eb.Embedding.create(model="ernie-text-embedding", input=word)
-            assert not isinstance(embedding, Iterator)
-            embedding = embedding.get_result()
+            resp = eb.Embedding.create(model="ernie-text-embedding", input=word)
+            assert not isinstance(resp, Iterator)
+            embedding = resp.get_result()
         else:
             size = len(word)
             embedding = []
             for i in tqdm(range(math.ceil(size / 16))):
                 temp_result = eb.Embedding.create(
-                                    model="ernie-text-embedding", input=word[i * 16 : (i + 1) * 16]
-                                )
+                    model="ernie-text-embedding", input=word[i * 16 : (i + 1) * 16]
+                )
                 assert not isinstance(temp_result, Iterator)
                 embedding.extend(temp_result.get_result())
                 time.sleep(1)
@@ -632,14 +632,14 @@ def create_rag_tab():
             }
             refs.append(temp_dict)
 
-        answer = eb.ChatCompletion.create(
+        resp = eb.ChatCompletion.create(
             model=_CONFIG["ernie_model"],
             messages=[{"role": "user", "content": PROMPT_TEMPLATE.format(DOCS=related_doc, QUERY=query)}],
             top_p=_CONFIG["top_p"],
             temperature=_CONFIG["temperature"],
         )
-        assert not isinstance(answer, Iterator)
-        answer = answer.get_result()
+        assert not isinstance(resp, Iterator)
+        answer = resp.get_result()
 
         return answer, "<h3>References (Click to Expand)</h3>" + "\n".join(
             [REF_HTML.format(**item, index=idx + 1) for idx, item in enumerate(refs)]
@@ -712,7 +712,6 @@ def create_rag_tab():
                             maximum=1,
                             minimum=0,
                         )
-
 
             with gr.TabItem("问答栏"):
                 with gr.Row():
