@@ -162,3 +162,7 @@ cython_debug/
 #.idea/
 examples/quick_start/data/knowledge_embedding.index
 examples/quick_start/data/knowledge.txt
+examples/cookbook/data/knowledge_embedding.index
+examples/cookbook/data/knowledge_embedding.npy
+.gitignore
+examples/cookbook/data/knowledge.txt
