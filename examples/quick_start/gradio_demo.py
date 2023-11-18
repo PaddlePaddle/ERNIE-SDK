@@ -528,7 +528,7 @@ def create_rag_tab():
         if (_CONFIG["AK"] == "" or _CONFIG["SK"] == "") and _CONFIG["access_token"] == "":
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
 
-        embedding: list[float]
+        embedding: List[float]
         if len(word) <= 16:
             resp = eb.Embedding.create(model="ernie-text-embedding", input=word)
             assert not isinstance(resp, Iterator)
