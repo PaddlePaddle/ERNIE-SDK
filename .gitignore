@@ -160,7 +160,15 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+<<<<<<< HEAD
 cookbook/data/olympics_data.csv
 examples/cookbook/data/knowledge_embedding.npy
 examples/cookbook/data/knowledge_embedding.index
+=======
+examples/quick_start/data/knowledge_embedding.index
+examples/quick_start/data/knowledge.txt
+examples/cookbook/data/knowledge_embedding.index
+examples/cookbook/data/knowledge_embedding.npy
+.gitignore
+>>>>>>> upstream/develop
 examples/cookbook/data/knowledge.txt
