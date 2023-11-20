@@ -36,7 +36,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
             message = await self.llm.async_chat(memory.get_messages())
             memory.add_message(message)
 
-        self.assertTrue(memory.token_length <= 4)
+        self.assertTrue(memory.mem_token_count <= 4)
 
 
 if __name__ == "__main__":

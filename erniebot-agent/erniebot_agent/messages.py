@@ -95,7 +95,7 @@ class AIMessage(Message):
             completion_tokens = len(content)
             Warning(
                 "The token usage is not set in AIMessage,\
-                     the token counts of AIMessage and HumanMessage is not correct."
+                     the token counts of AIMessage and HumanMessage are not correct."
             )
         else:
             prompt_tokens, completion_tokens = self._parse_token_count(token_usage)

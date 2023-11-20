@@ -25,7 +25,7 @@ class LimitTokensMemory(Memory):
     def __init__(self, max_token_limit=None):
         super().__init__()
         self.max_token_limit = max_token_limit
-        self.token_length = 0
+        self.mem_token_count = 0
 
         assert (
             max_token_limit is None
@@ -40,12 +40,12 @@ class LimitTokensMemory(Memory):
             self.prune_message(message)
 
     def prune_message(self, message):
-        self.token_length += message.token_count
-        self.token_length += message.query_tokens_count  # add human message token length
+        self.mem_token_count += message.token_count
+        self.mem_token_count += message.query_tokens_count  # add human message token length
         if self.max_token_limit is not None:
-            while self.token_length > self.max_token_limit:
+            while self.mem_token_count > self.max_token_limit:
                 deleted_message = self.msg_manager.pop_message()
-                self.token_length -= deleted_message.token_count
+                self.mem_token_count -= deleted_message.token_count
             else:
                 # if delete all
                 if len(self.get_messages()) == 0:
