@@ -179,7 +179,7 @@ class TestToolSchema(unittest.TestCase):
         self.assertEqual(len(toolkit.examples), 12)
 
         # add_word examples
-        examples = toolkit.get_examples_by_name("getWordbook")
+        examples = toolkit.get_tool("getWordbook").examples
 
         self.assertEqual(len(examples), 4)
         self.assertEqual(examples[0].content, "展示单词列表")
