@@ -25,7 +25,10 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
 
     def test_list_message_print_msg(self):
         messages = [HumanMessage("A"), AIMessage("B", function_call=None)]
-        self.assertEqual(str(messages), "[<role: user, content: A>, <role: assistant, content: B>]")
+        self.assertEqual(
+            str(messages),
+            "[<role: user, content: A, token_count: No>, <role: assistant, content: B, token_count:>]",
+        )
 
 
 if __name__ == "__main__":
