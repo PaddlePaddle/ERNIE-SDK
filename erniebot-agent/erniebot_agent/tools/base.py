@@ -119,7 +119,6 @@ class RemoteTool(BaseTool):
         examples: Optional[List[Message]] = None,
     ) -> None:
         self.tool_view = tool_view
-        self.tool_name = tool_view.name
         self.server_url = server_url
         self.headers = headers
         self.examples = examples
