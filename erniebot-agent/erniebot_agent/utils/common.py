@@ -12,4 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .image_generation_tool import ImageGenerationTool
+import os
+
+import requests
+
+
+def get_cache_dir():
+    """Use ~/.cache/erniebot_agent as the cache directory"""
+    home_dir = os.path.expanduser("~")
+    cache_dir = os.path.join(home_dir, ".cache", "erniebot_agent")
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    return cache_dir
+
+
+def download_file(url: str, save_path: str):
+    """Download file from url"""
+    response = requests.get(url)
+    assert response.status_code == 200, f"Download file failed: {url}."
+    with open(save_path, "wb") as file:
+        file.write(response.content)
