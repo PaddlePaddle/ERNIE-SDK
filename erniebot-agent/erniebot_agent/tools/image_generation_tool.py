@@ -89,7 +89,7 @@ class ImageGenerationTool(Tool):
                 "",
                 function_call={
                     "name": "ImageGenerationTool",
-                    "thoughts": "用户需要我生成一张小狗的图片，图像高度为512，宽度为512。" "我可以使用ImageGenerationTool工具来满足用户的需求。",
+                    "thoughts": "用户需要我生成一张小狗的图片，图像高度为512，宽度为512。我可以使用ImageGenerationTool工具来满足用户的需求。",
                     "arguments": '{"prompt":"画一张小狗的图片，图像高度512，图像宽度512",'
                     '"width":512,"height":512,"image_num":1}',
                 },
@@ -109,7 +109,7 @@ class ImageGenerationTool(Tool):
                 "",
                 function_call={
                     "name": self.tool_name,
-                    "thoughts": "用户需要生成一张小猫的图片，高度和宽度都是1024。" "我可以使用ImageGenerationTool工具来满足用户的需求。",
+                    "thoughts": "用户需要生成一张小猫的图片，高度和宽度都是1024。我可以使用ImageGenerationTool工具来满足用户的需求。",
                     "arguments": '{"prompt":"生成一张小猫的照片。","width":1024,"height":1024,"image_num":1}',
                 },
             ),
