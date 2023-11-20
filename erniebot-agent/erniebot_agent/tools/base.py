@@ -306,7 +306,6 @@ class RemoteToolkit:
             headers=cls._get_authorization_headers(access_token),
         )  # type: ignore
 
-
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:

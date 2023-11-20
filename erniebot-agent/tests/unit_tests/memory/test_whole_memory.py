@@ -24,7 +24,7 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(message is not None)
 
     def test_list_message_print_msg(self):
-        messages = [HumanMessage("A"), AIMessage("B")]
+        messages = [HumanMessage("A"), AIMessage("B", function_call=None)]
         self.assertEqual(str(messages), "[<role: user, content: A>, <role: assistant, content: B>]")
 
 
