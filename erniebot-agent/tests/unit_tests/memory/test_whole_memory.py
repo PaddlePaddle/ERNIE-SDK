@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 from erniebot_agent.memory import WholeMemory
-from erniebot_agent.messages import HumanMessage
+from erniebot_agent.messages import AIMessage, HumanMessage
 
 from tests.unit_tests.testing_utils import MockErnieBot
 
@@ -22,6 +22,10 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
         memory.add_message(HumanMessage("OK, what else?"))
         message = await self.llm.async_chat(memory.get_messages())
         self.assertTrue(message is not None)
+
+    def test_list_message_print_msg(self):
+        messages = [HumanMessage("A"), AIMessage("B")]
+        self.assertEqual(str(messages), "[<role: user, content: A>, <role: assistant, content: B>]")
 
 
 if __name__ == "__main__":

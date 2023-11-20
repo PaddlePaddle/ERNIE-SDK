@@ -50,7 +50,10 @@ class Message:
                 res += f"{name}: {value}, "
         else:
             res += f"token_count: {self._token_count}"
-        return res[:-2]
+        return f"<{res[:-2]}>"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class SystemMessage(Message):
@@ -68,7 +71,7 @@ class HumanMessage(Message):
 
 
 class FunctionCall(TypedDict):
-    name: str
+    name: Optional[str]  # name can be None when the function_call example is not related to any function
     thoughts: str
     arguments: str
 
