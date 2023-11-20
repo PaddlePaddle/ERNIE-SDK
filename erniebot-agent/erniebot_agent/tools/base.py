@@ -119,6 +119,7 @@ class RemoteTool(BaseTool):
         examples: Optional[List[Message]] = None,
     ) -> None:
         self.tool_view = tool_view
+        self.tool_name = tool_view.name
         self.server_url = server_url
         self.headers = headers
         self.examples = examples
@@ -337,6 +338,7 @@ class RemoteToolkit:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
+            print(file_path)
 
             toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
             for server in toolkit.servers:
