@@ -19,10 +19,13 @@ import pytest
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.tools.image_generation_tool import ImageGenerationTool
+from erniebot_agent.tools.image_generation_tool import (
+    ImageGenerationTool,
+    PromptGeneratorTool,
+)
 
 
-class TestImageGenerationTool(unittest.TestCase):
+class TestImageGenerationTool(unittest.IsolatedAsyncioTestCase):
     def test_schema(self):
         img_gen_tool = ImageGenerationTool(yinian_ak="xxx", yinian_sk="xxx")
         function_call_schema = img_gen_tool.function_call_schema()
@@ -32,7 +35,7 @@ class TestImageGenerationTool(unittest.TestCase):
         self.assertIn("responses", function_call_schema)
 
     @pytest.mark.asyncio
-    async def test_tool(self):
+    async def test_image_generation_tool(self):
         yinian_ak = os.environ.get("YINIAN_AK")
         yinian_sk = os.environ.get("YINIAN_SK")
         if yinian_ak is None or yinian_sk is None:
@@ -44,6 +47,17 @@ class TestImageGenerationTool(unittest.TestCase):
 
         for path in result["image_path"]:
             self.assertTrue(os.path.exists(path))
+
+    @pytest.mark.asyncio
+    async def test_prompt_generation_tool(self):
+        aistudio_access_token = os.environ["AISTUDIO_ACCESS_TOKEN"]
+        if aistudio_access_token is None:
+            return
+        model = ERNIEBot(model="ernie-bot-turbo", api_type="aistudio", access_token=aistudio_access_token)
+        prompt_generation_tool = PromptGeneratorTool(model=model)
+        result = await prompt_generation_tool("小狗飞奔")
+        self.assertIsNotNone(result)
+        self.assertIn("refined_prompt", result)
 
     @pytest.mark.asyncio
     async def test_agent(self):
@@ -59,7 +73,8 @@ class TestImageGenerationTool(unittest.TestCase):
         eb = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token=aistudio_access_token)
         memory = WholeMemory()
         img_gen_tool = ImageGenerationTool(yinian_ak=yinian_ak, yinian_sk=yinian_sk)
-        agent = FunctionalAgent(llm=eb, tools=[img_gen_tool], memory=memory)
+        prompt_generation_tool = PromptGeneratorTool(model=eb)
+        agent = FunctionalAgent(llm=eb, tools=[img_gen_tool, prompt_generation_tool], memory=memory)
         result = await agent.async_run("画1张小狗的图片")
 
         self.assertIn("image_path", result)
