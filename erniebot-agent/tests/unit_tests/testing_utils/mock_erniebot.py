@@ -14,7 +14,7 @@
 
 from typing import Any, List, Optional
 
-from erniebot_agent.messages import Message
+from erniebot_agent.messages import AIMessage, Message
 
 
 class MockErnieBot:
@@ -37,4 +37,4 @@ class MockErnieBot:
         functions: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> Message:
-        return messages[0]
+        return AIMessage(messages[0].content)
