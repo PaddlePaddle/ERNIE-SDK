@@ -10,8 +10,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Dict, Optional, TypedDict
+from typing import Dict, Optional, TypedDict, Union
 
 
 class Message:
@@ -123,3 +125,20 @@ class AIMessageChunk(object):
     content: str
     function_call: Optional[FunctionCall]
     token_usage: Optional[TokenUsage]
+
+
+def dict_to_message(dict_data: dict) -> Union[SystemMessage, HumanMessage, AIMessage, FunctionMessage]:
+    role = dict_data.pop("role")
+    if role == "system":
+        return SystemMessage(**dict_data)
+
+    if role == "user":
+        return HumanMessage(**dict_data)
+
+    if role == "assistant":
+        return AIMessage(**dict_data)
+
+    if role == "function":
+        return FunctionMessage(**dict_data)
+
+    raise ValueError("the dict_data is invalid")

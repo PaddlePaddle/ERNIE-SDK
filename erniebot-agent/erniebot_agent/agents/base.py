@@ -23,7 +23,7 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import AIMessage, Message
+from erniebot_agent.messages import AIMessage, HumanMessage, Message, dict_to_message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.tool_manager import ToolManager
 
@@ -228,3 +228,28 @@ class Agent(BaseAgent):
         bnd_args = sig.bind(**args_dict)
         bnd_args.apply_defaults()
         return bnd_args
+
+    def serve(self, host: str = "0.0.0.0", port: int = 8000):
+        import uvicorn
+        from fastapi import FastAPI, Request
+
+        app = FastAPI()
+
+        @app.post("/chat")
+        async def chat(request: Request):
+            chat_data = await request.json()
+            human_message = HumanMessage(chat_data["query"])
+            history = [dict_to_message(message) for message in chat_data.get("history", [])]
+            functions = [dict_to_message(message) for message in chat_data.get("functions", [])]
+            history.append(human_message)
+
+            # TODO(wj-Mcat): to support stream api
+            # content_type = request.headers.get("Content-Type", "")
+            # if "multipart/form-data" in content_type:
+            #     result = await self._async_run_llm(messages=history, functions=functions, stream=True)
+
+            result = await self._async_run_llm(messages=history, functions=functions)  # type: ignore
+            history.append(result)
+            return {"response": result.to_dict(), "history": [message.to_dict() for message in history]}
+
+        uvicorn.run(app, host=host, port=port)
