@@ -37,4 +37,8 @@ class MockErnieBot:
         functions: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> Message:
-        return AIMessage(messages[0].content)
+        return AIMessage(
+            content="Text response",
+            function_call=None,
+            token_usage={"prompt_tokens": 6, "completion_tokens": 2},
+        )

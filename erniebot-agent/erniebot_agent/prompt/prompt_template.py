@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any
+from typing import Any, List, Optional
 
+from erniebot_agent.messages import HumanMessage
 from erniebot_agent.prompt import BasePromptTemplate
+from jinja2 import Environment, meta
 
 
 def jinja2_formatter(template: str, **kwargs: Any) -> str:
@@ -33,14 +35,46 @@ def jinja2_formatter(template: str, **kwargs: Any) -> str:
 class PromptTemplate(BasePromptTemplate):
     """format the prompt for llm input."""
 
-    def __init__(self, template, input_variables, name=None):
+    def __init__(
+        self, template: str, name: Optional[str] = None, input_variables: Optional[List[str]] = None
+    ):
         super().__init__(input_variables)
         self.name = name
         self.template = template
-        self.validate_template = None  # todo，评估template中的合法性，langchain中评估变量是否符合预期 yes
+        self.validate_template = True if input_variables is not None else False  # todo: 验证模板是否正确
 
     def format(self, **kwargs) -> str:
+        if self.validate_template:
+            error = self._validate_template()
+            if error:
+                raise KeyError("The input_variables of PromptTemplate and template are not match! " + error)
         return jinja2_formatter(self.template, **kwargs)
 
-    def format_prompt(self):  # todo：确定是否需要，用于转换prompt为str/Message。 yes to user message
-        raise NotImplementedError("format_prompt is not implemented yet.")
+    def _validate_template(self):
+        """
+        Validate that the input variables are valid for the template.
+
+        Args:
+            template: The template string.
+            input_variables: The input variables.
+        """
+        input_variables_set = set(self.input_variables)
+        env = Environment()
+        ast = env.parse(self.template)
+        valid_variables = meta.find_undeclared_variables(ast)
+
+        missing_variables = valid_variables - input_variables_set
+        extra_variables = input_variables_set - valid_variables
+
+        Error_message = ""
+        if missing_variables:
+            Error_message += f"The missing input variables: {missing_variables} "
+
+        if extra_variables:
+            Error_message += f"The extra input variables: {extra_variables}"
+
+        return Error_message
+
+    def format_as_message(self, **kwargs):
+        prompt = self.format(**kwargs)
+        return HumanMessage(content=prompt)
