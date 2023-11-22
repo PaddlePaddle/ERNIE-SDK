@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from erniebot_agent.memory import Memory
+from erniebot_agent.memory import Memory, MessageManager
 from erniebot_agent.messages import AIMessage, Message
 
 
@@ -22,8 +22,8 @@ class LimitTokensMemory(Memory):
     If tokens >= max_token_limit, pop message from memory.
     """
 
-    def __init__(self, max_token_limit=None):
-        super().__init__()
+    def __init__(self, max_token_limit=None, message_manager=MessageManager):
+        super().__init__(message_manager)
         self.max_token_limit = max_token_limit
         self.mem_token_count = 0
 

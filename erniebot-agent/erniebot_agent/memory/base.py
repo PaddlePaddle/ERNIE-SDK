@@ -16,6 +16,16 @@ from typing import Dict, List, Optional, Union
 
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
 
+# Test Cases
+
+user_AK_relation = {"AK-123": "user-123", "AK-124": "user-124"}
+user_session_id_relation: Dict[str, List] = {"user-123": [], "user-124": ["session-124", "session-125"]}
+
+session_messages = {
+    "session-124": [HumanMessage(content="你好"), AIMessage(content="你好124", function_call=None)],
+    "session-125": [HumanMessage(content="你好"), AIMessage(content="你好125", function_call=None)],
+}
+
 
 class MessageManager:
     """Manage messages"""
@@ -42,21 +52,12 @@ class MessageManager:
         return self.messages
 
 
-user_AK_relation = {"AK-123": "user-123", "AK-124": "user-124"}
-user_session_id_relation: Dict[str, List] = {"user-123": [], "user-124": ["session-124", "session-125"]}
-
-session_messages = {
-    "session-124": [HumanMessage(content="你好"), AIMessage(content="你好124", function_call=None)],
-    "session-125": [HumanMessage(content="你好"), AIMessage(content="你好125", function_call=None)],
-}
-
-
 class RemoteMemory:
     """
     远程memory的实现类, 用于管理一个user 在一个session中的messages。
     """
 
-    def __init__(self, user_id, session_id):
+    def __init__(self, session_id):
         self.session_id: int = session_id
         self.messages: list[Message] = session_messages[session_id]
 
@@ -101,7 +102,7 @@ class MessageStorageServer:  # 绑定user
             self.create_session()
 
         self.session_id = session_id if session_id else self.sessions[-1]  # TODO: session选择
-        self.memory = RemoteMemory(self.user_id, self.session_id)
+        self.memory = RemoteMemory(self.session_id)
 
     def get_messages(self):
         return self.memory.get_messages()
@@ -135,7 +136,6 @@ class PersistentMessageManager:
 
     def add_message(self, message: Message):
         self.client.memory.add_message(message=[message])
-        self.messages.append(message)
 
     def clear_messages(self):
         self.messages = []
@@ -182,10 +182,3 @@ class Memory:
 
     def clear_chat_history(self):
         self.msg_manager.clear_messages()
-
-
-class WholeMemory(Memory):
-    """The memory include all the messages"""
-
-    def __init__(self):
-        super().__init__()
