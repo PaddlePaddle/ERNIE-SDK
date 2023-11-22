@@ -19,7 +19,7 @@ from erniebot_agent.messages import Message
 class SlidingWindowMemory(Memory):
     """This class controls max number of messages."""
 
-    def __init__(self, max_num_message: int, message_manager=MessageManager):
+    def __init__(self, max_num_message: int, message_manager=MessageManager()):
         super().__init__(message_manager)
         self.max_num_message = max_num_message
 

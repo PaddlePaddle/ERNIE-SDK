@@ -15,13 +15,15 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
     async def test_limit_token_memory(self):
         messages = HumanMessage(content="What is the purpose of model regularization?")
 
-        memory = LimitTokensMemory(4000)
+        memory = LimitTokensMemory(4)
         memory.add_message(messages)
         message = await self.llm.async_chat([messages])
         memory.add_message(message)
         memory.add_message(HumanMessage("OK, what else?"))
         message = await self.llm.async_chat(memory.get_messages())
+        memory.add_message(message)
         self.assertTrue(message is not None)
+        self.assertTrue(memory.mem_token_count <= 4)
 
     @pytest.mark.asyncio
     async def test_limit_token_memory_truncate_tokens(self, k=3):  # truncate through returned message

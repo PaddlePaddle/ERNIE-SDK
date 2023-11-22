@@ -58,10 +58,10 @@ class RemoteMemory:
     """
 
     def __init__(self, session_id):
-        self.session_id: int = session_id
+        self.session_id: str = session_id
         self.messages: list[Message] = session_messages[session_id]
 
-    def add_message(self, message):
+    def add_message(self, message: Message):
         "make changes to the session's memory"
         session_messages[self.session_id].append(message)
 
@@ -135,7 +135,7 @@ class PersistentMessageManager:
         self.messages = self.get_messages()
 
     def add_message(self, message: Message):
-        self.client.memory.add_message(message=[message])
+        self.client.memory.add_message(message=message)
 
     def clear_messages(self):
         self.messages = []
@@ -175,7 +175,7 @@ class Memory:
     def add_message(self, message: Message):
         if isinstance(message, AIMessage):
             self.msg_manager.update_last_message_token_count(message.query_tokens_count)
-        self.msg_manager.add_message(message)
+        self.msg_manager.add_message(message=message)
 
     def get_messages(self) -> List[Message]:
         return self.msg_manager.get_messages()
