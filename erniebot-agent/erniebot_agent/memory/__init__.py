@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Memory
+from .base import Memory, PersistentMessageManager
 from .limit_token_memory import LimitTokensMemory
 from .sliding_window_memory import SlidingWindowMemory
 from .whole_memory import WholeMemory
