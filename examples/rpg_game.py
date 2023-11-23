@@ -18,9 +18,9 @@ import argparse
 import os
 import platform
 import sys
+from typing import List
 
 from IPython.display import clear_output as clear
-from typing import List
 
 import erniebot
 
@@ -94,7 +94,7 @@ class RPGGame:
     def clear(self) -> None:
         self.chat_history = [
             {"role": "user", "content": INSTRUCTION.format(SCRIPT=self.script)},
-            {"role": "assistant", "content": "好的，我将为你提供《仙剑奇侠传》沉浸式图文RPG场景体验。"},
+            {"role": "assistant", "content": f"好的，我将为你提供《{self.script}》沉浸式图文RPG场景体验。"},
         ]
 
     def lauch_gradio(self) -> None:
