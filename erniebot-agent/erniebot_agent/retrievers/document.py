@@ -29,9 +29,7 @@ class Document:
 
     @classmethod
     def _get_id(cls, content_se=None) -> str:
-        # 对要加密的字符串进行指定编码
         md5_bytes = content_se.encode(encoding="UTF-8")
-        # 将md5 加密结果转字符串显示
         md5_string = hashlib.md5(md5_bytes).hexdigest()
         return md5_string
 
@@ -64,7 +62,6 @@ class Document:
             # Exclude internal fields (Pydantic, ...) fields from the conversion process
             if k.startswith("__"):
                 continue
-                # Convert pd.DataFrame to list of rows for serialization
             k = k if k not in inv_field_map else inv_field_map[k]
             _doc[k] = v
         return _doc

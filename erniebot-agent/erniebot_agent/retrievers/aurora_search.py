@@ -9,16 +9,19 @@ from .document import Document
 
 
 class AuroraSearch:
-    def __init__(self, baseUrl: str, projectName: str, remark: str, max_seq_length: int = 512) -> None:
+    def __init__(
+        self, baseUrl: str, projectName: str, remark: str, projectId: int = -1, max_seq_length: int = 512
+    ) -> None:
         self.baseUrl = baseUrl
         self.projectName = projectName
         self.remark = remark
-        self.index = self.create_project()
-        print(self.index)
-        # self.projectId = self.index['result']['projectId']
-        self.projectId = 274
         self.max_seq_length = max_seq_length
-        self.create_schema()
+        if projectId == -1:
+            self.index = self.create_project()
+            self.projectId = self.index["result"]["projectId"]
+            self.create_schema()
+        else:
+            self.projectId = projectId
 
     def create_project(self):
         json_data = {
