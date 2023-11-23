@@ -1,12 +1,18 @@
 import argparse
 import asyncio
+from typing import List
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.retrievers.aurora_search import AuroraSearch
 from erniebot_agent.retrievers.document import Document
-from erniebot_agent.tools.aurora_tool import AuroraSearchTool, AuroraSearchToolInputView
+from erniebot_agent.tools.aurora_tool import (
+    AuroraSearchTool,
+    AuroraSearchToolInputView,
+    AuroraSearchToolOutputView,
+    SearchResponseDocument,
+)
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
 
@@ -28,7 +34,7 @@ args = parser.parse_args()
 
 
 def offline_ann(data_path, aurora_db):
-    loader = PyPDFDirectoryLoader("construction_regulations")
+    loader = PyPDFDirectoryLoader(data_path)
     documents = loader.load()
     text_splitter = SpacyTextSplitter(pipeline="zh_core_web_sm", chunk_size=1500, chunk_overlap=0)
     docs = text_splitter.split_documents(documents)
@@ -69,7 +75,23 @@ if __name__ == "__main__":
         "top_k": {"type": int, "description": "返回结果数量"},
     }
     input_view = AuroraSearchToolInputView.from_dict(field_map=field_map)
+
+    field_map = {
+        "id": {"type": str, "description": "规章文本的id"},
+        "title": {"type": str, "description": "规章的标题"},
+        "document": {"type": str, "description": "规章的内容"},
+    }
+
+    respone_view_type = SearchResponseDocument.from_dict(field_map=field_map)
+    field_map = {
+        "documents": {
+            "type": List[respone_view_type],  # type: ignore
+            "description": "检索结果，内容为住房和城乡建设部规章中和query相关的规章片段",
+        }
+    }
+    output_view = AuroraSearchToolOutputView.from_dict(field_map=field_map)
     print(input_view.function_call_schema())
+    print(output_view.function_call_schema())
 
     if args.api_type == "aistudio":
         erniebot.api_type = "aistudio"
@@ -92,6 +114,7 @@ if __name__ == "__main__":
         description="在住房和城乡建设部规章中寻找和query最相关的片段",
         db=aurora_db,
         input_type=input_view,
+        output_type=output_view,
         examples=few_shot_examples,
     )
     print(aurora_search.function_call_schema())
