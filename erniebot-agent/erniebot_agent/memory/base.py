@@ -16,8 +16,6 @@ from typing import List, Union
 
 from erniebot_agent.messages import AIMessage, Message, SystemMessage
 
-# TODO: add message token_count fallback done
-# TODO: interact with system message
 # TODO: add conversation buffer memory or not?
 
 
