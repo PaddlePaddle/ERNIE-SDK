@@ -13,7 +13,6 @@ from .base import Tool
 class AuroraSearchToolInputView(ToolParameterView):
     query: str = Field(description="Query")
     top_k: int = Field(description="Number of results to return")
-    # filters: Dict = Field(description="filters")
 
     @classmethod
     def from_dict(cls, field_map: Dict[str, Any]):
@@ -29,7 +28,6 @@ class AuroraSearchToolInputView(ToolParameterView):
 class SearchResponseDocument(ToolParameterView):
     id: str = Field(description="text id")
     document: str = Field(description="content")
-    # meta: Dict = Field(description="meta data")
 
     @classmethod
     def from_dict(cls, dict: Dict[str, Any], field_map: Optional[Dict[str, Any]] = None):

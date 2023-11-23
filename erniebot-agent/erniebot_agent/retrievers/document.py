@@ -37,7 +37,7 @@ class Document:
         """
         Convert Document to dict. An optional field_map can be supplied to
         change the names of the keys in the resulting dict.
-        This way you can work with standardized Document objects in Haystack,
+        This way you can work with standardized Document objects in erniebot-agent,
         but adjust the format that they are serialized / stored in other places
         (e.g. elasticsearch)
         Example:
@@ -46,7 +46,7 @@ class Document:
             doc = Document(content="some text", content_type="text")
             doc.to_dict(field_map={"custom_content_field": "content"})
 
-            # Returns {"custom_content_field": "some text", content_type": "text"}
+            # Returns {"custom_content_field": "some text"}
         ```
 
         :param field_map: Dict with keys being the custom target keys and values
@@ -72,7 +72,7 @@ class Document:
         Create Document from dict. An optional `field_map` parameter
         can be supplied to adjust for custom names of the keys in the
         input dict. This way you can work with standardized Document
-        objects in Haystack, but adjust the format that
+        objects in erniebot-agent, but adjust the format that
         they are serialized / stored in other places (e.g. elasticsearch).
 
         Example:
