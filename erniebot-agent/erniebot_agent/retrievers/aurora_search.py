@@ -36,7 +36,7 @@ class AuroraSearch:
                 return result
             return result
 
-    def create_schema(self, max_seq_length: int = 512):
+    def create_schema(self):
         json_data = {
             "projectId": self.projectId,
             "schemaJson": {
@@ -51,6 +51,26 @@ class AuroraSearch:
         }
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/create", json=json_data)
         if res.status_code == 200:
+            return res.json()
+
+    def update_schema(
+        self,
+    ):
+        json_data = {
+            "projectId": self.projectId,
+            "schemaJson": {
+                "paraSize": self.max_seq_length,
+                "dataSegmentationMod": "neisou",
+                "storeType": "ElasticSearch",
+                "properties": {
+                    "title": {"type": "text", "shortindex": True},
+                    "content_se": {"type": "text", "longindex": True},
+                },
+            },
+        }
+        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/update", json=json_data)
+        status_code = res.status_code
+        if status_code == 200:
             return res.json()
 
     def search(self, query: str, top_k: int = 10, filters: Optional[Dict[str, Any]] = None):
