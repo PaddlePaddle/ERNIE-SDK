@@ -60,7 +60,7 @@ class SystemMessage(Message):
     """A message from human to set system information."""
 
     def __init__(self, content: str):
-        super().__init__(role="system", content=content)
+        super().__init__(role="system", content=content, token_count=len(content))
 
 
 class HumanMessage(Message):

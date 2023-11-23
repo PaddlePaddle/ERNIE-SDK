@@ -22,7 +22,9 @@ class LimitTokensMemory(Memory):
     If tokens >= max_token_limit, pop message from memory.
     """
 
-    def __init__(self, max_token_limit=None):
+    def __init__(
+        self, max_token_limit=16000
+    ):  # max_token_limit could be double the input length for chinese.
         super().__init__()
         self.max_token_limit = max_token_limit
         self.mem_token_count = 0
@@ -36,12 +38,14 @@ class LimitTokensMemory(Memory):
 
     def add_message(self, message: Message):
         super().add_message(message)
+        # TODO(shiyutang): 仅在添加AIMessage时截断会导致HumanMessage传入到LLM时可能长度超限
+        # 最优方案为每条message产生时确定token_count，从而在每次加入message时都进行prune_message
         if isinstance(message, AIMessage):
-            self.prune_message(message)
+            self.prune_message()
 
-    def prune_message(self, message):
-        self.mem_token_count += message.token_count
-        self.mem_token_count += message.query_tokens_count  # add human message token length
+    def prune_message(self):
+        self.mem_token_count += self.msg_manager.messages[-1].token_count
+        self.mem_token_count += self.msg_manager.messages[-2].token_count  # add human message token length
         if self.max_token_limit is not None:
             while self.mem_token_count > self.max_token_limit:
                 deleted_message = self.msg_manager.pop_message()
