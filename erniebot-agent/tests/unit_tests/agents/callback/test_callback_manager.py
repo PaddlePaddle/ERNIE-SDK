@@ -35,7 +35,11 @@ async def test_callback_manager_hit():
 
     await callback_manager.on_run_start(agent, "")
     await callback_manager.on_llm_start(agent, llm, [])
-    await callback_manager.on_llm_end(agent, llm, AIMessage(content=""))
+    await callback_manager.on_llm_end(
+        agent,
+        llm,
+        AIMessage(content="", function_call=None, token_usage={"prompt_tokens": 0, "completion_tokens": 0}),
+    )
     await callback_manager.on_llm_error(agent, llm, Exception())
     await callback_manager.on_tool_start(agent, tool, "{}")
     await callback_manager.on_tool_end(agent, tool, "{}")

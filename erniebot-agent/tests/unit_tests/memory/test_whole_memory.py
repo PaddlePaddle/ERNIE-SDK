@@ -1,31 +1,34 @@
-import asyncio
 import unittest
 
+import pytest
 from erniebot_agent.memory import WholeMemory
-from erniebot_agent.messages import HumanMessage
+from erniebot_agent.messages import AIMessage, HumanMessage
 
 from tests.unit_tests.testing_utils import MockErnieBot
 
 
-class TestWholeMemory(unittest.TestCase):
+class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.llm = MockErnieBot(None, None, None)
 
-    def test_whole_memory(self):
-        async def run_whole_memory():
-            messages = [
-                HumanMessage(content="What is the purpose of model regularization?"),
-            ]
-            memory = WholeMemory()
-            # memory =
-            memory.add_messages(messages)
-            message = await self.llm.async_chat(messages)
-            memory.add_messages([message])
-            memory.add_messages([HumanMessage("OK, what else?")])
-            message = await self.llm.async_chat(memory.get_messages())
-            self.assertTrue(message is not None)
+    @pytest.mark.asyncio
+    async def test_whole_memory(self):
+        message = HumanMessage(content="What is the purpose of model regularization?")
 
-        asyncio.run(run_whole_memory())
+        memory = WholeMemory()
+        memory.add_message(message)
+        message = await self.llm.async_chat([message])
+        memory.add_message(message)
+        memory.add_message(HumanMessage("OK, what else?"))
+        message = await self.llm.async_chat(memory.get_messages())
+        self.assertTrue(message is not None)
+
+    def test_list_message_print_msg(self):
+        messages = [HumanMessage("A"), AIMessage("B", function_call=None)]
+        self.assertEqual(
+            str(messages),
+            "[<role: user, content: A, token_count: No>, <role: assistant, content: B, token_count:>]",
+        )
 
 
 if __name__ == "__main__":

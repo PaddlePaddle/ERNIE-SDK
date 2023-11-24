@@ -14,7 +14,7 @@
 
 from typing import List
 
-from erniebot_agent.messages import Message
+from erniebot_agent.messages import AIMessage, Message
 
 
 class MessageManager:
@@ -35,11 +35,16 @@ class MessageManager:
     def clear_messages(self) -> None:
         self.messages = []
 
+    def update_last_message_token_count(self, token_count: int):
+        self.messages[-1].token_count = token_count
+
     def retrieve_messages(self) -> List[Message]:
         return self.messages
 
 
 class Memory:
+    """The base class of memory"""
+
     def __init__(self):
         self.msg_manager = MessageManager()
 
@@ -48,6 +53,8 @@ class Memory:
             self.add_message(message)
 
     def add_message(self, message: Message):
+        if isinstance(message, AIMessage):
+            self.msg_manager.update_last_message_token_count(message.query_tokens_count)
         self.msg_manager.add_message(message)
 
     def get_messages(self) -> List[Message]:
@@ -55,3 +62,10 @@ class Memory:
 
     def clear_chat_history(self):
         self.msg_manager.clear_messages()
+
+
+class WholeMemory(Memory):
+    """The memory include all the messages"""
+
+    def __init__(self):
+        super().__init__()

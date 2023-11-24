@@ -87,7 +87,7 @@ class FunctionalAgent(Agent):
         chat_history.append(output_message)
         if output_message.function_call is not None:
             return AgentAction(
-                tool_name=output_message.function_call["name"],
+                tool_name=output_message.function_call["name"],  # type: ignore
                 tool_args=output_message.function_call["arguments"],
             )
         else:

@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory import Memory
 from erniebot_agent.messages import Message
 
 
@@ -31,8 +29,8 @@ class SlidingWindowMemory(Memory):
             max_token_limit=max_num_message
         )
 
-    def add_messages(self, messages: List[Message]):
-        super().add_messages(messages=messages)
+    def add_message(self, message: Message):
+        super().add_message(message=message)
         self.prune_message()
 
     def prune_message(self):

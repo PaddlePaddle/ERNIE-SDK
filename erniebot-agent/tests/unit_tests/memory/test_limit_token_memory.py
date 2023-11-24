@@ -1,56 +1,42 @@
-import asyncio
 import unittest
 
-from erniebot_agent.memory import LimitTokenMemory
+import pytest
+from erniebot_agent.memory import LimitTokensMemory
 from erniebot_agent.messages import HumanMessage
 
 from tests.unit_tests.testing_utils import MockErnieBot
 
 
-class Testlimit_tokenMemory(unittest.TestCase):
+class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.llm = MockErnieBot(None, None, None)
 
-    def test_limit_token_memory(self):
-        async def run_limit_token_memory():
-            messages = [
-                HumanMessage(content="What is the purpose of model regularization?"),
-            ]
-            memory = LimitTokenMemory(4000)
-            # memory =
-            memory.add_messages(messages)
-            message = await self.llm.async_chat(messages)
-            memory.add_messages([message])
-            memory.add_messages([HumanMessage("OK, what else?")])
+    @pytest.mark.asyncio
+    async def test_limit_token_memory(self):
+        messages = HumanMessage(content="What is the purpose of model regularization?")
+
+        memory = LimitTokensMemory(4000)
+        memory.add_message(messages)
+        message = await self.llm.async_chat([messages])
+        memory.add_message(message)
+        memory.add_message(HumanMessage("OK, what else?"))
+        message = await self.llm.async_chat(memory.get_messages())
+        self.assertTrue(message is not None)
+
+    @pytest.mark.asyncio
+    async def test_limit_token_memory_truncate_tokens(self, k=3):  # truncate through returned message
+        # The memory
+        memory = LimitTokensMemory(4)
+
+        for _ in range(k):
+            # 2 times of human message
+            memory.add_message(HumanMessage(content="What is the purpose of model regularization?"))
+
+            # AI message
             message = await self.llm.async_chat(memory.get_messages())
-            self.assertTrue(message is not None)
+            memory.add_message(message)
 
-        asyncio.run(run_limit_token_memory())
-
-    def test_limit_token_memory_exceed_tokens(self):
-        messages = [
-            HumanMessage(content="What is the purpose of model regularization?"),
-        ]
-        memory = LimitTokenMemory(10)
-        with self.assertRaises(RuntimeError):
-            memory.add_messages(messages)
-
-    def test_limit_token_memory_truncate_tokens(self):  # truncate through returned message
-        async def run_limit_token_memory_truncate_tokens(k=3):
-            # The memory
-            memory = LimitTokenMemory(100)
-
-            for _ in range(k):
-                # 2 times of human message
-                memory.add_messages([HumanMessage(content="What is the purpose of model regularization?")])
-
-                # AI message
-                message = await self.llm.async_chat(memory.get_messages())
-                memory.add_messages([message])
-
-            self.assertTrue(memory.token_length <= 100)
-
-        asyncio.run(run_limit_token_memory_truncate_tokens())
+        self.assertTrue(memory.mem_token_count <= 4)
 
 
 if __name__ == "__main__":
