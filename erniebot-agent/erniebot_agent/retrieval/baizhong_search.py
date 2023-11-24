@@ -125,10 +125,10 @@ class BaizhongSearch:
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
-    def indexing(self, list_data: List[Document]):
+    def indexing(self, list_data: List[Document], batch_size: int = 10):
         if type(list_data[0]) == Document:
             list_dict = [item.to_dict() for item in list_data]
-        return self.add_documents(list_dict)
+        return self.add_documents(list_dict, batch_size=batch_size)
 
     def get_document_by_id(self, doc_id):
         json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
