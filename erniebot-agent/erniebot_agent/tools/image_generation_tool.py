@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
@@ -49,6 +49,7 @@ class ImageGenerationTool(Tool):
         yinian_ak: Optional[str] = None,
         yinian_sk: Optional[str] = None,
     ) -> None:
+        self.config: Dict[str, Optional[Any]]
         if yinian_access_token is not None:
             self.config = {"api_type": "yinian", "access_token": yinian_access_token}
         elif yinian_ak is not None and yinian_sk is not None:
