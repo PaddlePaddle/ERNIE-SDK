@@ -26,14 +26,14 @@ class Message:
     @property
     def token_count(self):
         """Get the number of tokens of the message."""
-        assert self._token_count, "The token length of message has not been set before get the token length."
+        assert self._token_count, "The token count of message has not been set before get the token count."
         return self._token_count
 
     @token_count.setter
     def token_count(self, token_count: int):
         """Set the number of tokens of the message."""
         if self._token_count is not None:
-            raise ValueError("The token length of message has been set.")
+            raise ValueError("The token count of message has been set.")
         self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
@@ -43,17 +43,20 @@ class Message:
         return res
 
     def __str__(self) -> str:
+        return f"<{self._get_attrs_str()}>"
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {self._get_attrs_str()}>"
+
+    def _get_attrs_str(self) -> str:
         res = ""
         for name in self._param_names:
             value = getattr(self, name)
             if value is not None and value != "":
-                res += f"{name}: {value}, "
-        else:
+                res += f"{name}: {repr(value)}, "
+        if self._token_count is not None:
             res += f"token_count: {self._token_count}"
-        return f"<{res[:-2]}>"
-
-    def __repr__(self):
-        return self.__str__()
+        return res
 
 
 class SystemMessage(Message):
@@ -105,7 +108,7 @@ class AIMessage(Message):
         self._param_names = ["role", "content", "function_call"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
-        """Parse the token length information from LLM."""
+        """Parse the token count information from LLM."""
         return token_usage["prompt_tokens"], token_usage["completion_tokens"]
 
 

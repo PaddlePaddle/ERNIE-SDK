@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -23,8 +22,6 @@ from langchain.llms.utils import enforce_stop_tokens
 from langchain.pydantic_v1 import Field, root_validator
 from langchain.schema.output import GenerationChunk
 from langchain.utils import get_from_dict_or_env
-
-logger = logging.getLogger(__name__)
 
 
 class ErnieBot(LLM):

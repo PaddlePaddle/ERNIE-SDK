@@ -58,7 +58,7 @@ async def test_callback_manager_add_remove_handlers():
     handler2 = MockCallbackHandler()
     callback_manager = CallbackManager(handlers=[handler1])
     assert len(callback_manager.handlers) == 1
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         callback_manager.add_handler(handler1)
     callback_manager.remove_handler(handler1)
     assert len(callback_manager.handlers) == 0

@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.utils.logging import logger, setup_logging
+import threading
+from typing import ClassVar
 
-__all__ = ["logger"]
+__all__ = ["Singleton"]
 
-setup_logging()
+
+class Singleton(type):
+    _insts: ClassVar[dict] = {}
+    _lock = threading.Lock()
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._insts:
+            with cls._lock:
+                if cls not in cls._insts:
+                    cls._insts[cls] = super().__call__(*args, **kwargs)
+        return cls._insts[cls]
