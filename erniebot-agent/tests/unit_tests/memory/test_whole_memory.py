@@ -29,7 +29,7 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
             str(messages),
             (
                 "[<HumanMessage role: 'user', content: 'A'>"
-                ", <AIMessage role: 'assistant', content: 'B', token_count: 1>]",
+                ", <AIMessage role: 'assistant', content: 'B', token_count: 1>]"
             ),
         )
 
