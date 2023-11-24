@@ -5,12 +5,12 @@ from typing import List
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.retrievers.aurora_search import AuroraSearch
-from erniebot_agent.retrievers.document import Document
-from erniebot_agent.tools.aurora_tool import (
-    AuroraSearchTool,
-    AuroraSearchToolInputView,
-    AuroraSearchToolOutputView,
+from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.retrieval.document import Document
+from erniebot_agent.tools.baizhong_tool import (
+    BaizhongSearchTool,
+    BaizhongSearchToolInputView,
+    BaizhongSearchToolOutputView,
     SearchResponseDocument,
 )
 from langchain.document_loaders import PyPDFDirectoryLoader
@@ -51,7 +51,7 @@ def offline_ann(data_path, aurora_db):
 
 
 if __name__ == "__main__":
-    aurora_db = AuroraSearch(
+    aurora_db = BaizhongSearch(
         baseUrl=args.base_url,
         projectName="construction_data",
         remark="construction test dataset",
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "query": {"type": str, "description": "查询语句"},
         "top_k": {"type": int, "description": "返回结果数量"},
     }
-    input_view = AuroraSearchToolInputView.from_dict(field_map=field_map)
+    input_view = BaizhongSearchToolInputView.from_dict(field_map=field_map)
 
     field_map = {
         "id": {"type": str, "description": "规章文本的id"},
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             "description": "检索结果，内容为住房和城乡建设部规章中和query相关的规章片段",
         }
     }
-    output_view = AuroraSearchToolOutputView.from_dict(field_map=field_map)
+    output_view = BaizhongSearchToolOutputView.from_dict(field_map=field_map)
     print(input_view.function_call_schema())
     print(output_view.function_call_schema())
 
@@ -105,12 +105,12 @@ if __name__ == "__main__":
     few_shot_examples = [
         {
             "user": "城乡建设部规章中描述的城市管理执法的执法主体是谁？",
-            "thoughts": "这是一个住房和城乡建设部规章的问题，我们使用AuroraSearchTool工具检索相关的信息，检索的query：'城市管理执法的执法主体'}",
+            "thoughts": "这是一个住房和城乡建设部规章的问题，我们使用BaizhongSearchTool工具检索相关的信息，检索的query：'城市管理执法的执法主体'}",
             "arguments": '{"query": "城市管理执法的执法主体", "top_k": 3}',
         }
     ]
 
-    aurora_search = AuroraSearchTool(
+    aurora_search = BaizhongSearchTool(
         description="在住房和城乡建设部规章中寻找和query最相关的片段",
         db=aurora_db,
         input_type=input_view,

@@ -3,12 +3,15 @@ import json
 from typing import Any, Dict, List, Optional
 
 import requests
+from erniebot_agent.utils.exception import APIConnectionError
 from tqdm import tqdm
+
+from erniebot.utils.logging import logger
 
 from .document import Document
 
 
-class AuroraSearch:
+class BaizhongSearch:
     def __init__(
         self, baseUrl: str, projectName: str, remark: str, projectId: int = -1, max_seq_length: int = 512
     ) -> None:
@@ -17,10 +20,15 @@ class AuroraSearch:
         self.remark = remark
         self.max_seq_length = max_seq_length
         if projectId == -1:
+            logger.info("Creating new project and schema")
             self.index = self.create_project()
+            logger.info("Project creation succeeded")
             self.projectId = self.index["result"]["projectId"]
             self.create_schema()
+            logger.info("Schema creation succeeded")
+
         else:
+            logger.info("Use existed project")
             self.projectId = projectId
 
     def create_project(self):
@@ -33,8 +41,11 @@ class AuroraSearch:
             result = res.json()
             # '{"errCode": 200101, "errMsg": "project name is exist!"}'
             if result["errCode"] == 200101:
-                return result
+                logger.info("project name is exist! please change project name and try again")
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return result
+        else:
+            raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
 
     def create_schema(self):
         json_data = {
@@ -52,6 +63,10 @@ class AuroraSearch:
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/create", json=json_data)
         if res.status_code == 200:
             return res.json()
+        else:
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
 
     def update_schema(
         self,
@@ -72,6 +87,10 @@ class AuroraSearch:
         status_code = res.status_code
         if status_code == 200:
             return res.json()
+        else:
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
 
     def search(self, query: str, top_k: int = 10, filters: Optional[Dict[str, Any]] = None):
         json_data = {
@@ -93,7 +112,9 @@ class AuroraSearch:
                 list_data.append(json_data)
             return list_data
         else:
-            raise Exception(f"request error: {res.status_code}")
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
 
     def indexing(self, list_data: List[Document]):
         if type(list_data[0]) == Document:
@@ -101,27 +122,31 @@ class AuroraSearch:
         return self.add_documents(list_dict)
 
     def get_document_by_id(self, doc_id):
-        pass
+        raise NotImplementedError
 
     def add_documents(self, list_data, batch_size=10):
         for i in tqdm(range(0, len(list_data), batch_size)):
             batch_data = list_data[i : i + batch_size]
             json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": batch_data}
             res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
-
             if res.status_code == 200:
-                msg = res.json()
-                print(msg)
+                continue
+            else:
+                raise APIConnectionError(
+                    message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+                )
         return {"message": "success"}
 
     def delete_all_documents(self, project_id: int):
-        json_data = {"projectId": project_id}
-        res = requests.post(f"{self.baseUrl}/baizhong/baizhong/web-api/v2/project/delete", json=json_data)
-        if res.status_code == 200:
-            return res.json()
+        # Currently delete all documents means delete project
+        self.delete_project(project_id)
 
     def delete_project(self, project_id: int):
         json_data = {"projectId": project_id}
-        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
+        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project/delete", json=json_data)
         if res.status_code == 200:
             return res.json()
+        else:
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )

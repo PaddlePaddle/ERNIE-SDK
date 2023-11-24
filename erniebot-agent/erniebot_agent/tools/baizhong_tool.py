@@ -10,7 +10,7 @@ from pydantic.fields import FieldInfo
 from .base import Tool
 
 
-class AuroraSearchToolInputView(ToolParameterView):
+class BaizhongSearchToolInputView(ToolParameterView):
     query: str = Field(description="Query")
     top_k: int = Field(description="Number of results to return")
 
@@ -41,7 +41,7 @@ class SearchResponseDocument(ToolParameterView):
         return create_model(cls.__name__, __base__=ToolParameterView, **fields)
 
 
-class AuroraSearchToolOutputView(ToolParameterView):
+class BaizhongSearchToolOutputView(ToolParameterView):
     documents: List[SearchResponseDocument] = Field(description="research results")
 
     @classmethod
@@ -55,10 +55,10 @@ class AuroraSearchToolOutputView(ToolParameterView):
         return create_model(cls.__name__, __base__=ToolParameterView, **fields)
 
 
-class AuroraSearchTool(Tool):
+class BaizhongSearchTool(Tool):
     description: str = "aurora search tool"
-    input_type: Type[ToolParameterView] = AuroraSearchToolInputView
-    ouptut_type: Type[ToolParameterView] = AuroraSearchToolOutputView
+    input_type: Type[ToolParameterView] = BaizhongSearchToolInputView
+    ouptut_type: Type[ToolParameterView] = BaizhongSearchToolOutputView
 
     def __init__(self, description, db, input_type=None, output_type=None, examples=None) -> None:
         super().__init__()
