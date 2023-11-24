@@ -7,7 +7,7 @@
 目前文心提供如下语义向量模型：
 
 | 模型 | 说明 | API调用方式 |
-| :--- | :---- | :----- |
+| :--- | :--- | :--- |
 | ernie-text-embedding | 支持计算最多384个token的文本的向量表示。 | `erniebot.Embedding.create(model="ernie-text-embedding", ...)` |
 
 参阅[Embedding API文档](../api_reference/embedding.md)了解API的完整使用方式。
@@ -24,7 +24,7 @@
 
 ### 如何计算token数量？
 
-目前千帆和AI Studio平台均采用`汉字数 + 单词数 * 1.3`估算token总数。可以通过如下代码估计token数量：
+可以采用`汉字数 + 单词数 * 1.3`估算token总数。ERNIE Bot SDK提供了估计token数量的函数：
 
 ```{.py .copy}
 import erniebot.utils

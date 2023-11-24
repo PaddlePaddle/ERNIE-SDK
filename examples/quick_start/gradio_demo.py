@@ -17,98 +17,108 @@
 import argparse
 import time
 
-import erniebot as eb
 import gradio as gr
 import numpy as np
 import requests
 
+import erniebot as eb
+
 
 def parse_setup_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8073)
+    parser.add_argument("--port", type=int, default=8073)
     args = parser.parse_args()
     return args
 
 
 def create_ui_and_launch(args):
-    with gr.Blocks(
-            title="ERNIE Bot SDK Demos", theme=gr.themes.Soft()) as block:
+    with gr.Blocks(title="ERNIE Bot SDK Demos", theme=gr.themes.Soft()) as blocks:
         gr.Markdown("# ERNIE Bot SDK基础功能演示")
         create_chat_completion_tab()
         create_embedding_tab()
         create_image_tab()
 
-    block.launch(server_name="0.0.0.0", server_port=args.port)
+    blocks.launch(server_name="0.0.0.0", server_port=args.port)
 
 
 def create_chat_completion_tab():
-    def _infer(ernie_model, content, state, top_p, temperature, api_type,
-               access_key, secret_key, access_token):
+    def _infer(
+        ernie_model, content, state, top_p, temperature, api_type, access_key, secret_key, access_token
+    ):
         access_key = access_key.strip()
         secret_key = secret_key.strip()
         access_token = access_token.strip()
 
-        if (access_key == '' or secret_key == '') and access_token == '':
+        if (access_key == "" or secret_key == "") and access_token == "":
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
-        if content.strip() == '':
+        if content.strip() == "":
             raise gr.Error("输入不能为空，请在清空后重试")
 
-        auth_config = {'api_type': api_type, }
+        auth_config = {
+            "api_type": api_type,
+        }
         if access_key:
-            auth_config['ak'] = access_key
+            auth_config["ak"] = access_key
         if secret_key:
-            auth_config['sk'] = secret_key
+            auth_config["sk"] = secret_key
         if access_token:
-            auth_config['access_token'] = access_token
+            auth_config["access_token"] = access_token
 
-        content = content.strip().replace('<br>', '\n')
-        context = state.setdefault('context', [])
-        context.append({'role': 'user', 'content': content})
+        content = content.strip().replace("<br>", "")
+        context = state.setdefault("context", [])
+        context.append({"role": "user", "content": content})
         data = {
-            'messages': context,
-            'top_p': top_p,
-            'temperature': temperature,
+            "messages": context,
+            "top_p": top_p,
+            "temperature": temperature,
         }
 
-        if ernie_model == 'chat_file':
-            response = eb.ChatFile.create(
-                _config_=auth_config, **data, stream=False)
+        if ernie_model == "chat_file":
+            response = eb.ChatFile.create(_config_=auth_config, **data, stream=False)
         else:
             response = eb.ChatCompletion.create(
-                _config_=auth_config, model=ernie_model, **data, stream=False)
+                _config_=auth_config, model=ernie_model, **data, stream=False
+            )
 
         bot_response = response.result
-        context.append({'role': 'assistant', 'content': bot_response})
+        context.append({"role": "assistant", "content": bot_response})
         history = _get_history(context)
         return None, history, context, state
 
-    def _regen_response(ernie_model, state, top_p, temperature, api_type,
-                        access_key, secret_key, access_token):
+    def _regen_response(
+        ernie_model, state, top_p, temperature, api_type, access_key, secret_key, access_token
+    ):
         """Regenerate response."""
-        context = state.setdefault('context', [])
+        context = state.setdefault("context", [])
         if len(context) < 2:
             raise gr.Error("请至少进行一轮对话")
         context.pop()
         user_message = context.pop()
-        return _infer(ernie_model, user_message['content'], state, top_p,
-                      temperature, api_type, access_key, secret_key,
-                      access_token)
+        return _infer(
+            ernie_model,
+            user_message["content"],
+            state,
+            top_p,
+            temperature,
+            api_type,
+            access_key,
+            secret_key,
+            access_token,
+        )
 
     def _rollback(state):
         """Roll back context."""
-        context = state.setdefault('context', [])
-        content = context[-2]['content']
+        context = state.setdefault("context", [])
+        content = context[-2]["content"]
         context = context[:-2]
-        state['context'] = context
+        state["context"] = context
         history = _get_history(context)
         return content, history, context, state
 
     def _get_history(context):
         history = []
         for turn_idx in range(0, len(context), 2):
-            history.append([
-                context[turn_idx]['content'], context[turn_idx + 1]['content']
-            ])
+            history.append([context[turn_idx]["content"], context[turn_idx + 1]["content"]])
 
         return history
 
@@ -116,41 +126,31 @@ def create_chat_completion_tab():
         with gr.Row():
             with gr.Column(scale=1):
                 api_type = gr.Dropdown(
-                    label="API Type",
-                    info="提供对话能力的后端平台",
-                    value='qianfan',
-                    choices=['qianfan', 'aistudio'])
+                    label="API Type", info="提供对话能力的后端平台", value="qianfan", choices=["qianfan", "aistudio"]
+                )
                 access_key = gr.Textbox(
-                    label="AK",
-                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="AK", info="用于访问后端平台的AK，如果设置了access token则无需设置此参数", type="password"
+                )
                 secret_key = gr.Textbox(
-                    label="SK",
-                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="SK", info="用于访问后端平台的SK，如果设置了access token则无需设置此参数", type="password"
+                )
                 access_token = gr.Textbox(
-                    label="Access Token",
-                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
-                    type='password')
+                    label="Access Token", info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数", type="password"
+                )
                 ernie_model = gr.Dropdown(
-                    label="Model",
-                    info="模型类型",
-                    value='ernie-bot',
-                    choices=['ernie-bot', 'ernie-bot-turbo'])
+                    label="Model", info="模型类型", value="ernie-bot", choices=["ernie-bot", "ernie-bot-turbo"]
+                )
                 top_p = gr.Slider(
-                    label="Top-p",
-                    info="控制采样范围，该参数越小生成结果越稳定",
-                    value=0.7,
-                    minimum=0,
-                    maximum=1,
-                    step=0.05)
+                    label="Top-p", info="控制采样范围，该参数越小生成结果越稳定", value=0.7, minimum=0, maximum=1, step=0.05
+                )
                 temperature = gr.Slider(
                     label="Temperature",
                     info="控制采样随机性，该参数越小生成结果越稳定",
                     value=0.95,
                     minimum=0.05,
                     maximum=1,
-                    step=0.05)
+                    step=0.05,
+                )
             with gr.Column(scale=4):
                 state = gr.State({})
                 context_chatbot = gr.Chatbot(label="对话历史")
@@ -164,8 +164,9 @@ def create_chat_completion_tab():
 
         api_type.change(
             lambda api_type: {
-                'qianfan': (gr.update(visible=True), gr.update(visible=True)),
-                'aistudio': (gr.update(visible=False), gr.update(visible=False)), }[api_type],
+                "qianfan": (gr.update(visible=True), gr.update(visible=True)),
+                "aistudio": (gr.update(visible=False), gr.update(visible=False)),
+            }[api_type],
             inputs=api_type,
             outputs=[
                 access_key,
@@ -265,32 +266,33 @@ def create_chat_completion_tab():
 
 
 def create_embedding_tab():
-    def _get_embeddings(text1, text2, api_type, access_key, secret_key,
-                        access_token):
+    def _get_embeddings(text1, text2, api_type, access_key, secret_key, access_token):
         access_key = access_key.strip()
         secret_key = secret_key.strip()
         access_token = access_token.strip()
 
-        if (access_key == '' or secret_key == '') and access_token == '':
+        if (access_key == "" or secret_key == "") and access_token == "":
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
 
-        auth_config = {'api_type': api_type, }
+        auth_config = {
+            "api_type": api_type,
+        }
         if access_key:
-            auth_config['ak'] = access_key
+            auth_config["ak"] = access_key
         if secret_key:
-            auth_config['sk'] = secret_key
+            auth_config["sk"] = secret_key
         if access_token:
-            auth_config['access_token'] = access_token
+            auth_config["access_token"] = access_token
 
-        if text1.strip() == '' or text2.strip() == '':
+        if text1.strip() == "" or text2.strip() == "":
             raise gr.Error("两个输入均不能为空")
         embeddings = eb.Embedding.create(
             _config_=auth_config,
-            model='ernie-text-embedding',
+            model="ernie-text-embedding",
             input=[text1.strip(), text2.strip()],
         )
-        emb_0 = embeddings.rbody['data'][0]['embedding']
-        emb_1 = embeddings.rbody['data'][1]['embedding']
+        emb_0 = embeddings.rbody["data"][0]["embedding"]
+        emb_1 = embeddings.rbody["data"][1]["embedding"]
         cos_sim = _calc_cosine_similarity(emb_0, emb_1)
         cos_sim_text = f"## 两段文本余弦相似度: {cos_sim}"
         return str(emb_0), str(emb_1), cos_sim_text
@@ -305,22 +307,17 @@ def create_embedding_tab():
         with gr.Row():
             with gr.Column(scale=1):
                 api_type = gr.Dropdown(
-                    label="API Type",
-                    info="提供语义向量能力的后端平台",
-                    value='qianfan',
-                    choices=['qianfan', 'aistudio'])
+                    label="API Type", info="提供语义向量能力的后端平台", value="qianfan", choices=["qianfan", "aistudio"]
+                )
                 access_key = gr.Textbox(
-                    label="AK",
-                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="AK", info="用于访问后端平台的AK，如果设置了access token则无需设置此参数", type="password"
+                )
                 secret_key = gr.Textbox(
-                    label="SK",
-                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="SK", info="用于访问后端平台的SK，如果设置了access token则无需设置此参数", type="password"
+                )
                 access_token = gr.Textbox(
-                    label="Access Token",
-                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
-                    type='password')
+                    label="Access Token", info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数", type="password"
+                )
             with gr.Column(scale=4):
                 with gr.Row():
                     text1 = gr.Textbox(label="第一段文本", placeholder="输入第一段文本")
@@ -333,8 +330,9 @@ def create_embedding_tab():
 
         api_type.change(
             lambda api_type: {
-                'qianfan': (gr.update(visible=True), gr.update(visible=True)),
-                'aistudio': (gr.update(visible=False), gr.update(visible=False)), }[api_type],
+                "qianfan": (gr.update(visible=True), gr.update(visible=True)),
+                "aistudio": (gr.update(visible=False), gr.update(visible=False)),
+            }[api_type],
             inputs=api_type,
             outputs=[
                 access_key,
@@ -360,41 +358,41 @@ def create_embedding_tab():
 
 
 def create_image_tab():
-    def _gen_image(prompt, w_and_h, api_type, access_key, secret_key,
-                   access_token):
+    def _gen_image(prompt, w_and_h, api_type, access_key, secret_key, access_token):
         access_key = access_key.strip()
         secret_key = secret_key.strip()
         access_token = access_token.strip()
 
-        if (access_key == '' or secret_key == '') and access_token == '':
+        if (access_key == "" or secret_key == "") and access_token == "":
             raise gr.Error("需要填写正确的AK/SK或access token，不能为空")
-        if prompt.strip() == '':
+        if prompt.strip() == "":
             raise gr.Error("输入不能为空")
 
-        auth_config = {'api_type': api_type, }
+        auth_config = {
+            "api_type": api_type,
+        }
         if access_key:
-            auth_config['ak'] = access_key
+            auth_config["ak"] = access_key
         if secret_key:
-            auth_config['sk'] = secret_key
+            auth_config["sk"] = secret_key
         if access_token:
-            auth_config['access_token'] = access_token
+            auth_config["access_token"] = access_token
 
         timestamp = int(time.time())
-        w, h = [int(x) for x in w_and_h.strip().split('x')]
+        w, h = [int(x) for x in w_and_h.strip().split("x")]
 
         response = eb.Image.create(
             _config_=auth_config,
-            model='ernie-vilg-v2',
+            model="ernie-vilg-v2",
             prompt=prompt,
             width=w,
             height=h,
-            version='v2',
+            version="v2",
             image_num=1,
         )
-        img_url = response.data['sub_task_result_list'][0]['final_image_list'][
-            0]['img_url']
+        img_url = response.data["sub_task_result_list"][0]["final_image_list"][0]["img_url"]
         res = requests.get(img_url)
-        with open(f"{timestamp}.jpg", 'wb') as f:
+        with open(f"{timestamp}.jpg", "wb") as f:
             f.write(res.content)
         return f"{timestamp}.jpg"
 
@@ -402,38 +400,37 @@ def create_image_tab():
         with gr.Row():
             with gr.Column(scale=1):
                 api_type = gr.Dropdown(
-                    label="API Type",
-                    info="提供文生图能力的后端平台",
-                    value='yinian',
-                    choices=['yinian'])
+                    label="API Type", info="提供文生图能力的后端平台", value="yinian", choices=["yinian"]
+                )
                 access_key = gr.Textbox(
-                    label="AK",
-                    info="用于访问后端平台的AK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="AK", info="用于访问后端平台的AK，如果设置了access token则无需设置此参数", type="password"
+                )
                 secret_key = gr.Textbox(
-                    label="SK",
-                    info="用于访问后端平台的SK，如果设置了access token则无需设置此参数",
-                    type='password')
+                    label="SK", info="用于访问后端平台的SK，如果设置了access token则无需设置此参数", type="password"
+                )
                 access_token = gr.Textbox(
-                    label="Access Token",
-                    info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数",
-                    type='password')
+                    label="Access Token", info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数", type="password"
+                )
             with gr.Column(scale=4):
                 with gr.Row():
-                    prompt = gr.Textbox(
-                        label="Prompt",
-                        placeholder="输入用于生成图片的prompt，例如： 生成一朵玫瑰花")
+                    prompt = gr.Textbox(label="Prompt", placeholder="输入用于生成图片的prompt，例如： 生成一朵玫瑰花")
                     w_and_h = gr.Dropdown(
                         label="分辨率",
-                        value='512x512',
+                        value="512x512",
                         choices=[
-                            '512x512', '640x360', '360x640', '1024x1024',
-                            '1280x720', '720x1280', '2048x2048', '2560x1440',
-                            '1440x2560'
-                        ])
+                            "512x512",
+                            "640x360",
+                            "360x640",
+                            "1024x1024",
+                            "1280x720",
+                            "720x1280",
+                            "2048x2048",
+                            "2560x1440",
+                            "1440x2560",
+                        ],
+                    )
                 submit_btn = gr.Button("生成图片")
-                image_show_zone = gr.Image(
-                    label="图片生成结果", type='filepath', show_download_button=True)
+                image_show_zone = gr.Image(label="图片生成结果", type="filepath", show_download_button=True)
 
         submit_btn.click(
             _gen_image,
@@ -449,6 +446,6 @@ def create_image_tab():
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_setup_args()
     create_ui_and_launch(args)

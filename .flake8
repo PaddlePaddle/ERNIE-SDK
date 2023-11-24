@@ -9,9 +9,8 @@ ignore =
     # Line break before binary operator, as it is not compatible with black.
     W503
 max-line-length = 109
-
 per-file-ignores =
     # Ignore unused imports for __init__.py files.
     __init__.py:F401,
     # Allow long lines for CLI due to argparse.
-    erniebot/cli.py:E501,
+    src/erniebot/cli.py:E501,

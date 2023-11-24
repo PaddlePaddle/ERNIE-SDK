@@ -14,33 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import time
 
 import erniebot
-from erniebot.utils.logging import logger
 
-if __name__ == '__main__':
-    logger.set_level('WARNING')
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING)
 
-    erniebot.api_type = 'qianfan-sft'
+    erniebot.api_type = "qianfan-sft"
 
-    response = erniebot.FineTuningTask.create(
-        name='sft_test', description='test')
+    response = erniebot.FineTuningTask.create(name="sft_test", description="test")
     task_info = response.get_result()
     print(task_info)
 
     train_config = {
-        'epoch': 1,
-        'batchSize': 4,
-        'learningRate': 0.00003,
-        'maxSeqLen': 4096,
+        "epoch": 1,
+        "batchSize": 4,
+        "learningRate": 0.00003,
+        "maxSeqLen": 4096,
     }
-    train_set = [{'type': 2, 'bosPath': "<path-to-dataset>"}]
+    train_set = [{"type": 2, "bosPath": "<path-to-dataset>"}]
     response = erniebot.FineTuningJob.create(
-        task_id=task_info['id'],
+        task_id=task_info["id"],
         description="test",
-        train_mode='SFT',
-        peft_type='LoRA',
+        train_mode="SFT",
+        peft_type="LoRA",
         train_config=train_config,
         train_set=train_set,
         train_set_rate=20,
@@ -50,14 +49,13 @@ if __name__ == '__main__':
 
     vdl_url = None
     while True:
-        response = erniebot.FineTuningJob.query(
-            task_id=task_info['id'], job_id=job_info['id'])
+        response = erniebot.FineTuningJob.query(task_id=task_info["id"], job_id=job_info["id"])
         running_info = response.get_result()
         if vdl_url is None:
-            vdl_url = running_info['vdlLink']
+            vdl_url = running_info["vdlLink"]
             print(f"Check VisualDL logs at {vdl_url}")
-        status = running_info['trainStatus']
-        if status == 'RUNNING':
+        status = running_info["trainStatus"]
+        if status == "RUNNING":
             print(f"Progress: {running_info['progress']}%")
             time.sleep(20)
             continue
