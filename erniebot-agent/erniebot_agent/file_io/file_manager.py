@@ -73,14 +73,14 @@ class FileManager(object):
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
         if file_type == "local":
-            file = await self.create_local_file_from_path(file_path)
+            file = await self.create_local_file(file_path)
         elif file_type == "remote":
             file = await self.create_remote_file_from_path(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
         return file
 
-    async def create_local_file_from_path(self, file_path: _PathType) -> LocalFile:
+    async def create_local_file(self, file_path: _PathType) -> LocalFile:
         file = create_local_file_from_path(file_path)
         if self._auto_register:
             self._file_registry.register_file(file)
@@ -92,11 +92,15 @@ class FileManager(object):
             self._file_registry.register_file(file)
         return file
 
-    async def create_remote_file_from_id(self, file_id: str) -> RemoteFile:
+    async def retrieve_remote_file(self, file_id: str) -> RemoteFile:
         file = await retrieve_remote_file_by_id(file_id, self.remote_file_client)
         if self._auto_register:
             self._file_registry.register_file(file)
         return file
 
-    async def list_remote_files(self) -> List[RemoteFile]:
-        return await list_remote_files(self.remote_file_client)
+    async def retrieve_all_remote_files(self) -> List[RemoteFile]:
+        files = await list_remote_files(self.remote_file_client)
+        if self._auto_register:
+            for file in files:
+                self._file_registry.register_file(file)
+        return files
