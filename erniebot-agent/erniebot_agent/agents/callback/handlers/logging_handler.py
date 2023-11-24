@@ -24,6 +24,7 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.utils.json import to_pretty_json
+from erniebot_agent.utils.text_color import color_text
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
@@ -35,18 +36,30 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
-            "Agent %s starts running with input: %s",
+            "Agent %s starts running with input: \n %s",
             agent,
-            prompt,
+            color_text(prompt, "Blue"),
             level="Run",
             state="Start",
         )
 
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
-        self.agent_info("Agent %s starts running with input: %s", llm, messages, level="LLM", state="Start")
+        self.agent_info(
+            "Agent %s starts running with input: \n %s",
+            llm,
+            color_text(messages, "Yellow"),
+            level="LLM",
+            state="Start",
+        )
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
-        self.agent_info("Agent %s starts running with input: %s", llm, response, level="LLM", state="End")
+        self.agent_info(
+            "Agent %s ends running with output: \n %s",
+            llm,
+            color_text(response, "Yellow"),
+            level="LLM",
+            state="End",
+        )
 
     async def on_llm_error(
         self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
@@ -57,7 +70,10 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "Tool %s starts running with input: \n %s",
             tool,
-            to_pretty_json(input_args, from_json=True),
+            color_text(
+                to_pretty_json(input_args, from_json=True),
+                color="Blue",
+            ),
             level="Tool",
             state="Start",
         )
@@ -66,7 +82,10 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "Tool %s finished running with input: \n %s",
             tool,
-            to_pretty_json(response, from_json=True),
+            color_text(
+                to_pretty_json(response, from_json=True),
+                color="Blue",
+            ),
             level="Tool",
             state="End",
         )
@@ -78,7 +97,11 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
         self.agent_info(
-            "Agent %s finished running with output: %s", agent, response, level="Run", state="End"
+            "Agent %s finished running with output: \n %s",
+            agent,
+            color_text(response, "Blue"),
+            level="Run",
+            state="End",
         )
 
     def agent_info(self, msg: str, *args, level, state, **kwargs) -> None:

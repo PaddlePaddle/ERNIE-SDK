@@ -1,6 +1,6 @@
 import pytest
 from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.tools.calculator_tool import CalculatorTool
+from erniebot_agent.tools.text2img import ImageGenerateTool
 
 from tests.unit_tests.testing_utils.mock_erniebot import MockErnieBot
 
@@ -12,7 +12,7 @@ def llm():
 
 @pytest.fixture(scope="module")
 def tool():
-    return CalculatorTool()
+    return ImageGenerateTool()
 
 
 @pytest.fixture(scope="function")

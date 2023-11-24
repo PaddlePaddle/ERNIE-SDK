@@ -34,8 +34,14 @@ class Message:
         res = ""
         for name in self._param_names:
             value = getattr(self, name)
-            if value is not None and value != "":
-                res += f"{name}: {value}, "
+
+            if isinstance(value, dict):
+                res += f"{name}: \n"
+                for k, v in value.items():
+                    res += f"    {k}: {v}, \n"
+            elif value is not None and value != "":
+                res += f"{name}: \n    {value}, \n"
+
         return res[:-2]
 
 

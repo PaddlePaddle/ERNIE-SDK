@@ -54,7 +54,7 @@ def setup_logging(logger, verbosity: Optional[str] = None, standard_format: Opti
         if not isinstance(numeric_level, int):
             raise ValueError(f"Invalid log level: {verbosity}")
     else:
-        numeric_level = getattr(logging, "INFO", None)
+        numeric_level = getattr(logging, "DEBUG", None)
 
     if not standard_format:
         standard_format = bool(os.environ.get("EB_FORMAT", True))

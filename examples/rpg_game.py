@@ -18,9 +18,19 @@ import argparse
 import os
 import platform
 import sys
+
+<<<<<<< HEAD
 from typing import List
 
 from IPython.display import clear_output as clear
+
+=======
+
+from typing import List
+
+from IPython.display import clear_output as clear
+
+>>>>>>> origin
 
 import erniebot
 
@@ -44,12 +54,17 @@ INSTRUCTION = """你的指令是为我提供一个基于《{SCRIPT}》剧情的�
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="erniebot-RPG")
+<<<<<<< HEAD
     parser.add_argument("--access-token", type=str, default=None, help="Access token to use.")
+=======
+    parser.add_argument("--access-token", type=str, help="Access token to use.")
+>>>>>>> origin
     parser.add_argument("--game", type=str, default="仙剑奇侠传", help="story name")
     parser.add_argument("--model", type=str, default="ernie-bot-4", help="Model name")
     return parser.parse_args()
 
 
+<<<<<<< HEAD
 def get_img(prompt: str) -> None:
     import webuiapi
 
@@ -67,6 +82,8 @@ def get_img(prompt: str) -> None:
     result1.image.save("squirrel.png")
 
 
+=======
+>>>>>>> origin
 def _clear_screen():
     os.system("cls" if platform.system() == "Windows" else "clear")
     if "ipykernel" in sys.modules:
@@ -111,7 +128,11 @@ class RPGGame:
     def clear(self) -> None:
         self.chat_history = [
             {"role": "user", "content": INSTRUCTION.format(SCRIPT=self.script)},
+<<<<<<< HEAD
             {"role": "assistant", "content": f"好的，我将为你提供《{self.script}》沉浸式图文RPG场景体验。"},
+=======
+            {"role": "assistant", "content": "好的，我将为你提供《仙剑奇侠传》沉浸式图文RPG场景体验。"},
+>>>>>>> origin
         ]
 
     def lauch_gradio(self) -> None:
@@ -145,9 +166,12 @@ if __name__ == "__main__":
     args = parse_args()
     game_system = RPGGame(model=args.model, script=args.game)
     game_system.lauch_gradio()
+<<<<<<< HEAD
     # get_img(
     #     erniebot.ChatCompletion.create(
     #     model=args.model,
     #     messages=[{"role": "user", "content": '翻译成英语: 山庄大殿的内部图片，庄主和长老们围坐在一起，背景中透露出庄重的气氛。'}],
     #     ).get_result()
     # )
+=======
+>>>>>>> origin
