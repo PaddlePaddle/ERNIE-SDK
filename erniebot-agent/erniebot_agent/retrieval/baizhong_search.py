@@ -113,7 +113,6 @@ class BaizhongSearch:
             result = res.json()
             if result["errCode"] != 0:
                 raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
-            result = res.json()
             list_data = []
             for item in result["hits"]:
                 content = item["_source"]["doc"]
@@ -132,7 +131,30 @@ class BaizhongSearch:
         return self.add_documents(list_dict)
 
     def get_document_by_id(self, doc_id):
-        raise NotImplementedError
+        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
+        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/get", json=json_data)
+        if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+            return result
+        else:
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
+
+    def delete_document_by_id(self, doc_id):
+        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
+        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/delete", json=json_data)
+        if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+            return result
+        else:
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
 
     def add_documents(self, list_data, batch_size=10):
         for i in tqdm(range(0, len(list_data), batch_size)):
