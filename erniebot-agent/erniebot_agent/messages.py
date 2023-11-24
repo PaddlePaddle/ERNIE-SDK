@@ -10,8 +10,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+
 from dataclasses import dataclass
-from typing import Dict, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict
+
+import erniebot.utils.token_helper as token_helper
+from erniebot_agent.utils.logging import logger
 
 
 class Message:
@@ -26,14 +30,15 @@ class Message:
     @property
     def token_count(self):
         """Get the number of tokens of the message."""
-        assert self._token_count, "The token count of message has not been set before get the token count."
+        if self._token_count is None:
+            raise AttributeError("The token count of the message has not been set.")
         return self._token_count
 
     @token_count.setter
     def token_count(self, token_count: int):
         """Set the number of tokens of the message."""
         if self._token_count is not None:
-            raise ValueError("The token count of message has been set.")
+            raise AttributeError("The token count of the message can only be set once.")
         self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
@@ -49,14 +54,14 @@ class Message:
         return f"<{self.__class__.__name__} {self._get_attrs_str()}>"
 
     def _get_attrs_str(self) -> str:
-        res = ""
+        parts: List[str] = []
         for name in self._param_names:
             value = getattr(self, name)
             if value is not None and value != "":
-                res += f"{name}: {repr(value)}, "
+                parts.append(f"{name}: {repr(value)}")
         if self._token_count is not None:
-            res += f"token_count: {self._token_count}"
-        return res
+            parts.append(f"token_count: {self._token_count}")
+        return ", ".join(parts)
 
 
 class SystemMessage(Message):
@@ -95,10 +100,9 @@ class AIMessage(Message):
     ):
         if token_usage is None:
             prompt_tokens = 0
-            completion_tokens = len(content)
-            Warning(
-                "The token usage is not set in AIMessage,\
-                     the token counts of AIMessage and HumanMessage are not correct."
+            completion_tokens = token_helper.approx_num_tokens(content)
+            logger.warning(
+                "Since no token usage was provided, the token count was approximated and may not be correct."
             )
         else:
             prompt_tokens, completion_tokens = self._parse_token_count(token_usage)
