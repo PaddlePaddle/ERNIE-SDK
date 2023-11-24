@@ -44,7 +44,9 @@ class BaizhongSearch:
                 raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+            raise APIConnectionError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
 
     def create_schema(self):
         json_data = {
