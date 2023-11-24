@@ -14,8 +14,9 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, TypedDict
 
-import erniebot.utils.token_helper as token_helper
 from erniebot_agent.utils.logging import logger
+
+import erniebot.utils.token_helper as token_helper
 
 
 class Message:
