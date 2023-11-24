@@ -44,11 +44,25 @@ INSTRUCTION = """你的指令是为我提供一个基于《{SCRIPT}》剧情的�
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="erniebot-RPG")
-    parser.add_argument("--access-token", type=str, help="Access token to use.")
+    parser.add_argument("--access-token", type=str, default=None, help="Access token to use.")
     parser.add_argument("--game", type=str, default="仙剑奇侠传", help="story name")
     parser.add_argument("--model", type=str, default="ernie-bot-4", help="Model name")
     return parser.parse_args()
 
+def get_img(prompt: str) -> None:
+    import webuiapi
+    api = webuiapi.WebUIApi(host='10.21.226.177', port=8544)
+
+    result1 = api.txt2img(
+        prompt=prompt,
+        negative_prompt="ugly, out of frame",
+        seed=1003,
+        styles=["anime"],
+        cfg_scale=7,
+    )
+    # result1.images
+    # image is shorthand for images[0]
+    result1.image.save('squirrel.png')
 
 def _clear_screen():
     os.system("cls" if platform.system() == "Windows" else "clear")
@@ -128,3 +142,9 @@ if __name__ == "__main__":
     args = parse_args()
     game_system = RPGGame(model=args.model, script=args.game)
     game_system.lauch_gradio()
+    # get_img(
+    #     erniebot.ChatCompletion.create(
+    #     model=args.model,
+    #     messages=[{"role": "user", "content": '翻译成英语: 山庄大殿的内部图片，庄主和长老们围坐在一起，背景中透露出庄重的气氛。'}],
+    #     ).get_result()
+    # )
