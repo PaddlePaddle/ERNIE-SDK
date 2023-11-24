@@ -219,10 +219,9 @@ class RemoteToolkit:
                 for example in examples
                 if isinstance(example, AIMessage) and example.function_call is not None
             ]
-            tool_names = [name for name in tool_names if name is not None]
-            if len(tool_names) == 0:
-                final_exampels.extend(examples)
-            elif tool_name in tool_names:
+            tool_names = [name for name in tool_names if name]
+
+            if tool_name in tool_names:
                 final_exampels.extend(examples)
 
         return final_exampels
@@ -407,7 +406,11 @@ class RemoteToolkit:
                             "arguments": json.dumps(plugin["requestArguments"], ensure_ascii=False),
                         }
                     else:
-                        function_call = {"thoughts": plugin["thoughts"], "arguments": "{}"}  # type: ignore
+                        function_call = {
+                            "name": "",
+                            "thoughts": plugin["thoughts"],
+                            "arguments": "{}",
+                        }  # type: ignore
                     messages.append(
                         AIMessage(
                             "",
