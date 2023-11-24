@@ -13,14 +13,13 @@
 # limitations under the License.
 
 import os
-from typing import List, Literal, Optional, Union, overload
+from typing import Literal, Optional, Union, overload
 
 from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import (
     RemoteFile,
     create_remote_file_from_path,
-    list_remote_files,
     retrieve_remote_file_by_id,
 )
 from erniebot_agent.file_io.remote_file_clients.base import RemoteFileClient
@@ -96,10 +95,3 @@ class FileManager(object):
         if self._auto_register:
             self._file_registry.register_file(file)
         return file
-
-    async def retrieve_all_remote_files(self) -> List[RemoteFile]:
-        files = await list_remote_files(self.remote_file_client)
-        if self._auto_register:
-            for file in files:
-                self._file_registry.register_file(file)
-        return files
