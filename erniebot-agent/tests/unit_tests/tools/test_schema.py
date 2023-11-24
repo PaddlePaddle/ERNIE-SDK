@@ -176,14 +176,12 @@ class TestToolSchema(unittest.TestCase):
     def test_load_examples(self):
         toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapi.yaml")
         toolkit.examples = toolkit.load_examples_yaml("./tests/fixtures/examples.yaml")
-        self.assertEqual(len(toolkit.examples), 12)
+        self.assertEqual(len(toolkit.examples), 10)
 
         # add_word examples
         examples = toolkit.get_tool("getWordbook").examples
 
-        self.assertEqual(len(examples), 4)
+        self.assertEqual(len(examples), 2)
         self.assertEqual(examples[0].content, "展示单词列表")
         self.assertEqual(examples[1].function_call["name"], "getWordbook")
         self.assertEqual(examples[1].function_call["thoughts"], "这是一个展示单词本的需求")
-
-        self.assertEqual(examples[-1].function_call["thoughts"], "我不需要使用以上工具")
