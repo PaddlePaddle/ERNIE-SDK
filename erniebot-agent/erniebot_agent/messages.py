@@ -79,7 +79,7 @@ class HumanMessage(Message):
 
 
 class FunctionCall(TypedDict):
-    name: Optional[str]  # name can be None when the function_call example is not related to any function
+    name: str
     thoughts: str
     arguments: str
 
