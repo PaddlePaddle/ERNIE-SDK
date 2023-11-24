@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -33,8 +32,6 @@ from langchain.schema.messages import (
 )
 from langchain.schema.output import ChatGenerationChunk
 from langchain.utils import get_from_dict_or_env
-
-logger = logging.getLogger(__name__)
 
 _MessageDict = Dict[str, Any]
 

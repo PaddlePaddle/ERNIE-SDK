@@ -17,7 +17,7 @@ from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Any, List, Union, final
 
-from erniebot_agent.agents.callback.events import EventType
+from erniebot_agent.agents.callback.event import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
@@ -40,14 +40,14 @@ class CallbackManager(object):
 
     def add_handler(self, handler: CallbackHandler):
         if handler in self._handlers:
-            raise ValueError(f"The callback handler {handler} is already registered.")
+            raise RuntimeError(f"The callback handler {handler} is already registered.")
         self._handlers.append(handler)
 
     def remove_handler(self, handler):
         try:
             self._handlers.remove(handler)
         except ValueError as e:
-            raise ValueError(f"The callback handler {handler} is not registered.") from e
+            raise RuntimeError(f"The callback handler {handler} is not registered.") from e
 
     def set_handlers(self, handlers: List[CallbackHandler]):
         self._handlers = []

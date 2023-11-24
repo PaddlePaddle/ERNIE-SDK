@@ -38,20 +38,20 @@ class ToolManager(object):
     def add_tool(self, tool: Tool) -> None:
         tool_name = tool.tool_name
         if tool_name in self._tools:
-            raise ValueError(f"Name {repr(tool_name)} is already registered.")
+            raise RuntimeError(f"Name {repr(tool_name)} is already registered.")
         self._tools[tool_name] = tool
 
     def remove_tool(self, tool: Tool) -> None:
         tool_name = tool.tool_name
         if tool_name not in self._tools:
-            raise ValueError(f"Name {repr(tool_name)} is not registered.")
+            raise RuntimeError(f"Name {repr(tool_name)} is not registered.")
         if self._tools[tool_name] is not tool:
-            raise ValueError(f"The tool with the registered name {repr(tool_name)} is not the given tool.")
+            raise RuntimeError(f"The tool with the registered name {repr(tool_name)} is not the given tool.")
         self._tools.pop(tool_name)
 
     def get_tool(self, tool_name: str) -> Tool:
         if tool_name not in self._tools:
-            raise ValueError(f"Name {repr(tool_name)} is not registered.")
+            raise RuntimeError(f"Name {repr(tool_name)} is not registered.")
         return self._tools[tool_name]
 
     def get_tools(self) -> List[Tool]:
