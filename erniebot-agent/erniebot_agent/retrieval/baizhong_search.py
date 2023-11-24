@@ -40,8 +40,7 @@ class BaizhongSearch:
         if res.status_code == 200:
             result = res.json()
             # '{"errCode": 200101, "errMsg": "project name is exist!"}'
-            if result["errCode"] == 200101:
-                logger.info("project name is exist! please change project name and try again")
+            if result["errCode"] != 0:
                 raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
@@ -62,6 +61,9 @@ class BaizhongSearch:
         }
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/create", json=json_data)
         if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
             raise APIConnectionError(
@@ -86,6 +88,9 @@ class BaizhongSearch:
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/update", json=json_data)
         status_code = res.status_code
         if status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
             raise APIConnectionError(
@@ -103,6 +108,9 @@ class BaizhongSearch:
             json_data.update(filterConditions)
         res = requests.post(f"{self.baseUrl}/baizhong/common-search/v2/search", json=json_data)
         if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             result = res.json()
             list_data = []
             for item in result["hits"]:
@@ -130,12 +138,15 @@ class BaizhongSearch:
             json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": batch_data}
             res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
             if res.status_code == 200:
-                continue
+                result = res.json()
+                if result["errCode"] != 0:
+                    raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             else:
+                # TODO(wugaosheng): retry 3 times
                 raise APIConnectionError(
                     message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
                 )
-        return {"message": "success"}
+        return {"errCode": 0, "errMsg": "indexing success!"}
 
     def delete_all_documents(self, project_id: int):
         # Currently delete all documents means delete project
@@ -145,6 +156,9 @@ class BaizhongSearch:
         json_data = {"projectId": project_id}
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project/delete", json=json_data)
         if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
             raise APIConnectionError(
