@@ -49,9 +49,11 @@ def parse_args():
     parser.add_argument("--model", type=str, default="ernie-bot-4", help="Model name")
     return parser.parse_args()
 
+
 def get_img(prompt: str) -> None:
     import webuiapi
-    api = webuiapi.WebUIApi(host='10.21.226.177', port=8544)
+
+    api = webuiapi.WebUIApi(host="10.21.226.177", port=8544)
 
     result1 = api.txt2img(
         prompt=prompt,
@@ -62,7 +64,8 @@ def get_img(prompt: str) -> None:
     )
     # result1.images
     # image is shorthand for images[0]
-    result1.image.save('squirrel.png')
+    result1.image.save("squirrel.png")
+
 
 def _clear_screen():
     os.system("cls" if platform.system() == "Windows" else "clear")
