@@ -50,7 +50,7 @@ class FileManager(object):
     @property
     def remote_file_client(self) -> RemoteFileClient:
         if self._remote_file_client is None:
-            raise RuntimeError("No remote file client is set.")
+            raise AttributeError("No remote file client is set.")
         else:
             return self._remote_file_client
 
