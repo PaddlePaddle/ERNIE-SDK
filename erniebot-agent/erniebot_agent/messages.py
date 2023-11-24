@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from dataclasses import dataclass
 from typing import Dict, List, Optional, TypedDict
 
 from erniebot_agent.utils.logging import logger
@@ -66,14 +65,14 @@ class Message:
 
 
 class SystemMessage(Message):
-    """A message from human to set system information."""
+    """A message from a human to set system information."""
 
     def __init__(self, content: str):
         super().__init__(role="system", content=content)
 
 
 class HumanMessage(Message):
-    """The message from human."""
+    """A message from a human."""
 
     def __init__(self, content: str):
         super().__init__(role="user", content=content)
@@ -91,7 +90,7 @@ class TokenUsage(TypedDict):
 
 
 class AIMessage(Message):
-    """A Message from assistant."""
+    """A message from an assistant."""
 
     def __init__(
         self,
@@ -118,7 +117,7 @@ class AIMessage(Message):
 
 
 class FunctionMessage(Message):
-    """A message from human that contains the result of a function call."""
+    """A message from a human, containing the result of a function call."""
 
     def __init__(self, name: str, content: str):
         super().__init__(role="function", content=content)
@@ -126,8 +125,5 @@ class FunctionMessage(Message):
         self._param_names = ["role", "name", "content"]
 
 
-@dataclass
-class AIMessageChunk(object):
-    content: str
-    function_call: Optional[FunctionCall]
-    token_usage: Optional[TokenUsage]
+class AIMessageChunk(AIMessage):
+    """A message chunk from an assistant."""
