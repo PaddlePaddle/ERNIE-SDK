@@ -82,8 +82,7 @@ class FileManager(object):
 
     async def create_local_file(self, file_path: _PathType) -> LocalFile:
         file = create_local_file_from_path(file_path)
-        if self._auto_register:
-            self._file_registry.register_file(file)
+        self._file_registry.register_file(file)
         return file
 
     async def create_remote_file_from_path(self, file_path: _PathType) -> RemoteFile:
