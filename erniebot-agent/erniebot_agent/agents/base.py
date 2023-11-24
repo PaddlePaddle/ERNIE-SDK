@@ -31,8 +31,6 @@ from erniebot_agent.tools.tool_manager import ToolManager
 class BaseAgent(metaclass=abc.ABCMeta):
     llm: ChatModel
     memory: Memory
-    _tool_manager: ToolManager
-    _callback_manager: CallbackManager
 
     @abc.abstractmethod
     async def async_run(self, prompt: str) -> AgentResponse:

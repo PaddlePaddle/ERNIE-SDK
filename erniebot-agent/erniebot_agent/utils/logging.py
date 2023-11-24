@@ -16,6 +16,10 @@ import logging
 import os
 from typing import Optional
 
+__all__ = ["logger", "setup_logging"]
+
+logger = logging.getLogger("erniebot_agent")
+
 
 class ColorFormatter(logging.Formatter):
     COLORS = {
@@ -33,35 +37,29 @@ class ColorFormatter(logging.Formatter):
         return log_message
 
 
-def setup_logging(logger, verbosity: Optional[str] = None, standard_format: Optional[bool] = True) -> None:
-    """
-    Configures logging for the command.
+def setup_logging(verbosity: Optional[str] = None, use_standard_format: bool = True) -> None:
+    """Configures logging for the ERNIE Bot Agent library.
 
     Args:
-        logger: logger object.
-        verbosity: Optional[str] A value indicating the logging level. Defaults to None.
-        standard_format: Optional[bool] A value indicating whether to use the predefined log format.
-                         Defaults to True.
+        verbosity: A value indicating the logging level.
+        use_standard_format: If True, use the library's standard logging format.
 
     Raises:
-        ValueError: If the provided verbosity is not a valid log level.
+        ValueError: If the provided verbosity is not a valid logging level.
     """
-    if not verbosity:
+    global logger
+
+    if verbosity is None:
         verbosity = os.environ.get("EB_LOGGING_LEVEL", None)
 
-    if verbosity:
+    if verbosity is not None:
         numeric_level = getattr(logging, verbosity.upper(), None)
         if not isinstance(numeric_level, int):
-            raise ValueError(f"Invalid log level: {verbosity}")
-    else:
-        numeric_level = getattr(logging, "INFO", None)
+            raise ValueError(f"Invalid logging level: {verbosity}")
 
-    if not standard_format:
-        standard_format = bool(os.environ.get("EB_FORMAT", True))
-
-    if standard_format:
         logger.setLevel(numeric_level)
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
-        logger.addHandler(console_handler)
         logger.propagate = False
+        if use_standard_format and not logger.hasHandlers():
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
+            logger.addHandler(console_handler)

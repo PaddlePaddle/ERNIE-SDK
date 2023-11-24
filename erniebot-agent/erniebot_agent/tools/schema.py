@@ -18,10 +18,9 @@ import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Type, get_args
 
+from erniebot_agent.utils.logging import logger
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
-
-from erniebot.utils.logging import logger
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 

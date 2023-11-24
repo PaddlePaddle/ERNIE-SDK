@@ -30,13 +30,13 @@ from erniebot_agent.tools.schema import (
     ToolParameterView,
     scrub_dict,
 )
-from erniebot_agent.utils.http_util import url_file_exists
+from erniebot_agent.utils.http import url_file_exists
+from erniebot_agent.utils.logging import logger
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
 import erniebot
-from erniebot.utils.logging import logger
 
 
 def validate_openapi_yaml(yaml_file: str) -> bool:
