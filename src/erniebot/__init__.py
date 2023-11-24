@@ -48,8 +48,8 @@ __all__ = [
     "ChatCompletionResponse",
     "EmbeddingResponse",
     "ImageResponse",
-    "__version__",
     "GlobalConfig",
+    "__version__",
 ]
 
 _init_global_config()

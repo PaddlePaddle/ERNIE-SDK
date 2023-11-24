@@ -11,106 +11,186 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from typing import List, Optional
-from yaml import safe_dump
 
-from docstring_parser import DocstringParam, DocstringReturns
+import inspect
+from dataclasses import dataclass
+from typing import List, Optional, Type, get_args
+
+from erniebot_agent.utils.logging import logger
+from pydantic import BaseModel, Field, create_model
+from pydantic.fields import FieldInfo
+
+INVALID_FIELD_NAME = "__invalid_field_name__"
 
 
-def scrub_dict(d):
-    """remove empty Value node
+def is_optional_type(type: Type):
+    args = get_args(type)
+    if len(args) == 0:
+        return False
+
+    return len([arg for arg in args if arg is None.__class__]) > 0
+
+
+def get_typing_list_type(type):
+    """get typing.List[T] element type
+
+    Args:
+        type (typing.List): Generics type
+    """
+    # 1. checking list type
+    if getattr(type, "_name", None) != "List":
+        return None
+
+    arg_type = get_args(type)[0]
+    return json_type(arg_type)
+
+
+def json_type(type: Optional[Type[object]] = None):
+    if type is None:
+        return "object"
+
+    mapping = {
+        int: "integer",
+        str: "string",
+        list: "array",
+        List: "array",
+        float: "number",
+        ToolParameterView: "object",
+    }
+
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
+        return "object"
+
+    if getattr(type, "_name", None) == "List":
+        return "array"
+
+    if type not in mapping:
+        args = [arg for arg in get_args(type) if arg is not None.__class__]
+        if len(args) > 1 or len(args) == 0:
+            raise ValueError(
+                "only support simple type: FieldType=int/str/float/ToolParameterView, "
+                "so the target type should be one of: FieldType, List[FieldType], "
+                f"Optional[FieldType], but receive {type}"
+            )
+        type = args[0]
+
+    if type in mapping:
+        return mapping[type]
+
+    if inspect.isclass(type) and issubclass(type, ToolParameterView):
+        return "object"
+
+    return str(type)
+
+
+def python_type_from_json_type(json_type_dict: dict) -> Type[object]:
+    simple_types = {"integer": int, "string": str, "number": float, "object": ToolParameterView}
+    if json_type_dict["type"] in simple_types:
+        return simple_types[json_type_dict["type"]]
+
+    assert (
+        json_type_dict["type"] == "array"
+    ), f"only support simple_types<{','.join(simple_types)}> and array type"
+    assert "type" in json_type_dict["items"], "<items> field must be defined when 'type'=array"
+
+    json_type_value = json_type_dict["items"]["type"]
+    if json_type_value == "string":
+        return List[str]
+    if json_type_value == "integer":
+        return List[int]
+    if json_type_value == "number":
+        return List[float]
+    if json_type_value == "object":
+        return List[ToolParameterView]
+
+    raise ValueError(f"unsupported data type: {json_type_value}")
+
+
+def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
+    """remove empty Value node,
+
+        function_call_schema: require
 
     Args:
         d (dict): the instance of dictionary
+        remove_empty_dict (bool): whether remove empty dict
 
     Returns:
         dict: the dictionary data after slimming down
     """
     if type(d) is dict:
-        if len(d) == 0:
-            return {}
-
         result = {}
         for k, v in d.items():
-            if v is None:
-                continue
-            result[k] = v
+            v = scrub_dict(v, remove_empty_dict)
+            if v is not None:
+                result[k] = v
+
+        if len(result) == 0:
+            if not remove_empty_dict:
+                return {}
+            return None
+
         return result
+    elif isinstance(d, list):
+        return [scrub_dict(item, remove_empty_dict) for item in d]  # type: ignore
     else:
         return d
 
 
-@dataclass
-class ParameterView:
-    """function parameter object"""
-    type: Optional[str] = None
+class OpenAPIProperty(BaseModel):
+    type: str
     description: Optional[str] = None
-    items: dict = field(default_factory=dict)
-    name: Optional[str] = None
-    default_value: Optional[str] = None
-    required: Optional[bool] = True
-
-    @property
-    def json_type(self):
-        mapping = {"int": "integer", "str": "string"}
-        if self.type in mapping:
-            return mapping[self.type]
-        return self.type
-
-    def to_openapi_dict(self):
-        return {
-            "type": self.json_type,
-            "description": self.description,
-            "items": self.items,
-        }
+    required: Optional[List[str]] = None
+    items: dict = Field(default_factory=dict)
+    properties: dict = Field(default_factory=dict)
 
 
-@dataclass
-class ParametersView:
-    """a set of parameters which can be input or output of function"""
-    parameters: List[ParameterView]
-    name: Optional[str] = None
-    code: int = 200
-    type: str = "object"
+def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
+    """convert pydantic FieldInfo instance to OpenAPIProperty value
 
-    @staticmethod
-    def from_docstring(params: List[DocstringParam] | DocstringReturns |
-                       None) -> Optional[ParametersView]:
-        """parse docstring param to ParameterView
+    Args:
+        field_info (FieldInfo): the field instance
 
-        Args:
-            params (List[DocstringParam]): the list of parameter view
+    Returns:
+        OpenAPIProperty: the converted OpenAPI Property
+    """
+    typing_list_type = get_typing_list_type(field_info.annotation)
+    if typing_list_type is not None:
+        field_type = "array"
+    elif is_optional_type(field_info.annotation):
+        field_type = json_type(get_args(field_info.annotation)[0])
+    else:
+        field_type = json_type(field_info.annotation)
 
-        Returns:
-            ParametersView: the instance of ParametersView
-        """
-        if params is None:
-            return None
+    property = {
+        "type": field_type,
+        "description": field_info.description,
+    }
 
-        parameters = []
-        if isinstance(params, DocstringReturns):
-            # only support one return value
-            return ParametersView(parameters=[
-                ParameterView(
-                    type=params.type_name,
-                    description=params.description,
-                    name=params.return_name)
-            ])
+    if property["type"] == "array":
+        if typing_list_type == "object":
+            list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+            property["items"] = list_type.to_openapi_dict()
+        else:
+            property["items"] = {"type": typing_list_type}
+    elif property["type"] == "object":
+        if is_optional_type(field_info.annotation):
+            field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+        else:
+            field_type_class = field_info.annotation
 
-        for param in params:
-            parameter_view = ParameterView(
-                type=param.type_name or "",
-                description=param.description,
-                name=param.arg_name,
-                default_value=param.default,
-                required=not param.is_optional)
-            parameters.append(parameter_view)
-        return ParametersView(parameters=parameters)
+        openapi_dict = field_type_class.to_openapi_dict()
+        property.update(openapi_dict)
 
-    @staticmethod
-    def from_openapi_dict(name, schema: dict) -> ParametersView:
+    property["description"] = property.get("description", "")
+    return OpenAPIProperty(**property)
+
+
+class ToolParameterView(BaseModel):
+    @classmethod
+    def from_openapi_dict(cls, name, schema: dict) -> Type[ToolParameterView]:
         """parse openapi component schemas to ParameterView
         Args:
             response_or_returns (dict): the content of status code
@@ -118,58 +198,73 @@ class ParametersView:
         Returns:
             _type_: _description_
         """
-        parameters = []
-        for parameter_name, parameter_info in schema.get("properties",
-                                                         {}).items():
-            parameter = ParameterView(name=parameter_name, **parameter_info)
-            parameter.required = parameter_name in schema.get("required", [])
-            parameters.append(parameter)
-        return ParametersView(parameters=parameters, name=name)
 
-    def to_openapi_dict(self) -> dict:
+        # TODO(wj-Mcat): to load Optional field
+        fields = {}
+        for field_name, field_dict in schema.get("properties", {}).items():
+            field_type = python_type_from_json_type(field_dict)
+
+            if field_type is List[ToolParameterView]:
+                SubParameterView: Type[ToolParameterView] = ToolParameterView.from_openapi_dict(
+                    field_name, field_dict["items"]
+                )
+                field_type = List[SubParameterView]  # type: ignore
+
+            # TODO(wj-Mcat): remove supporting for `summary` field
+            if "summary" in field_dict:
+                description = field_dict["summary"]
+                logger.info("`summary` field will be deprecated, please use `description`")
+
+                if "description" in field_dict:
+                    logger.info("`description` field will be used instead of `summary`")
+                    description = field_dict["description"]
+            else:
+                description = field_dict.get("description", None)
+
+            description = description or ""
+
+            field = FieldInfo(annotation=field_type, description=description)
+
+            # TODO(wj-Mcat): to handle list field required & not-required
+            # if get_typing_list_type(field_type) is not None:
+            #     field.default_factory = list
+
+            fields[field_name] = (field_type, field)
+
+        return create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+
+    @classmethod
+    def to_openapi_dict(cls) -> dict:
         """convert ParametersView to openapi spec dict
 
         Returns:
             dict: schema of openapi
         """
-        return {
+
+        required_names, properties = [], {}
+        for field_name, field_info in cls.model_fields.items():
+            if field_info.is_required() and not is_optional_type(field_info.annotation):
+                required_names.append(field_name)
+
+            properties[field_name] = dict(get_field_openapi_property(field_info))
+
+        result = {
             "type": "object",
-            "required": [
-                parameter_view.name for parameter_view in self.parameters
-                if parameter_view.required
-            ],
-            "properties": {
-                parameter_view.name: parameter_view.to_openapi_dict()
-                for parameter_view in self.parameters if parameter_view.required
-            }
+            "properties": properties,
         }
+        if len(required_names) > 0:
+            result["required"] = required_names
+        result = scrub_dict(result, remove_empty_dict=True)  # type: ignore
+        return result or {}
 
-    def to_function_inputs(self) -> dict:
-        if not self.parameters:
-            return {"type": "object", "properties": {}}
+    @classmethod
+    def function_call_schema(cls) -> dict:
+        """get function_call schame
 
-        params = {
-            param.name: param.to_openapi_dict()
-            for param in self.parameters if param.name
-        }
-        return {
-            "type": "object",
-            "properties": params,
-            "required": [
-                param.name for param in self.parameters
-                if param.required and param.name
-            ]
-        }
-
-
-@dataclass
-class ToolView:
-    """the view of one tool"""
-    name: str
-    description: str
-    parameters: Optional[ParametersView] = None
-    returns: Optional[ParametersView] = None
-    examples: Optional[List[dict]] = None
+        Returns:
+            dict: the schema of function_call
+        """
+        return cls.to_openapi_dict()
 
 
 @dataclass
@@ -178,15 +273,18 @@ class RemoteToolView:
     method: str
     name: str
     description: str
-    parameters: Optional[ParametersView] = None
+    parameters: Optional[Type[ToolParameterView]] = None
     parameters_description: Optional[str] = None
-    returns: Optional[ParametersView] = None
+    returns: Optional[Type[ToolParameterView]] = None
     returns_description: Optional[str] = None
+
+    returns_ref_uri: Optional[str] = None
+    parameters_ref_uri: Optional[str] = None
 
     def to_openapi_dict(self):
         result = {
             "operationId": self.name,
-            "summary": self.description,
+            "description": self.description,
         }
         if self.returns is not None:
             response = {
@@ -194,12 +292,9 @@ class RemoteToolView:
                     "description": self.returns_description,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/" +
-                                (self.returns.name or "")
-                            }
+                            "schema": {"$ref": "#/components/schemas/" + (self.returns_ref_uri or "")}
                         }
-                    }
+                    },
                 }
             }
             result["responses"] = response
@@ -209,63 +304,77 @@ class RemoteToolView:
                 "required": True,
                 "content": {
                     "application/json": {
-                        "schema": {
-                            "$ref": "#/components/schemas/" +
-                            (self.parameters.name or "")
-                        }
+                        "schema": {"$ref": "#/components/schemas/" + (self.parameters_ref_uri or "")}
                     }
-                }
+                },
             }
             result["requestBody"] = parameters
         return {self.method: result}
 
     @staticmethod
     def from_openapi_dict(
-            uri: str,
-            method: str,
-            path_info: dict,
-            parameters_views: dict[str, ParametersView]) -> RemoteToolView:
+        uri: str, method: str, path_info: dict, parameters_views: dict[str, Type[ToolParameterView]]
+    ) -> RemoteToolView:
         """construct RemoteToolView from openapi spec-dict info
 
         Args:
             uri (str): the url path of remote tool
             method (str): http method: one of [get, post, put, delete]
             path_info (dict): the spec info of remote tool
-            parameters_views (dict[str, ParametersView]): the dict of parameters views which are the schema of input/output of tool
+            parameters_views (dict[str, ParametersView]):
+                the dict of parameters views which are the schema of input/output of tool
 
         Returns:
             RemoteToolView: the instance of remote tool view
         """
+        parameters_ref_uri, returns_ref_uri = None, None
         parameters, parameters_description = None, None
         if "requestBody" in path_info:
-            request_ref = path_info["requestBody"]["content"][
-                "application/json"]["schema"]["$ref"]
-            request_ref_uri = request_ref.split("/")[-1]
-            assert request_ref_uri in parameters_views
-            parameters = parameters_views[request_ref_uri]
-            parameters_description = path_info["requestBody"].get("description",
-                                                                  None)
+            request_ref = path_info["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+            parameters_ref_uri = request_ref.split("/")[-1]
+            assert parameters_ref_uri in parameters_views
+            parameters = parameters_views[parameters_ref_uri]
+            parameters_description = path_info["requestBody"].get("description", None)
 
         returns, returns_description = None, None
         if "responses" in path_info:
-            response_ref = list(path_info["responses"].values())[0]["content"][
-                "application/json"]["schema"]["$ref"]
-            response_ref_uri = response_ref.split("/")[-1]
-            assert response_ref_uri in parameters_views
-            returns = parameters_views[response_ref_uri]
-            returns_description = list(path_info["responses"].values())[0].get(
-                "description", None)
+            response_ref = list(path_info["responses"].values())[0]["content"]["application/json"]["schema"][
+                "$ref"
+            ]
+            returns_ref_uri = response_ref.split("/")[-1]
+            assert returns_ref_uri in parameters_views
+            returns = parameters_views[returns_ref_uri]
+            returns_description = list(path_info["responses"].values())[0].get("description", None)
 
         return RemoteToolView(
-            name=path_info['operationId'],
+            name=path_info["operationId"],
             parameters=parameters,
             parameters_description=parameters_description,
             returns=returns,
             returns_description=returns_description,
-            description=path_info['summary'],
+            description=path_info.get("description", path_info.get("summary", None)),
             method=method,
             uri=uri,
+            # save ref id info
+            returns_ref_uri=returns_ref_uri,
+            parameters_ref_uri=parameters_ref_uri,
         )
+
+    def function_call_schema(self):
+        inputs = {
+            "name": self.name,
+            "description": self.description,
+            # TODO(wj-Mcat): read examples from openapi.yaml
+            # "examples": [example.to_dict() for example in self.examples],
+        }
+        if self.parameters is not None:
+            inputs["parameters"] = self.parameters.function_call_schema()  # type: ignore
+        else:
+            inputs["parameters"] = {"type": "object", "properties": {}}
+
+        if self.returns is not None:
+            inputs["responses"] = self.returns.function_call_schema()  # type: ignore
+        return scrub_dict(inputs) or {}
 
 
 @dataclass
@@ -278,85 +387,3 @@ class EndpointInfo:
     title: str
     description: str
     version: str
-
-
-@dataclass
-class PluginSchema:
-    """plugin schema object which be converted from Toolkit and generate openapi configuration file"""
-    openapi: str
-    info: EndpointInfo
-    servers: List[Endpoint]
-    paths: List[RemoteToolView]
-
-    component_schemas: dict[str, ParametersView]
-
-    def to_openapi_dict(self) -> dict:
-        """convert plugin schema to openapi spec dict"""
-        spec_dict = {
-            "openapi": self.openapi,
-            "info": asdict(self.info),
-            "servers": [asdict(server) for server in self.servers],
-            "paths": {
-                tool_view.uri: tool_view.to_openapi_dict()
-                for tool_view in self.paths
-            },
-            "components": {
-                "schemas": {
-                    uri: parameters_view.to_openapi_dict()
-                    for uri, parameters_view in self.component_schemas.items()
-                }
-            }
-        }
-        return scrub_dict(spec_dict)
-
-    def to_openapi_file(self, file: str):
-        """generate openapi configuration file
-
-        Args:
-            file (str): the path of the openapi yaml file
-        """
-        spec_dict = self.to_openapi_dict()
-        with open(file, "w+", encoding='utf-8') as f:
-            safe_dump(spec_dict, f, indent=4)
-
-    @staticmethod
-    def from_openapi_file(file: str) -> PluginSchema:
-        """only support openapi v3.0.1
-
-        Args:
-            file (str): the path of openapi yaml file
-        """
-        from openapi_spec_validator import validate
-        from openapi_spec_validator.readers import read_from_filename
-        spec_dict, base_uri = read_from_filename(file)
-        validate(spec_dict)
-
-        # info
-        info = EndpointInfo(**spec_dict["info"])
-        servers = [
-            Endpoint(**server) for server in spec_dict.get("servers", [])
-        ]
-
-        # components
-        component_schemas = spec_dict["components"]["schemas"]
-        parameters_views = {}
-        for name, schema in component_schemas.items():
-            parameters_view = ParametersView.from_openapi_dict(name, schema)
-            parameters_views[name] = parameters_view
-
-        # paths
-        paths = []
-        for path, path_info in spec_dict.get("paths", {}).items():
-            for method, path_method_info in path_info.items():
-                paths.append(
-                    RemoteToolView.from_openapi_dict(
-                        uri=path,
-                        method=method,
-                        path_info=path_method_info,
-                        parameters_views=parameters_views))
-        return PluginSchema(
-            openapi=spec_dict["openapi"],
-            info=info,
-            servers=servers,
-            paths=paths,
-            component_schemas=parameters_views)

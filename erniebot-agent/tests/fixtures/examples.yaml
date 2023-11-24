@@ -1,0 +1,70 @@
+version: 0.0.1
+examples:
+      - context: # 对话历史
+          - role: user
+            content: 请帮我添加一个单词Hello
+          - role: bot
+            # 触发插件
+            plugin:
+              # 应当触发的接口operationId
+              operationId: addWord
+              # 思考过程，对触发有帮助
+              thoughts: 这是一个插入单词到单词本的需求
+              requestArguments:
+                word: "Hello"
+                query: 请帮我添加一个单词Hello
+          - role: user
+            content: 展示单词列表
+          - role: bot
+            # 触发插件
+            plugin:
+              # 应当触发的接口operationId
+              operationId: getWordbook
+              # 思考过程，对触发有帮助
+              thoughts: 这是一个展示单词本的需求
+              requestArguments:
+                query: 展示单词列表
+          - role: user
+            content: 请帮我添加一个单词World
+          - role: bot
+            # 触发插件
+            plugin:
+              # 应当触发的接口operationId
+              operationId: addWord
+              # 思考过程，对触发有帮助
+              thoughts: 这是一个插入单词到单词本的需求
+              requestArguments:
+                word: "World"
+                query: 请帮我添加一个单词World
+          - role: user
+            content: 我要背两个单词
+          - role: bot
+            # 触发插件
+            plugin:
+              # 应当触发的接口operationId
+              operationId: generateSentences
+              # 思考过程，对触发有帮助
+              thoughts: 这是一个从单词本中抽取单词生成句子的需求
+              requestArguments:
+                word_number: 2
+                query: 我要背两个单词
+          - role: user
+            content: 删除单词Hello
+          - role: bot
+            # 触发插件
+            plugin:
+              # 应当触发的接口operationId
+              operationId: deleteWord
+              # 思考过程，对触发有帮助
+              thoughts: 这是一个从单词本中删除单词的需求
+              requestArguments:
+                word: "Hello"
+                query: 删除单词Hello
+      # 反例，无需触发此插件的任一某个接口
+      - context:
+          - role: user
+            content: 怎么养成记单词的习惯?
+          - role: bot
+            # 无需触发
+            plugin:
+              thoughts: 我不需要使用以上工具

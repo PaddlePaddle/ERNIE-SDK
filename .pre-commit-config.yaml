@@ -17,7 +17,8 @@ repos:
     rev: v1.6.1
     hooks:
     -   id: mypy
-        additional_dependencies: [types-requests]
+        exclude: ^(setup\.py|.*tests.*)$
+        additional_dependencies: ['types-requests', 'types-PyYAML']
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: a11d9314b22d8f8c7556443875b731ef05965464
     hooks:
