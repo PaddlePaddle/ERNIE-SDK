@@ -28,8 +28,8 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             str(messages),
             (
-                "[<HumanMessage role: 'user', content: 'A'>, "
-                "<AIMessage role: 'assistant', content: 'B', token_count: 1>]",
+                "[<HumanMessage role: 'user', content: 'A'>"
+                ", <AIMessage role: 'assistant', content: 'B', token_count: 1>]",
             ),
         )
 
