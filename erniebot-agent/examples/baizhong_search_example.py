@@ -59,10 +59,10 @@ if __name__ == "__main__":
         projectId=args.project_id,
     )
     # look up the document by id
-    # doc_id = "be1a9ef5-0375-4999-8b65-04c569bcaa63"
-    # msg = aurora_db.get_document_by_id(doc_id=doc_id)
+    # doc_ids = ["be1a9ef5-0375-4999-8b65-04c569bcaa63"]
+    # msg = aurora_db.delete_documents(ids=doc_id)
     # delete the document by id
-    # msg = aurora_db.delete_document_by_id(doc_id=doc_id)
+    # msg = aurora_db.delete_documents(ids=doc_id)
     if args.indexing:
         offline_ann(args.data_path, aurora_db)
 
