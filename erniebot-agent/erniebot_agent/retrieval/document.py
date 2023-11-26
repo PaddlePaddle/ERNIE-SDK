@@ -10,7 +10,7 @@ BaseConfig.arbitrary_types_allowed = True
 
 @dataclass
 class Document:
-    id: Optional[str]
+    id: str
     title: str
     content_se: str
     meta: Dict[str, Any]
