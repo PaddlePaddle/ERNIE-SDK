@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-class APIConnectionError(Exception):
+class BaizhongError(Exception):
     """Exception for issues that occur in a document store"""
 
     def __init__(self, message: Optional[str] = None, error_code: Optional[str] = None):

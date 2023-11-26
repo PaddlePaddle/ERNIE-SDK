@@ -1,9 +1,10 @@
 import base64
 import json
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 import requests
-from erniebot_agent.utils.exception import APIConnectionError
+from erniebot_agent.utils.exception import BaizhongError
 from tqdm import tqdm
 
 from erniebot.utils.logging import logger
@@ -39,12 +40,11 @@ class BaizhongSearch:
         res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project/add", json=json_data)
         if res.status_code == 200:
             result = res.json()
-            # '{"errCode": 200101, "errMsg": "project name is exist!"}'
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
@@ -65,10 +65,10 @@ class BaizhongSearch:
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
@@ -92,10 +92,10 @@ class BaizhongSearch:
         if status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
-            return res.json()
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
+            return result
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
@@ -112,7 +112,7 @@ class BaizhongSearch:
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             list_data = []
             for item in result["hits"]:
                 content = item["_source"]["doc"]
@@ -121,14 +121,20 @@ class BaizhongSearch:
                 list_data.append(json_data)
             return list_data
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
-    def indexing(self, list_data: List[Document], batch_size: int = 10):
+    def indexing(self, list_data: List[Document], batch_size: int = 10, thread_count: int = 2):
         if type(list_data[0]) == Document:
-            list_dict = [item.to_dict() for item in list_data]
-        return self.add_documents(list_dict, batch_size=batch_size)
+            list_dicts = [item.to_dict() for item in list_data]
+        all_data = []
+        for i in tqdm(range(0, len(list_dicts), batch_size)):
+            batch_data = list_data[i : i + batch_size]
+            all_data.append(batch_data)
+        with ThreadPoolExecutor(max_workers=thread_count) as executor:
+            res = executor.map(self.add_documents, all_data)
+        return res
 
     def get_document_by_id(self, doc_id):
         json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
@@ -136,55 +142,58 @@ class BaizhongSearch:
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
-    def delete_document_by_id(self, doc_id):
-        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
+    def delete_documents(
+        self,
+        ids: Optional[List[str]] = None,
+    ):
+        json_data = {"projectId": self.projectId, "followIndexFlag": True}
+        if ids:
+            json_data["dataBody"] = ids
+        else:
+            # TODO: delete all documents
+            raise NotImplementedError
         res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/delete", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
 
-    def add_documents(self, list_data, batch_size=10):
-        for i in tqdm(range(0, len(list_data), batch_size)):
-            batch_data = list_data[i : i + batch_size]
-            json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": batch_data}
-            res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
-            if res.status_code == 200:
-                result = res.json()
-                if result["errCode"] != 0:
-                    raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
-            else:
-                # TODO(wugaosheng): retry 3 times
-                raise APIConnectionError(
-                    message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-                )
-        return {"errCode": 0, "errMsg": "indexing success!"}
-
-    def delete_all_documents(self, project_id: int):
-        # Currently delete all documents means delete project
-        self.delete_project(project_id)
-
-    def delete_project(self, project_id: int):
-        json_data = {"projectId": project_id}
-        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project/delete", json=json_data)
+    def add_documents(self, list_data):
+        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": list_data}
+        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
-                raise APIConnectionError(message=result["errMsg"], error_code=result["errCode"])
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
+            return result
+        else:
+            # TODO(wugaosheng): retry 3 times
+            raise BaizhongError(
+                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
+            )
+
+    @classmethod
+    def delete_project(cls, project_id: int):
+        json_data = {"projectId": project_id}
+        res = requests.post(f"{cls.baseUrl}/baizhong/web-api/v2/project/delete", json=json_data)
+        if res.status_code == 200:
+            result = res.json()
+            if result["errCode"] != 0:
+                raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
-            raise APIConnectionError(
+            raise BaizhongError(
                 message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
             )
