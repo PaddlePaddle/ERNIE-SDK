@@ -15,6 +15,7 @@ from erniebot_agent.tools.baizhong_tool import (
 )
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
+from tqdm import tqdm
 
 import erniebot
 
@@ -39,7 +40,7 @@ def offline_ann(data_path, aurora_db):
     text_splitter = SpacyTextSplitter(pipeline="zh_core_web_sm", chunk_size=1500, chunk_overlap=0)
     docs = text_splitter.split_documents(documents)
     list_data = []
-    for item in docs:
+    for item in tqdm(docs):
         doc_title = item.metadata["source"].split("/")[-1]
         doc_content = item.page_content
         example = {"title": doc_title, "content_se": doc_content}
