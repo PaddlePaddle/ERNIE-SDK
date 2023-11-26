@@ -28,7 +28,7 @@ class BaizhongSearch:
             logger.info("Schema creation succeeded")
 
         else:
-            logger.info("Use existed project")
+            logger.info("Loading existing project with `project_id={projectId}`")
             self.projectId = projectId
 
     def create_project(self):
