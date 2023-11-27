@@ -40,7 +40,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
 
     @pytest.mark.asyncio
     async def test_limit_token_memory_truncate_tokens_system_message(
-        self, k=5
+        self, k=10
     ):  # truncate through returned message
         # The memory
         memory = LimitTokensMemory(100)
