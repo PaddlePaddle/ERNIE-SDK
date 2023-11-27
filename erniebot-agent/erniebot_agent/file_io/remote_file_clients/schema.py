@@ -12,8 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.utils.logging import logger, setup_logging
+from dataclasses import dataclass
 
-__all__ = ["logger"]
 
-setup_logging()
+@dataclass
+class FileContent(object):
+    content: bytes
+
+
+@dataclass
+class FileInfo(object):
+    id: str
+    filename: str
+    created_at: int

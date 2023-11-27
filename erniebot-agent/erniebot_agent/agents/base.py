@@ -23,7 +23,7 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import AIMessage, Message
+from erniebot_agent.messages import AIMessage, Message, SystemMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.tool_manager import ToolManager
 
@@ -31,8 +31,6 @@ from erniebot_agent.tools.tool_manager import ToolManager
 class BaseAgent(metaclass=abc.ABCMeta):
     llm: ChatModel
     memory: Memory
-    _tool_manager: ToolManager
-    _callback_manager: CallbackManager
 
     @abc.abstractmethod
     async def async_run(self, prompt: str) -> AgentResponse:
@@ -45,12 +43,18 @@ class Agent(BaseAgent):
         llm: ChatModel,
         tools: Union[ToolManager, List[Tool]],
         memory: Memory,
+        system_message: Optional[SystemMessage] = None,
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
         self.memory = memory
+        # system message exist in memory, or it can be overwrite by the system_message paased in the Agent.
+        if system_message:
+            self.system_message = system_message
+        else:
+            self.system_message = memory.get_system_message()
         if isinstance(tools, ToolManager):
             self._tool_manager = tools
         else:

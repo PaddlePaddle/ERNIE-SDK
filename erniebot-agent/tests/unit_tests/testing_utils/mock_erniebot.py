@@ -40,5 +40,5 @@ class MockErnieBot:
         return AIMessage(
             content="Text response",
             function_call=None,
-            token_usage={"prompt_tokens": 6, "completion_tokens": 2},
+            token_usage=None,
         )

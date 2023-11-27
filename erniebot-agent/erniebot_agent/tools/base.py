@@ -30,13 +30,13 @@ from erniebot_agent.tools.schema import (
     ToolParameterView,
     scrub_dict,
 )
-from erniebot_agent.utils.http_util import url_file_exists
+from erniebot_agent.utils.http import url_file_exists
+from erniebot_agent.utils.logging import logger
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
 import erniebot
-from erniebot.utils.logging import logger
 
 
 def validate_openapi_yaml(yaml_file: str) -> bool:
@@ -219,10 +219,9 @@ class RemoteToolkit:
                 for example in examples
                 if isinstance(example, AIMessage) and example.function_call is not None
             ]
-            tool_names = [name for name in tool_names if name is not None]
-            if len(tool_names) == 0:
-                final_exampels.extend(examples)
-            elif tool_name in tool_names:
+            tool_names = [name for name in tool_names if name]
+
+            if tool_name in tool_names:
                 final_exampels.extend(examples)
 
         return final_exampels
@@ -407,7 +406,11 @@ class RemoteToolkit:
                             "arguments": json.dumps(plugin["requestArguments"], ensure_ascii=False),
                         }
                     else:
-                        function_call = {"thoughts": plugin["thoughts"], "arguments": "{}"}  # type: ignore
+                        function_call = {
+                            "name": "",
+                            "thoughts": plugin["thoughts"],
+                            "arguments": "{}",
+                        }  # type: ignore
                     messages.append(
                         AIMessage(
                             "",

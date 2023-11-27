@@ -1,3 +1,5 @@
+anyio
+bce-python-sdk
 erniebot
 PyYAML
 openapi_spec_validator
