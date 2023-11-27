@@ -176,7 +176,7 @@ class TestToolSchema(unittest.TestCase):
     def test_load_examples(self):
         toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapi.yaml")
         toolkit.examples = toolkit.load_examples_yaml("./tests/fixtures/examples.yaml")
-        self.assertEqual(len(toolkit.examples), 10)
+        self.assertEqual(len(toolkit.examples), 12)
 
         # add_word examples
         examples = toolkit.get_tool("getWordbook").examples
