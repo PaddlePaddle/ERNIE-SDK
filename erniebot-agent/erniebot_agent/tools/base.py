@@ -258,9 +258,11 @@ class RemoteToolkit:
         spec_dict = self.to_openapi_dict()
         with open(file, "w+", encoding="utf-8") as f:
             safe_dump(spec_dict, f, indent=4)
-        
+
     @classmethod
-    def from_openapi_dict(cls, openapi_dict: Dict[str, Any], access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_openapi_dict(
+        cls, openapi_dict: Dict[str, Any], access_token: Optional[str] = None
+    ) -> RemoteToolkit:
         info = EndpointInfo(**openapi_dict["info"])
         servers = [Endpoint(**server) for server in openapi_dict.get("servers", [])]
 
@@ -292,7 +294,7 @@ class RemoteToolkit:
             component_schemas=fields,
             headers=cls._get_authorization_headers(access_token),
         )  # type: ignore
-    
+
     @classmethod
     def from_openapi_file(cls, file: str, access_token: Optional[str] = None) -> RemoteToolkit:
         """only support openapi v3.0.1
@@ -410,7 +412,6 @@ class RemoteToolkit:
                     raise ValueError(f"invald role: <{example['role']}>")
         return messages
 
-    
     @classmethod
     def load_examples_yaml(cls, file: str) -> List[Message]:
         """load examples from yaml file
@@ -426,6 +427,5 @@ class RemoteToolkit:
             raise ValueError("invalid examples configuration file")
         return cls.load_examples_dict(content)
 
-        
     def function_call_schemas(self) -> List[dict]:
         return [tool.function_call_schema() for tool in self.get_tools()]
