@@ -402,12 +402,7 @@ class RemoteToolkit:
                             "thoughts": plugin["thoughts"],
                             "arguments": "{}",
                         }  # type: ignore
-                    messages.append(
-                        AIMessage(
-                            "",
-                            function_call=function_call,
-                        )
-                    )
+                    messages.append(AIMessage("", function_call=function_call))
                 else:
                     raise ValueError(f"invald role: <{example['role']}>")
         return messages
