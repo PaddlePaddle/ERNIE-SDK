@@ -91,7 +91,7 @@ class FunctionalAgent(Agent):
         output_message = await self._async_run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
-            system=self.system_message.content,
+            system=self.system_message.content if self.system_message is not None else None,
         )
         chat_history.append(output_message)
         if output_message.function_call is not None:

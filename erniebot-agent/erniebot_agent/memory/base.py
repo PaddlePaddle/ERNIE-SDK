@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 from erniebot_agent.messages import AIMessage, Message, SystemMessage
-
-# TODO: add conversation buffer memory or not?
 
 
 class MessageManager:
     """
-    Manage messages
-    system message is the attribute of message manage, thus it is unique.
+    Messages Manager.
     """
 
     def __init__(self) -> None:
@@ -30,12 +27,12 @@ class MessageManager:
         self._system_message: Union[SystemMessage, None] = None
 
     @property
-    def system_message(self) -> Message:
+    def system_message(self) -> Optional[Message]:
         """
-        The message manager manage one and only system message.
+        The message manager have only one system message.
+
+        return: Message or None
         """
-        if self._system_message is None:
-            raise RuntimeError("system message is not set, please check the system message")
         return self._system_message
 
     @system_message.setter
