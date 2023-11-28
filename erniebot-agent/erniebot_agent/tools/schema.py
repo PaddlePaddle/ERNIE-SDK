@@ -269,6 +269,22 @@ class ToolParameterView(BaseModel):
 
     @classmethod
     def from_dict(cls, field_map: Dict[str, Any]):
+        """
+        Class method to create a Pydantic model dynamically based on a dictionary.
+
+        Args:
+            field_map (Dict[str, Any]): A dictionary mapping field names to their corresponding type
+            and description.
+
+        Returns:
+            PydanticModel: A dynamically created Pydantic model with fields specified by the
+            input dictionary.
+
+        Note:
+            This method is used to create a Pydantic model dynamically based on the provided dictionary,
+            where each field's type and description are specified in the input.
+
+        """
         fields = {}
         for field_name, field_dict in field_map.items():
             field_type = field_dict["type"]
