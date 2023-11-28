@@ -14,14 +14,17 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
+from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -110,6 +113,68 @@ class Tool(BaseTool, ABC):
         return []
 
 
+def wrap_tool_with_files(func):
+    @wraps(func)
+    async def wrapper_func(object, file_manager, **tool_arguments: Dict[str, Any]):
+        async def fileid_to_byte(file_id, file_manager):
+            remote_file = await file_manager.retrieve_remote_file(file_id)
+            byte_str = await remote_file.read_content()
+
+            return byte_str
+
+        async def byte_to_fileid(file_name, input_str, file_manager):
+            # 1. base64_to_byte
+            def base64_to_byte(input_str):
+                def is_base64(string):
+                    try:
+                        base64.b64decode(string)
+                        return True
+                    except base64.binascii.Error:
+                        return False
+
+                if is_base64(input_str):
+                    return base64.b64decode(input_str)
+                else:
+                    return input_str
+
+            byte_str = base64_to_byte(input_str)
+
+            # 2. save to local file
+            cache_dir = os.path.join(file_manager.workspace, "cache")
+            with open(os.path.join(cache_dir, file_name), "wb") as f:
+                f.write(byte_str)
+
+            # 3. file to fileid
+            local_file = await file_manager.create_file(
+                file_name, file_type="local"
+            )  # TODO: file set local workspace here
+
+            return local_file.file_id
+
+        # 1. replace fileid with byte string
+        if file_manager:  # 根据提示字段判断是否需要转换
+            print("I am doing some boring work before executing a_func()")
+            byte_str = await fileid_to_byte(tool_arguments["file_id"], file_manager)
+
+            tool_arguments["file_id"] = byte_str
+
+        # 2. call tool get response
+        json_response = func(file_manager, **tool_arguments)
+
+        # 3.replace json response byte string to fileid
+        key = json_response["responses"]["properties"].keys()
+        if json_response["responses"]["properties"]["format"]:  # TODO: output could have no format key
+            print("I am doing some boring work after executing a_func()")
+            file_id = await byte_to_fileid(
+                "default_file_name", json_response["input_byte_str"], file_manager
+            )
+            json_response["responses"]["properties"][key] = file_id  # replace return byte with fileid
+
+        return json_response
+
+    return wrapper_func
+
+
 class RemoteTool(BaseTool):
     def __init__(
         self,
@@ -135,7 +200,10 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
-    async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
+    @wrap_tool_with_files
+    async def __call__(
+        self, file_manager: Optional[FileManager] = None, **tool_arguments: Dict[str, Any]
+    ) -> Any:  # TODO: file_manager needs to be passes as the first argument
         url = self.server_url + self.tool_view.uri
 
         if self.tool_view.method == "get":
@@ -228,9 +296,13 @@ class RemoteToolkit:
 
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
+        # paths[0].format = schemas[] # set format here
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
         return RemoteTool(
-            paths[0], self.servers[0].url, self.headers, examples=self.get_examples_by_name(tool_name)
+            paths[0],
+            self.servers[0].url,
+            self.headers,
+            examples=self.get_examples_by_name(tool_name),
         )
 
     def to_openapi_dict(self) -> dict:
