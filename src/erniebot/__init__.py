@@ -63,4 +63,7 @@ def __getattr__(name):
     # pollution and mutable global state) and further allows sanity checks.
     # Currently supported configuration options can be found in
     # erniebot/config.py.
-    return GlobalConfig().get_value(name)
+    try:
+        return GlobalConfig().get_value(name)
+    except KeyError:
+        raise AttributeError(f"module '{__name__}' has no attribute '{name}'") from None
