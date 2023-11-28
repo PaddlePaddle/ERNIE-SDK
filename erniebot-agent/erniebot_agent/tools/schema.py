@@ -267,6 +267,16 @@ class ToolParameterView(BaseModel):
         """
         return cls.to_openapi_dict()
 
+    @classmethod
+    def from_dict(cls, field_map: Dict[str, Any]):
+        fields = {}
+        for field_name, field_dict in field_map.items():
+            field_type = field_dict["type"]
+            description = field_dict["description"]
+            field = FieldInfo(annotation=field_type, description=description)
+            fields[field_name] = (field_type, field)
+        return create_model(cls.__name__, __base__=ToolParameterView, **fields)
+
 
 @dataclass
 class RemoteToolView:
@@ -376,16 +386,6 @@ class RemoteToolView:
         if self.returns is not None:
             inputs["responses"] = self.returns.function_call_schema()  # type: ignore
         return scrub_dict(inputs) or {}
-
-    @classmethod
-    def from_dict(cls, field_map: Dict[str, Any]):
-        fields = {}
-        for field_name, field_dict in field_map.items():
-            field_type = field_dict["type"]
-            description = field_dict["description"]
-            field = FieldInfo(annotation=field_type, description=description)
-            fields[field_name] = (field_type, field)
-        return create_model(cls.__name__, __base__=ToolParameterView, **fields)
 
 
 @dataclass

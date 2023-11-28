@@ -47,7 +47,7 @@ def offline_ann(data_path, aurora_db):
         example = Document.from_dict(example)
         list_data.append(example)
 
-    res = aurora_db.indexing(list_data=list_data)
+    res = aurora_db.add_documents(documents=list_data)
     return res
 
 

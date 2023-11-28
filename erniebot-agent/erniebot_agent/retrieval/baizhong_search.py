@@ -117,15 +117,15 @@ class BaizhongSearch:
         else:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
-    def indexing(self, list_data: List[Document], batch_size: int = 10, thread_count: int = 2):
-        if type(list_data[0]) == Document:
-            list_dicts = [item.to_dict() for item in list_data]
+    def add_documents(self, documents: List[Document], batch_size: int = 10, thread_count: int = 1):
+        if type(documents[0]) == Document:
+            list_dicts = [item.to_dict() for item in documents]
         all_data = []
         for i in tqdm(range(0, len(list_dicts), batch_size)):
-            batch_data = list_data[i : i + batch_size]
+            batch_data = documents[i : i + batch_size]
             all_data.append(batch_data)
         with ThreadPoolExecutor(max_workers=thread_count) as executor:
-            res = executor.map(self.add_documents, all_data)
+            res = executor.map(self._add_documents, all_data)
         return res
 
     def get_document_by_id(self, doc_id):
@@ -158,7 +158,7 @@ class BaizhongSearch:
         else:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
-    def add_documents(self, documents: List[Dict[str, Any]]):
+    def _add_documents(self, documents: List[Dict[str, Any]]):
         json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": documents}
         res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
         if res.status_code == 200:
