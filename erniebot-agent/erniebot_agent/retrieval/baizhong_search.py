@@ -44,9 +44,7 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def create_schema(self):
         json_data = {
@@ -68,9 +66,7 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def update_schema(
         self,
@@ -95,9 +91,7 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def search(self, query: str, top_k: int = 10, filters: Optional[Dict[str, Any]] = None):
         json_data = {
@@ -121,9 +115,7 @@ class BaizhongSearch:
                 list_data.append(json_data)
             return list_data
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def indexing(self, list_data: List[Document], batch_size: int = 10, thread_count: int = 2):
         if type(list_data[0]) == Document:
@@ -145,9 +137,7 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def delete_documents(
         self,
@@ -166,12 +156,10 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return result
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
-    def add_documents(self, list_data):
-        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": list_data}
+    def add_documents(self, documents: List[Dict[str, Any]]):
+        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": documents}
         res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
         if res.status_code == 200:
             result = res.json()
@@ -180,9 +168,7 @@ class BaizhongSearch:
             return result
         else:
             # TODO(wugaosheng): retry 3 times
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     @classmethod
     def delete_project(cls, project_id: int):
@@ -194,6 +180,4 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
             return res.json()
         else:
-            raise BaizhongError(
-                message=f"request error: {res.text}", error_code=f"status code: {res.status_code}"
-            )
+            raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)

@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Any, Optional
 
 
 class BaizhongError(Exception):
     """Exception for issues that occur in a document store"""
 
-    def __init__(self, message: Optional[str] = None, error_code: Optional[str] = None):
+    def __init__(self, message: Optional[str] = None, error_code: Optional[Any] = None):
         super().__init__(message)
         self.message = message
         self.error_code = error_code
