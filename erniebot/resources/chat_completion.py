@@ -150,7 +150,7 @@ class ChatCompletion(EBResource, Creatable):
             params["penalty_score"] = penalty_score
         if "system" in kwargs:
             system = kwargs["system"]
-            if len(system) > 1024:
+            if system and len(system) > 1024:
                 raise errors.InvalidArgumentError("`system` must have less than 1024 characters.")
             params["system"] = system
         if self.api_type is not APIType.AISTUDIO:

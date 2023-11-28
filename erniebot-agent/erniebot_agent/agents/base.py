@@ -50,7 +50,8 @@ class Agent(BaseAgent):
         super().__init__()
         self.llm = llm
         self.memory = memory
-        # system message exist in memory, or it can be overwrite by the system_message paased in the Agent.
+        # 1. Get system message exist in memory
+        # OR 2. overwrite by the system_message paased in the Agent.
         if system_message:
             self.system_message = system_message
         else:

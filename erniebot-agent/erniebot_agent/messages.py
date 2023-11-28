@@ -13,8 +13,6 @@
 
 from typing import Dict, List, Optional, TypedDict
 
-from erniebot_agent.utils.logging import logger
-
 import erniebot.utils.token_helper as token_helper
 
 
@@ -101,9 +99,6 @@ class AIMessage(Message):
         if token_usage is None:
             prompt_tokens = 0
             completion_tokens = token_helper.approx_num_tokens(content)
-            logger.warning(
-                "Since no token usage was provided, the token count was approximated and may not be correct."
-            )
         else:
             prompt_tokens, completion_tokens = self._parse_token_count(token_usage)
         super().__init__(role="assistant", content=content, token_count=completion_tokens)
