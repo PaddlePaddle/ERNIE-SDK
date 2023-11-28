@@ -20,13 +20,17 @@ from typing import Union
 
 import anyio
 from erniebot_agent.file_io.base import File
+from erniebot_agent.file_io.protocol import (
+    build_local_file_id_from_uuid,
+    is_local_file_id,
+)
 from erniebot_agent.utils.logging import logger
-
-LOCAL_FILE_ID_PREFIX = "file-local-"
 
 
 class LocalFile(File):
     def __init__(self, id: str, filename: str, created_at: int, path: Union[str, os.PathLike]) -> None:
+        if not is_local_file_id(id):
+            raise ValueError("Invalid file ID: {id}")
         super().__init__(id=id, filename=filename, created_at=created_at)
         self.path = path
 
@@ -51,4 +55,4 @@ def create_local_file_from_path(file_path: Union[str, os.PathLike]) -> LocalFile
 
 
 def generate_local_file_id():
-    return LOCAL_FILE_ID_PREFIX + str(uuid.uuid1())
+    return build_local_file_id_from_uuid(str(uuid.uuid1()))

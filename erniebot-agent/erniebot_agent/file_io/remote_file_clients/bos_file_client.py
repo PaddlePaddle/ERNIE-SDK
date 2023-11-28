@@ -21,6 +21,7 @@ from typing import BinaryIO, ClassVar, Dict, List
 from baidubce.auth.bce_credentials import BceCredentials
 from baidubce.bce_client_configuration import BceClientConfiguration
 from baidubce.services.bos.bos_client import BosClient
+from erniebot_agent.file_io.protocol import build_remote_file_id_from_uuid
 from erniebot_agent.file_io.remote_file_clients.base import RemoteFileClient
 from erniebot_agent.file_io.remote_file_clients.schema import FileContent, FileInfo
 
@@ -103,4 +104,4 @@ class BOSFileClient(RemoteFileClient):
 
     @staticmethod
     def _generate_file_id() -> str:
-        return "file-bos4test-" + str(uuid.uuid1())
+        return build_remote_file_id_from_uuid(str(uuid.uuid1()))

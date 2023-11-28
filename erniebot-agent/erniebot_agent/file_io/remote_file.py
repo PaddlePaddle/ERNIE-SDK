@@ -16,12 +16,15 @@ import os
 from typing import List, Union
 
 from erniebot_agent.file_io.base import File
+from erniebot_agent.file_io.protocol import is_remote_file_id
 from erniebot_agent.file_io.remote_file_clients.base import RemoteFileClient
 from erniebot_agent.file_io.remote_file_clients.schema import FileInfo
 
 
 class RemoteFile(File):
     def __init__(self, id: str, filename: str, created_at: int, client: RemoteFileClient) -> None:
+        if not is_remote_file_id(id):
+            raise ValueError("Invalid file ID: {id}")
         super().__init__(id=id, filename=filename, created_at=created_at)
         self._client = client
 
