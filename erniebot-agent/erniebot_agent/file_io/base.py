@@ -27,7 +27,7 @@ class File(metaclass=abc.ABCMeta):
         return f"<{self.__class__.__name__} {attrs_str}>"
 
     @abc.abstractmethod
-    async def read_content(self) -> bytes:
+    async def read_contents(self) -> bytes:
         raise NotImplementedError
 
     def _get_attrs_str(self) -> str:

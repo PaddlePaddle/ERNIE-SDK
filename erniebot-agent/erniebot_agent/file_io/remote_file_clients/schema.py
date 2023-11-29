@@ -16,8 +16,8 @@ from dataclasses import dataclass
 
 
 @dataclass
-class FileContent(object):
-    content: bytes
+class FileContents(object):
+    contents: bytes
 
 
 @dataclass

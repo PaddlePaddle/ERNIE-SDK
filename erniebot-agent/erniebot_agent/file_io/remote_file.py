@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-from typing import List, Union
+import pathlib
+from typing import List
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import is_remote_file_id
@@ -28,18 +28,16 @@ class RemoteFile(File):
         super().__init__(id=id, filename=filename, created_at=created_at)
         self._client = client
 
-    async def read_content(self) -> bytes:
-        file_content = await self._client.retrieve_file_content(self.id)
-        return file_content.content
+    async def read_contents(self) -> bytes:
+        file_contents = await self._client.retrieve_file_contents(self.id)
+        return file_contents.contents
 
     async def delete(self) -> None:
         await self._client.delete_file(self.id)
 
 
-async def create_remote_file_from_path(
-    file_path: Union[str, os.PathLike], client: RemoteFileClient
-) -> RemoteFile:
-    file_info = await client.upload_file(open(file_path, "rb"))
+async def create_remote_file_from_path(file_path: pathlib.Path, client: RemoteFileClient) -> RemoteFile:
+    file_info = await client.upload_file(file_path)
     return _build_remote_file_from_file_info(file_info, client)
 
 

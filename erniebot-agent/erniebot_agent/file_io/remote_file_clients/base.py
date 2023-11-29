@@ -13,14 +13,15 @@
 # limitations under the License.
 
 import abc
-from typing import BinaryIO, List
+import pathlib
+from typing import List
 
-from erniebot_agent.file_io.remote_file_clients.schema import FileContent, FileInfo
+from erniebot_agent.file_io.remote_file_clients.schema import FileContents, FileInfo
 
 
 class RemoteFileClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    async def upload_file(self, file: BinaryIO) -> FileInfo:
+    async def upload_file(self, file_path: pathlib.Path) -> FileInfo:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -28,7 +29,7 @@ class RemoteFileClient(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def retrieve_file_content(self, file_id: str) -> FileContent:
+    async def retrieve_file_contents(self, file_id: str) -> FileContents:
         raise NotImplementedError
 
     @abc.abstractmethod
