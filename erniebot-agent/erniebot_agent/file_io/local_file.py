@@ -44,12 +44,12 @@ class LocalFile(File):
 def create_local_file_from_path(file_path: pathlib.Path) -> LocalFile:
     if not file_path.exists():
         logger.warn("File %s does not exist.", file_path)
-    file_id = generate_local_file_id()
+    file_id = _generate_local_file_id()
     filename = file_path.name
     created_at = int(time.time())
     file = LocalFile(id=file_id, filename=filename, created_at=created_at, path=file_path)
     return file
 
 
-def generate_local_file_id():
+def _generate_local_file_id():
     return build_local_file_id_from_uuid(str(uuid.uuid1()))

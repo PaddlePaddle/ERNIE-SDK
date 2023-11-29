@@ -20,11 +20,7 @@ from typing import Literal, Optional, Union, overload
 import anyio
 from erniebot_agent.file_io.file_registry import FileRegistry, get_file_registry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
-from erniebot_agent.file_io.remote_file import (
-    RemoteFile,
-    create_remote_file_from_path,
-    retrieve_remote_file_by_id,
-)
+from erniebot_agent.file_io.remote_file import RemoteFile
 from erniebot_agent.file_io.remote_file_clients.base import RemoteFileClient
 from erniebot_agent.utils.temp_file import create_tracked_temp_dir
 from typing_extensions import TypeAlias
@@ -93,7 +89,7 @@ class FileManager(object):
         return file
 
     async def create_remote_file_from_path(self, file_path: _PathType) -> RemoteFile:
-        file = await create_remote_file_from_path(pathlib.Path(file_path), self.remote_file_client)
+        file = await self.remote_file_client.upload_file(pathlib.Path(file_path))
         if self._auto_register:
             self._file_registry.register_file(file)
         return file
@@ -121,8 +117,8 @@ class FileManager(object):
         file = await self.create_file_from_path(file_path, file_type=file_type)
         return file
 
-    async def retrieve_remote_file(self, file_id: str) -> RemoteFile:
-        file = await retrieve_remote_file_by_id(file_id, self.remote_file_client)
+    async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
+        file = await self.remote_file_client.retrieve_file(file_id)
         if self._auto_register:
             self._file_registry.register_file(file)
         return file
