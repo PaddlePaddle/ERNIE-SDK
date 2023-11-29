@@ -5,9 +5,8 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from erniebot_agent.utils.exception import BaizhongError
+from erniebot_agent.utils.logging import logger
 from tqdm import tqdm
-
-from erniebot.utils.logging import logger
 
 from .document import Document
 
