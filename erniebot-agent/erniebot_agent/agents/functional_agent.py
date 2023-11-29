@@ -20,7 +20,12 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentAction, AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import FunctionMessage, HumanMessage, Message
+from erniebot_agent.messages import (
+    FunctionMessage,
+    HumanMessage,
+    Message,
+    SystemMessage,
+)
 from erniebot_agent.tools.base import Tool
 
 _MAX_STEPS = 5
@@ -32,11 +37,14 @@ class FunctionalAgent(Agent):
         llm: ChatModel,
         tools: Union[ToolManager, List[Tool]],
         memory: Memory,
+        system_message: Optional[SystemMessage] = None,
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         max_steps: Optional[int] = None,
     ) -> None:
-        super().__init__(llm=llm, tools=tools, memory=memory, callbacks=callbacks)
+        super().__init__(
+            llm=llm, tools=tools, memory=memory, callbacks=callbacks, system_message=system_message
+        )
         if max_steps is not None:
             if max_steps <= 0:
                 raise ValueError("Invalid `max_steps` value")
@@ -83,6 +91,7 @@ class FunctionalAgent(Agent):
         output_message = await self._async_run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
+            system=self.system_message.content if self.system_message is not None else None,
         )
         chat_history.append(output_message)
         if output_message.function_call is not None:

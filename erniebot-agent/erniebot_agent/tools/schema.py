@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from typing import List, Optional, Type, get_args
+from typing import Any, Dict, List, Optional, Type, get_args
 
 from erniebot_agent.utils.logging import logger
 from pydantic import BaseModel, Field, create_model
@@ -265,6 +265,32 @@ class ToolParameterView(BaseModel):
             dict: the schema of function_call
         """
         return cls.to_openapi_dict()
+
+    @classmethod
+    def from_dict(cls, field_map: Dict[str, Any]):
+        """
+        Class method to create a Pydantic model dynamically based on a dictionary.
+
+        Args:
+            field_map (Dict[str, Any]): A dictionary mapping field names to their corresponding type
+            and description.
+
+        Returns:
+            PydanticModel: A dynamically created Pydantic model with fields specified by the
+            input dictionary.
+
+        Note:
+            This method is used to create a Pydantic model dynamically based on the provided dictionary,
+            where each field's type and description are specified in the input.
+
+        """
+        fields = {}
+        for field_name, field_dict in field_map.items():
+            field_type = field_dict["type"]
+            description = field_dict["description"]
+            field = FieldInfo(annotation=field_type, description=description)
+            fields[field_name] = (field_type, field)
+        return create_model(cls.__name__, __base__=ToolParameterView, **fields)
 
 
 @dataclass
