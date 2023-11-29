@@ -13,11 +13,22 @@
 # limitations under the License.
 
 import abc
+import asyncio
+import functools
 import pathlib
-from typing import List
+import time
+import uuid
+from typing import ClassVar, Dict, List
 
+import anyio
+from baidubce.auth.bce_credentials import BceCredentials
+from baidubce.bce_client_configuration import BceClientConfiguration
+from baidubce.services.bos.bos_client import BosClient
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import is_remote_file_id
+from erniebot_agent.file_io.protocol import (
+    build_remote_file_id_from_uuid,
+    is_remote_file_id,
+)
 
 
 class RemoteFile(File):
@@ -55,20 +66,6 @@ class RemoteFileClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def delete_file(self, file_id: str) -> None:
         raise NotImplementedError
-
-
-import asyncio
-import functools
-import pathlib
-import time
-import uuid
-from typing import ClassVar, Dict
-
-import anyio
-from baidubce.auth.bce_credentials import BceCredentials
-from baidubce.bce_client_configuration import BceClientConfiguration
-from baidubce.services.bos.bos_client import BosClient
-from erniebot_agent.file_io.protocol import build_remote_file_id_from_uuid
 
 
 class BOSFileClient(RemoteFileClient):
