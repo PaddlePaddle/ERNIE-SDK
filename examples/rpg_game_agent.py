@@ -28,7 +28,8 @@ from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message, SystemMessage
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.ImageGenerateTool import ImageGenerationTool
+
+# from erniebot_agent.tools.ImageGenerateTool import ImageGenerationTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.logging import logger
 
