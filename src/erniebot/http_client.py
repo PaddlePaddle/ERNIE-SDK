@@ -111,7 +111,7 @@ class EBClient(object):
                 data = json.dumps(params).encode()
                 headers["Content-Type"] = "application/json"
         else:
-            raise errors.ConnectionError(f"Unrecognized HTTP method {repr(method)}.")
+            raise errors.ConnectionError(f"Unrecognized HTTP method: {repr(method)}")
 
         headers = self.get_request_headers(method, headers)
 

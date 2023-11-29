@@ -372,12 +372,12 @@ class EBResource(object):
         )
         if stream:
             if not isinstance(resp, Iterator):
-                raise TypeError("Expected an iterator of response objects.")
+                raise TypeError("Expected an iterator of response objects")
             else:
                 return resp
         else:
             if not isinstance(resp, EBResponse):
-                raise TypeError("Expected a response object.")
+                raise TypeError("Expected a response object")
             else:
                 return resp
 
@@ -442,12 +442,12 @@ class EBResource(object):
         )
         if stream:
             if not isinstance(resp, AsyncIterator):
-                raise TypeError("Expected an iterator of response objects.")
+                raise TypeError("Expected an iterator of response objects")
             else:
                 return resp
         else:
             if not isinstance(resp, EBResponse):
-                raise TypeError("Expected a response object.")
+                raise TypeError("Expected a response object")
             else:
                 return resp
 
