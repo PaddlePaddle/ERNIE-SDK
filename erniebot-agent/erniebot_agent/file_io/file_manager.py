@@ -95,22 +95,24 @@ class FileManager(object):
 
     @overload
     async def create_file_from_bytes(
-        self, file_contents: bytes, *, file_type: Literal["local"] = ...
+        self, file_contents: bytes, filename: str, *, file_type: Literal["local"] = ...
     ) -> LocalFile:
         ...
 
     @overload
     async def create_file_from_bytes(
-        self, file_contents: bytes, *, file_type: Literal["remote"]
+        self, file_contents: bytes, filename: str, *, file_type: Literal["remote"]
     ) -> RemoteFile:
         ...
 
     async def create_file_from_bytes(
-        self, file_contents: bytes, *, file_type: Literal["local", "remote"] = "local"
+        self, file_contents: bytes, filename: str, *, file_type: Literal["local", "remote"] = "local"
     ) -> Union[LocalFile, RemoteFile]:
         # Can we do this without creating a temp file?
         # For example, can we use in-memory files?
-        file_path = self._create_temp_file()
+        file_path = self._create_temp_file(
+            prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
+        )
         async with await anyio.open_file(file_path, "wb") as f:
             await f.write(file_contents)
         file = await self.create_file_from_path(file_path, file_type=file_type)
@@ -122,8 +124,8 @@ class FileManager(object):
             self._file_registry.register_file(file)
         return file
 
-    def _create_temp_file(self) -> pathlib.Path:
-        filename = str(uuid.uuid4())
+    def _create_temp_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
+        filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"
         file_path = self._temp_dir / filename
         file_path.touch()
         return file_path
