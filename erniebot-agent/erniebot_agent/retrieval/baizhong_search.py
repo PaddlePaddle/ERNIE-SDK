@@ -14,25 +14,29 @@ from .document import Document
 
 class BaizhongSearch:
     def __init__(
-        self, baseUrl: str, projectName: str, remark: str, projectId: int = -1, max_seq_length: int = 512
+        self,
+        base_url: str,
+        project_name: Optional[str] = None,
+        remark: Optional[str] = None,
+        project_id: Optional[int] = None,
+        max_seq_length: int = 512,
     ) -> None:
-        self.baseUrl = baseUrl
-        self.projectName = projectName
-        self.remark = remark
+        self.base_url = base_url
         self.max_seq_length = max_seq_length
-        if projectId == -1:
+        if project_id is not None:
+            logger.info(f"Loading existing project with `project_id={project_id}`")
+            self.project_id = project_id
+        elif project_name is not None:
             logger.info("Creating new project and schema")
-            self.index = self.create_project()
+            self.index = self.create_project(project_name, remark)
             logger.info("Project creation succeeded")
-            self.projectId = self.index["result"]["projectId"]
+            self.project_id = self.index["result"]["projectId"]
             self.create_schema()
             logger.info("Schema creation succeeded")
-
         else:
-            logger.info("Loading existing project with `project_id={projectId}`")
-            self.projectId = projectId
+            raise BaizhongError("You must provide either a `project_name` or a `project_id`.")
 
-    def create_project(self):
+    def create_project(self, project_name: str, remark: Optional[str] = None):
         """
         Create a project using the Baizhong API.
 
@@ -43,10 +47,10 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {
-            "projectName": self.projectName,
-            "remark": self.remark,
+            "projectName": project_name,
+            "remark": remark,
         }
-        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project/add", json=json_data)
+        res = requests.post(f"{self.base_url}/baizhong/web-api/v2/project/add", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -66,7 +70,7 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {
-            "projectId": self.projectId,
+            "projectId": self.project_id,
             "schemaJson": {
                 "paraSize": self.max_seq_length,
                 "dataSegmentationMod": "neisou",
@@ -77,7 +81,7 @@ class BaizhongSearch:
                 },
             },
         }
-        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/create", json=json_data)
+        res = requests.post(f"{self.base_url}/baizhong/web-api/v2/project-schema/create", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -99,7 +103,7 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {
-            "projectId": self.projectId,
+            "projectId": self.project_id,
             "schemaJson": {
                 "paraSize": self.max_seq_length,
                 "dataSegmentationMod": "neisou",
@@ -110,7 +114,7 @@ class BaizhongSearch:
                 },
             },
         }
-        res = requests.post(f"{self.baseUrl}/baizhong/web-api/v2/project-schema/update", json=json_data)
+        res = requests.post(f"{self.base_url}/baizhong/web-api/v2/project-schema/update", json=json_data)
         status_code = res.status_code
         if status_code == 200:
             result = res.json()
@@ -138,13 +142,13 @@ class BaizhongSearch:
         """
         json_data = {
             "query": query,
-            "projectId": self.projectId,
+            "projectId": self.project_id,
             "size": top_k,
         }
         if filters is not None:
             filterConditions = {"filterConditions": {"bool": {"filter": {"match": filters}}}}
             json_data.update(filterConditions)
-        res = requests.post(f"{self.baseUrl}/baizhong/common-search/v2/search", json=json_data)
+        res = requests.post(f"{self.base_url}/baizhong/common-search/v2/search", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -159,15 +163,15 @@ class BaizhongSearch:
         else:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
-    def add_documents(self, documents: List[Document], batch_size: int = 10, thread_count: int = 1):
+    def add_documents(self, documents: List[Document], batch_size: int = 1, thread_count: int = 1):
         """
         Add a batch of documents to the Baizhong system using multi-threading.
 
         Args:
             documents (List[Document]): A list of Document objects to be added.
-            batch_size (int, optional): The size of each batch of documents (default is 10).
+            batch_size (int, optional): The size of each batch of documents (defaults to 1).
             thread_count (int, optional): The number of threads to use for concurrent document addition
-            (default is 1).
+            (defaults to 1).
 
         Returns:
             List[Union[None, Exception]]: A list of results from the document addition process.
@@ -200,8 +204,8 @@ class BaizhongSearch:
         Raises:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
-        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": [doc_id]}
-        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/get", json=json_data)
+        json_data = {"projectId": self.project_id, "followIndexFlag": True, "dataBody": [doc_id]}
+        res = requests.post(f"{self.base_url}/baizhong/data-api/v2/flush/get", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -229,13 +233,13 @@ class BaizhongSearch:
             as it is not yet implemented.
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
-        json_data = {"projectId": self.projectId, "followIndexFlag": True}
-        if ids:
+        json_data: Dict[str, Any] = {"projectId": self.project_id, "followIndexFlag": True}
+        if ids is not None:
             json_data["dataBody"] = ids
         else:
             # TODO: delete all documents
             raise NotImplementedError
-        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/delete", json=json_data)
+        res = requests.post(f"{self.base_url}/baizhong/data-api/v2/flush/delete", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -257,8 +261,8 @@ class BaizhongSearch:
         Raises:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
-        json_data = {"projectId": self.projectId, "followIndexFlag": True, "dataBody": documents}
-        res = requests.post(f"{self.baseUrl}/baizhong/data-api/v2/flush/add", json=json_data)
+        json_data = {"projectId": self.project_id, "followIndexFlag": True, "dataBody": documents}
+        res = requests.post(f"{self.base_url}/baizhong/data-api/v2/flush/add", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
@@ -283,7 +287,7 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {"projectId": project_id}
-        res = requests.post(f"{cls.baseUrl}/baizhong/web-api/v2/project/delete", json=json_data)
+        res = requests.post(f"{cls.base_url}/baizhong/web-api/v2/project/delete", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
