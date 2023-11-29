@@ -271,7 +271,7 @@ class Agent(BaseAgent):
                         continue
                     file = self.file_manager.registry.lookup_file(val)
                     if file is None:
-                        file = await self.file_manager.retrieve_remote_file(val)
+                        file = await self.file_manager.retrieve_remote_file_by_id(val)
                 else:
                     continue
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
