@@ -18,6 +18,7 @@ import uuid
 from typing import Literal, Optional, Union, overload
 
 import anyio
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_registry import FileRegistry, get_file_registry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
@@ -126,6 +127,9 @@ class FileManager(object):
         if self._auto_register:
             self._file_registry.register_file(file)
         return file
+
+    def look_up_file_by_id(self, file_id: str) -> Optional[File]:
+        return self._file_registry.look_up_file(file_id)
 
     def _fs_create_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"

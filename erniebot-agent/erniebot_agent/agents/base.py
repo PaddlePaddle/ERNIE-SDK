@@ -260,7 +260,7 @@ class Agent(BaseAgent):
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.registry.lookup_file(val)
+                    file = self.file_manager.look_up_file_by_id(val)
                     if file is None:
                         raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
                 elif is_remote_file_id(val):
@@ -269,7 +269,7 @@ class Agent(BaseAgent):
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.registry.lookup_file(val)
+                    file = self.file_manager.look_up_file_by_id(val)
                     if file is None:
                         file = await self.file_manager.retrieve_remote_file_by_id(val)
                 else:

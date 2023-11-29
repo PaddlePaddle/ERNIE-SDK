@@ -39,7 +39,7 @@ class FileRegistry(metaclass=Singleton):
                 raise RuntimeError(f"ID {repr(file_id)} is not registered.")
             self._id_to_file.pop(file_id)
 
-    def lookup_file(self, file_id: str) -> Optional[File]:
+    def look_up_file(self, file_id: str) -> Optional[File]:
         with self._lock:
             return self._id_to_file.get(file_id, None)
 
