@@ -366,7 +366,9 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+                raise ValueError(
+                    f"Invalid resource, status_code: {response.status_code}, error message: {response.text}"
+                )
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():

@@ -24,6 +24,7 @@ class APIType(enum.Enum):
     YINIAN = 2
     AISTUDIO = 3
     QIANFAN_SFT = 4
+    CUSTOM = 5
 
 
 def convert_str_to_api_type(api_type_str: str) -> APIType:
@@ -32,6 +33,8 @@ def convert_str_to_api_type(api_type_str: str) -> APIType:
         return APIType.QIANFAN
     elif s == "yinian":
         return APIType.YINIAN
+    elif s == "custom":
+        return APIType.CUSTOM
     elif s in ("aistudio", "ai_studio"):
         return APIType.AISTUDIO
     elif s in ("qianfan_sft", "qianfan-sft"):

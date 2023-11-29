@@ -180,11 +180,11 @@ class BaizhongSearch:
             list_dicts = [item.to_dict() for item in documents]
         all_data = []
         for i in tqdm(range(0, len(list_dicts), batch_size)):
-            batch_data = documents[i : i + batch_size]
+            batch_data = list_dicts[i : i + batch_size]
             all_data.append(batch_data)
         with ThreadPoolExecutor(max_workers=thread_count) as executor:
             res = executor.map(self._add_documents, all_data)
-        return res
+        return list(res)
 
     def get_document_by_id(self, doc_id):
         """

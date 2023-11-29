@@ -45,6 +45,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.AISTUDIO,
+        APIType.CUSTOM,
     )
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
@@ -78,6 +79,14 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 },
                 "ernie-bot-8k": {
                     "model_id": "ernie_bot_8k",
+                },
+            },
+        },
+        APIType.CUSTOM: {
+            "resource_id": "chat",
+            "models": {
+                "ernie-bot": {
+                    "model_id": "completions",
                 },
             },
         },
