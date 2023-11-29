@@ -35,6 +35,7 @@ class FileManager(object):
         remote_file_client: Optional[RemoteFileClient] = None,
         *,
         auto_register: bool = True,
+        save_dir: Optional[_PathType] = None,
     ) -> None:
         super().__init__()
         if remote_file_client is not None:
@@ -42,10 +43,13 @@ class FileManager(object):
         else:
             self._remote_file_client = None
         self._auto_register = auto_register
+        if save_dir is not None:
+            self._save_dir = pathlib.Path(save_dir)
+        else:
+            # This can be done lazily, but we need to be careful about race conditions.
+            self._save_dir = create_tracked_temp_dir()
 
         self._file_registry = get_file_registry()
-        # This can be done lazily, but we need to be careful about race conditions.
-        self._temp_dir = create_tracked_temp_dir()
 
     @property
     def registry(self) -> FileRegistry:
@@ -108,9 +112,8 @@ class FileManager(object):
     async def create_file_from_bytes(
         self, file_contents: bytes, filename: str, *, file_type: Literal["local", "remote"] = "local"
     ) -> Union[LocalFile, RemoteFile]:
-        # Can we do this without creating a temp file?
-        # For example, can we use in-memory files?
-        file_path = self._create_temp_file(
+        # Can we do this with in-memory files?
+        file_path = self._fs_create_file(
             prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
         )
         async with await anyio.open_file(file_path, "wb") as f:
@@ -124,8 +127,8 @@ class FileManager(object):
             self._file_registry.register_file(file)
         return file
 
-    def _create_temp_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
+    def _fs_create_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"
-        file_path = self._temp_dir / filename
+        file_path = self._save_dir / filename
         file_path.touch()
         return file_path
