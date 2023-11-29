@@ -260,24 +260,14 @@ class RemoteToolkit:
             safe_dump(spec_dict, f, indent=4)
 
     @classmethod
-    def from_openapi_file(cls, file: str, access_token: Optional[str] = None) -> RemoteToolkit:
-        """only support openapi v3.0.1
-
-        Args:
-            file (str): the path of openapi yaml file
-            access_token (Optional[str]): the path of openapi yaml file
-        """
-        if not validate_openapi_yaml(file):
-            raise ValueError(f"invalid openapi yaml file: {file}")
-
-        spec_dict, _ = read_from_filename(file)
-
-        # info
-        info = EndpointInfo(**spec_dict["info"])
-        servers = [Endpoint(**server) for server in spec_dict.get("servers", [])]
+    def from_openapi_dict(
+        cls, openapi_dict: Dict[str, Any], access_token: Optional[str] = None
+    ) -> RemoteToolkit:
+        info = EndpointInfo(**openapi_dict["info"])
+        servers = [Endpoint(**server) for server in openapi_dict.get("servers", [])]
 
         # components
-        component_schemas = spec_dict["components"]["schemas"]
+        component_schemas = openapi_dict["components"]["schemas"]
         fields = {}
         for schema_name, schema in component_schemas.items():
             parameter_view = ToolParameterView.from_openapi_dict(schema_name, schema)
@@ -285,7 +275,7 @@ class RemoteToolkit:
 
         # paths
         paths = []
-        for path, path_info in spec_dict.get("paths", {}).items():
+        for path, path_info in openapi_dict.get("paths", {}).items():
             for method, path_method_info in path_info.items():
                 paths.append(
                     RemoteToolView.from_openapi_dict(
@@ -297,13 +287,27 @@ class RemoteToolkit:
                 )
 
         return RemoteToolkit(
-            openapi=spec_dict["openapi"],
+            openapi=openapi_dict["openapi"],
             info=info,
             servers=servers,
             paths=paths,
             component_schemas=fields,
             headers=cls._get_authorization_headers(access_token),
         )  # type: ignore
+
+    @classmethod
+    def from_openapi_file(cls, file: str, access_token: Optional[str] = None) -> RemoteToolkit:
+        """only support openapi v3.0.1
+
+        Args:
+            file (str): the path of openapi yaml file
+            access_token (Optional[str]): the path of openapi yaml file
+        """
+        if not validate_openapi_yaml(file):
+            raise ValueError(f"invalid openapi yaml file: {file}")
+
+        spec_dict, _ = read_from_filename(file)
+        return cls.from_openapi_dict(spec_dict, access_token=access_token)
 
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
@@ -336,7 +340,6 @@ class RemoteToolkit:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
-            print(file_path)
 
             toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
             for server in toolkit.servers:
@@ -378,21 +381,9 @@ class RemoteToolkit:
         return examples
 
     @classmethod
-    def load_examples_yaml(cls, file: str) -> List[Message]:
-        """load examples from yaml file
-
-        Args:
-            file (str): the path of examples file
-
-        Returns:
-            List[Message]: the list of messages
-        """
-        content: dict = read_from_filename(file)[0]
-        if len(content) == 0 or "examples" not in content:
-            raise ValueError("invalid examples configuration file")
-
+    def load_examples_dict(cls, examples_dict: Dict[str, Any]) -> List[Message]:
         messages: List[Message] = []
-        for examples in content["examples"]:
+        for examples in examples_dict["examples"]:
             examples = examples["context"]
             for example in examples:
                 if "user" == example["role"]:
@@ -411,15 +402,25 @@ class RemoteToolkit:
                             "thoughts": plugin["thoughts"],
                             "arguments": "{}",
                         }  # type: ignore
-                    messages.append(
-                        AIMessage(
-                            "",
-                            function_call=function_call,
-                        )
-                    )
+                    messages.append(AIMessage("", function_call=function_call))
                 else:
                     raise ValueError(f"invald role: <{example['role']}>")
         return messages
+
+    @classmethod
+    def load_examples_yaml(cls, file: str) -> List[Message]:
+        """load examples from yaml file
+
+        Args:
+            file (str): the path of examples file
+
+        Returns:
+            List[Message]: the list of messages
+        """
+        content: dict = read_from_filename(file)[0]
+        if len(content) == 0 or "examples" not in content:
+            raise ValueError("invalid examples configuration file")
+        return cls.load_examples_dict(content)
 
     def function_call_schemas(self) -> List[dict]:
         return [tool.function_call_schema() for tool in self.get_tools()]
