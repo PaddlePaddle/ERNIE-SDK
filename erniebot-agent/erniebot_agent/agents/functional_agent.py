@@ -129,8 +129,8 @@ class FunctionalAgent(Agent):
             text=last_message.content,
             chat_history=chat_history,
             actions=actions,
-            status="FINISHED",
             files=files,
+            status="FINISHED",
         )
 
     def _create_stopped_response(
@@ -143,6 +143,6 @@ class FunctionalAgent(Agent):
             text="Agent run stopped early.",
             chat_history=chat_history,
             actions=actions,
-            status="STOPPED",
             files=files,
+            status="STOPPED",
         )

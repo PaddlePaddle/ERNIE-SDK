@@ -57,8 +57,8 @@ class AgentResponse(object):
     text: str
     chat_history: List[Message]
     actions: List[AgentAction]
-    status: Union[Literal["FINISHED"], Literal["STOPPED"]]
     files: List["AgentFile"]
+    status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
     def get_last_output_file(self) -> Optional[File]:
         for agent_file in self.files[::-1]:

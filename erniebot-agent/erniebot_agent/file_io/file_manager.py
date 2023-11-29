@@ -18,7 +18,7 @@ import uuid
 from typing import Literal, Optional, Union, overload
 
 import anyio
-from erniebot_agent.file_io.file_registry import get_file_registry
+from erniebot_agent.file_io.file_registry import FileRegistry, get_file_registry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import (
     RemoteFile,
@@ -51,6 +51,10 @@ class FileManager(object):
         self._file_registry = get_file_registry()
         # This can be done lazily, but we need to be careful about race conditions.
         self._temp_dir = create_tracked_temp_dir()
+
+    @property
+    def registry(self) -> FileRegistry:
+        return self._file_registry
 
     @property
     def remote_file_client(self) -> RemoteFileClient:
