@@ -19,6 +19,7 @@ from erniebot.api_types import APIType, convert_str_to_api_type
 from .aistudio import AIStudioBackend
 from .base import EBBackend
 from .bce import QianfanBackend, QianfanLegacyBackend, YinianBackend
+from .custom import CustomBackend
 
 __all__ = ["build_backend"]
 
@@ -34,5 +35,7 @@ def build_backend(api_type: Union[str, APIType], config_dict: Dict[str, Any], **
         return AIStudioBackend(config_dict, **opts)
     elif api_type is APIType.QIANFAN_SFT:
         return QianfanBackend(config_dict, **opts)
+    elif api_type is APIType.CUSTOM:
+        return CustomBackend(config_dict, **opts)
     else:
         raise ValueError(f"Unrecoginzed API type: {api_type.name}")
