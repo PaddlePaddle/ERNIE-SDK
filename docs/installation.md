@@ -11,5 +11,6 @@ pip install --upgrade erniebot
 ```{.sh .copy}
 git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK
 cd ERNIE-Bot-SDK
+pip install --upgrade setuptools
 pip install .
 ```

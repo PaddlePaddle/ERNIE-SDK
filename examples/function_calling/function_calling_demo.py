@@ -44,11 +44,11 @@ def parse_setup_args():
 def create_ui_and_launch(args):
     with gr.Blocks(
         title="ERNIE Bot SDK Function Calling Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
-    ) as block:
+    ) as blocks:
         gr.Markdown("# ERNIE Bot SDK函数调用功能演示")
         create_components(functions=get_predefined_functions())
 
-    block.queue(api_open=False, concurrency_count=8).launch(server_name="0.0.0.0", server_port=args.port)
+    blocks.queue(api_open=False, concurrency_count=8).launch(server_name="0.0.0.0", server_port=args.port)
 
 
 def create_components(functions):
@@ -511,7 +511,7 @@ def generate_response_for_text(
 ):
     if text_is_empty(content):
         raise gr.Error("消息内容不能为空")
-    content = content.strip().replace("<br>", "\n")
+    content = content.strip().replace("<br>", "")
     message = {"role": "user", "content": content}
     yield from generate_response(
         state=state,
@@ -959,7 +959,7 @@ def obj_to_json(obj, **kwargs):
 def to_compact_json(obj, *, from_json=False):
     if from_json:
         obj = json_to_obj(obj)
-    return obj_to_json(obj, separators=(",", ":"))
+    return obj_to_json(obj, sort_keys=False, separators=(",", ":"))
 
 
 def to_pretty_json(obj, *, from_json=False):
@@ -970,7 +970,7 @@ def to_pretty_json(obj, *, from_json=False):
 
 def handle_exception(exception, message, *, raise_=False):
     if raise_:
-        raise gr.Error(message)
+        raise gr.Error(message) from exception
     else:
         traceback.print_exception(type(exception), exception, exception.__traceback__)
         gr.Warning(message)
