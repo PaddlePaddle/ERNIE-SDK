@@ -64,8 +64,8 @@ class MessageManager:
         else:
             self.messages.append(message)
 
-    def pop_message(self) -> Message:
-        return self.messages.pop(0)
+    def pop_message(self, index: int = 0) -> Message:
+        return self.messages.pop(index)
 
     def clear_messages(self) -> None:
         self.messages = []
