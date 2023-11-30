@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import sys
 import threading
 
 import erniebot
-from erniebot.utils.logging import logger
 
 NUM_TASKS = 4
 
@@ -77,7 +77,7 @@ def test_chat_completion_mt(target, args):
 
 
 if __name__ == "__main__":
-    logger.set_level("WARNING")
+    logging.basicConfig(level=logging.WARNING)
 
     erniebot.api_type = "qianfan"
 

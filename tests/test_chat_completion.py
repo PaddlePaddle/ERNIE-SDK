@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import sys
 
 import erniebot
-from erniebot.utils.logging import logger
 
 
 def create_chat_completion(model):
@@ -63,7 +63,7 @@ def create_chat_completion_stream(model):
 
 
 if __name__ == "__main__":
-    logger.set_level("WARNING")
+    logging.basicConfig(level=logging.WARNING)
 
     erniebot.api_type = "qianfan"
 
