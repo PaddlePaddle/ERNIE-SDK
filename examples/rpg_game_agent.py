@@ -20,7 +20,7 @@ import os
 import queue
 import threading
 import time
-from typing import AsyncGenerator, List, Optional, Union
+from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
 from erniebot_agent.agents.base import Agent
@@ -28,8 +28,7 @@ from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message, SystemMessage
 from erniebot_agent.tools.base import Tool
-
-# from erniebot_agent.tools.ImageGenerateTool import ImageGenerationTool
+from erniebot_agent.tools.ImageGenerateTool import ImageGenerationTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.logging import logger
 
@@ -162,7 +161,7 @@ class Game_Agent(Agent):
         )
         FILE_QUEUE.put(save_path)
 
-    async def _async_run(self, prompt: str) -> AsyncGenerator:
+    async def _async_run(self, prompt: str) -> AsyncGenerator[Any, Any]:
         """Defualt open stream for threading tool call
 
         Args:
@@ -207,7 +206,7 @@ class Game_Agent(Agent):
             AIMessage(content=f"好的，我将为你提供《{self.script}》沉浸式图文RPG场景体验。", function_call=None),
         ]
 
-    def launch_gradio_demo(self) -> None:
+    def launch_gradio_demo(self) -> Any:
         with gr.Blocks() as demo:
             context_chatbot = gr.Chatbot(label=self.script, height=750)
             input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
@@ -231,7 +230,7 @@ class Game_Agent(Agent):
             ).then(self._handle_gradio_stream, context_chatbot, context_chatbot)
         demo.launch()
 
-    def _handle_gradio_chat(self, user_message, history) -> tuple[str, List[tuple[str, str]]]:
+    def _handle_gradio_chat(self, user_message, history) -> Tuple[str, List[tuple[str, str]]]:
         # 用于处理gradio的chatbot返回
         return "", history + [[user_message, None]]
 
