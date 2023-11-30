@@ -38,14 +38,14 @@ def parse_setup_args():
 
 
 def create_ui_and_launch(args):
-    with gr.Blocks(title="ERNIE Bot SDK Demos", theme=gr.themes.Soft()) as block:
+    with gr.Blocks(title="ERNIE Bot SDK Demos", theme=gr.themes.Soft()) as blocks:
         gr.Markdown("# ERNIE Bot SDK基础功能演示")
         create_chat_completion_tab()
         create_embedding_tab()
         create_image_tab()
         create_rag_tab()
 
-    block.launch(server_name="0.0.0.0", server_port=args.port)
+    blocks.launch(server_name="0.0.0.0", server_port=args.port)
 
 
 def create_chat_completion_tab():
@@ -71,7 +71,7 @@ def create_chat_completion_tab():
         if access_token:
             auth_config["access_token"] = access_token
 
-        content = content.strip().replace("<br>", "\n")
+        content = content.strip().replace("<br>", "")
         context = state.setdefault("context", [])
         context.append({"role": "user", "content": content})
         data = {
