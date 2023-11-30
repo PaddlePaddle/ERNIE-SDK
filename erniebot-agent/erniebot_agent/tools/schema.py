@@ -231,7 +231,17 @@ class ToolParameterView(BaseModel):
 
             fields[field_name] = (field_type, field)
 
-        return create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        model.__ebagent_file__ = schema.get("x-ebagent-file", [])
+        return model
+
+    @classmethod
+    def is_file_type(cls, field_name: str) -> bool:
+        return field_name in cls.eb_file_names()
+
+    @classmethod
+    def eb_file_names(cls) -> List[str]:
+        return getattr(cls, "__ebagent_file__", [])
 
     @classmethod
     def to_openapi_dict(cls) -> dict:
