@@ -30,7 +30,7 @@ from .resource import EBResource
 class ChatCompletion(EBResource, Creatable):
     """Given a conversation, get a new reply from the model."""
 
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, APIType.AISTUDIO)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN, APIType.AISTUDIO, APIType.CUSTOM)
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "chat",
@@ -63,6 +63,14 @@ class ChatCompletion(EBResource, Creatable):
                 },
                 "ernie-bot-8k": {
                     "model_id": "ernie_bot_8k",
+                },
+            },
+        },
+        APIType.CUSTOM: {
+            "resource_id": "chat",
+            "models": {
+                "ernie-bot": {
+                    "model_id": "completions",
                 },
             },
         },

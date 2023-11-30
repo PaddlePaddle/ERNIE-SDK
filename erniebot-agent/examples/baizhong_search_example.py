@@ -53,10 +53,10 @@ def offline_ann(data_path, aurora_db):
 
 if __name__ == "__main__":
     aurora_db = BaizhongSearch(
-        baseUrl=args.base_url,
-        projectName="construction_data",
+        base_url=args.base_url,
+        project_name="construction_data",
         remark="construction test dataset",
-        projectId=args.project_id,
+        project_id=args.project_id,
     )
     # look up the document by id
     # doc_ids = ["be1a9ef5-0375-4999-8b65-04c569bcaa63"]
