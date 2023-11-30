@@ -37,11 +37,11 @@ class SlidingWindowMemory(Memory):
             max_token_limit=max_round
         )
 
-    def add_message(self, message: Message):
+    def add_message(self, message: Message) -> None:
         super().add_message(message=message)
         self.prune_message()
 
-    def prune_message(self):
+    def prune_message(self) -> None:
         while len(self.get_messages()) > self.max_round * 2:
             self.msg_manager.pop_message(self.remaining_memory * 2)
             # `messages` must have an odd number of elements.
