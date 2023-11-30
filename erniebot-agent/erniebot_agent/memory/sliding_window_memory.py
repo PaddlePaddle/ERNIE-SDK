@@ -43,7 +43,7 @@ class SlidingWindowMemory(Memory):
 
     def prune_message(self):
         while len(self.get_messages()) > self.max_round * 2:
-            self.msg_manager.pop_message(self.remaining_memory)
+            self.msg_manager.pop_message(self.remaining_memory * 2)
             # `messages` must have an odd number of elements.
             if len(self.get_messages()) % 2 == 0:
                 self.msg_manager.pop_message()
