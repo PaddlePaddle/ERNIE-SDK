@@ -14,7 +14,6 @@
 
 import argparse
 import asyncio
-import os
 import queue
 import threading
 import time
@@ -30,8 +29,6 @@ from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.ImageGenerateTool import ImageGenerationTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.logging import logger
-
-import erniebot as eb
 
 INSTRUCTION = """你的指令是为我提供一个基于《{SCRIPT}》剧情的在线RPG游戏体验。\
 在这个游戏中，玩家将扮演《{SCRIPT}》剧情关键角色，你可以自行决定玩家的角色。\
@@ -104,11 +101,8 @@ class Game_Agent(Agent):
         script: str,
         tools: Union[ToolManager, List[Tool]],
         system_message: Optional[str] = None,
-        access_token: str = "",
         max_round: int = 2,
     ) -> None:
-        eb.api_type = "aistudio"
-        eb.access_token = os.getenv("EB_ACCESS_TOKEN") if not access_token else access_token
         self.script = script
         memory = SlidingWindowMemory(max_round)
         super().__init__(
