@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Union
 
-from erniebot_agent.agents.schema import AgentResponse
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
@@ -32,7 +32,7 @@ class CallbackHandler(object):
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         """"""
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
+    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         """"""
 
     async def on_llm_error(
@@ -43,7 +43,7 @@ class CallbackHandler(object):
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         """"""
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
+    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
         """"""
 
     async def on_tool_error(

@@ -18,7 +18,7 @@ import logging
 from typing import TYPE_CHECKING, List, Optional, Union
 
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.schema import AgentResponse
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
@@ -58,11 +58,11 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
+    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         self.agent_info(
             "%s finished running with output: %s\n",
             llm.__class__.__name__,
-            response,
+            response.message,
             subject="LLM",
             state="End",
         )
@@ -81,11 +81,11 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
+    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
         self.agent_info(
             "%s finished running with output:\n%s\n",
             tool.__class__.__name__,
-            to_pretty_json(response, from_json=True),
+            to_pretty_json(response.json, from_json=True),
             subject="Tool",
             state="End",
         )
