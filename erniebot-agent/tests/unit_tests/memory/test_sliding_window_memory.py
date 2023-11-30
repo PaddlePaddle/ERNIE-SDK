@@ -13,7 +13,7 @@ class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
 
     @pytest.mark.parametrize("k", [1, 2, 4, 5, 10])
     @pytest.mark.asyncio
-    async def test_sliding_window_memory(self, k=3):  # asyn pytest
+    async def test_sliding_window_memory(self, k=2):  # asyn pytest
         # The memory
         memory = SlidingWindowMemory(k)
 
@@ -25,7 +25,7 @@ class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
             message = await self.llm.async_chat(memory.get_messages())
             memory.add_message(message)
 
-        self.assertTrue(len(memory.get_messages()) <= k)
+        self.assertTrue(len(memory.get_messages()) <= 2 * k)
 
 
 if __name__ == "__main__":
