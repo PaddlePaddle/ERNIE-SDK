@@ -115,11 +115,10 @@ class Tool(BaseTool, ABC):
 
 def wrap_tool_with_files(func):
     @wraps(func)
-    async def wrapper_func(object, file_manager, **tool_arguments: Dict[str, Any]):
+    async def wrapper_func(object: RemoteTool, file_manager, **tool_arguments: Dict[str, Any]):
         async def fileid_to_byte(file_id, file_manager):
-            remote_file = await file_manager.retrieve_remote_file(file_id)
-            byte_str = await remote_file.read_content()
-
+            file = file_manager.registry.lookup_file(file_id)
+            byte_str = await file.read_content()
             return byte_str
 
         async def byte_to_fileid(file_name, input_str, file_manager):
@@ -154,21 +153,23 @@ def wrap_tool_with_files(func):
         # 1. replace fileid with byte string
         if file_manager:  # 根据提示字段判断是否需要转换
             print("I am doing some boring work before executing a_func()")
-            byte_str = await fileid_to_byte(tool_arguments["file_id"], file_manager)
-
-            tool_arguments["file_id"] = byte_str
+            for key in tool_arguments.keys():
+                if object.tool_view.parameters and object.tool_view.parameters.is_file_type(key):
+                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                    tool_arguments[key] = byte_str
 
         # 2. call tool get response
-        json_response = func(file_manager, **tool_arguments)
+        json_response = await func(object, file_manager, **tool_arguments)
+        return json_response
 
         # 3.replace json response byte string to fileid
-        key = json_response["responses"]["properties"].keys()
-        if json_response["responses"]["properties"]["format"]:  # TODO: output could have no format key
-            print("I am doing some boring work after executing a_func()")
-            file_id = await byte_to_fileid(
-                "default_file_name", json_response["input_byte_str"], file_manager
-            )
-            json_response["responses"]["properties"][key] = file_id  # replace return byte with fileid
+        # key = json_response["responses"]["properties"].keys()
+        # if json_response["responses"]["properties"]["format"]:  # TODO: output could have no format key
+        #     print("I am doing some boring work after executing a_func()")
+        #     file_id = await byte_to_fileid(
+        #         "default_file_name", json_response["input_byte_str"], file_manager
+        #     )
+        #     json_response["responses"]["properties"][key] = file_id  # replace return byte with fileid
 
         return json_response
 
@@ -220,7 +221,30 @@ class RemoteTool(BaseTool):
         if response.status_code != 200:
             raise ValueError(f"the resource is invalid, the error message is: {response.text}")
 
-        return response.json()
+        # parse the file from response
+        file_names = []
+        if self.tool_view.returns is not None:
+            file_names = self.tool_view.returns.eb_file_names()
+
+        if len(file_names) == 0:
+            return response.json()
+
+        assert len(file_names) == 1
+        result = {}
+        # create file from bytes
+        file_name = response.headers["Content-Disposition"].split("filename=")[1]
+        temp_file_path = os.path.join("./", file_name)
+        with open(temp_file_path, "wb") as f:
+            f.write(response.content)
+
+        assert file_manager is not None
+        file = await file_manager.create_file(temp_file_path)
+        result[file_names[0]] = file.id
+
+        return result
+
+    def _decode_file(self):
+        pass
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
