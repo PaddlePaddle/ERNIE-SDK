@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+from .cancellable import Cancellable
+from .creatable import Creatable, CreatableWithStreaming
+from .queryable import Queryable
 
-import erniebot
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
-
-    erniebot.api_type = "yinian"
-
-    response = erniebot.Image.create(
-        model="ernie-vilg-v2", prompt="请帮我画一只开心的袋熊", width=512, height=512, version="v2", image_num=1
-    )
-    print(response.get_result())
+__all__ = ["Cancellable", "Creatable", "CreatableWithStreaming", "Queryable"]
