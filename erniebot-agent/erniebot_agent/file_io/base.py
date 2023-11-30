@@ -22,12 +22,18 @@ class File(metaclass=abc.ABCMeta):
         self.filename = filename
         self.created_at = created_at
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, File):
+            return self.id == other.id
+        else:
+            return False
+
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
 
     @abc.abstractmethod
-    async def read_content(self) -> bytes:
+    async def read_contents(self) -> bytes:
         raise NotImplementedError
 
     def _get_attrs_str(self) -> str:
