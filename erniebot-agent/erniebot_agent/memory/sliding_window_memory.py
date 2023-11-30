@@ -23,8 +23,8 @@ class SlidingWindowMemory(Memory):
         """This class controls max number of messages.
 
         Args:
-        max_num_message: Max number of rounds(round: human message and AI message).
-        remaining_memory: The first K rounds of memory to be retained. Default to 0.
+        max_round: Max number of rounds(round: human message and AI message).
+        remaining_memory: The first remaining_memory rounds of memory to be retained. Default to 0.
         """
 
         super().__init__()
