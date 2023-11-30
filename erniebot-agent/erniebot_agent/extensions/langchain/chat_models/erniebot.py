@@ -348,8 +348,9 @@ def _create_retry_decorator(
     import erniebot
 
     errors: List[Type[BaseException]] = [
+        erniebot.errors.TryAgain,
+        erniebot.errors.RateLimitError,
         erniebot.errors.TimeoutError,
-        erniebot.errors.RequestLimitError,
     ]
     return create_base_retry_decorator(
         error_types=errors, max_retries=llm.max_retries, run_manager=run_manager

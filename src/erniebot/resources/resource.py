@@ -159,6 +159,8 @@ class EBResource(object):
                         request_timeout=request_timeout,
                     )
                 except (errors.TryAgain, errors.RateLimitError, errors.TimeoutError):
+                    # TODO: Consider more advanced retrying strategies,
+                    # e.g. exponential jitter.
                     if time.time() > st_time + self.timeout:
                         logging.error("Operation timed out. No more attempts.")
                         raise
@@ -266,7 +268,7 @@ class EBResource(object):
     ) -> EBResponse:
         st_time = time.time()
         while True:
-            resp = self._request(
+            resp = self.request(
                 method=method,
                 path=path,
                 stream=False,
@@ -295,7 +297,7 @@ class EBResource(object):
     ) -> EBResponse:
         st_time = time.time()
         while True:
-            resp = await self._arequest(
+            resp = await self.arequest(
                 method=method,
                 path=path,
                 stream=False,
