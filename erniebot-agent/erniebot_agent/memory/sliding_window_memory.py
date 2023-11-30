@@ -19,14 +19,22 @@ from erniebot_agent.messages import Message
 class SlidingWindowMemory(Memory):
     """This class controls max number of messages."""
 
-    def __init__(self, max_num_message: int):
-        super().__init__()
-        self.max_num_message = max_num_message
+    def __init__(self, max_round: int, remaining_memory: int = 0) -> None:
+        """This class controls max number of messages.
 
-        assert (isinstance(max_num_message, int)) and (
-            max_num_message > 0
+        Args:
+        max_num_message: Max number of rounds(round: human message and AI message).
+        remaining_memory: The first K rounds of memory to be retained. Default to 0.
+        """
+
+        super().__init__()
+        self.max_round = max_round
+        self.remaining_memory = remaining_memory
+
+        assert (isinstance(max_round, int)) and (
+            max_round > 0
         ), "max_num_message should be positive integer, but got {max_token_limit}".format(
-            max_token_limit=max_num_message
+            max_token_limit=max_round
         )
 
     def add_message(self, message: Message):
@@ -34,8 +42,8 @@ class SlidingWindowMemory(Memory):
         self.prune_message()
 
     def prune_message(self):
-        while len(self.get_messages()) > self.max_num_message:
-            self.msg_manager.pop_message()
+        while len(self.get_messages()) > self.max_round * 2:
+            self.msg_manager.pop_message(self.remaining_memory)
             # `messages` must have an odd number of elements.
             if len(self.get_messages()) % 2 == 0:
                 self.msg_manager.pop_message()
