@@ -12,16 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
-from typing import Optional
+import math
+import re
 
-from setuptools import setup
+__all__ = ["approx_num_tokens"]
 
-try:
-    git_version: Optional[str] = (
-        subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
-    )
-except (OSError, subprocess.CalledProcessError):
-    git_version = None
 
-setup()
+def approx_num_tokens(text: str) -> int:
+    """Estimates the number of tokens for a text."""
+    cnt_han = 0
+    cnt_word = 0
+
+    res = []
+    for char in text:
+        if re.match(r"[\u4e00-\u9fff]", char):
+            cnt_han += 1
+            res.append(" ")
+        elif re.match(r"[^\w\s]", char):
+            res.append(" ")
+        else:
+            res.append(char)
+
+    res_text = "".join(res)
+    cnt_word = len(res_text.split())
+
+    return cnt_han + int(math.floor(cnt_word * 1.3))

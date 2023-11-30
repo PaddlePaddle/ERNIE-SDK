@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+LOGGER_NAME: str = "erniebot"
 
-import erniebot
+STREAM_RESPONSE_PREFIX: bytes = b"data: "
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
+DEFAULT_REQUEST_TIMEOUT_SECS: float = 600
+MAX_CONNECTION_RETRIES: int = 2
+MAX_SESSION_LIFETIME_SECS: float = 180
 
-    erniebot.api_type = "yinian"
-
-    response = erniebot.Image.create(
-        model="ernie-vilg-v2", prompt="请帮我画一只开心的袋熊", width=512, height=512, version="v2", image_num=1
-    )
-    print(response.get_result())
+POLLING_INTERVAL_SECS: float = 5
+POLLING_TIMEOUT_SECS: float = 20

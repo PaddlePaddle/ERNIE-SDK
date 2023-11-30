@@ -23,17 +23,18 @@ markdown_extensions:
   - pymdownx.superfences
 nav:
   - 使用文档:
-    - 快速开始:
-      - "README.md"
-      - "installation.md"
-      - "authentication.md"
-      - "configuration.md"
+    - 预备步骤:
+      - README.md
+      - installation.md
+      - authentication.md
+      - configuration.md
+      - models.md
     - 使用指南:
-      - "guides/chat_completion.md"
-      - "guides/embedding.md"
-      - "guides/image.md"
-      - "guides/function_calling.md"
+      - guides/chat_completion.md
+      - guides/embedding.md
+      - guides/image.md
+      - guides/function_calling.md
   - API文档:
-    - "api_reference/chat_completion.md"
-    - "api_reference/embedding.md"
-    - "api_reference/image.md"
+    - api_reference/chat_completion.md
+    - api_reference/embedding.md
+    - api_reference/image.md
