@@ -63,7 +63,7 @@ SYSTEM_MESSAGE = "你是《{SCRIPT}》沉浸式图文RPG场景助手，能够生
                 每次仅生成一轮互动，不要自己生成玩家的选择"
 
 # 创建消息队列用于传递文件地址
-FILE_QUEUE: queue.Queue[str] = queue.Queue()
+FILE_QUEUE: queue.Queue[ToolResponse] = queue.Queue()
 
 
 def parse_args():
