@@ -75,8 +75,8 @@ class Tool(BaseTool, ABC):
 
     def __str__(self) -> str:
         if not self.name:
-            self.name = self.tool_name
-        return "<name: {0}, description: {1}>".format(self.name, self.description)
+            name = self.tool_name
+        return "<name: {0}, description: {1}>".format(name, self.description)
 
     def __repr__(self):
         return self.__str__()
