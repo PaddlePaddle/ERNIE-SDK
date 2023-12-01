@@ -75,7 +75,7 @@ class Game_Agent(Agent):
         script: str,
         tools: Union[ToolManager, List[Tool]],
         system_message: Optional[SystemMessage] = None,
-        access_token: str | None = None,
+        access_token: Union[str, None] = None,
         max_round: int = 3,
     ) -> None:
         self.script = script
