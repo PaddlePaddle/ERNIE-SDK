@@ -14,14 +14,17 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
+from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -111,6 +114,33 @@ class Tool(BaseTool, ABC):
         return []
 
 
+def wrap_tool_with_files(func):
+    @wraps(func)
+    async def wrapper_func(object: RemoteTool, **tool_arguments):
+        async def fileid_to_byte(file_id, file_manager):
+            file = file_manager.look_up_file_by_id(file_id)
+            byte_str = await file.read_contents()
+            return byte_str
+
+        file_manager = object.file_manager
+        # 1. replace fileid with byte string
+        for key in tool_arguments.keys():
+            if (
+                object.tool_view.parameters
+                and object.tool_view.parameters.model_fields[key].json_schema_extra
+            ):
+                json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
+                if json_schema_extra.get("format", None) in ["byte", "binary"]:
+                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                    tool_arguments[key] = base64.b64encode(byte_str).decode()
+
+        # 2. call tool get response
+        json_response = await func(object, **tool_arguments)
+        return json_response
+
+    return wrapper_func
+
+
 class RemoteTool(BaseTool):
     def __init__(
         self,
@@ -123,6 +153,7 @@ class RemoteTool(BaseTool):
         self.server_url = server_url
         self.headers = headers
         self.examples = examples
+        self.file_manager = FileManager()
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -136,6 +167,7 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
+    @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
         url = self.server_url + self.tool_view.uri
 
@@ -153,7 +185,36 @@ class RemoteTool(BaseTool):
         if response.status_code != 200:
             raise ValueError(f"the resource is invalid, the error message is: {response.text}")
 
-        return response.json()
+        # parse the file from response
+        file_names = []
+        if self.tool_view.returns:
+            for key in self.tool_view.returns.model_fields.keys():
+                if self.tool_view.returns.model_fields[
+                    key
+                ].json_schema_extra and self.tool_view.returns.model_fields[key].json_schema_extra.get(
+                    "format", None
+                ) in [
+                    "byte",
+                    "binary",
+                ]:
+                    file_names.append(key)
+
+        if len(file_names) == 0:
+            return response.json()
+        elif len(file_names) != 1:
+            raise RuntimeError("The tool returns multiple files, which is not supported for now")
+
+        result = {}
+        # create file from bytes
+        file_name = response.headers["Content-Disposition"].split("filename=")[1]
+        local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+
+        result[file_names[0]] = local_file.id
+
+        return result
+
+    def _decode_file(self):
+        pass
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
@@ -231,7 +292,10 @@ class RemoteToolkit:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
         return RemoteTool(
-            paths[0], self.servers[0].url, self.headers, examples=self.get_examples_by_name(tool_name)
+            paths[0],
+            self.servers[0].url,
+            self.headers,
+            examples=self.get_examples_by_name(tool_name),
         )
 
     def to_openapi_dict(self) -> dict:
@@ -271,7 +335,7 @@ class RemoteToolkit:
         component_schemas = openapi_dict["components"]["schemas"]
         fields = {}
         for schema_name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(schema_name, schema)
+            parameter_view = ToolParameterView.from_openapi_dict(schema)
             fields[schema_name] = parameter_view
 
         # paths
