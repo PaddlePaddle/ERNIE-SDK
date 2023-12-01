@@ -124,9 +124,14 @@ def wrap_tool_with_files(func):
         file_manager = object.file_manager
         # 1. replace fileid with byte string
         for key in tool_arguments.keys():
-            if object.tool_view.parameters and object.tool_view.parameters.is_file_type(key):
-                byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-                tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if (
+                object.tool_view.parameters
+                and object.tool_view.parameters.model_fields[key].json_schema_extra
+            ):
+                json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
+                if json_schema_extra.get("format", None) in ["byte", "binary"]:
+                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                    tool_arguments[key] = base64.b64encode(byte_str).decode()
 
         # 2. call tool get response
         json_response = await func(object, **tool_arguments)
@@ -181,13 +186,23 @@ class RemoteTool(BaseTool):
 
         # parse the file from response
         file_names = []
-        if self.tool_view.returns is not None:
-            file_names = self.tool_view.returns.eb_file_names()
+        if self.tool_view.returns:
+            for key in self.tool_view.returns.model_fields.keys():
+                if self.tool_view.returns.model_fields[
+                    key
+                ].json_schema_extra and self.tool_view.returns.model_fields[key].json_schema_extra.get(
+                    "format", None
+                ) in [
+                    "byte",
+                    "binary",
+                ]:
+                    file_names.append(key)
 
         if len(file_names) == 0:
             return response.json()
+        elif len(file_names) != 1:
+            raise RuntimeError("The tool returns multiple files, which is not supported for now")
 
-        assert len(file_names) == 1
         result = {}
         # create file from bytes
         file_name = response.headers["Content-Disposition"].split("filename=")[1]
@@ -319,7 +334,7 @@ class RemoteToolkit:
         component_schemas = openapi_dict["components"]["schemas"]
         fields = {}
         for schema_name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(schema_name, schema)
+            parameter_view = ToolParameterView.from_openapi_dict(schema)
             fields[schema_name] = parameter_view
 
         # paths

@@ -141,6 +141,7 @@ def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
 
 class OpenAPIProperty(BaseModel):
     type: str
+    json_schema_extra: Optional[Dict[str, str]] = None
     description: Optional[str] = None
     required: Optional[List[str]] = None
     items: dict = Field(default_factory=dict)
@@ -168,6 +169,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
         "type": field_type,
         "description": field_info.description,
     }
+    if field_info.json_schema_extra:
+        property["json_schema_extra"] = field_info.json_schema_extra
 
     if property["type"] == "array":
         if typing_list_type == "object":
@@ -190,7 +193,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 class ToolParameterView(BaseModel):
     @classmethod
-    def from_openapi_dict(cls, name, schema: dict) -> Type[ToolParameterView]:
+    def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
         """parse openapi component schemas to ParameterView
         Args:
             response_or_returns (dict): the content of status code
@@ -206,7 +209,7 @@ class ToolParameterView(BaseModel):
 
             if field_type is List[ToolParameterView]:
                 SubParameterView: Type[ToolParameterView] = ToolParameterView.from_openapi_dict(
-                    field_name, field_dict["items"]
+                    field_dict["items"]
                 )
                 field_type = List[SubParameterView]  # type: ignore
 
@@ -223,7 +226,14 @@ class ToolParameterView(BaseModel):
 
             description = description or ""
 
-            field = FieldInfo(annotation=field_type, description=description)
+            format = field_dict.get("format", None)
+            json_schema_extra = None
+            if format is not None:
+                json_schema_extra = {"format": format}
+
+            field = FieldInfo(
+                annotation=field_type, description=description, json_schema_extra=json_schema_extra
+            )
 
             # TODO(wj-Mcat): to handle list field required & not-required
             # if get_typing_list_type(field_type) is not None:
@@ -232,16 +242,7 @@ class ToolParameterView(BaseModel):
             fields[field_name] = (field_type, field)
 
         model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
-        model.__ebagent_file__ = schema.get("x-erniebot-agent-file", [])
         return model
-
-    @classmethod
-    def is_file_type(cls, field_name: str) -> bool:
-        return field_name in cls.eb_file_names()
-
-    @classmethod
-    def eb_file_names(cls) -> List[str]:
-        return getattr(cls, "__ebagent_file__", [])
 
     @classmethod
     def to_openapi_dict(cls) -> dict:

@@ -21,8 +21,11 @@ import time
 import unittest
 import uuid
 
+import uvicorn
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.tools.base import RemoteToolkit
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 PYYAML_CONTENT = """openapi: 3.0.1
 info:
@@ -75,16 +78,17 @@ components:
 """
 
 
-def start_local_file_server(port, file_path):
-    from flask import Flask, send_file
+def start_local_file_server(port, file_path, file_name):
+    app = FastAPI()
 
-    app = Flask(__name__)
-
-    @app.route("/get_file")
+    @app.get(
+        "/get_file",
+        response_class=FileResponse,
+    )
     def get_file():
-        return send_file(file_path)
+        return FileResponse(file_path, filename=file_name)
 
-    app.run("0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 def is_port_in_use(port):
@@ -111,7 +115,8 @@ class TestToolWithFile(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
-        self.file_path = os.path.join(self.tempdir.name, "file.npy")
+        self.file_name = "file.npy"
+        self.file_path = os.path.join(self.tempdir.name, self.file_name)
         self.content = str(uuid.uuid4())
         with open(self.file_path, "w", encoding="utf-8") as f:
             f.write(self.content)
@@ -119,7 +124,7 @@ class TestToolWithFile(unittest.TestCase):
         from multiprocessing import Process
 
         self.port = self.avaliable_free_port()
-        p = Process(target=start_local_file_server, args=(self.port, self.file_path))
+        p = Process(target=start_local_file_server, args=(self.port, self.file_path, self.file_name))
         p.daemon = True
         p.start()
 
@@ -144,9 +149,9 @@ class TestToolWithFile(unittest.TestCase):
             file_manager = FileManager()
             input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
             result = asyncio.run(tool(file=input_file.id))
-            assert "response_file" in result
+            self.assertIn("response_file", result)
             file_id = result["response_file"]
 
             file = file_manager.look_up_file_by_id(file_id=file_id)
             content = asyncio.run(file.read_contents())
-            assert content.decode("utf-8") == self.content
+            self.assertEquals(content.decode("utf-8"), self.content)
