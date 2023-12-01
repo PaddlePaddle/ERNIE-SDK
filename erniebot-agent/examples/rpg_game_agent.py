@@ -23,6 +23,7 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 import gradio as gr
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
@@ -87,7 +88,7 @@ class Game_Agent(Agent):
             tools=tools,
             system_message=system_message,
         )
-        self.file_manager = FileManager()
+        self.file_manager: FileManager = FileManager()
         # 如果不使用system的方式，也可以放在第一轮对话当中
         # self.memory.msg_manager.messages = [
         #     HumanMessage(INSTRUCTION.format(SCRIPT=self.script)),
@@ -103,7 +104,7 @@ class Game_Agent(Agent):
             )
         )
 
-        file = self.file_manager.look_up_file_by_id(eval(tool_response.json)["file_id"])
+        file: File = self.file_manager.look_up_file_by_id(eval(tool_response.json)["file_id"])
         img_byte = asyncio.run(file.read_contents())
 
         import base64
