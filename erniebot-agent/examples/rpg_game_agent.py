@@ -18,11 +18,10 @@ import os
 import queue
 import threading
 import time
-from typing import AsyncGenerator, List, Optional, Union
+from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.agents.schema import ToolResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
@@ -58,7 +57,7 @@ ImageGenerationTool的入参为根据场景描述总结的图片内容：
 当我说游戏开始的时候，开始游戏。每次只要输出【一组】互动，【不要自己生成互动】。"""
 
 # 创建消息队列用于传递文件地址
-FILE_QUEUE: queue.Queue[ToolResponse] = queue.Queue()
+FILE_QUEUE: queue.Queue[str] = queue.Queue()
 
 
 def parse_args():
@@ -75,7 +74,7 @@ class Game_Agent(Agent):
         model: str,
         script: str,
         tools: Union[ToolManager, List[Tool]],
-        system_message: Optional[str] = None,
+        system: Optional[str] = None,
         access_token: str | None = None,
         max_round: int = 3,
     ) -> None:
@@ -86,7 +85,7 @@ class Game_Agent(Agent):
             llm=ERNIEBot(model, api_type="aistudio", access_token=access_token),
             memory=memory,
             tools=tools,
-            system_message=SystemMessage(system_message),
+            system_message=SystemMessage(system),
         )
         self.file_manager = FileManager()
         # 如果不使用system的方式，也可以放在第一轮对话当中
@@ -147,7 +146,7 @@ class Game_Agent(Agent):
         self.memory.add_message(HumanMessage(prompt))
         self.memory.add_message(AIMessage(content=res, function_call=None))
 
-    def launch_gradio_demo(self) -> None:
+    def launch_gradio_demo(self, **launch_kwargs: Any) -> Any:
         with gr.Blocks() as demo:
             context_chatbot = gr.Chatbot(label=self.script, height=750)
             input_text = gr.Textbox(label="消息内容", placeholder="请输入...")
@@ -171,7 +170,7 @@ class Game_Agent(Agent):
             ).then(self._handle_gradio_stream, context_chatbot, context_chatbot)
         demo.launch()
 
-    def _handle_gradio_chat(self, user_message, history) -> tuple[str, List[tuple[str, str]]]:
+    def _handle_gradio_chat(self, user_message, history) -> Tuple[str, List[tuple[str, str]]]:
         # 用于处理gradio的chatbot返回
         return "", history + [[user_message, None]]
 
@@ -206,7 +205,7 @@ if __name__ == "__main__":
         model=args.model,
         script=args.game,
         tools=[ImageGenerationTool()],
-        system_message=INSTRUCTION.format(SCRIPT=args.game),
+        system=INSTRUCTION.format(SCRIPT=args.game),
         access_token=access_token,
     )
     game_system.launch_gradio_demo()
