@@ -9,13 +9,13 @@ from erniebot_agent.tools.base import RemoteToolkit
 
 class CVToolkit:
     def __init__(self):
-        API_URL = "http://10.21.226.150:8097"  # replace your api url
+        API_URL = "<your-api-url>"
         self.toolkit = RemoteToolkit.from_url(API_URL, access_token="<your-access-token>")
         self.tools = self.toolkit.get_tools()
 
 
 llm = ERNIEBot(model="ernie-bot", api_type="custom")
-# llm = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token="your-ak")
+# llm = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token="<your-access-token>")
 toolkit = CVToolkit()
 memory = WholeMemory()
 file_manager = FileManager()
