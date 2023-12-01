@@ -5,4 +5,3 @@ PyYAML
 openapi_spec_validator
 pydantic
 langchain
-tenacity

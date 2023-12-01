@@ -48,8 +48,10 @@ def init_global_config() -> None:
     cfg.add_item(URLItem(key="proxy", env_key="EB_PROXY"))
     # Timeout for retrying
     cfg.add_item(PositiveNumberItem(key="timeout", env_key="EB_TIMEOUT"))
-    # Retry interval
-    cfg.add_item(PositiveNumberItem(key="retry_interval", env_key="EB_RETRY_INTERVAL", default=0.5))
+    # Minimum retry delay
+    cfg.add_item(PositiveNumberItem(key="min_retry_delay", env_key="EB_MIN_RETRY_DELAY", default=1))
+    # Maximum retry delay (not taking account of jitter)
+    cfg.add_item(PositiveNumberItem(key="max_retry_delay", env_key="EB_MAX_RETRY_DELAY", default=10))
 
 
 class _BaseConfig(object):
