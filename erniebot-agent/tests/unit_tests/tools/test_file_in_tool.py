@@ -70,7 +70,7 @@ components:
                     type: string
                     format: byte
                     description: 单词本单词列表
-            x-ebagent-file:
+            x-erniebot-agent-file:
                 - response_file
 """
 
@@ -142,11 +142,11 @@ class TestToolWithFile(unittest.TestCase):
             toolkit = RemoteToolkit.from_openapi_file(openapi_file)
             tool = toolkit.get_tool("getFile")
             file_manager = FileManager()
-            input_file = asyncio.run(file_manager.create_file(self.file_path))
-            result = asyncio.run(tool(file_manager=file_manager, file=input_file.id))
+            input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
+            result = asyncio.run(tool(file=input_file.id))
             assert "response_file" in result
             file_id = result["response_file"]
 
-            file = file_manager.registry.lookup_file(file_id=file_id)
-            content = asyncio.run(file.read_content())
+            file = file_manager.look_up_file_by_id(file_id=file_id)
+            content = asyncio.run(file.read_contents())
             assert content.decode("utf-8") == self.content

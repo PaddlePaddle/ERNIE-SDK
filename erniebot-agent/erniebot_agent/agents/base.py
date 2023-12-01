@@ -54,7 +54,7 @@ class Agent(BaseAgent):
         system_message: Optional[SystemMessage] = None,
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
-        file_manager: Optional[FileManager] = None,
+        file_manager: Optional[FileManager] = FileManager(),
     ) -> None:
         super().__init__()
         self.llm = llm

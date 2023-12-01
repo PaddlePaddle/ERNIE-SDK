@@ -232,7 +232,7 @@ class ToolParameterView(BaseModel):
             fields[field_name] = (field_type, field)
 
         model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
-        model.__ebagent_file__ = schema.get("x-ebagent-file", [])
+        model.__ebagent_file__ = schema.get("x-erniebot-agent-file", [])
         return model
 
     @classmethod
