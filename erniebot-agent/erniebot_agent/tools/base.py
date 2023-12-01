@@ -74,8 +74,7 @@ class Tool(BaseTool, ABC):
     ouptut_type: Optional[Type[ToolParameterView]] = None
 
     def __str__(self) -> str:
-        if not self.name:
-            name = self.tool_name
+        name = self.name if self.name else self.tool_name
         return "<name: {0}, description: {1}>".format(name, self.description)
 
     def __repr__(self):
