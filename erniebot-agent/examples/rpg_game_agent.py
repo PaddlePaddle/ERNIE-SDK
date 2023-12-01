@@ -135,7 +135,7 @@ class Game_Agent(Agent):
                 time.sleep(0.005)
                 yield s, function_part, thread  # 将处理函数时需要用到的部分返回给外层函数
 
-                if res.count("```") == 2 and not apply:  # TODO 判断逻辑待更改
+                if res.count("```") == 2 and not apply:  # 判断当出现两个```时，说明已经获取到函数调用部分
                     function_part = res[res.find("```") : res.rfind("```") + 3]
                     tool = eval(function_part[function_part.find("{") : function_part.rfind("}") + 1])
                     thread = threading.Thread(
