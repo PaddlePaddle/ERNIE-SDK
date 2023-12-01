@@ -74,7 +74,7 @@ class Game_Agent(Agent):
         model: str,
         script: str,
         tools: Union[ToolManager, List[Tool]],
-        system: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         access_token: str | None = None,
         max_round: int = 3,
     ) -> None:
@@ -85,7 +85,7 @@ class Game_Agent(Agent):
             llm=ERNIEBot(model, api_type="aistudio", access_token=access_token),
             memory=memory,
             tools=tools,
-            system_message=SystemMessage(system),
+            system_message=system_message,
         )
         self.file_manager = FileManager()
         # 如果不使用system的方式，也可以放在第一轮对话当中
@@ -170,7 +170,7 @@ class Game_Agent(Agent):
             ).then(self._handle_gradio_stream, context_chatbot, context_chatbot)
         demo.launch()
 
-    def _handle_gradio_chat(self, user_message, history) -> Tuple[str, List[tuple[str, str]]]:
+    def _handle_gradio_chat(self, user_message, history) -> Tuple[str, List[Tuple[str, str]]]:
         # 用于处理gradio的chatbot返回
         return "", history + [[user_message, None]]
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         model=args.model,
         script=args.game,
         tools=[ImageGenerationTool()],
-        system=INSTRUCTION.format(SCRIPT=args.game),
+        system_message=SystemMessage(INSTRUCTION.format(SCRIPT=args.game)),
         access_token=access_token,
     )
     game_system.launch_gradio_demo()
