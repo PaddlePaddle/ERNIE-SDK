@@ -52,6 +52,10 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         else:
             return await super()._async_step(step_input, chat_history, actions, files)
 
+    def _pre_process(self, step_input):
+        # TODO: add pre-process logic
+        raise NotImplementedError
+
     async def _post_process(
         self,
         step_input,
