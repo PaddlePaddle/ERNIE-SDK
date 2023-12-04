@@ -15,7 +15,6 @@
 import argparse
 import asyncio
 import os
-import queue
 import time
 from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
@@ -86,9 +85,7 @@ class GameAgent(Agent):
         )
         self.file_manager: FileManager = FileManager()
 
-    async def handle_tool(self, tool_name: str, tool_args: str) -> None:
-        # 创建消息队列用于传递文件地址
-        self.file_queue: queue.Queue[str] = queue.Queue()
+    async def handle_tool(self, tool_name: str, tool_args: str) -> str:
         tool_response = await self._async_run_tool(
             tool_name=tool_name,
             tool_args=tool_args,
@@ -100,7 +97,7 @@ class GameAgent(Agent):
         import base64
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
-        self.file_queue.put(base64_encoded)
+        return base64_encoded
 
     async def _async_run(self, prompt: str) -> AsyncGenerator:
         """Defualt open stream for tool call
@@ -122,7 +119,7 @@ class GameAgent(Agent):
             for s in temp_res.content:
                 # 用缓冲区来达成一个字一个字输出的流式
                 res += s
-                time.sleep(0.005)
+                time.sleep(0.01)
                 yield s, function_part, task  # 将处理函数时需要用到的部分返回给外层函数
 
                 if res.count("```") == 2 and not apply:  # 判断当出现两个```时，说明已经获取到函数调用部分
@@ -174,13 +171,12 @@ class GameAgent(Agent):
             yield history
         else:
             if task:
-                await task
-                img_path = self.file_queue.get()
+                img_base64 = await task
 
             if function_part:
                 history[-1][1] = history[-1][1].replace(
                     function_part,
-                    f"<img src='data:image/png;base64,{img_path}' \
+                    f"<img src='data:image/png;base64,{img_base64}' \
                         width='400' height='300'>",
                 )
             yield history
