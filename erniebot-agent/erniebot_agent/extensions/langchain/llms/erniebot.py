@@ -27,18 +27,19 @@ class ErnieBot(LLM):
     """
 
     client: Any = None
-    timeout: float = 60
     aistudio_access_token: Optional[str] = None
     """AI Studio access token."""
+    max_retries: int = 6
+    """Maximum number of retries to make when generating."""
     streaming: bool = False
     """Whether to stream the results or not."""
 
     model: str = "ernie-bot"
     """Model to use."""
-    top_p: Optional[float] = 0.8
-    """Parameter of nucleus sampling that affects the diversity of generated content."""
     temperature: Optional[float] = 0.95
     """Sampling temperature to use."""
+    top_p: Optional[float] = 0.8
+    """Parameter of nucleus sampling that affects the diversity of generated content."""
     penalty_score: Optional[float] = 1
     """Penalty assigned to tokens that have been generated."""
     request_timeout: Optional[int] = 60
@@ -69,7 +70,7 @@ class ErnieBot(LLM):
             "api_type": "aistudio",
             "access_token": self.aistudio_access_token,
         }
-        return {**{"_config_": {"timeout": self.timeout, **auth_cfg}}, **self._default_params}
+        return {**{"_config_": {"max_retries": self.max_retries, **auth_cfg}}, **self._default_params}
 
     @property
     def _llm_type(self) -> str:

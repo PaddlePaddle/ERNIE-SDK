@@ -20,11 +20,12 @@ class ErnieEmbeddings(BaseModel, Embeddings):
     """
 
     client: Any = None
-    timeout: float = 60
     chunk_size: int = 16
     """Chunk size to use when the input is a list of texts."""
     aistudio_access_token: Optional[str] = None
     """AI Studio access token."""
+    max_retries: int = 6
+    """Maximum number of retries to make when generating."""
 
     model: str = "ernie-text-embedding"
     """Model to use."""
@@ -66,7 +67,9 @@ class ErnieEmbeddings(BaseModel, Embeddings):
         lst = []
         for chunk in text_in_chunks:
             resp = self.client.create(
-                _config_={"timeout": self.timeout, **self._get_auth_config()}, input=chunk, model=self.model
+                _config_={"max_retries": self.max_retries, **self._get_auth_config()},
+                input=chunk,
+                model=self.model,
             )
             lst.extend([res["embedding"] for res in resp["data"]])
         return lst
@@ -76,7 +79,9 @@ class ErnieEmbeddings(BaseModel, Embeddings):
         lst = []
         for chunk in text_in_chunks:
             resp = await self.client.acreate(
-                _config_={"timeout": self.timeout, **self._get_auth_config()}, input=chunk, model=self.model
+                _config_={"max_retries": self.max_retries, **self._get_auth_config()},
+                input=chunk,
+                model=self.model,
             )
             for res in resp["data"]:
                 lst.extend([res["embedding"]])

@@ -70,7 +70,7 @@ class EBResource(object):
         if api_type is None:
             raise RuntimeError("API type is not configured.")
         self.api_type = api_type
-        self.timeout = self._cfg["timeout"]
+        self.max_retries = self._cfg["max_retries"] or 0
         self.retry_after = (self._cfg["min_retry_delay"] or 0, self._cfg["max_retry_delay"] or 0)
 
         self._backend = build_backend(
@@ -137,47 +137,34 @@ class EBResource(object):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        if self.timeout is None:
-            return self._request(
-                method=method,
-                path=path,
-                stream=stream,
-                params=params,
-                headers=headers,
-                files=files,
-                request_timeout=request_timeout,
-            )
-        else:
-            retrying = tenacity.Retrying(
-                stop=tenacity.stop_after_delay(self.timeout),
-                wait=tenacity.wait_exponential(
-                    multiplier=1, max=self.retry_after[1], min=self.retry_after[0]
+        retrying = tenacity.Retrying(
+            stop=tenacity.stop_after_attempt(self.max_retries + 1),
+            wait=tenacity.wait_exponential(multiplier=1, max=self.retry_after[1], min=self.retry_after[0])
+            + tenacity.wait_random(min=0, max=0.5),
+            retry=(
+                tenacity.retry_if_exception_type(errors.TryAgain)
+                | tenacity.retry_if_exception_type(errors.RateLimitError)
+                | tenacity.retry_if_exception_type(errors.TimeoutError)
+            ),
+            before_sleep=lambda retry_state: logging.warning(
+                "Retrying requests: Attempt %s ended with: %s",
+                retry_state.attempt_number,
+                retry_state.outcome,
+            ),
+            reraise=True,
+        )
+        for attempt in retrying:
+            with attempt:
+                return self._request(
+                    method=method,
+                    path=path,
+                    stream=stream,
+                    params=params,
+                    headers=headers,
+                    files=files,
+                    request_timeout=request_timeout,
                 )
-                + tenacity.wait_random(min=0, max=0.5),
-                retry=(
-                    tenacity.retry_if_exception_type(errors.TryAgain)
-                    | tenacity.retry_if_exception_type(errors.RateLimitError)
-                    | tenacity.retry_if_exception_type(errors.TimeoutError)
-                ),
-                before_sleep=lambda retry_state: logging.warning(
-                    "Retrying requests: Attempt %s ended with: %s",
-                    retry_state.attempt_number,
-                    retry_state.outcome,
-                ),
-                reraise=True,
-            )
-            for attempt in retrying:
-                with attempt:
-                    return self._request(
-                        method=method,
-                        path=path,
-                        stream=stream,
-                        params=params,
-                        headers=headers,
-                        files=files,
-                        request_timeout=request_timeout,
-                    )
-            raise AssertionError
+        raise AssertionError
 
     @overload
     async def arequest(
@@ -233,47 +220,34 @@ class EBResource(object):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        if self.timeout is None:
-            return await self._arequest(
-                method=method,
-                path=path,
-                stream=stream,
-                params=params,
-                headers=headers,
-                files=files,
-                request_timeout=request_timeout,
-            )
-        else:
-            async_retrying = tenacity.AsyncRetrying(
-                stop=tenacity.stop_after_delay(self.timeout),
-                wait=tenacity.wait_exponential(
-                    multiplier=1, max=self.retry_after[1], min=self.retry_after[0]
+        async_retrying = tenacity.AsyncRetrying(
+            stop=tenacity.stop_after_attempt(self.max_retries + 1),
+            wait=tenacity.wait_exponential(multiplier=1, max=self.retry_after[1], min=self.retry_after[0])
+            + tenacity.wait_random(min=0, max=0.5),
+            retry=(
+                tenacity.retry_if_exception_type(errors.TryAgain)
+                | tenacity.retry_if_exception_type(errors.RateLimitError)
+                | tenacity.retry_if_exception_type(errors.TimeoutError)
+            ),
+            before_sleep=lambda retry_state: logging.warning(
+                "Retrying requests: Attempt %s ended with: %s",
+                retry_state.attempt_number,
+                retry_state.outcome,
+            ),
+            reraise=True,
+        )
+        async for attempt in async_retrying:
+            with attempt:
+                return await self._arequest(
+                    method=method,
+                    path=path,
+                    stream=stream,
+                    params=params,
+                    headers=headers,
+                    files=files,
+                    request_timeout=request_timeout,
                 )
-                + tenacity.wait_random(min=0, max=0.5),
-                retry=(
-                    tenacity.retry_if_exception_type(errors.TryAgain)
-                    | tenacity.retry_if_exception_type(errors.RateLimitError)
-                    | tenacity.retry_if_exception_type(errors.TimeoutError)
-                ),
-                before_sleep=lambda retry_state: logging.warning(
-                    "Retrying requests: Attempt %s ended with: %s",
-                    retry_state.attempt_number,
-                    retry_state.outcome,
-                ),
-                reraise=True,
-            )
-            async for attempt in async_retrying:
-                with attempt:
-                    return await self._arequest(
-                        method=method,
-                        path=path,
-                        stream=stream,
-                        params=params,
-                        headers=headers,
-                        files=files,
-                        request_timeout=request_timeout,
-                    )
-            raise AssertionError
+        raise AssertionError
 
     @final
     def poll(
