@@ -14,6 +14,7 @@
 
 import argparse
 import asyncio
+import base64
 import os
 import time
 from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
@@ -59,7 +60,7 @@ ImageGenerationTool的入参为根据场景描述总结的图片内容：
 def parse_args():
     parser = argparse.ArgumentParser(prog="erniebot-RPG")
     parser.add_argument("--access-token", type=str, default=None, help="Access token to use.")
-    parser.add_argument("--game", type=str, default="射雕英雄传", help="story name")
+    parser.add_argument("--game", type=str, default="射雕英雄传", help="Story name")
     parser.add_argument("--model", type=str, default="ernie-bot-4", help="Model name")
     return parser.parse_args()
 
@@ -94,16 +95,14 @@ class GameAgent(Agent):
         agent_file: AgentFile = tool_response.files[-1]
         img_byte = await agent_file.file.read_contents()
 
-        import base64
-
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
 
     async def _async_run(self, prompt: str) -> AgentResponse:
-        raise RuntimeError(("Only Support for stream mode, please use _async_run_stream instead."))
+        raise RuntimeError(("Only support for stream mode, please use _async_run_stream instead."))
 
     async def _async_run_stream(self, prompt: str) -> AsyncGenerator:
-        """Defualt open stream for tool call
+        """default to use stream chat mode for tool call in this case
 
         Args:
         prompt: str, the prompt for the tool
@@ -187,7 +186,7 @@ class GameAgent(Agent):
 
 if __name__ == "__main__":
     args = parse_args()
-    access_token = os.getenv("EB_ACCESS_TOKEN")
+    access_token = args.access_token if args.access_token else os.getenv("EB_ACCESS_TOKEN")
     game_system = GameAgent(
         model=args.model,
         script=args.game,
