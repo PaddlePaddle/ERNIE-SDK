@@ -21,7 +21,7 @@ from erniebot_agent.agents.callback.event import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import Message
+from erniebot_agent.messages import HumanMessage, Message
 from erniebot_agent.tools.base import Tool
 
 if TYPE_CHECKING:
@@ -68,7 +68,9 @@ class CallbackManager(object):
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         await self.handle_event(EventType.RUN_START, agent=agent, prompt=prompt)
 
-    async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
+    async def on_llm_start(
+        self, agent: Agent, llm: ChatModel, messages: Union[List[Message], List[HumanMessage]]
+    ) -> None:
         await self.handle_event(EventType.LLM_START, agent=agent, llm=llm, messages=messages)
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:

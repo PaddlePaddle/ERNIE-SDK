@@ -30,7 +30,7 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import Message, SystemMessage
+from erniebot_agent.messages import HumanMessage, Message, SystemMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.logging import logger
@@ -212,7 +212,9 @@ class Agent(BaseAgent):
         await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
-    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+    async def _async_run_llm(
+        self, messages: Union[List[Message], List[HumanMessage]], **opts: Any
+    ) -> LLMResponse:
         await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:
             llm_resp = await self._async_run_llm_without_hooks(messages, **opts)
@@ -234,10 +236,12 @@ class Agent(BaseAgent):
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
     async def _async_run_llm_without_hooks(
-        self, messages: List[Message], functions=None, **opts: Any
+        self, messages: Union[List[Message], List[HumanMessage]], functions=None, **opts: Any
     ) -> LLMResponse:
-        llm_ret = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
-        return LLMResponse(message=llm_ret)
+        llm_ret = await self.llm.async_chat(  # type: ignore
+            messages, functions=functions, stream=False, **opts  # type: ignore
+        )  # type: ignore
+        return LLMResponse(message=llm_ret)  # type: ignore
 
     def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
         args_dict = json.loads(tool_args)
