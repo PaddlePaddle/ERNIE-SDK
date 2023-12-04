@@ -20,7 +20,7 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.agents.schema import AgentFile
+from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
@@ -99,7 +99,10 @@ class GameAgent(Agent):
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
 
-    async def _async_run(self, prompt: str) -> AsyncGenerator:
+    async def _async_run(self, prompt: str) -> AgentResponse:
+        raise RuntimeError(("Only Support for stream mode, please use _async_run_stream instead."))
+
+    async def _async_run_stream(self, prompt: str) -> AsyncGenerator:
         """Defualt open stream for tool call
 
         Args:
@@ -119,7 +122,7 @@ class GameAgent(Agent):
             for s in temp_res.content:
                 # 用缓冲区来达成一个字一个字输出的流式
                 res += s
-                time.sleep(0.01)
+                time.sleep(0.05)
                 yield s, function_part, task  # 将处理函数时需要用到的部分返回给外层函数
 
                 if res.count("```") == 2 and not apply:  # 判断当出现两个```时，说明已经获取到函数调用部分
@@ -157,12 +160,12 @@ class GameAgent(Agent):
         demo.launch()
 
     def _handle_gradio_chat(self, user_message, history) -> Tuple[str, List[Tuple[str, str]]]:
-        # 用于处理gradio的chatbot返回
+        """Handle chatbot response and add it to history"""
         return "", history + [[user_message, None]]
 
     async def _handle_gradio_stream(self, history) -> AsyncGenerator:
-        # 用于处理gradio的流式
-        bot_response = self._async_run(history[-1][0])
+        """Handle stream response and alter history"""
+        bot_response = self._async_run_stream(history[-1][0])
         history[-1][1] = ""
         async for temp_response in bot_response:
             function_part = temp_response[1]
