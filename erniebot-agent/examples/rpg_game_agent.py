@@ -16,7 +16,6 @@ import argparse
 import asyncio
 import os
 import queue
-import threading
 import time
 from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
@@ -87,18 +86,16 @@ class GameAgent(Agent):
         )
         self.file_manager: FileManager = FileManager()
 
-    def handle_tool(self, tool_name: str, tool_args: str) -> None:
+    async def handle_tool(self, tool_name: str, tool_args: str) -> None:
         # 创建消息队列用于传递文件地址
         self.file_queue: queue.Queue[str] = queue.Queue()
-        tool_response = asyncio.run(
-            self._async_run_tool(
-                tool_name=tool_name,
-                tool_args=tool_args,
-            )
+        tool_response = await self._async_run_tool(
+            tool_name=tool_name,
+            tool_args=tool_args,
         )
 
         file: File = self.file_manager.look_up_file_by_id(eval(tool_response.json)["file_id"])
-        img_byte = asyncio.run(file.read_contents())
+        img_byte = await file.read_contents()
 
         import base64
 
@@ -106,7 +103,7 @@ class GameAgent(Agent):
         self.file_queue.put(base64_encoded)
 
     async def _async_run(self, prompt: str) -> AsyncGenerator:
-        """Defualt open stream for threading tool call
+        """Defualt open stream for tool call
 
         Args:
         prompt: str, the prompt for the tool
@@ -119,22 +116,20 @@ class GameAgent(Agent):
         apply = False
         res = ""
         function_part = None
-        thread = None
+        task = None
 
         async for temp_res in response:
             for s in temp_res.content:
                 # 用缓冲区来达成一个字一个字输出的流式
                 res += s
                 time.sleep(0.005)
-                yield s, function_part, thread  # 将处理函数时需要用到的部分返回给外层函数
+                yield s, function_part, task  # 将处理函数时需要用到的部分返回给外层函数
 
                 if res.count("```") == 2 and not apply:  # 判断当出现两个```时，说明已经获取到函数调用部分
                     function_part = res[res.find("```") : res.rfind("```") + 3]
                     tool = eval(function_part[function_part.find("{") : function_part.rfind("}") + 1])
-                    thread = threading.Thread(
-                        target=self.handle_tool, args=(tool["tool_name"], tool["tool_args"])
-                    )
-                    thread.start()
+                    loop = asyncio.get_event_loop()
+                    task = loop.create_task(self.handle_tool(tool["tool_name"], tool["tool_args"]))
                     apply = True
 
         self.memory.add_message(HumanMessage(prompt))
@@ -174,12 +169,12 @@ class GameAgent(Agent):
         history[-1][1] = ""
         async for temp_response in bot_response:
             function_part = temp_response[1]
-            thread = temp_response[2]
+            task = temp_response[2]
             history[-1][1] += temp_response[0]
             yield history
         else:
-            if thread:
-                thread.join()
+            if task:
+                await task
                 img_path = self.file_queue.get()
 
             if function_part:
