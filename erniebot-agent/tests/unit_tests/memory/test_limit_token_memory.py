@@ -4,12 +4,12 @@ import pytest
 from erniebot_agent.memory import LimitTokensMemory
 from erniebot_agent.messages import HumanMessage, SystemMessage
 
-from tests.unit_tests.testing_utils import MockErnieBot
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
 
 class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.llm = MockErnieBot(None, None, None)
+        self.llm = FakeSimpleChatModel()
 
     @pytest.mark.asyncio
     async def test_limit_token_memory(self):
