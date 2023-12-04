@@ -19,6 +19,7 @@ import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from functools import wraps
 from typing import Any, Dict, List, Optional, Type
@@ -147,11 +148,13 @@ class RemoteTool(BaseTool):
         tool_view: RemoteToolView,
         server_url: str,
         headers: dict,
+        version: str,
         examples: Optional[List[Message]] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
+        self.version = version
         self.examples = examples
         self.file_manager = FileManager()
 
@@ -169,16 +172,31 @@ class RemoteTool(BaseTool):
 
     @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
-        url = self.server_url + self.tool_view.uri
+        url = self.server_url + self.tool_view.uri + "?version=" + self.version
+
+        headers = deepcopy(self.headers)
+        headers["Content-Type"] = self.tool_view.parameters_content_type
+
+        requests_inputs = {
+            "headers": headers,
+        }
+        if self.tool_view.method == "get":
+            requests_inputs["params"] = tool_arguments
+        if self.tool_view.parameters_content_type == "application/json":
+            requests_inputs["json"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
+            requests_inputs["data"] = tool_arguments
+        else:
+            raise ValueError(f"Unsupported content type: {self.tool_view.parameters_content_type}")
 
         if self.tool_view.method == "get":
-            response = requests.get(url, params=tool_arguments, headers=self.headers)
+            response = requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":
-            response = requests.post(url, json=tool_arguments, headers=self.headers)
+            response = requests.post(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "put":
-            response = requests.put(url, json=tool_arguments, headers=self.headers)
+            response = requests.put(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "delete":
-            response = requests.delete(url, json=tool_arguments, headers=self.headers)
+            response = requests.delete(url, **requests_inputs)  # type: ignore
         else:
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
@@ -243,7 +261,11 @@ class RemoteToolkit:
     def get_tools(self) -> List[RemoteTool]:
         return [
             RemoteTool(
-                path, self.servers[0].url, self.headers, examples=self.get_examples_by_name(path.name)
+                path,
+                self.servers[0].url,
+                self.headers,
+                self.info.version,
+                examples=self.get_examples_by_name(path.name),
             )
             for path in self.paths
         ]
@@ -295,6 +317,7 @@ class RemoteToolkit:
             paths[0],
             self.servers[0].url,
             self.headers,
+            self.info.version,
             examples=self.get_examples_by_name(tool_name),
         )
 
@@ -346,6 +369,7 @@ class RemoteToolkit:
                     RemoteToolView.from_openapi_dict(
                         uri=path,
                         method=method,
+                        version=info.version,
                         path_info=path_method_info,
                         parameters_views=fields,
                     )
@@ -377,7 +401,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token
+            access_token = erniebot.access_token  # type: ignore
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
@@ -387,11 +411,11 @@ class RemoteToolkit:
         return headers
 
     @classmethod
-    def from_url(cls, url: str, access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_url(cls, url: str, version: str, access_token: Optional[str] = None) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith("/"):
             url += "/"
-        openapi_yaml_url = url + ".well-known/openapi.yaml"
+        openapi_yaml_url = url + ".well-known/openapi.yaml?version=" + version
 
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
