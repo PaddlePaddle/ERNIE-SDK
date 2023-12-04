@@ -57,9 +57,6 @@ ImageGenerationTool的入参为根据场景描述总结的图片内容：
 
 当我说游戏开始的时候，开始游戏。每次只要输出【一组】互动，【不要自己生成互动】。"""
 
-# 创建消息队列用于传递文件地址
-FILE_QUEUE: queue.Queue[str] = queue.Queue()
-
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="erniebot-RPG")
@@ -69,7 +66,7 @@ def parse_args():
     return parser.parse_args()
 
 
-class Game_Agent(Agent):
+class GameAgent(Agent):
     def __init__(
         self,
         model: str,
@@ -89,14 +86,10 @@ class Game_Agent(Agent):
             system_message=system_message,
         )
         self.file_manager: FileManager = FileManager()
-        # 如果不使用system的方式，也可以放在第一轮对话当中
-        # self.memory.msg_manager.messages = [
-        #     HumanMessage(INSTRUCTION.format(SCRIPT=self.script)),
-        #     AIMessage(content=f"好的，我将为你提供《{self.script}》沉浸式图文RPG场景体验。", function_call=None),
-        # ]
 
     def handle_tool(self, tool_name: str, tool_args: str) -> None:
-        global FILE_QUEUE
+        # 创建消息队列用于传递文件地址
+        self.file_queue: queue.Queue[str] = queue.Queue()
         tool_response = asyncio.run(
             self._async_run_tool(
                 tool_name=tool_name,
@@ -110,7 +103,7 @@ class Game_Agent(Agent):
         import base64
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
-        FILE_QUEUE.put(base64_encoded)
+        self.file_queue.put(base64_encoded)
 
     async def _async_run(self, prompt: str) -> AsyncGenerator:
         """Defualt open stream for threading tool call
@@ -177,7 +170,6 @@ class Game_Agent(Agent):
 
     async def _handle_gradio_stream(self, history) -> AsyncGenerator:
         # 用于处理gradio的流式
-        global FILE_QUEUE
         bot_response = self._async_run(history[-1][0])
         history[-1][1] = ""
         async for temp_response in bot_response:
@@ -188,7 +180,7 @@ class Game_Agent(Agent):
         else:
             if thread:
                 thread.join()
-                img_path = FILE_QUEUE.get()
+                img_path = self.file_queue.get()
 
             if function_part:
                 history[-1][1] = history[-1][1].replace(
@@ -202,7 +194,7 @@ class Game_Agent(Agent):
 if __name__ == "__main__":
     args = parse_args()
     access_token = os.getenv("EB_ACCESS_TOKEN")
-    game_system = Game_Agent(
+    game_system = GameAgent(
         model=args.model,
         script=args.game,
         tools=[ImageGenerationTool()],
