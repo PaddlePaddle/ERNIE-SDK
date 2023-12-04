@@ -6,8 +6,8 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
-![python version](https://img.shields.io/badge/python-3.8+-orange.svg)
-![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
+![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 </div>
 
@@ -68,11 +68,11 @@ print(models)
 # ernie-vilg-v2         文心一格模型
 
 # Set authentication params
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 # Create a chat completion
-response = erniebot.ChatCompletion.create(model='ernie-bot', messages=[{'role': 'user', 'content': "你好，请介绍下你自己"}])
+response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
 
 print(response.get_result())
 ```
@@ -84,15 +84,15 @@ print(response.get_result())
 erniebot api model.list
 
 # Set authentication params for chat_completion.create
-export EB_API_TYPE='aistudio'
-export EB_ACCESS_TOKEN='<access-token-for-aistudio>'
+export EB_API_TYPE="aistudio"
+export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 
 # Create a chat completion (using ernie-bot, ernie-bot-turbo, etc.)
 erniebot api chat_completion.create --model ernie-bot --message user "请介绍下你自己"
 
 # Set authentication params for image.create
-export EB_API_TYPE='yinian'
-export EB_ACCESS_TOKEN='<access-token-for-yinian>'
+export EB_API_TYPE="yinian"
+export EB_ACCESS_TOKEN="<access-token-for-yinian>"
 
 # Generate images via ERNIE-ViLG
 erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
@@ -111,21 +111,21 @@ ERNIE Bot SDK提供具备对话补全能力的ernie-bot、ernie-bot-turbo、erni
 ```python
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model='ernie-bot',
+    model="ernie-bot",
     messages=[{
-        'role': 'user',
-        'content': "请问你是谁？"
+        "role": "user",
+        "content": "请问你是谁？"
     }, {
-        'role': 'assistant',
-        'content':
+        "role": "assistant",
+        "content":
         "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。"
     }, {
-        'role': 'user',
-        'content': "我在深圳，周末可以去哪里玩？"
+        "role": "user",
+        "content": "我在深圳，周末可以去哪里玩？"
     }])
 
 print(response.get_result())
@@ -142,11 +142,11 @@ ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模�
 ```python
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.Embedding.create(
-    model='ernie-text-embedding',
+    model="ernie-text-embedding",
     input=[
         "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。",
         "2018年深圳市各区GDP"
@@ -166,11 +166,11 @@ ERNIE Bot SDK提供具备文生图能力的ernie-vilg-v2大模型。
 ```python
 import erniebot
 
-erniebot.api_type = 'yinian'
-erniebot.access_token = '<access-token-for-yinian>'
+erniebot.api_type = "yinian"
+erniebot.access_token = "<access-token-for-yinian>"
 
 response = erniebot.Image.create(
-    model='ernie-vilg-v2',
+    model="ernie-vilg-v2",
     prompt="雨后的桃花，8k，辛烷值渲染",
     width=512,
     height=512
@@ -179,7 +179,7 @@ response = erniebot.Image.create(
 print(response.get_result())
 ```
 
-<img width="512" alt="image" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c">
+<img width="512" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
 
 我们推荐两个撰写文生图提示词的文档，大家可以组合使用，创作出更加精美的图片。
 
@@ -199,51 +199,51 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 ```python
 import erniebot
 
-erniebot.api_type = 'aistudio'
-erniebot.access_token = '<access-token-for-aistudio>'
+erniebot.api_type = "aistudio"
+erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model='ernie-bot',
+    model="ernie-bot",
     messages=[{
-        'role': 'user',
-        'content': "深圳市今天气温多少摄氏度？",
+        "role": "user",
+        "content": "深圳市今天气温多少摄氏度？",
     }, ],
     functions = [
         {
-            'name': 'get_current_temperature',
-            'description': "获取指定城市的气温",
-            'parameters': {
-                'type': 'object',
-                'properties': {
-                    'location': {
-                        'type': 'string',
-                        'description': "城市名称",
+            "name": "get_current_temperature",
+            "description": "获取指定城市的气温",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "城市名称",
                     },
-                    'unit': {
-                        'type': 'string',
-                        'enum': [
-                            '摄氏度',
-                            '华氏度',
+                    "unit": {
+                        "type": "string",
+                        "enum": [
+                            "摄氏度",
+                            "华氏度",
                         ],
                     },
                 },
-                'required': [
-                    'location',
-                    'unit',
+                "required": [
+                    "location",
+                    "unit",
                 ],
             },
-            'responses': {
-                'type': 'object',
-                'properties': {
-                    'temperature': {
-                        'type': 'integer',
-                        'description': "城市气温",
+            "responses": {
+                "type": "object",
+                "properties": {
+                    "temperature": {
+                        "type": "integer",
+                        "description": "城市气温",
                     },
-                    'unit': {
-                        'type': 'string',
-                        'enum': [
-                            '摄氏度',
-                            '华氏度',
+                    "unit": {
+                        "type": "string",
+                        "enum": [
+                            "摄氏度",
+                            "华氏度",
                         ],
                     },
                 },
@@ -258,7 +258,7 @@ print(response.get_result())
 
 为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](./examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
-<img width="1296" alt="36dd85dbe30682a287b6a5c5d13e0cdc" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif">
+<img width="1296" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif" />
 
 ## Acknowledgement
 

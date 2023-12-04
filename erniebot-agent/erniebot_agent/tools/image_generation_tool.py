@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
@@ -29,9 +29,9 @@ import erniebot
 
 class ImageGenerationInputView(ToolParameterView):
     prompt: str = Field(description="描述图像内容、风格的文本。例如：生成一张月亮的照片，月亮很圆。")
-    width: Optional[int] = Field(description="生成图片的宽度")
-    height: Optional[int] = Field(description="生成图片的高度")
-    image_num: Optional[int] = Field(description="生成图片的数量")
+    width: int = Field(description="生成图片的宽度")
+    height: int = Field(description="生成图片的高度")
+    image_num: int = Field(description="生成图片的数量")
 
 
 class ImageGenerationOutputView(ToolParameterView):
@@ -49,6 +49,7 @@ class ImageGenerationTool(Tool):
         yinian_ak: Optional[str] = None,
         yinian_sk: Optional[str] = None,
     ) -> None:
+        self.config: Dict[str, Optional[Any]]
         if yinian_access_token is not None:
             self.config = {"api_type": "yinian", "access_token": yinian_access_token}
         elif yinian_ak is not None and yinian_sk is not None:
@@ -59,9 +60,9 @@ class ImageGenerationTool(Tool):
     async def __call__(
         self,
         prompt: str,
-        width: Optional[int] = 512,
-        height: Optional[int] = 512,
-        image_num: Optional[int] = 1,
+        width: int = 512,
+        height: int = 512,
+        image_num: int = 1,
     ) -> Dict[str, List[str]]:
         response = erniebot.Image.create(
             model="ernie-vilg-v2",

@@ -17,7 +17,7 @@
 
 **具体案例**：针对用户需求，输出推荐内容。例如，用户需要平台帮忙推荐一下四大名著，如下图所示：
 
-![pic1](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_a90f36c.png)
+![Example 1](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_a90f36c.png)
 
 ### 场景二：内容创作
 
@@ -28,7 +28,7 @@
 
 **具体案例**：用户下发自定义指令，创作成型的文本内容。例如，用户需要平台按要求写一首藏头诗，如下图所示：
 
-![pic2](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_766ad39.png)
+![Example 2](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_766ad39.png)
 
 ### 场景三：分析控制
 
@@ -39,16 +39,16 @@
 
 **具体案例**：用户临时遇到需处理的问题，平台生成解决方案。例如，开发工程师利用平台生成具体代码，完成对代码的优化，如下图所示：
 
-![pic3](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_edb718d.png)
+![Example 3](https://bce.bdstatic.com/doc/ai-cloud-share/WENXINWORKSHOP/image_edb718d.png)
 
 目前文心提供如下几种对话模型：
 
 | 模型 | 说明 | API调用方式 |
-| :--- | :--- | :----- |
-| ernie-bot | 具备优秀的知识增强和内容生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model='ernie-bot', ...)` |
-| ernie-bot-turbo | 相比erniebot模型具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
-| ernie-bot-4 | 基于文心大模型4.0版本的文心一言，具备目前文心一言系列模型中最优的理解和生成能力。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
-| ernie-bot-8k | 在ernie-bot模型的基础上增强了对长对话上下文的支持，输入token数量上限为7000。 | `erniebot.ChatCompletion.create(model='ernie-bot-turbo', ...)` |
+| :--- | :--- | :--- |
+| ernie-bot | 具备优秀的知识增强和内容生成能力，在文本创作、问答、推理和代码生成等方面表现出色。 |`erniebot.ChatCompletion.create(model="ernie-bot", ...)` |
+| ernie-bot-turbo | 相比erniebot模型具备更快的响应速度和学习能力，API调用成本更低。 | `erniebot.ChatCompletion.create(model="ernie-bot-turbo", ...)` |
+| ernie-bot-4 | 基于文心大模型4.0版本的文心一言，具备目前文心一言系列模型中最优的理解和生成能力。 | `erniebot.ChatCompletion.create(model="ernie-bot-turbo", ...)` |
+| ernie-bot-8k | 在ernie-bot模型的基础上增强了对长对话上下文的支持，输入token数量上限为7000。 | `erniebot.ChatCompletion.create(model="ernie-bot-turbo", ...)` |
 
 参阅[ChatCompletion API文档](../api_reference/chat_completion.md)了解API的完整使用方式。
 
@@ -67,7 +67,7 @@
 
 ### 如何计算token数量？
 
-目前千帆和AI Studio平台均采用`汉字数 + 单词数 * 1.3`估算token总数。可以通过如下代码估计token数量：
+可以采用`汉字数 + 单词数 * 1.3`估算token总数。ERNIE Bot SDK提供了估计token数量的函数：
 
 ```{.py .copy}
 import erniebot.utils
