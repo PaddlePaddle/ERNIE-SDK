@@ -411,11 +411,16 @@ class RemoteToolkit:
         return headers
 
     @classmethod
-    def from_url(cls, url: str, version: str, access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_url(
+        cls, url: str, version: Optional[str] = None, access_token: Optional[str] = None
+    ) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith("/"):
             url += "/"
-        openapi_yaml_url = url + ".well-known/openapi.yaml?version=" + version
+        openapi_yaml_url = url + ".well-known/openapi.yaml"
+
+        if version:
+            openapi_yaml_url = openapi_yaml_url + "?version=" + version
 
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
