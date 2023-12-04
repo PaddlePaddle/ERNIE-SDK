@@ -40,13 +40,14 @@ class ChatFile(EBResource, Creatable):
     ) -> ChatCompletionResponse:
         config = _config_ or {}
         resource = cls(**config)
-        resp = resource.create_resource(
-            **filter_args(
-                messages=messages,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            messages=messages,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = resource.create_resource(**kwargs)
         return ChatCompletionResponse.from_mapping(resp)
 
     @classmethod
@@ -60,13 +61,14 @@ class ChatFile(EBResource, Creatable):
     ) -> ChatCompletionResponse:
         config = _config_ or {}
         resource = cls(**config)
-        resp = await resource.acreate_resource(
-            **filter_args(
-                messages=messages,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            messages=messages,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = await resource.acreate_resource(**kwargs)
         return ChatCompletionResponse.from_mapping(resp)
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:

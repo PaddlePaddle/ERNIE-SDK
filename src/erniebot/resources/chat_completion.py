@@ -33,7 +33,7 @@ import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import ConfigDictType, HeadersType, RequestWithStream
-from erniebot.utils.misc import filter_args, transform
+from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args, transform
 
 from .abc import CreatableWithStreaming
 from .resource import EBResource
@@ -99,13 +99,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
-        stream: Optional[Literal[False]] = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
+        stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
@@ -120,12 +125,17 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
@@ -141,13 +151,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
-        stream: bool = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
+        stream: bool,
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
@@ -161,13 +176,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        penalty_score: Optional[float] = None,
-        system: Optional[str] = None,
-        user_id: Optional[str] = None,
-        stream: Optional[bool] = None,
+        functions: Union[List[dict], NotGiven] = NOT_GIVEN,
+        temperature: Union[float, NotGiven] = NOT_GIVEN,
+        top_p: Union[float, NotGiven] = NOT_GIVEN,
+        penalty_score: Union[float, NotGiven] = NOT_GIVEN,
+        system: Union[str, NotGiven] = NOT_GIVEN,
+        stop: Union[str, NotGiven] = NOT_GIVEN,
+        disable_search: Union[bool, NotGiven] = NOT_GIVEN,
+        enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
+        user_id: Union[str, NotGiven] = NOT_GIVEN,
+        function_choice: Union[str, NotGiven] = NOT_GIVEN,
+        extra_data: Union[str, NotGiven] = NOT_GIVEN,
+        stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
@@ -186,7 +206,13 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             penalty_score: Penalty assigned to new tokens that appear in the
                 generated text so far.
             system: Text that tells the model how to interpret the conversation.
+            stop: Instructs the model to stop generating further tokens at the
+                first occurrence of any of these strings.
+            disable_search: Whether to disable the search engine.
+            enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
+            function_choice: Forces the model to generate JSON inputs for the
+                function.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
             headers: Additional headers to send with the request.
@@ -199,22 +225,28 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = resource.create_resource(
-            **filter_args(
-                model=model,
-                messages=messages,
-                functions=functions,
-                temperature=temperature,
-                top_p=top_p,
-                penalty_score=penalty_score,
-                system=system,
-                user_id=user_id,
-                stream=stream,
-                validate_functions=validate_functions,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            messages=messages,
+            functions=functions,
+            temperature=temperature,
+            top_p=top_p,
+            penalty_score=penalty_score,
+            system=system,
+            stop=stop,
+            disable_search=disable_search,
+            enable_citation=enable_citation,
+            user_id=user_id,
+            function_choice=function_choice,
+            extra_data=extra_data,
+            stream=stream,
         )
+        kwargs["validate_functions"] = validate_functions
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = resource.create_resource(**kwargs)
         return transform(ChatCompletionResponse.from_mapping, resp)
 
     @overload
@@ -224,13 +256,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
-        stream: Optional[Literal[False]] = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
+        stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
@@ -245,12 +282,17 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
@@ -266,13 +308,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = ...,
-        temperature: Optional[float] = ...,
-        top_p: Optional[float] = ...,
-        penalty_score: Optional[float] = ...,
-        system: Optional[str] = ...,
-        user_id: Optional[str] = ...,
-        stream: bool = ...,
+        functions: Union[List[dict], NotGiven] = ...,
+        temperature: Union[float, NotGiven] = ...,
+        top_p: Union[float, NotGiven] = ...,
+        penalty_score: Union[float, NotGiven] = ...,
+        system: Union[str, NotGiven] = ...,
+        stop: Union[str, NotGiven] = ...,
+        disable_search: Union[bool, NotGiven] = ...,
+        enable_citation: Union[bool, NotGiven] = ...,
+        user_id: Union[str, NotGiven] = ...,
+        function_choice: Union[str, NotGiven] = ...,
+        extra_data: Union[str, NotGiven] = ...,
+        stream: bool,
         validate_functions: bool = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
@@ -286,13 +333,18 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         model: str,
         messages: List[dict],
         *,
-        functions: Optional[List[dict]] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        penalty_score: Optional[float] = None,
-        system: Optional[str] = None,
-        user_id: Optional[str] = None,
-        stream: Optional[bool] = None,
+        functions: Union[List[dict], NotGiven] = NOT_GIVEN,
+        temperature: Union[float, NotGiven] = NOT_GIVEN,
+        top_p: Union[float, NotGiven] = NOT_GIVEN,
+        penalty_score: Union[float, NotGiven] = NOT_GIVEN,
+        system: Union[str, NotGiven] = NOT_GIVEN,
+        stop: Union[str, NotGiven] = NOT_GIVEN,
+        disable_search: Union[bool, NotGiven] = NOT_GIVEN,
+        enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
+        user_id: Union[str, NotGiven] = NOT_GIVEN,
+        function_choice: Union[str, NotGiven] = NOT_GIVEN,
+        extra_data: Union[str, NotGiven] = NOT_GIVEN,
+        stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
@@ -311,8 +363,14 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             penalty_score: Penalty assigned to new tokens that appear in the
                 generated text so far.
             system: Text that tells the model how to interpret the conversation.
+            stop: Instructs the model to stop generating further tokens at the
+                first occurrence of any of these strings.
+            disable_search: Whether to disable the search engine.
+            enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
-            stream: Whether to enable response streaming or not.
+            function_choice: Forces the model to generate JSON inputs for the
+                function.
+            stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
             headers: Additional headers to send with the request.
             request_timeout: Timeout for a single request.
@@ -324,22 +382,28 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = await resource.acreate_resource(
-            **filter_args(
-                model=model,
-                messages=messages,
-                functions=functions,
-                temperature=temperature,
-                top_p=top_p,
-                penalty_score=penalty_score,
-                system=system,
-                user_id=user_id,
-                stream=stream,
-                validate_functions=validate_functions,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            messages=messages,
+            functions=functions,
+            temperature=temperature,
+            top_p=top_p,
+            penalty_score=penalty_score,
+            system=system,
+            stop=stop,
+            disable_search=disable_search,
+            enable_citation=enable_citation,
+            user_id=user_id,
+            function_choice=function_choice,
+            extra_data=extra_data,
+            stream=stream,
         )
+        kwargs["validate_functions"] = validate_functions
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = await resource.acreate_resource(**kwargs)
         return transform(ChatCompletionResponse.from_mapping, resp)
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> RequestWithStream:
@@ -355,7 +419,12 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             "top_p",
             "penalty_score",
             "system",
+            "stop",
+            "disable_search",
+            "enable_citation",
             "user_id",
+            "function_choice",
+            "extra_data",
             "stream",
             "validate_functions",
             "headers",
@@ -403,9 +472,14 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         _set_val_if_key_exists(kwargs, params, "top_p")
         _set_val_if_key_exists(kwargs, params, "penalty_score")
         _set_val_if_key_exists(kwargs, params, "system")
+        _set_val_if_key_exists(kwargs, params, "stop")
+        _set_val_if_key_exists(kwargs, params, "disable_search")
+        _set_val_if_key_exists(kwargs, params, "enable_citation")
         if self.api_type is not APIType.AISTUDIO:
             # The AI Studio backend automatically injects `user_id`.
             _set_val_if_key_exists(kwargs, params, "user_id")
+        _set_val_if_key_exists(kwargs, params, "function_chioce")
+        _set_val_if_key_exists(kwargs, params, "extra_data")
         _set_val_if_key_exists(kwargs, params, "stream")
 
         # headers

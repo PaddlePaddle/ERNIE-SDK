@@ -16,7 +16,7 @@ import threading
 from collections.abc import AsyncIterator, Iterator
 from typing import ClassVar
 
-__all__ = ["Constant", "filter_args", "Singleton", "transform"]
+__all__ = ["Constant", "Singleton", "NOT_GIVEN", "NotGiven", "filter_args", "transform"]
 
 
 class Constant(object):
@@ -43,8 +43,20 @@ class Singleton(type):
         return cls._insts[cls]
 
 
+class _NotGivenSentinel(metaclass=Singleton):
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return "NOT_GIVEN"
+
+
+NOT_GIVEN = _NotGivenSentinel()
+NotGiven = _NotGivenSentinel
+
+
 def filter_args(**kwargs):
-    return {k: v for k, v in kwargs.items() if v is not None}
+    return {k: v for k, v in kwargs.items() if v is not NOT_GIVEN}
 
 
 def transform(func, data):
