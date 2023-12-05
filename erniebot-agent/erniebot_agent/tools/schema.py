@@ -141,6 +141,7 @@ def scrub_dict(d: dict, remove_empty_dict: bool = False) -> Optional[dict]:
 
 class OpenAPIProperty(BaseModel):
     type: str
+    json_schema_extra: Optional[Dict[str, str]] = None
     description: Optional[str] = None
     required: Optional[List[str]] = None
     items: dict = Field(default_factory=dict)
@@ -168,6 +169,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
         "type": field_type,
         "description": field_info.description,
     }
+    if field_info.json_schema_extra:
+        property["json_schema_extra"] = field_info.json_schema_extra
 
     if property["type"] == "array":
         if typing_list_type == "object":
@@ -190,7 +193,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 class ToolParameterView(BaseModel):
     @classmethod
-    def from_openapi_dict(cls, name, schema: dict) -> Type[ToolParameterView]:
+    def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
         """parse openapi component schemas to ParameterView
         Args:
             response_or_returns (dict): the content of status code
@@ -206,7 +209,7 @@ class ToolParameterView(BaseModel):
 
             if field_type is List[ToolParameterView]:
                 SubParameterView: Type[ToolParameterView] = ToolParameterView.from_openapi_dict(
-                    field_name, field_dict["items"]
+                    field_dict["items"]
                 )
                 field_type = List[SubParameterView]  # type: ignore
 
@@ -223,7 +226,14 @@ class ToolParameterView(BaseModel):
 
             description = description or ""
 
-            field = FieldInfo(annotation=field_type, description=description)
+            format = field_dict.get("format", None)
+            json_schema_extra = None
+            if format is not None:
+                json_schema_extra = {"format": format}
+
+            field = FieldInfo(
+                annotation=field_type, description=description, json_schema_extra=json_schema_extra
+            )
 
             # TODO(wj-Mcat): to handle list field required & not-required
             # if get_typing_list_type(field_type) is not None:
@@ -231,7 +241,8 @@ class ToolParameterView(BaseModel):
 
             fields[field_name] = (field_type, field)
 
-        return create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        return model
 
     @classmethod
     def to_openapi_dict(cls) -> dict:
@@ -299,10 +310,15 @@ class RemoteToolView:
     method: str
     name: str
     description: str
+    version: str
+
     parameters: Optional[Type[ToolParameterView]] = None
     parameters_description: Optional[str] = None
+    parameters_content_type: Optional[str] = None
+
     returns: Optional[Type[ToolParameterView]] = None
     returns_description: Optional[str] = None
+    returns_content_type: Optional[str] = None
 
     returns_ref_uri: Optional[str] = None
     parameters_ref_uri: Optional[str] = None
@@ -317,7 +333,7 @@ class RemoteToolView:
                 "200": {
                     "description": self.returns_description,
                     "content": {
-                        "application/json": {
+                        self.returns_content_type: {
                             "schema": {"$ref": "#/components/schemas/" + (self.returns_ref_uri or "")}
                         }
                     },
@@ -329,7 +345,7 @@ class RemoteToolView:
             parameters = {
                 "required": True,
                 "content": {
-                    "application/json": {
+                    self.parameters_content_type: {
                         "schema": {"$ref": "#/components/schemas/" + (self.parameters_ref_uri or "")}
                     }
                 },
@@ -339,7 +355,11 @@ class RemoteToolView:
 
     @staticmethod
     def from_openapi_dict(
-        uri: str, method: str, path_info: dict, parameters_views: dict[str, Type[ToolParameterView]]
+        uri: str,
+        method: str,
+        path_info: dict,
+        parameters_views: dict[str, Type[ToolParameterView]],
+        version: str,
     ) -> RemoteToolView:
         """construct RemoteToolView from openapi spec-dict info
 
@@ -349,14 +369,19 @@ class RemoteToolView:
             path_info (dict): the spec info of remote tool
             parameters_views (dict[str, ParametersView]):
                 the dict of parameters views which are the schema of input/output of tool
+            version (Optional[str]): the optional version of remote tool
 
         Returns:
             RemoteToolView: the instance of remote tool view
         """
         parameters_ref_uri, returns_ref_uri = None, None
         parameters, parameters_description = None, None
+        parameters_content_type, returns_content_type = None, None
         if "requestBody" in path_info:
-            request_ref = path_info["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+            request_content = path_info["requestBody"]["content"]
+            assert len(request_content.keys()) == 1
+            parameters_content_type = list(request_content.keys())[0]
+            request_ref = request_content[parameters_content_type]["schema"]["$ref"]
             parameters_ref_uri = request_ref.split("/")[-1]
             assert parameters_ref_uri in parameters_views
             parameters = parameters_views[parameters_ref_uri]
@@ -364,9 +389,10 @@ class RemoteToolView:
 
         returns, returns_description = None, None
         if "responses" in path_info:
-            response_ref = list(path_info["responses"].values())[0]["content"]["application/json"]["schema"][
-                "$ref"
-            ]
+            response_content = list(path_info["responses"].values())[0]["content"]
+            assert len(response_content.keys()) == 1
+            returns_content_type = list(response_content.keys())[0]
+            response_ref = response_content[returns_content_type]["schema"]["$ref"]
             returns_ref_uri = response_ref.split("/")[-1]
             assert returns_ref_uri in parameters_views
             returns = parameters_views[returns_ref_uri]
@@ -375,9 +401,12 @@ class RemoteToolView:
         return RemoteToolView(
             name=path_info["operationId"],
             parameters=parameters,
+            version=version,
             parameters_description=parameters_description,
+            parameters_content_type=parameters_content_type,
             returns=returns,
             returns_description=returns_description,
+            returns_content_type=returns_content_type,
             description=path_info.get("description", path_info.get("summary", None)),
             method=method,
             uri=uri,

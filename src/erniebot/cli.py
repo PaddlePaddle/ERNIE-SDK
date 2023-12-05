@@ -35,6 +35,10 @@ def console_main():
 
     cfg = GlobalConfig()
 
+    if args.api_type:
+        cfg.set_value("api_type", args.api_type)
+    if args.api_base_url:
+        cfg.set_value("base_url", args.api_base_url)
     if args.access_token:
         cfg.set_value("access_token", args.access_token)
     if args.ak:
@@ -42,15 +46,11 @@ def console_main():
     if args.sk:
         cfg.set_value("sk", args.sk)
 
-    if args.api_base_url:
-        cfg.set_value("base_url", args.api_base_url)
-    if args.api_type:
-        cfg.set_value("api_type", args.api_type)
+    if args.max_retries:
+        cfg.set_value("max_retries", args.max_retries)
 
     if args.proxy:
         cfg.set_value("proxy", args.proxy)
-    if args.timeout:
-        cfg.set_value("timeout", args.timeout)
 
     try:
         args.api_invoker(args)
@@ -65,15 +65,15 @@ def parse_args(*args, **kwargs):
     subparsers = parser.add_subparsers(dest="sub_command", required=True)
 
     # Global arguments
+    parser.add_argument("--api-type", type=str, help="API type.")
+    parser.add_argument("--api-base-url", type=str, help="API base URL.")
     parser.add_argument("--access-token", type=str, help="Access token to use.")
     parser.add_argument("--ak", type=str, help="API key or access key ID.")
     parser.add_argument("--sk", type=str, help="Secret key or secret access key.")
 
-    parser.add_argument("--api-base-url", type=str, help="API base URL.")
-    parser.add_argument("--api-type", type=str, help="API type.")
+    parser.add_argument("--max-retries", type=int, help="Maximum number of retries.")
 
     parser.add_argument("--proxy", type=str, help="Proxy to use.")
-    parser.add_argument("--timeout", type=float, help="Timeout for retrying.")
 
     parser.add_argument("-v", "--verbose", action="store_true", help="Whether to increase verbosity.")
     parser.add_argument(
