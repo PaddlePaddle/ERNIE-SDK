@@ -13,7 +13,7 @@ def create_search_intent(chunk: str, query: str) -> str:
     context = f"{chunk}，请判断上面的关键信息和{query}是否相关?"
     return (
         context
-        + """按照下面的格式输出：
+        + """按照下面json格式输出：
             如果相关，则回复：{"msg":"相关"}，如果不相关，则回复：{"msg":"不相关"}。回复："""
     )
 
@@ -69,7 +69,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         for index, item in enumerate(documents):
             retrieval_results += f"第{index}个段落：{item['content_se']}\n"
 
-        messages = [HumanMessage(content=create_search_intent(retrieval_results, step_input))]
+        messages = [HumanMessage(content=create_search_intent(retrieval_results, step_input.content))]
         response = await self._async_run_llm(messages)
         message = response.message
         results = self._parse_results(message.content)
@@ -80,6 +80,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             results = self._parse_results(message.content)
             request_count += 1
             if request_count > _MAX_RETRY_STEPS:
+                if "不相关" in results:
+                    return {"msg": "不相关", "retrieval_results": retrieval_results}
                 raise ValueError("No answer found in max retry steps")
         return {"msg": results["msg"], "retrieval_results": retrieval_results}
 

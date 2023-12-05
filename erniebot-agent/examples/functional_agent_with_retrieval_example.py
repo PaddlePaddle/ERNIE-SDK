@@ -56,8 +56,8 @@ def offline_ann(data_path, aurora_db):
 
 
 if __name__ == "__main__":
-    erniebot.api_type = args.api_type  # type: ignore
-    erniebot.access_token = args.access_token  # type: ignore
+    erniebot.api_type = args.api_type
+    erniebot.access_token = args.access_token
     aurora_db = BaizhongSearch(
         base_url=args.base_url,
         project_name="finance_assistant1",
