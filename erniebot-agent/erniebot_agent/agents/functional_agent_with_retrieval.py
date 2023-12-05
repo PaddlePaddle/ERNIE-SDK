@@ -32,7 +32,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         files: List[AgentFile],
     ) -> Optional[Message]:
         if self.knowledge_base is not None:
-            results = await self._post_process(step_input, chat_history, actions, files)
+            results = await self._post_process(step_input)
 
             if results["msg"] == "相关":
                 step_input = HumanMessage(
@@ -63,9 +63,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     async def _post_process(
         self,
         step_input,
-        chat_history: List[Message],
-        actions: List[AgentAction],
-        files: List[AgentFile],
     ):
         documents = self.knowledge_base.search(step_input.content, top_k=self.top_k, filters=None)
         retrieval_results = ""
@@ -83,7 +80,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             results = self._parse_results(message.content)
             request_count += 1
             if request_count > _MAX_RETRY_STEPS:
-                break
+                raise ValueError("No answer found in max retry steps")
         return {"msg": results["msg"], "retrieval_results": retrieval_results}
 
     def _parse_results(self, results):
