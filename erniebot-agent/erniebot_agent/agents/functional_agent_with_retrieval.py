@@ -6,6 +6,7 @@ from erniebot_agent.agents.schema import AgentAction, AgentFile
 from erniebot_agent.messages import HumanMessage, Message
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.utils.logging import logger
 
 
 def check_retrieval_intent(retrieval_results: str, query: str) -> str:
@@ -30,28 +31,24 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         actions: List[AgentAction],
         files: List[AgentFile],
     ) -> Optional[Message]:
-        if self.knowledge_base is not None:
-            results = await self._maybe_retrieval(step_input)
-            if results["msg"] is True:
-                # RAG
-                step_input = HumanMessage(
-                    content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
-                )
-                chat_history.append(step_input)
-                llm_resp = await self._async_run_llm(
-                    messages=chat_history,
-                    functions=None,
-                    system=self.system_message.content if self.system_message is not None else None,
-                )
-                output_message = llm_resp.message
-                chat_history.append(output_message)
-                return None
-            elif results["msg"] is False:
-                # FunctionalAgent
-                return await super()._async_step(step_input, chat_history, actions, files)
-            else:
-                raise ValueError("No answer found in the knowledge base")
+        results = await self._maybe_retrieval(step_input)
+        if results["msg"] is True:
+            # RAG
+            step_input = HumanMessage(
+                content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
+            )
+            chat_history.append(step_input)
+            llm_resp = await self._async_run_llm(
+                messages=chat_history,
+                functions=None,
+                system=self.system_message.content if self.system_message is not None else None,
+            )
+            output_message = llm_resp.message
+            chat_history.append(output_message)
+            return None
         else:
+            # Functional Agent
+            logger.info(f"Use functional agent to handle the query: {step_input.content}")
             return await super()._async_step(step_input, chat_history, actions, files)
 
     async def _maybe_retrieval(
