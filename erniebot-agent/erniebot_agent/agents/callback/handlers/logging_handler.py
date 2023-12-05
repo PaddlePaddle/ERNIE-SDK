@@ -24,7 +24,7 @@ from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
-from erniebot_agent.utils.text_color import color_msg, color_text
+from erniebot_agent.utils.output_style import color_msg, color_text
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent

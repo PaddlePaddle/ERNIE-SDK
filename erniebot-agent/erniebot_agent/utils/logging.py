@@ -22,7 +22,7 @@ __all__ = ["logger", "setup_logging"]
 logger = logging.getLogger("erniebot_agent")
 
 
-def handle_color_pattern(s):
+def _handle_color_pattern(s):
     color_pattern = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
     color_lis = re.findall(color_pattern, s)
     origin_text = re.split(color_pattern, s)
@@ -65,7 +65,7 @@ class ColorFormatter(logging.Formatter):
 
     def format(self, record):
         log_message = super(ColorFormatter, self).format(record)
-        log_message = handle_color_pattern(
+        log_message = _handle_color_pattern(
             self.COLORS.get(record.levelname, "") + log_message + self.COLORS["RESET"]
         )
         return log_message
