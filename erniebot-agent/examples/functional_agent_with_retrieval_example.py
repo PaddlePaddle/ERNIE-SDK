@@ -76,4 +76,5 @@ if __name__ == "__main__":
     queries = ["OpenAI管理层变更会带来哪些影响？", "今天天气怎么样？", "abcabc"]
     for query in queries:
         response = asyncio.run(agent.async_run(query))
-        print(response.text)
+        print(f"query: {query}")
+        print(f"agent response: {response.text}")
