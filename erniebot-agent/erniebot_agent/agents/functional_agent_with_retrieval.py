@@ -10,10 +10,11 @@ _MAX_RETRY_STEPS = 5
 
 
 def create_search_intent(chunk: str, query: str) -> str:
+    # Be careful, slighly changes on prompt will influence final results at a large scale
     context = f"{chunk}，请判断上面的关键信息和{query}是否相关?"
     return (
         context
-        + """按照下面json格式输出：
+        + """按照下面的格式输出：
             如果相关，则回复：{"msg":"相关"}，如果不相关，则回复：{"msg":"不相关"}。回复："""
     )
 
@@ -35,6 +36,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             results = await self._post_process(step_input)
 
             if results["msg"] == "相关":
+                # RAG
                 step_input = HumanMessage(
                     content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
                 )
@@ -48,6 +50,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 chat_history.append(output_message)
                 return None
             elif results["msg"] == "不相关":
+                # FunctionalAgent
                 return await super()._async_step(step_input, chat_history, actions, files)
             else:
                 raise ValueError("No answer found in the knowledge base")
@@ -64,10 +67,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             retrieval_results += f"第{index}个段落：{item['content_se']}\n"
 
         messages = [HumanMessage(content=create_search_intent(retrieval_results, step_input.content))]
-        response = await self._async_run_llm(messages)
-        message = response.message
-        results = self._parse_results(message.content)
         request_count = 0
+        results = ""
         while isinstance(results, str):
             response = await self._async_run_llm(messages)
             message = response.message
