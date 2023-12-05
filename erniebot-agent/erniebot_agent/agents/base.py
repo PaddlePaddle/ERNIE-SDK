@@ -236,10 +236,8 @@ class Agent(BaseAgent):
     async def _async_run_llm_without_hooks(
         self, messages: List[Message], functions=None, **opts: Any
     ) -> LLMResponse:
-        llm_ret = await self.llm.async_chat(  # type: ignore
-            messages, functions=functions, stream=False, **opts  # type: ignore
-        )
-        return LLMResponse(message=llm_ret)  # type: ignore
+        llm_ret = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
+        return LLMResponse(message=llm_ret)
 
     def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
         args_dict = json.loads(tool_args)
