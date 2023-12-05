@@ -44,5 +44,7 @@ ERNIE Bot SDK支持的参数，具体介绍如下：
 | access_token | EB_ACCESS_TOKEN | str | 否 | 认证鉴权的access token。具体参见[认证鉴权文档](./authentication.md)。 |
 | ak | EB_AK | str | 否 | 认证鉴权的API key或access key ID。必须和`sk`同时设置。 |
 | sk | EB_SK | str | 否 | 认证鉴权的secret key或secret access key。必须和`ak`同时设置。 |
+| max_retries | EB_MAX_RETRIES | int | 否 | 最大请求重试次数。默认值为`0`。 |
+| min_retry_delay | EB_MIN_RETRY_DELAY | float | 否 | 请求重试时两次尝试间的最短等待时间，单位为秒。默认值为`1`。 |
+| max_retry_delay | EB_MAX_RETRY_DELAY | float | 否 | 请求重试时两次尝试间的最长等待时间（不计随机扰动），单位为秒。默认值为`10`。 |
 | proxy | EB_PROXY | str | 否 | 请求使用的代理。 |
-| timeout | EB_TIMEOUT | float | 否 | 超时时间。如果设置了`timeout`，请求失败后会再次请求，直到成功或者超过设置的时间。 |

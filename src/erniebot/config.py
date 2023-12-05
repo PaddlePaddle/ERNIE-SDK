@@ -29,7 +29,11 @@ __all__ = ["GlobalConfig", "init_global_config"]
 def init_global_config() -> None:
     cfg = GlobalConfig()
 
-    # Authentication settings
+    # API backend settings
+    # API type
+    cfg.add_item(StringItem(key="api_type", env_key="EB_API_TYPE", default="qianfan"))
+    # API base URL
+    cfg.add_item(URLItem(key="api_base_url", env_key="EB_BASE_URL"))
     # Access token
     cfg.add_item(StringItem(key="access_token", env_key="EB_ACCESS_TOKEN"))
     # API key or access key ID
@@ -37,19 +41,19 @@ def init_global_config() -> None:
     # Secret key or secret access key
     cfg.add_item(StringItem(key="sk", env_key="EB_SK"))
 
-    # API backend settings
-    # API base URL
-    cfg.add_item(URLItem(key="api_base_url", env_key="EB_BASE_URL"))
-    # API type
-    cfg.add_item(StringItem(key="api_type", env_key="EB_API_TYPE", default="qianfan"))
+    # Retrying settings
+    # Maximum number of retries
+    cfg.add_item(
+        PositiveNumberItem(key="max_retries", env_key="EB_MAX_RETRIES", default=0, ensure_integer=True)
+    )
+    # Minimum retry delay
+    cfg.add_item(PositiveNumberItem(key="min_retry_delay", env_key="EB_MIN_RETRY_DELAY", default=1))
+    # Maximum retry delay (not taking account of jitter)
+    cfg.add_item(PositiveNumberItem(key="max_retry_delay", env_key="EB_MAX_RETRY_DELAY", default=10))
 
     # Miscellaneous settings
     # Proxy to use
     cfg.add_item(URLItem(key="proxy", env_key="EB_PROXY"))
-    # Timeout for retrying
-    cfg.add_item(PositiveNumberItem(key="timeout", env_key="EB_TIMEOUT"))
-    # Retry interval
-    cfg.add_item(PositiveNumberItem(key="retry_interval", env_key="EB_RETRY_INTERVAL", default=0.5))
 
 
 class _BaseConfig(object):
@@ -140,11 +144,17 @@ class _ConfigItem(object):
 
 
 class NumberItem(_ConfigItem):
+    def __init__(
+        self, key: str, env_key: Optional[str] = None, default: Any = None, *, ensure_integer: bool = False
+    ) -> None:
+        super().__init__(key=key, env_key=env_key, default=default)
+        self.ensure_integer = ensure_integer
+
     def factory(self, env_val: str) -> Any:
         return float(env_val)
 
     def _validate(self, val: Any) -> None:
-        if not isinstance(val, numbers.Real):
+        if not isinstance(val, int if self.ensure_integer else numbers.Real):
             raise TypeError
 
 
