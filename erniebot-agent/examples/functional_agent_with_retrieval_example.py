@@ -69,7 +69,7 @@ if __name__ == "__main__":
         res = offline_ann(args.data_path, aurora_db)
         print(res)
 
-    llm = ERNIEBot(model="ernie-bot-8k")
+    llm = ERNIEBot(model="ernie-bot")
     memory = WholeMemory()
     agent = FunctionalAgentWithRetrieval(llm=llm, knowledge_base=aurora_db, top_k=3, tools=[], memory=memory)
 

@@ -38,8 +38,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 step_input = HumanMessage(
                     content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
                 )
-                # Currently, _async_step do not support the retrieval-based agent
-                # return await super()._async_step(step_input, chat_history, actions, files)
                 chat_history.append(step_input)
                 llm_resp = await self._async_run_llm(
                     messages=chat_history,
@@ -55,10 +53,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 raise ValueError("No answer found in the knowledge base")
         else:
             return await super()._async_step(step_input, chat_history, actions, files)
-
-    def _pre_process(self, step_input):
-        # TODO: add pre-process logic
-        raise NotImplementedError
 
     async def _post_process(
         self,
