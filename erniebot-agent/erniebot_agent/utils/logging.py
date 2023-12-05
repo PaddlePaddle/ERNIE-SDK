@@ -14,11 +14,43 @@
 
 import logging
 import os
+import re
 from typing import Optional
 
 __all__ = ["logger", "setup_logging"]
 
 logger = logging.getLogger("erniebot_agent")
+
+
+def handle_color_pattern(s):
+    corlor_pattern = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
+    color_lis = re.findall(corlor_pattern, s)
+    origin_text = re.split(corlor_pattern, s)
+
+    idx_color, idx_text = 0, 0
+    # 把原有的字符串按颜色pattern分割为列表
+    while idx_text < len(origin_text):
+        if idx_text > 0 and origin_text[idx_text - 1] != "" and origin_text[idx_text] != "":
+            origin_text.insert(idx_text, "")
+        idx_text += 1
+
+    for i in range(len(origin_text)):
+        if origin_text[i] == "":
+            origin_text[i] = color_lis[idx_color]
+            idx_color += 1
+
+    stack = []
+    # 所有颜色认为是左括号，reset认为是右括号，不允许左右括号交叉
+    for i in range(len(origin_text)):
+        if origin_text[i] in color_lis:
+            color = origin_text[i]
+            if color == "\033[0m":
+                stack.pop()
+                if stack:
+                    origin_text[i] = stack[-1]
+            else:
+                stack.append(color)
+    return "".join(origin_text)
 
 
 class ColorFormatter(logging.Formatter):
@@ -33,7 +65,9 @@ class ColorFormatter(logging.Formatter):
 
     def format(self, record):
         log_message = super(ColorFormatter, self).format(record)
-        log_message = self.COLORS.get(record.levelname, "") + log_message + self.COLORS["RESET"]
+        log_message = handle_color_pattern(
+            self.COLORS.get(record.levelname, "") + log_message + self.COLORS["RESET"]
+        )
         return log_message
 
 
