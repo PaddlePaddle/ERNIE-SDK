@@ -4,19 +4,17 @@ from typing import List, Optional
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.agents.schema import AgentAction, AgentFile
 from erniebot_agent.messages import HumanMessage, Message
+from erniebot_agent.prompt.prompt_template import PromptTemplate
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
 
-_MAX_RETRY_STEPS = 5
 
-
-def create_search_intent(chunk: str, query: str) -> str:
+def check_retrieval_intent(retrieval_results: str, query: str) -> str:
     # Be careful, slighly changes on prompt will influence final results at a large scale
-    context = f"{chunk}，请判断上面的关键信息和{query}是否相关?"
-    return (
-        context
-        + """按照下面的格式输出：
-            如果相关，则回复：{"msg":"相关"}，如果不相关，则回复：{"msg":"不相关"}。回复："""
-    )
+    template = """{{retrieval_results}}，请判断上面的关键信息和"{{query}}"是否相关? \
+        要求：按照下面的格式输出，如果相关，则回复：{"msg":true}，如果不相关，则回复：{"msg":false}。回复："""
+    template_engine = PromptTemplate(template, input_variables=["retrieval_results", "query"])
+    prompt = template_engine.format(retrieval_results=retrieval_results, query=query)
+    return prompt
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
@@ -33,9 +31,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         files: List[AgentFile],
     ) -> Optional[Message]:
         if self.knowledge_base is not None:
-            results = await self._post_process(step_input)
-
-            if results["msg"] == "相关":
+            results = await self._maybe_retrieval(step_input)
+            if results["msg"] is True:
                 # RAG
                 step_input = HumanMessage(
                     content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
@@ -49,7 +46,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 output_message = llm_resp.message
                 chat_history.append(output_message)
                 return None
-            elif results["msg"] == "不相关":
+            elif results["msg"] is False:
                 # FunctionalAgent
                 return await super()._async_step(step_input, chat_history, actions, files)
             else:
@@ -57,27 +54,18 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         else:
             return await super()._async_step(step_input, chat_history, actions, files)
 
-    async def _post_process(
+    async def _maybe_retrieval(
         self,
         step_input,
     ):
         documents = self.knowledge_base.search(step_input.content, top_k=self.top_k, filters=None)
-        retrieval_results = ""
-        for index, item in enumerate(documents):
-            retrieval_results += f"第{index}个段落：{item['content_se']}\n"
-
-        messages = [HumanMessage(content=create_search_intent(retrieval_results, step_input.content))]
-        request_count = 0
-        results = ""
-        while isinstance(results, str):
-            response = await self._async_run_llm(messages)
-            message = response.message
-            results = self._parse_results(message.content)
-            request_count += 1
-            if request_count > _MAX_RETRY_STEPS:
-                if "不相关" in results:
-                    return {"msg": "不相关", "retrieval_results": retrieval_results}
-                raise ValueError("No answer found in max retry steps")
+        retrieval_results = "\n".join(
+            [f"第{index}个段落：{item['content_se']}" for index, item in enumerate(documents)]
+        )
+        messages = [HumanMessage(content=check_retrieval_intent(retrieval_results, step_input.content))]
+        response = await self._async_run_llm(messages)
+        message = response.message
+        results = self._parse_results(message.content)
         return {"msg": results["msg"], "retrieval_results": retrieval_results}
 
     def _parse_results(self, results):
