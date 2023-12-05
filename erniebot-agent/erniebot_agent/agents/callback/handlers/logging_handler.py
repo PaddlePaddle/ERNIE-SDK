@@ -52,7 +52,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s is about to start running with input:\n %s\n",
             agent.__class__.__name__,
-            color_text(prompt, self.role_corlor.get("user")),
+            color_text(prompt, self.role_color.get("user")),
             subject="Run",
             state="Start",
         )
@@ -62,7 +62,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s is about to start running with input:\n%s\n",
             llm.__class__.__name__,
-            color_msg(messages, self.role_corlor, self.log_max_length),
+            color_msg(messages, self.role_color, self.log_max_length),
             subject="LLM",
             state="Start",
         )
@@ -71,7 +71,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s finished running with output: \n%s\n",
             llm.__class__.__name__,
-            color_msg(response.message, self.role_corlor, self.log_max_length),
+            color_msg(response.message, self.role_color, self.log_max_length),
             subject="LLM",
             state="End",
         )
@@ -85,8 +85,8 @@ class LoggingHandler(CallbackHandler):
         js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
             "%s is about to start running with input:\n%s\n",
-            color_text(tool.__class__.__name__, self.role_corlor.get("function")),
-            color_text(js_inputs, self.role_corlor.get("function")),
+            color_text(tool.__class__.__name__, self.role_color.get("function")),
+            color_text(js_inputs, self.role_color.get("function")),
             subject="Tool",
             state="Start",
         )
@@ -95,8 +95,8 @@ class LoggingHandler(CallbackHandler):
         js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
             "%s finished running with output:\n%s\n",
-            color_text(tool.__class__.__name__, self.role_corlor.get("function")),
-            color_text(js_inputs, self.role_corlor.get("function")),
+            color_text(tool.__class__.__name__, self.role_color.get("function")),
+            color_text(js_inputs, self.role_color.get("function")),
             subject="Tool",
             state="End",
         )
@@ -125,6 +125,6 @@ class LoggingHandler(CallbackHandler):
             open (bool, optional): whether or not to open. Defaults to True.
         """
         if open:
-            self.role_corlor = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
+            self.role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
         else:
-            self.role_corlor = {}
+            self.role_color = {}

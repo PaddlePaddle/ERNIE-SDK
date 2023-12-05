@@ -45,18 +45,18 @@ def get_bolded_text(text: str) -> str:
     return f"\033[1m{text}\033[0m"
 
 
-def color_msg(message: Union[Message, List[Message]], role_corlor: dict, max_length: int) -> str:
+def color_msg(message: Union[Message, List[Message]], role_color: dict, max_length: int) -> str:
     res = ""
     if isinstance(message, list):
         for msg in message:
-            res += _color_by_role(msg, role_corlor, max_length)
+            res += _color_by_role(msg, role_color, max_length)
             res += "\n"
     else:
-        res = _color_by_role(message, role_corlor, max_length)
+        res = _color_by_role(message, role_color, max_length)
     return res
 
 
-def _color_by_role(msg: Message, role_corlor: dict, max_length: int):
+def _color_by_role(msg: Message, role_color: dict, max_length: int):
     res = ""
     for k, v in msg.to_dict().items():
         if isinstance(v, dict):
@@ -66,7 +66,7 @@ def _color_by_role(msg: Message, role_corlor: dict, max_length: int):
             if len(v) >= max_length:
                 v = v[:max_length] + "..."
         if v:
-            possible_color = role_corlor.get(msg.role)
+            possible_color = role_color.get(msg.role)
             if possible_color:
                 res += f" {k}: {COLORS[possible_color]}{v}{COLORS['RESET']} \n"
             else:
