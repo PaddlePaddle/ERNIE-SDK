@@ -69,10 +69,11 @@ if __name__ == "__main__":
         res = offline_ann(args.data_path, aurora_db)
         print(res)
 
-    llm = ERNIEBot(model="ernie-bot-4")
+    llm = ERNIEBot(model="ernie-bot")
     memory = WholeMemory()
-
     agent = FunctionalAgentWithRetrieval(llm=llm, knowledge_base=aurora_db, top_k=3, tools=[], memory=memory)
-    query = "OpenAI管理层变更会带来哪些影响？"
-    response = asyncio.run(agent.async_run(query))
-    print(response)
+
+    queries = ["OpenAI管理层变更会带来哪些影响？", "今天天气怎么样？", "abcabc"]
+    for query in queries:
+        response = asyncio.run(agent.async_run(query))
+        print(response.text)

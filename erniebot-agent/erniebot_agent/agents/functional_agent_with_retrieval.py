@@ -1,4 +1,4 @@
-import time
+import json
 from typing import List, Optional
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
@@ -10,8 +10,12 @@ _MAX_RETRY_STEPS = 5
 
 
 def create_search_intent(chunk: str, query: str) -> str:
-    return f"""{chunk}，请判断上面的关键信息和{query}是否相关，按照下面的格式输出：
-            如果相关，则回复：['否']，如果不相关，则回复：['否']。只需要回复['是']和['否']，不需要回复其他内容."""
+    context = f"{chunk}，请判断上面的关键信息和{query}是否相关?"
+    return (
+        context
+        + """按照下面的格式输出：
+            如果相关，则回复：{"msg":"相关"}，如果不相关，则回复：{"msg":"不相关"}。回复："""
+    )
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
@@ -29,13 +33,13 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     ) -> Optional[Message]:
         if self.knowledge_base is not None:
             results = await self._post_process(step_input, chat_history, actions, files)
-            if results["msg"] == "是":
+
+            if results["msg"] == "相关":
                 step_input = HumanMessage(
                     content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
                 )
                 # Currently, _async_step do not support the retrieval-based agent
                 # return await super()._async_step(step_input, chat_history, actions, files)
-                time.sleep(2)
                 chat_history.append(step_input)
                 llm_resp = await self._async_run_llm(
                     messages=chat_history,
@@ -45,7 +49,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 output_message = llm_resp.message
                 chat_history.append(output_message)
                 return None
-            elif results["msg"] == "否":
+            elif results["msg"] == "不相关":
                 return await super()._async_step(step_input, chat_history, actions, files)
             else:
                 raise ValueError("No answer found in the knowledge base")
@@ -73,19 +77,21 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         message = response.message
         results = self._parse_results(message.content)
         request_count = 0
-        while results not in ["是", "否"]:
-            time.sleep(2)
+        while isinstance(results, str):
             response = await self._async_run_llm(messages)
             message = response.message
             results = self._parse_results(message.content)
             request_count += 1
             if request_count > _MAX_RETRY_STEPS:
                 break
-        return {"msg": results, "retrieval_results": retrieval_results}
+        return {"msg": results["msg"], "retrieval_results": retrieval_results}
 
     def _parse_results(self, results):
-        left_index = results.find("[")
-        right_index = results.rfind("]")
+        left_index = results.find("{")
+        right_index = results.rfind("}")
         if left_index == -1 or right_index == -1:
             return results
-        return results[left_index + 2 : right_index - 1]
+        try:
+            return json.loads(results[left_index : right_index + 1])
+        except Exception:
+            return results
