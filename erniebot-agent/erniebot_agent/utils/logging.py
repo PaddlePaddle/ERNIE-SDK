@@ -23,9 +23,9 @@ logger = logging.getLogger("erniebot_agent")
 
 
 def handle_color_pattern(s):
-    corlor_pattern = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
-    color_lis = re.findall(corlor_pattern, s)
-    origin_text = re.split(corlor_pattern, s)
+    color_pattern = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
+    color_lis = re.findall(color_pattern, s)
+    origin_text = re.split(color_pattern, s)
 
     idx_color, idx_text = 0, 0
     # 把原有的字符串按颜色pattern分割为列表
