@@ -16,11 +16,17 @@ import abc
 
 
 class File(metaclass=abc.ABCMeta):
-    def __init__(self, id: str, filename: str, created_at: int) -> None:
+    def __init__(
+        self, *, id: str, filename: str, created_at: int, bytes: int = 0, purpose: str = "", meta: str = ""
+    ) -> None:  # TODO: init for test purpose
         super().__init__()
         self.id = id
         self.filename = filename
         self.created_at = created_at
+        self.bytes = bytes
+        self.purpose = purpose
+        self.meta = meta
+        self._param_names = {"id", "filename", "created_at", "bytes", "purpose", "meta"}
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -31,6 +37,9 @@ class File(metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
+
+    def to_dict(self) -> dict:
+        return {k: getattr(self, k) for k in self._param_names}
 
     @abc.abstractmethod
     async def read_contents(self) -> bytes:

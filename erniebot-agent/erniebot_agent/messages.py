@@ -72,7 +72,10 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str):
+    def __init__(self, content: str, file_ids: Optional[List[str]] = None):  # TODO replace with file
+        self.file_ids = file_ids
+        if self.file_ids is not None:
+            content += ", ".join([content] + self.file_ids)
         super().__init__(role="user", content=content)
 
 
