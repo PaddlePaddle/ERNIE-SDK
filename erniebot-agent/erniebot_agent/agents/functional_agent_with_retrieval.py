@@ -1,8 +1,8 @@
 import json
-from typing import List, Optional
+from typing import List
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
-from erniebot_agent.agents.schema import AgentAction, AgentFile
+from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
 from erniebot_agent.messages import HumanMessage, Message
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
@@ -22,21 +22,19 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
-        self.top_k = kwargs.get("top_k", 3)
+        self.top_k = top_k
 
-    async def _async_step(
-        self,
-        step_input,
-        chat_history: List[Message],
-        actions: List[AgentAction],
-        files: List[AgentFile],
-    ) -> Optional[Message]:
-        results = await self._maybe_retrieval(step_input)
+    async def _async_run(self, prompt: str) -> AgentResponse:
+        results = await self._maybe_retrieval(prompt)
         if results["msg"] is True:
             # RAG
             step_input = HumanMessage(
-                content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + step_input.content
+                content="背景：" + results["retrieval_results"] + "请根据上面的背景信息回答下面的问题：" + prompt
             )
+            chat_history: List[Message] = []
+            actions_taken: List[AgentAction] = []
+            files_involved: List[AgentFile] = []
+
             chat_history.append(step_input)
             llm_resp = await self._async_run_llm(
                 messages=chat_history,
@@ -45,21 +43,24 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
             output_message = llm_resp.message
             chat_history.append(output_message)
-            return None
+            response = self._create_finished_response(chat_history, actions_taken, files_involved)
+            self.memory.add_message(chat_history[0])
+            self.memory.add_message(chat_history[-1])
+            return response
         else:
             # Functional Agent
-            logger.info(f"Use functional agent to handle the query: {step_input.content}")
-            return await super()._async_step(step_input, chat_history, actions, files)
+            logger.info(f"Use functional agent to handle the query: {prompt}")
+            return await super()._async_run(prompt)
 
     async def _maybe_retrieval(
         self,
         step_input,
     ):
-        documents = self.knowledge_base.search(step_input.content, top_k=self.top_k, filters=None)
+        documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         retrieval_results = "\n".join(
             [f"第{index}个段落：{item['content_se']}" for index, item in enumerate(documents)]
         )
-        messages = [HumanMessage(content=check_retrieval_intent(retrieval_results, step_input.content))]
+        messages = [HumanMessage(content=check_retrieval_intent(retrieval_results, step_input))]
         response = await self._async_run_llm(messages)
         message = response.message
         results = self._parse_results(message.content)
