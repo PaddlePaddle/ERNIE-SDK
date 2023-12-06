@@ -216,3 +216,27 @@ class TestToolSchema(unittest.TestCase):
         self.assertTrue(isclass(MyEnum))
         self.assertEqual(MyEnum.MEMBER1.value, "MEMBER1")
         self.assertListEqual(list(MyEnum.__members__.keys()), member_names)
+
+
+class TestDataTypeSchema(unittest.IsolatedAsyncioTestCase):
+    def test_enum_file(self):
+        file = "./tests/fixtures/tools/enum_openapi.yaml"
+        toolkit = RemoteToolkit.from_openapi_file(file)
+
+        # get_tool
+        tool = toolkit.get_tool("OCR")
+        self.assertIsNotNone(tool)
+
+        # test function_call schema
+        function_call_schema = tool.function_call_schema()
+
+        self.assertIn("language_type", function_call_schema["parameters"]["properties"])
+        self.assertIn("enum", function_call_schema["parameters"]["properties"]["language_type"])
+        self.assertEqual(len(function_call_schema["parameters"]["properties"]["language_type"]["enum"]), 25)
+
+    def test_empty_object(self):
+        file = "./tests/fixtures/tools/empty_object_openapi.yaml"
+        toolkit = RemoteToolkit.from_openapi_file(file)
+        tool = toolkit.get_tool("OCR")
+        function_call_schema = tool.function_call_schema()
+        self.assertEqual(function_call_schema["parameters"]["properties"]["language_type"]["type"], "object")
