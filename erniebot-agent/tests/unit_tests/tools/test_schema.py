@@ -14,6 +14,8 @@
 from __future__ import annotations
 
 import unittest
+from enum import Enum
+from inspect import isclass
 from typing import List, Optional
 
 from erniebot_agent.tools.base import RemoteToolkit
@@ -23,6 +25,7 @@ from erniebot_agent.tools.schema import (
     is_optional_type,
     json_type,
 )
+from erniebot_agent.utils.common import create_enum_class
 from openapi_spec_validator.readers import read_from_filename
 from pydantic import Field
 
@@ -185,3 +188,13 @@ class TestToolSchema(unittest.TestCase):
         self.assertEqual(examples[0].content, "展示单词列表")
         self.assertEqual(examples[1].function_call["name"], "getWordbook")
         self.assertEqual(examples[1].function_call["thoughts"], "这是一个展示单词本的需求")
+
+    def test_dynamic_enum_class(self):
+        # 使用函数创建枚举类
+        member_names = ["MEMBER1", "MEMBER2", "MEMBER3"]
+        MyEnum = create_enum_class("MyEnum", member_names)
+
+        self.assertTrue(issubclass(MyEnum, Enum))
+        self.assertTrue(isclass(MyEnum))
+        self.assertEqual(MyEnum.MEMBER1.value, "MEMBER1")
+        self.assertListEqual(list(MyEnum.__members__.keys()), member_names)

@@ -16,8 +16,10 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, get_args
+from enum import Enum
+from typing import Any, Dict, List, Optional, Type, Union, get_args
 
+from erniebot_agent.utils.common import create_enum_class
 from erniebot_agent.utils.logging import logger
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
@@ -144,6 +146,7 @@ class OpenAPIProperty(BaseModel):
     json_schema_extra: Optional[Dict[str, str]] = None
     description: Optional[str] = None
     required: Optional[List[str]] = None
+    enum: Optional[List[Union[int, str]]] = None
     items: dict = Field(default_factory=dict)
     properties: dict = Field(default_factory=dict)
 
@@ -162,6 +165,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
         field_type = "array"
     elif is_optional_type(field_info.annotation):
         field_type = json_type(get_args(field_info.annotation)[0])
+    elif issubclass(field_info.annotation, Enum):
+        field_type = json_type(type(list(field_info.annotation.__members__.keys())[0]))
     else:
         field_type = json_type(field_info.annotation)
 
@@ -186,6 +191,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
         openapi_dict = field_type_class.to_openapi_dict()
         property.update(openapi_dict)
+    elif issubclass(field_info.annotation, Enum):
+        property["enum"] = list(field_info.annotation.__members__.keys())
 
     property["description"] = property.get("description", "")
     return OpenAPIProperty(**property)
@@ -212,6 +219,8 @@ class ToolParameterView(BaseModel):
                     field_dict["items"]
                 )
                 field_type = List[SubParameterView]  # type: ignore
+            elif "enum" in field_dict:
+                field_type = create_enum_class(field_name, field_dict["enum"])
 
             # TODO(wj-Mcat): remove supporting for `summary` field
             if "summary" in field_dict:
@@ -227,13 +236,18 @@ class ToolParameterView(BaseModel):
             description = description or ""
 
             format = field_dict.get("format", None)
-            json_schema_extra = None
+            json_schema_extra = {}
             if format is not None:
-                json_schema_extra = {"format": format}
+                json_schema_extra["format"] = format
 
-            field = FieldInfo(
+            json_schema_extra["x-ebagent-file-type"] = field_dict.get("x-ebagent-file-type", "auto")
+
+            field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
             )
+            if "default" in field_dict:
+                field_info_param["default"] = field_dict["default"]
+            field = FieldInfo(**field_info_param)  # type: ignore
 
             # TODO(wj-Mcat): to handle list field required & not-required
             # if get_typing_list_type(field_type) is not None:
@@ -435,6 +449,7 @@ class RemoteToolView:
 @dataclass
 class Endpoint:
     url: str
+    description: Optional[str] = None
 
 
 @dataclass

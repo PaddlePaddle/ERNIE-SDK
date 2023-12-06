@@ -71,6 +71,29 @@ class BaseTool(ABC):
         raise NotImplementedError
 
 
+def get_file_names_from_param_view(param_view: Optional[Type[ToolParameterView]] = None) -> List[str]:
+    """get file names from tool parameter view
+
+    Args:
+        param_view (ToolParameterView): the ToolParameterView pydantic class
+
+    Returns:
+        List[str]: the names of file
+    """
+    if param_view is None:
+        return []
+    file_names = []
+    for key in param_view.model_fields.keys():
+        if param_view.model_fields[key].json_schema_extra and param_view.model_fields[
+            key
+        ].json_schema_extra.get("format", None) in [
+            "byte",
+            "binary",
+        ]:
+            file_names.append(key)
+    return file_names
+
+
 class Tool(BaseTool, ABC):
     description: str
     name: Optional[str] = None
@@ -125,16 +148,19 @@ def wrap_tool_with_files(func):
 
         file_manager = object.file_manager
         # 1. replace fileid with byte string
+        parameter_file_names = get_file_names_from_param_view(object.tool_view.parameters)
+        origin_tool_arguments = deepcopy(tool_arguments)
         for key in tool_arguments.keys():
-            if (
-                object.tool_view.parameters
-                and object.tool_view.parameters.model_fields[key].json_schema_extra
-            ):
-                json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
-                if json_schema_extra.get("format", None) in ["byte", "binary"]:
-                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-                    tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if key not in parameter_file_names:
+                continue
+            if object.tool_view.parameters is None:
+                break
+            json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
+            if json_schema_extra.get("format", None) in ["byte", "binary"]:
+                byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                tool_arguments[key] = base64.b64encode(byte_str).decode()
 
+        tool_arguments["__origin_arguments__"] = origin_tool_arguments
         # 2. call tool get response
         json_response = await func(object, **tool_arguments)
         return json_response
@@ -173,6 +199,7 @@ class RemoteTool(BaseTool):
     @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
         url = self.server_url + self.tool_view.uri + "?version=" + self.version
+        origin_tool_arguments = tool_arguments.pop("__origin_arguments__")
 
         headers = deepcopy(self.headers)
         headers["Content-Type"] = self.tool_view.parameters_content_type
@@ -182,7 +209,7 @@ class RemoteTool(BaseTool):
         }
         if self.tool_view.method == "get":
             requests_inputs["params"] = tool_arguments
-        if self.tool_view.parameters_content_type == "application/json":
+        elif self.tool_view.parameters_content_type == "application/json":
             requests_inputs["json"] = tool_arguments
         elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
             requests_inputs["data"] = tool_arguments
@@ -204,35 +231,45 @@ class RemoteTool(BaseTool):
             raise ValueError(f"the resource is invalid, the error message is: {response.text}")
 
         # parse the file from response
-        file_names = []
-        if self.tool_view.returns:
-            for key in self.tool_view.returns.model_fields.keys():
-                if self.tool_view.returns.model_fields[
-                    key
-                ].json_schema_extra and self.tool_view.returns.model_fields[key].json_schema_extra.get(
-                    "format", None
-                ) in [
-                    "byte",
-                    "binary",
-                ]:
-                    file_names.append(key)
+        returns_file_names = get_file_names_from_param_view(self.tool_view.returns)
 
-        if len(file_names) == 0:
+        if len(returns_file_names) == 0:
             return response.json()
-        elif len(file_names) != 1:
+        elif len(returns_file_names) != 1:
             raise RuntimeError("The tool returns multiple files, which is not supported for now")
 
         result = {}
         # create file from bytes
-        file_name = response.headers["Content-Disposition"].split("filename=")[1]
-        local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+        if response.headers.get("Content-Disposition", None) is not None:
+            file_name = response.headers["Content-Disposition"].split("filename=")[1]
+            local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+        else:
+            assert self.tool_view.returns is not None
+            file_type = self.tool_view.returns.model_fields[returns_file_names[0]].json_schema_extra[
+                "x-ebagent-file-type"
+            ]
+            if file_type == "auto":
+                # guess file_name from parameters
+                parameter_file_names = get_file_names_from_param_view(self.tool_view.parameters)
+                if len(parameter_file_names) == 0:
+                    raise ValueError("Can not find the file name in response")
 
-        result[file_names[0]] = local_file.id
+                file_id = origin_tool_arguments[parameter_file_names[0]]
+                file = self.file_manager.look_up_file_by_id(file_id)
+                if file is None:
+                    raise ValueError("Can not find file in parameter")
+                file_name = file.filename
+            else:
+                file_name = f"test.{file_type}"
+
+            base64_string = response.json()[returns_file_names[0]]
+            local_file = await self.file_manager.create_file_from_bytes(
+                base64.b64decode(base64_string), file_name
+            )
+
+        result[returns_file_names[0]] = local_file.id
 
         return result
-
-    def _decode_file(self):
-        pass
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
