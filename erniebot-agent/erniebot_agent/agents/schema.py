@@ -107,9 +107,6 @@ class AgentResponse(object):
         prev_idx = 0
         file_len = len(self.files[0].file.id)
         for place in places:
-            import pdb
-
-            pdb.set_trace()
             place = place.start()
             split_text_list.append(self.text[prev_idx:place])
             split_text_list.append(self.text[place : place + file_len])

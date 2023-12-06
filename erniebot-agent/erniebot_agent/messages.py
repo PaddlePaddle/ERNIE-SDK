@@ -13,6 +13,8 @@
 
 from typing import Dict, List, Optional, TypedDict
 
+from erniebot_agent.file_io.base import File
+
 import erniebot.utils.token_helper as token_helper
 
 
@@ -72,10 +74,10 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, file_ids: Optional[List[str]] = None):  # TODO replace with file
-        self.file_ids = file_ids
-        if self.file_ids is not None:
-            content += ", ".join([content] + self.file_ids)
+    def __init__(self, content: str, files: Optional[List[File]] = None):
+        self.files = files
+        if self.files is not None:
+            content += ", ".join([content] + [file.id for file in self.files])
         super().__init__(role="user", content=content)
 
 
