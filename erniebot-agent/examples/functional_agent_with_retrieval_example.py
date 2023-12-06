@@ -2,13 +2,11 @@ import argparse
 import asyncio
 from typing import Dict, List, Type
 
-from erniebot_agent.agents.functional_agent_with_retrieval import (
-    FunctionalAgentWithRetrieval,
-)
-from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.memory.whole_memory import WholeMemory
+from erniebot_agent.agents import FunctionalAgentWithRetrieval
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.memory import WholeMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
-from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
