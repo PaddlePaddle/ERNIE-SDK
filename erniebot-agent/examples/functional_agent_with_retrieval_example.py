@@ -1,12 +1,10 @@
 import argparse
 import asyncio
 
-from erniebot_agent.agents.functional_agent_with_retrieval import (
-    FunctionalAgentWithRetrieval,
-)
-from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.agents import FunctionalAgentWithRetrieval
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.memory import WholeMemory
+from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
