@@ -44,7 +44,9 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 functions=None,
                 system=self.system_message.content if self.system_message is not None else None,
             )
+            # Get RAG results
             output_message = llm_resp.message
+
             chat_history.append(
                 AIMessage(
                     content="",
@@ -69,6 +71,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                     next_step_input, chat_history, actions_taken, files_involved
                 )
                 if curr_step_output is None:
+                    print(chat_history)
                     response = self._create_finished_response(chat_history, actions_taken, files_involved)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
