@@ -152,11 +152,16 @@ class BaizhongSearch:
             result = res.json()
             if result["errCode"] != 0:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
+
             list_data = []
             for item in result["hits"]:
                 content = item["_source"]["doc"]
+                score = item["_score"]
+
                 content = base64.b64decode(content).decode("utf-8")
                 json_data = json.loads(content)
+
+                json_data["score"] = score
                 list_data.append(json_data)
             return list_data
         else:
