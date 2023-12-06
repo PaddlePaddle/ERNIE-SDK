@@ -61,10 +61,10 @@ examples:
                 word: "Hello"
                 query: 删除单词Hello
       # 反例，无需触发此插件的任一某个接口
-      # - context:
-      #     - role: user
-      #       content: 怎么养成记单词的习惯?
-      #     - role: bot
-      #       # 无需触发
-      #       plugin:
-      #         thoughts: 我不需要使用以上工具
+      - context:
+          - role: user
+            content: 怎么养成记单词的习惯?
+          - role: bot
+            # 无需触发
+            plugin:
+              thoughts: 我不需要使用以上工具
