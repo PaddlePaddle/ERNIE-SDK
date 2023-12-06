@@ -107,10 +107,13 @@ class AgentResponse(object):
         prev_idx = 0
         file_len = len(self.files[0].file.id)
         for place in places:
-            place = place.start()
-            split_text_list.append(self.text[prev_idx:place])
-            split_text_list.append(self.text[place : place + file_len])
-            prev_idx = place + file_len
+            import pdb
+
+            pdb.set_trace()
+            file_start_index = place.start()
+            split_text_list.append(self.text[prev_idx:file_start_index])
+            split_text_list.append(self.text[file_start_index : file_start_index + file_len])
+            prev_idx = file_start_index + file_len
         else:
             split_text_list.append(self.text[prev_idx:])
 
@@ -126,9 +129,9 @@ class AgentResponse(object):
                 else:
                     raise RuntimeError(f"File id is neither local nor remote. It is {data}")
 
-                file_meta = file_object.to_dict()
-
-                output_dict["content_parts"].append(file_meta)
+                if file_object is not None:
+                    file_meta = file_object.to_dict()
+                    output_dict["content_parts"].append(file_meta)
             else:
                 output_dict["content_parts"].append({"text": data})
 
