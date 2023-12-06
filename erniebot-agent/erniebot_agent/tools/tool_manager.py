@@ -36,6 +36,7 @@ class ToolManager(object):
         return self.get_tool(tool_name)
 
     def add_tool(self, tool: Tool) -> None:
+        print(f"adding {tool.tool_name}")
         tool_name = tool.tool_name
         if tool_name in self._tools:
             raise RuntimeError(f"Name {repr(tool_name)} is already registered.")

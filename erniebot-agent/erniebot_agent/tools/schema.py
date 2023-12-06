@@ -433,8 +433,6 @@ class RemoteToolView:
         inputs = {
             "name": self.name,
             "description": self.description,
-            # TODO(wj-Mcat): read examples from openapi.yaml
-            # "examples": [example.to_dict() for example in self.examples],
         }
         if self.parameters is not None:
             inputs["parameters"] = self.parameters.function_call_schema()  # type: ignore

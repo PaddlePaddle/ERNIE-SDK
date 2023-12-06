@@ -176,12 +176,18 @@ class RemoteTool(BaseTool):
         headers: dict,
         version: str,
         examples: Optional[List[Message]] = None,
+        tool_name_prefix: Optional[str] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
         self.version = version
         self.examples = examples
+        self.tool_name_prefix = tool_name_prefix
+        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
+        if tool_name_prefix is not None:
+            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+
         self.file_manager = FileManager()
 
     def __str__(self) -> str:
@@ -228,7 +234,10 @@ class RemoteTool(BaseTool):
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
-            raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+            raise ValueError(
+                f"The resource requested by `{self.tool_name}` returned"
+                f"{response.status_code}: {response.text}"
+            )
 
         # parse the file from response
         returns_file_names = get_file_names_from_param_view(self.tool_view.returns)
@@ -292,7 +301,11 @@ class RemoteToolkit:
     headers: dict
     examples: List[Message] = field(default_factory=list)
 
-    def __getitem__(self, tool_name: str):
+    @property
+    def tool_name_prefix(self) -> str:
+        return f"{self.info.title}/{self.info.version}"
+
+    def __getitem__(self, tool_name: str) -> RemoteTool:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
@@ -303,6 +316,7 @@ class RemoteToolkit:
                 self.headers,
                 self.info.version,
                 examples=self.get_examples_by_name(path.name),
+                tool_name_prefix=self.tool_name_prefix,
             )
             for path in self.paths
         ]
@@ -343,6 +357,11 @@ class RemoteToolkit:
             tool_names = [name for name in tool_names if name]
 
             if tool_name in tool_names:
+                # 3. prepend `tool_name_prefix` to all tool names in examples
+                for example in examples:
+                    if isinstance(example, AIMessage) and example.function_call is not None:
+                        original_tool_name = example.function_call["name"]
+                        example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
                 final_exampels.extend(examples)
 
         return final_exampels
@@ -356,6 +375,7 @@ class RemoteToolkit:
             self.headers,
             self.info.version,
             examples=self.get_examples_by_name(tool_name),
+            tool_name_prefix=self.tool_name_prefix,
         )
 
     def to_openapi_dict(self) -> dict:
