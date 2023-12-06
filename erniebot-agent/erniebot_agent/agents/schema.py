@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import asyncio
 import re
 from dataclasses import dataclass
@@ -62,13 +64,13 @@ class AgentResponse(object):
     actions: List[AgentAction]
     files: List["AgentFile"]
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
-    annotations: Optional[Dict[str, List]] = None
 
-    def get_annotations(self):
-        # If there is file, annotation will not be none,
+    @property
+    def annotations(self):
+        annotations = None
         if self.includes_file():
-            self.annotations = self.output_dict()
-        return self.annotations
+            annotations = self.output_dict()
+        return annotations
 
     def get_last_output_file(self) -> Optional[File]:
         for agent_file in self.files[::-1]:
@@ -107,9 +109,6 @@ class AgentResponse(object):
         prev_idx = 0
         file_len = len(self.files[0].file.id)
         for place in places:
-            import pdb
-
-            pdb.set_trace()
             file_start_index = place.start()
             split_text_list.append(self.text[prev_idx:file_start_index])
             split_text_list.append(self.text[file_start_index : file_start_index + file_len])
