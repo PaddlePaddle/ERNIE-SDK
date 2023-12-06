@@ -250,9 +250,7 @@ class RemoteTool(BaseTool):
             examples = []
             # prepend `tool_name_prefix` to all tool names in examples
             for example in self.examples:
-                print(example)
                 if isinstance(example, AIMessage) and example.function_call is not None:
-                    print("here")
                     original_tool_name = example.function_call["name"]
                     example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
                 examples.append(example.to_dict())
