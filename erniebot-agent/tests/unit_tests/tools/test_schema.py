@@ -200,6 +200,6 @@ class TestToolSchema(unittest.TestCase):
 
         self.assertEqual(len(examples), 2)
         self.assertEqual(examples[0].content, "展示单词列表")
-        # Note: example still have the original function name without function_call_schema() call
-        self.assertEqual(examples[1].function_call["name"], "getWordbook")
+        # function_call name in examples should have `tool_name_prefix` prepended
+        self.assertEqual(examples[1].function_call["name"], "单词本/v1/getWordbook")
         self.assertEqual(examples[1].function_call["thoughts"], "这是一个展示单词本的需求")
