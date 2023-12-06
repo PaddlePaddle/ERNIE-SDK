@@ -8,20 +8,20 @@ from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.utils.logging import logger
 
-INTENT_PROMPT = """请判断以下的检索结果和检索语句是否相关，并且有助于回答检索语句的问题。
-请严格按照【JSON格式】输出。如果相关，则回复：{"is_relevant":true}，如果不相关，则回复：{"is_relevant":false}
-检索结果:
+INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content_se']}}
 {% endfor %}
-检索语句: {{query}}"""
+检索语句: {{query}}
+请判断以上的检索结果和检索语句是否相关，并且有助于回答检索语句的问题。
+请严格按照【JSON格式】输出。如果相关，则回复：{"is_relevant":true}，如果不相关，则回复：{"is_relevant":false}"""
 
-RAG_PROMPT = """请根据以下检索结果回答检索语句的问题。
-检索结果:
+RAG_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content_se']}}
 {% endfor %}
-检索语句: {{query}}"""
+检索语句: {{query}}
+请根据以上检索结果回答检索语句的问题"""
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
