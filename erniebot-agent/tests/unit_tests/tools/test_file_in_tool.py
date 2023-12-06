@@ -29,7 +29,7 @@ from fastapi.responses import FileResponse
 
 PYYAML_CONTENT = """openapi: 3.0.1
 info:
-    title: 测试 Remote Tool
+    title: TestRemoteTool
     description: 个性化的英文单词本，可以增加、删除和浏览单词本中的单词，背单词时从已有单词本中随机抽取单词生成句子或者段落。
     version: "v1"
 servers:
@@ -146,6 +146,10 @@ class TestToolWithFile(unittest.TestCase):
 
             toolkit = RemoteToolkit.from_openapi_file(openapi_file)
             tool = toolkit.get_tool("getFile")
+            # tool.tool_name should be original tool name
+            self.assertEqual(tool.tool_name, "getFile")
+            # tool_name from function_call_schema have tool_name_prefix prepended
+            self.assertEqual(tool.function_call_schema()["name"], "TestRemoteTool/v1/getFile")
             file_manager = FileManager()
             input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
             result = asyncio.run(tool(file=input_file.id))
@@ -154,4 +158,4 @@ class TestToolWithFile(unittest.TestCase):
 
             file = file_manager.look_up_file_by_id(file_id=file_id)
             content = asyncio.run(file.read_contents())
-            self.assertEquals(content.decode("utf-8"), self.content)
+            self.assertEqual(content.decode("utf-8"), self.content)

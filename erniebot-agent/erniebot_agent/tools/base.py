@@ -150,12 +150,15 @@ class RemoteTool(BaseTool):
         headers: dict,
         version: str,
         examples: Optional[List[Message]] = None,
+        tool_name_prefix: Optional[str] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
         self.version = version
         self.examples = examples
+        self.tool_name_prefix = tool_name_prefix
+
         self.file_manager = FileManager()
 
     def __str__(self) -> str:
@@ -182,7 +185,7 @@ class RemoteTool(BaseTool):
         }
         if self.tool_view.method == "get":
             requests_inputs["params"] = tool_arguments
-        if self.tool_view.parameters_content_type == "application/json":
+        elif self.tool_view.parameters_content_type == "application/json":
             requests_inputs["json"] = tool_arguments
         elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
             requests_inputs["data"] = tool_arguments
@@ -201,7 +204,10 @@ class RemoteTool(BaseTool):
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
-            raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+            raise ValueError(
+                f"The resource requested by `{self.tool_name}` returned"
+                f"{response.status_code}: {response.text}"
+            )
 
         # parse the file from response
         file_names = []
@@ -236,8 +242,19 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
+        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
+        if self.tool_name_prefix is not None:
+            original_name = schema["name"]
+            schema["name"] = f"{self.tool_name_prefix}/{original_name}"
         if self.examples is not None:
-            schema["examples"] = [example.to_dict() for example in self.examples]
+            examples = []
+            # prepend `tool_name_prefix` to all tool names in examples
+            for example in self.examples:
+                if isinstance(example, AIMessage) and example.function_call is not None:
+                    original_tool_name = example.function_call["name"]
+                    example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
+                examples.append(example.to_dict())
+            schema["examples"] = examples
 
         return schema or {}
 
@@ -255,7 +272,11 @@ class RemoteToolkit:
     headers: dict
     examples: List[Message] = field(default_factory=list)
 
-    def __getitem__(self, tool_name: str):
+    @property
+    def tool_name_prefix(self) -> str:
+        return f"{self.info.title}/{self.info.version}"
+
+    def __getitem__(self, tool_name: str) -> RemoteTool:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
@@ -266,6 +287,7 @@ class RemoteToolkit:
                 self.headers,
                 self.info.version,
                 examples=self.get_examples_by_name(path.name),
+                tool_name_prefix=self.tool_name_prefix,
             )
             for path in self.paths
         ]
@@ -319,6 +341,7 @@ class RemoteToolkit:
             self.headers,
             self.info.version,
             examples=self.get_examples_by_name(tool_name),
+            tool_name_prefix=self.tool_name_prefix,
         )
 
     def to_openapi_dict(self) -> dict:

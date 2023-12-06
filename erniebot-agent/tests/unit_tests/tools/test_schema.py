@@ -29,6 +29,7 @@ from pydantic import Field
 
 class TestToolSchema(unittest.TestCase):
     openapi_file = "./tests/fixtures/openapi.yaml"
+    examples_file = "./tests/fixtures/examples.yaml"
 
     def test_plugin_schema(self):
         schema = RemoteToolkit.from_openapi_file(self.openapi_file)
@@ -50,10 +51,26 @@ class TestToolSchema(unittest.TestCase):
         function_call_schemas = [tool.function_call_schema() for tool in toolkit.get_tools()]
         self.assertEqual(len(function_call_schemas), 4)
 
-        self.assertEqual(function_call_schemas[0]["name"], "getWordbook")
+        self.assertEqual(function_call_schemas[0]["name"], "单词本/v1/getWordbook")
         self.assertEqual(function_call_schemas[0]["responses"]["required"], ["wordbook"])
         self.assertEqual(function_call_schemas[0]["responses"]["properties"]["wordbook"]["type"], "array")
-        self.assertEqual(function_call_schemas[3]["name"], "deleteWord")
+        self.assertEqual(function_call_schemas[3]["name"], "单词本/v1/deleteWord")
+
+    def test_function_call_schemas_with_examples(self):
+        toolkit = RemoteToolkit.from_openapi_file(self.openapi_file)
+        toolkit.examples = toolkit.load_examples_yaml(self.examples_file)
+        function_call_schemas = [tool.function_call_schema() for tool in toolkit.get_tools()]
+        self.assertEqual(len(function_call_schemas), 4)
+        self.assertEqual(function_call_schemas[0]["name"], "单词本/v1/getWordbook")
+        self.assertEqual(
+            function_call_schemas[0]["examples"][1]["function_call"]["name"], "单词本/v1/getWordbook"
+        )
+        self.assertEqual(function_call_schemas[0]["responses"]["required"], ["wordbook"])
+        self.assertEqual(function_call_schemas[0]["responses"]["properties"]["wordbook"]["type"], "array")
+        self.assertEqual(function_call_schemas[3]["name"], "单词本/v1/deleteWord")
+        self.assertEqual(
+            function_call_schemas[3]["examples"][1]["function_call"]["name"], "单词本/v1/deleteWord"
+        )
 
     def test_get_typing_list_type(self):
         result = get_typing_list_type(List[int])
@@ -174,8 +191,8 @@ class TestToolSchema(unittest.TestCase):
         self.assertTrue(is_optional_type(Optional[ToolParameterView]))
 
     def test_load_examples(self):
-        toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapi.yaml")
-        toolkit.examples = toolkit.load_examples_yaml("./tests/fixtures/examples.yaml")
+        toolkit = RemoteToolkit.from_openapi_file(self.openapi_file)
+        toolkit.examples = toolkit.load_examples_yaml(self.examples_file)
         self.assertEqual(len(toolkit.examples), 12)
 
         # add_word examples
@@ -183,5 +200,6 @@ class TestToolSchema(unittest.TestCase):
 
         self.assertEqual(len(examples), 2)
         self.assertEqual(examples[0].content, "展示单词列表")
+        # Note: example still have the original function name without function_call_schema() call
         self.assertEqual(examples[1].function_call["name"], "getWordbook")
         self.assertEqual(examples[1].function_call["thoughts"], "这是一个展示单词本的需求")
