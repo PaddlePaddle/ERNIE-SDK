@@ -175,9 +175,6 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
         "description": field_info.description,
     }
 
-    # if field_info.json_schema_extra:
-    #     property["json_schema_extra"] = field_info.json_schema_extra
-
     if property["type"] == "array":
         if typing_list_type == "object":
             list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
