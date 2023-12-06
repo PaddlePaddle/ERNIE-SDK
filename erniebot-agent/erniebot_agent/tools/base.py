@@ -158,9 +158,6 @@ class RemoteTool(BaseTool):
         self.version = version
         self.examples = examples
         self.tool_name_prefix = tool_name_prefix
-        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
-        if tool_name_prefix is not None:
-            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
 
         self.file_manager = FileManager()
 
@@ -245,8 +242,21 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
+        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
+        if self.tool_name_prefix is not None:
+            original_name = schema["name"]
+            schema["name"] = f"{self.tool_name_prefix}/{original_name}"
         if self.examples is not None:
-            schema["examples"] = [example.to_dict() for example in self.examples]
+            examples = []
+            # prepend `tool_name_prefix` to all tool names in examples
+            for example in self.examples:
+                print(example)
+                if isinstance(example, AIMessage) and example.function_call is not None:
+                    print("here")
+                    original_tool_name = example.function_call["name"]
+                    example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
+                examples.append(example.to_dict())
+            schema["examples"] = examples
 
         return schema or {}
 
@@ -320,11 +330,6 @@ class RemoteToolkit:
             tool_names = [name for name in tool_names if name]
 
             if tool_name in tool_names:
-                # 3. prepend `tool_name_prefix` to all tool names in examples
-                for example in examples:
-                    if isinstance(example, AIMessage) and example.function_call is not None:
-                        original_tool_name = example.function_call["name"]
-                        example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
                 final_exampels.extend(examples)
 
         return final_exampels
