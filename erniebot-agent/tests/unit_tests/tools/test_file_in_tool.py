@@ -146,10 +146,8 @@ class TestToolWithFile(unittest.TestCase):
 
             toolkit = RemoteToolkit.from_openapi_file(openapi_file)
             tool = toolkit.get_tool("getFile")
-            # tool.tool_name should be original tool name
-            self.assertEqual(tool.tool_name, "getFile")
-            # tool_name from function_call_schema have tool_name_prefix prepended
-            self.assertEqual(tool.function_call_schema()["name"], "TestRemoteTool/v1/getFile")
+            # tool.tool_name should have `tool_name_prefix`` prepended
+            self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
             file_manager = FileManager()
             input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
             result = asyncio.run(tool(file=input_file.id))
