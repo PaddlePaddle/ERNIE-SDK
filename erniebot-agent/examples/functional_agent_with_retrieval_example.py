@@ -8,6 +8,7 @@ from erniebot_agent.memory import WholeMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
+from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from langchain.document_loaders import PyPDFDirectoryLoader
@@ -95,9 +96,12 @@ if __name__ == "__main__":
         print(res)
 
     llm = ERNIEBot(model="ernie-bot")
+    retrieval_tool = BaizhongSearchTool(
+        description="Use BaizhongSearch to retrieve documents.", db=baizhong_db
+    )
     memory = WholeMemory()
     agent = FunctionalAgentWithRetrieval(
-        llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool()], memory=memory
+        llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     )
 
     queries = ["OpenAI管理层变更会带来哪些影响?", "OpenAI管理层变更会带来哪些影响？并记录在笔记本里面", "量化交易", "今天天气怎么样？", "abcabc"]

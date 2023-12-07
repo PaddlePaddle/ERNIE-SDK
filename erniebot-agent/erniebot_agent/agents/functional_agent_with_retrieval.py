@@ -63,9 +63,10 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="knowledge_retrieval_tool", tool_args='{"query": "%s"}' % prompt)
+            action = AgentAction(tool_name="BaizhongTool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
+            # next_step_input = FunctionMessage(name=action.tool_name, content=action.tool_args)
             next_step_input = HumanMessage(content=f"检索的上下文为：{output_message.content} 请回答：{prompt}")
 
             num_steps_taken = 0
