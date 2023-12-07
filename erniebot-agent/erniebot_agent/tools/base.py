@@ -421,7 +421,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token  # type: ignore
+            access_token = erniebot.access_token
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
