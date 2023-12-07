@@ -25,7 +25,7 @@ class File(metaclass=abc.ABCMeta):
         byte_size: int,
         created_at: int,
         purpose: str,
-        meta: Dict[str, Any],
+        metadata: Dict[str, Any],
     ) -> None:
         super().__init__()
         self.id = id
@@ -33,7 +33,7 @@ class File(metaclass=abc.ABCMeta):
         self.byte_size = byte_size
         self.created_at = created_at
         self.purpose = purpose
-        self.meta = meta
+        self.metadata = metadata
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -57,6 +57,6 @@ class File(metaclass=abc.ABCMeta):
                 f"byte_size: {repr(self.byte_size)}",
                 f"created_at: {repr(self.created_at)}",
                 f"purpose: {repr(self.purpose)}",
-                f"meta: {repr(self.meta)}",
+                f"metadata: {repr(self.metadata)}",
             ]
         )

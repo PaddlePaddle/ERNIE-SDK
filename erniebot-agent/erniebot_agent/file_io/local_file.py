@@ -35,7 +35,7 @@ class LocalFile(File):
         byte_size: int,
         created_at: int,
         purpose: FilePurpose,
-        meta: Dict[str, Any],
+        metadata: Dict[str, Any],
         path: pathlib.Path,
     ) -> None:
         if not is_local_file_id(id):
@@ -46,7 +46,7 @@ class LocalFile(File):
             byte_size=byte_size,
             created_at=created_at,
             purpose=purpose,
-            meta=meta,
+            metadata=metadata,
         )
         self.path = path
 
@@ -60,7 +60,7 @@ class LocalFile(File):
 
 
 def create_local_file_from_path(
-    file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: Dict[str, Any]
+    file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
 ) -> LocalFile:
     if not file_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist.")
@@ -74,7 +74,7 @@ def create_local_file_from_path(
         byte_size=byte_size,
         created_at=created_at,
         purpose=file_purpose,
-        meta=file_meta,
+        metadata=file_metadata,
         path=file_path,
     )
     return file

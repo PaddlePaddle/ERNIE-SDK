@@ -72,7 +72,7 @@ class FileManager(object):
         file_path: FilePath,
         *,
         file_purpose: FilePurpose = ...,
-        file_meta: Optional[Dict[str, Any]] = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
@@ -83,7 +83,7 @@ class FileManager(object):
         file_path: FilePath,
         *,
         file_purpose: FilePurpose = ...,
-        file_meta: Optional[Dict[str, Any]] = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
@@ -93,30 +93,30 @@ class FileManager(object):
         file_path: FilePath,
         *,
         file_purpose: FilePurpose = "assistants",
-        file_meta: Optional[Dict[str, Any]] = None,
+        file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Literal["local", "remote"] = "local",
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
         if file_type == "local":
-            file = await self.create_local_file_from_path(file_path, file_purpose, file_meta)
+            file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
-            file = await self.create_remote_file_from_path(file_path, file_purpose, file_meta)
+            file = await self.create_remote_file_from_path(file_path, file_purpose, file_metadata)
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
         return file
 
     async def create_local_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[Dict[str, Any]]
+        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
     ) -> LocalFile:
-        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_meta or {})
+        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata or {})
         self._file_registry.register_file(file)
         return file
 
     async def create_remote_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[Dict[str, Any]]
+        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
     ) -> RemoteFile:
         file = await self.remote_file_client.upload_file(
-            pathlib.Path(file_path), file_purpose, file_meta or {}
+            pathlib.Path(file_path), file_purpose, file_metadata or {}
         )
         if self._auto_register:
             self._file_registry.register_file(file)
@@ -129,7 +129,7 @@ class FileManager(object):
         filename: str,
         *,
         file_purpose: FilePurpose = ...,
-        file_meta: Optional[Dict[str, Any]] = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
@@ -141,7 +141,7 @@ class FileManager(object):
         filename: str,
         *,
         file_purpose: FilePurpose = ...,
-        file_meta: Optional[Dict[str, Any]] = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
@@ -152,7 +152,7 @@ class FileManager(object):
         filename: str,
         *,
         file_purpose: FilePurpose = "assistants",
-        file_meta: Optional[Dict[str, Any]] = None,
+        file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Literal["local", "remote"] = "local",
     ) -> Union[LocalFile, RemoteFile]:
         # Can we do this with in-memory files?
@@ -165,7 +165,7 @@ class FileManager(object):
             file = await self.create_file_from_path(
                 file_path,
                 file_purpose=file_purpose,
-                file_meta=file_meta,
+                file_metadata=file_metadata,
                 file_type=file_type,
             )
         finally:
