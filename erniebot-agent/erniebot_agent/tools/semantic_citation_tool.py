@@ -55,7 +55,9 @@ class SemanticCitationTool(Tool):
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
                         if similarities[idx] >= 0.9:
-                            sentence += f"<sup>[{url_index[source['url']]['index']}]({source['url']})</sup>"
+                            sentence += (
+                                f"<sup>[\\[{url_index[source['url']]['index']}\\]]({source['url']})</sup>"
+                            )
                     output_sent.append(sentence)
                 chunk_text = "".join(output_sent)
                 output_text.append(chunk_text)
