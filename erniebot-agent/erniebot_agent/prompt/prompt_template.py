@@ -41,7 +41,7 @@ class PromptTemplate(BasePromptTemplate):
         super().__init__(input_variables)
         self.name = name
         self.template = template
-        self.validate_template = True if input_variables is not None else False  # todo: 验证模板是否正确
+        self.validate_template = True if input_variables is not None else False
 
     def format(self, **kwargs) -> str:
         if self.validate_template:

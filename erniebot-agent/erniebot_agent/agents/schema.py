@@ -14,15 +14,13 @@
 
 from __future__ import annotations
 
-import asyncio
-import re
+import functools
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.protocol import extract_file_ids
 from erniebot_agent.messages import AIMessage, Message
-from typing_extensions import Literal
 
 
 @dataclass
@@ -65,8 +63,8 @@ class AgentResponse(object):
     files: List["AgentFile"]
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
-    @property
-    def annotations(self):
+    @functools.cached_property  # lazy and prevent extra fime from multiple calls
+    def annotations(self) -> Optional[Dict[str, List]]:
         annotations = None
         if self.includes_file():
             annotations = self.output_dict()
@@ -96,37 +94,43 @@ class AgentResponse(object):
         return input_files, output_files
 
     def includes_file(self) -> bool:
-        for agent_file in self.files:  # TODO: self.files contains all input and output files
+        for agent_file in self.files:
             if agent_file.file.id in self.text:
                 return True
         else:
             return False
 
     def output_dict(self) -> Dict[str, List]:
-        # split the text into parts and add file id to each part
-        places = re.finditer("file-", self.text)
+        # 1. split the text into parts and add file id to each part
+        file_ids = extract_file_ids(self.text)
+
+        places = []
+        for file_id in file_ids:
+            # remote file-id & local file-id may have different length.
+            places.append((self.text.index(file_id), len(file_id)))
+        else:
+            sorted(places, key=lambda x: x[0])
+
         split_text_list = []
         prev_idx = 0
-        file_len = len(self.files[0].file.id)
         for place in places:
-            file_start_index = place.start()
+            file_start_index, file_len = place
             split_text_list.append(self.text[prev_idx:file_start_index])
             split_text_list.append(self.text[file_start_index : file_start_index + file_len])
             prev_idx = file_start_index + file_len
         else:
             split_text_list.append(self.text[prev_idx:])
 
+        # 2. parse text to dict
         output_dict: Dict = {"content_parts": []}
-        file_manager = FileManager()
 
         for data in split_text_list:
-            if "file-" in data:
-                if "local" in data:
-                    file_object = file_manager.look_up_file_by_id(data)
-                elif "remote" in data:
-                    file_object = asyncio.run(file_manager.retrieve_remote_file_by_id(data))
-                else:
-                    raise RuntimeError(f"File id is neither local nor remote. It is {data}")
+            if data in file_ids:
+                file_object = None
+                for agent_file in self.files:
+                    if data == agent_file.file.id:
+                        file_object = agent_file.file
+                        break
 
                 if file_object is not None:
                     file_meta = file_object.to_dict()
