@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import abc
-import inspect
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -226,12 +225,12 @@ class Agent(BaseAgent):
         return llm_resp
 
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
-        bnd_args = self._parse_tool_args(tool, tool_args)
+        parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = await self._sniff_and_extract_files_from_args(bnd_args.arguments, tool, "input")
-        tool_ret = await tool(*bnd_args.args, **bnd_args.kwargs)
+        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
+        tool_ret = await tool(**parsed_tool_args)
         output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
@@ -242,15 +241,15 @@ class Agent(BaseAgent):
         llm_ret = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
-    def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
-        args_dict = json.loads(tool_args)
+    def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
+        try:
+            args_dict = json.loads(tool_args)
+        except json.JSONDecodeError:
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+
         if not isinstance(args_dict, dict):
-            raise ValueError("`tool_args` cannot be interpreted as a dict.")
-        # TODO: Check types
-        sig = inspect.signature(tool.__call__)
-        bnd_args = sig.bind(**args_dict)
-        bnd_args.apply_defaults()
-        return bnd_args
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
+        return args_dict
 
     async def _sniff_and_extract_files_from_args(
         self, args: Dict[str, Any], tool: Tool, file_type: Literal["input", "output"]
