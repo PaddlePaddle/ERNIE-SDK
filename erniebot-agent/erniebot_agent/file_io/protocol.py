@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import re
-from typing import List
+from typing import List, Literal
+
+from typing_extensions import TypeAlias
+
+FilePurpose: TypeAlias = Literal["assistants", "assistants_output"]
 
 _LOCAL_FILE_ID_PREFIX = "file-local-"
-_REMOTE_FILE_ID_PREFIX = "file-remote-"
 _UUID_PATTERN = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _LOCAL_FILE_ID_PATTERN = _LOCAL_FILE_ID_PREFIX + _UUID_PATTERN
-_REMOTE_FILE_ID_PATTERN = _REMOTE_FILE_ID_PREFIX + _UUID_PATTERN
+_REMOTE_FILE_ID_PATTERN = r"file-[0-9]{15}"
 
 _compiled_local_file_id_pattern = re.compile(_LOCAL_FILE_ID_PATTERN)
 _compiled_remote_file_id_pattern = re.compile(_REMOTE_FILE_ID_PATTERN)
@@ -27,10 +30,6 @@ _compiled_remote_file_id_pattern = re.compile(_REMOTE_FILE_ID_PATTERN)
 
 def build_local_file_id_from_uuid(uuid: str) -> str:
     return _LOCAL_FILE_ID_PREFIX + uuid
-
-
-def build_remote_file_id_from_uuid(uuid: str) -> str:
-    return _REMOTE_FILE_ID_PREFIX + uuid
 
 
 def is_file_id(str_: str) -> bool:
