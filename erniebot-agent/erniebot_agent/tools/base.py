@@ -19,11 +19,13 @@ import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent import file_io
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
@@ -147,13 +149,23 @@ class RemoteTool(BaseTool):
         tool_view: RemoteToolView,
         server_url: str,
         headers: dict,
+        version: str,
         examples: Optional[List[Message]] = None,
+        tool_name_prefix: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
+        self.version = version
         self.examples = examples
-        self.file_manager = FileManager()
+        self.tool_name_prefix = tool_name_prefix
+        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
+        if tool_name_prefix is not None:
+            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+        if file_manager is None:
+            file_manager = file_io.get_file_manager()
+        self.file_manager = file_manager
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -169,21 +181,40 @@ class RemoteTool(BaseTool):
 
     @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
-        url = self.server_url + self.tool_view.uri
+        url = self.server_url + self.tool_view.uri + "?version=" + self.version
+
+        headers = deepcopy(self.headers)
+        headers["Content-Type"] = self.tool_view.parameters_content_type
+
+        requests_inputs = {
+            "headers": headers,
+        }
+        if self.tool_view.method == "get":
+            requests_inputs["params"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "application/json":
+            requests_inputs["json"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
+            requests_inputs["data"] = tool_arguments
+        else:
+            raise ValueError(f"Unsupported content type: {self.tool_view.parameters_content_type}")
 
         if self.tool_view.method == "get":
-            response = requests.get(url, params=tool_arguments, headers=self.headers)
+            response = requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":
-            response = requests.post(url, json=tool_arguments, headers=self.headers)
+            response = requests.post(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "put":
-            response = requests.put(url, json=tool_arguments, headers=self.headers)
+            response = requests.put(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "delete":
-            response = requests.delete(url, json=tool_arguments, headers=self.headers)
+            response = requests.delete(url, **requests_inputs)  # type: ignore
         else:
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
-            raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+            logger.debug(f"The resource requested returned the following headers: {response.headers}")
+            raise ValueError(
+                f"The resource requested by `{self.tool_name}` "
+                f"returned {response.status_code}: {response.text}"
+            )
 
         # parse the file from response
         file_names = []
@@ -207,7 +238,9 @@ class RemoteTool(BaseTool):
         result = {}
         # create file from bytes
         file_name = response.headers["Content-Disposition"].split("filename=")[1]
-        local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+        local_file = await self.file_manager.create_file_from_bytes(
+            response.content, file_name, file_purpose="assistants_output"
+        )
 
         result[file_names[0]] = local_file.id
 
@@ -237,13 +270,22 @@ class RemoteToolkit:
     headers: dict
     examples: List[Message] = field(default_factory=list)
 
-    def __getitem__(self, tool_name: str):
+    @property
+    def tool_name_prefix(self) -> str:
+        return f"{self.info.title}/{self.info.version}"
+
+    def __getitem__(self, tool_name: str) -> RemoteTool:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
         return [
             RemoteTool(
-                path, self.servers[0].url, self.headers, examples=self.get_examples_by_name(path.name)
+                path,
+                self.servers[0].url,
+                self.headers,
+                self.info.version,
+                examples=self.get_examples_by_name(path.name),
+                tool_name_prefix=self.tool_name_prefix,
             )
             for path in self.paths
         ]
@@ -284,6 +326,11 @@ class RemoteToolkit:
             tool_names = [name for name in tool_names if name]
 
             if tool_name in tool_names:
+                # 3. prepend `tool_name_prefix` to all tool names in examples
+                for example in examples:
+                    if isinstance(example, AIMessage) and example.function_call is not None:
+                        original_tool_name = example.function_call["name"]
+                        example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
                 final_exampels.extend(examples)
 
         return final_exampels
@@ -295,7 +342,9 @@ class RemoteToolkit:
             paths[0],
             self.servers[0].url,
             self.headers,
+            self.info.version,
             examples=self.get_examples_by_name(tool_name),
+            tool_name_prefix=self.tool_name_prefix,
         )
 
     def to_openapi_dict(self) -> dict:
@@ -346,6 +395,7 @@ class RemoteToolkit:
                     RemoteToolView.from_openapi_dict(
                         uri=path,
                         method=method,
+                        version=info.version,
                         path_info=path_method_info,
                         parameters_views=fields,
                     )
@@ -387,16 +437,22 @@ class RemoteToolkit:
         return headers
 
     @classmethod
-    def from_url(cls, url: str, access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_url(
+        cls, url: str, version: Optional[str] = None, access_token: Optional[str] = None
+    ) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith("/"):
             url += "/"
         openapi_yaml_url = url + ".well-known/openapi.yaml"
 
+        if version:
+            openapi_yaml_url = openapi_yaml_url + "?version=" + version
+
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                raise ValueError(f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}")
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():
@@ -431,9 +487,8 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                raise ValueError(
-                    f"Invalid resource, status_code: {response.status_code}, error message: {response.text}"
-                )
+                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                raise ValueError(f"`{examples_yaml_url}` returned {response.status_code}: {response.text}")
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():

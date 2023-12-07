@@ -25,11 +25,11 @@ class FileRegistry(metaclass=Singleton):
         self._id_to_file: Dict[str, File] = {}
         self._lock = threading.Lock()
 
-    def register_file(self, file: File) -> None:
+    def register_file(self, file: File, *, allow_overwrite: bool = False) -> None:
         file_id = file.id
         with self._lock:
-            # Re-registering an existing file is allowed.
-            # We simply update the registry.
+            if not allow_overwrite and file_id in self._id_to_file:
+                raise RuntimeError(f"ID {repr(file_id)} is already registered.")
             self._id_to_file[file_id] = file
 
     def unregister_file(self, file: File) -> None:
