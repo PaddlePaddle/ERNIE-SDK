@@ -155,10 +155,8 @@ def wrap_tool_with_files(func):
                 continue
             if object.tool_view.parameters is None:
                 break
-            json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
-            if json_schema_extra.get("format", None) in ["byte", "binary"]:
-                byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-                tool_arguments[key] = base64.b64encode(byte_str).decode()
+            byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+            tool_arguments[key] = base64.b64encode(byte_str).decode()
 
         tool_arguments["__origin_arguments__"] = origin_tool_arguments
         # 2. call tool get response
@@ -245,7 +243,7 @@ class RemoteTool(BaseTool):
         if len(returns_file_names) == 0:
             return response.json()
         elif len(returns_file_names) != 1:
-            raise RuntimeError("The tool returns multiple files, which is not supported for now")
+            raise NotImplementedError("The tool returns multiple files, which is not supported for now")
 
         result = {}
         # create file from bytes
@@ -253,9 +251,11 @@ class RemoteTool(BaseTool):
             file_name = response.headers["Content-Disposition"].split("filename=")[1]
             local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
         else:
-            assert self.tool_view.returns is not None
+            if self.tool_view.returns is None:
+                raise ValueError(f"The returns params of tool_view<{self.tool_name}> should be None")
+
             file_type = self.tool_view.returns.model_fields[returns_file_names[0]].json_schema_extra[
-                "x-ebagent-file-type"
+                "x-ebagent-file-mimetype"
             ]
             if file_type == "auto":
                 # guess file_name from parameters
@@ -269,6 +269,7 @@ class RemoteTool(BaseTool):
                     raise ValueError("Can not find file in parameter")
                 file_name = file.filename
             else:
+                # guess the file-type from mime-type
                 file_name = f"test.{file_type}"
 
             base64_string = response.json()[returns_file_names[0]]
