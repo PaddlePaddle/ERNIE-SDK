@@ -2,7 +2,7 @@ import argparse
 import asyncio
 from typing import Dict, List, Type
 
-from erniebot_agent.agents import FunctionalAgentWithRetrievalTool
+from erniebot_agent.agents import FunctionalAgentWithRetrievalScoreTool
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
@@ -95,13 +95,21 @@ if __name__ == "__main__":
         res = offline_ann(args.data_path, baizhong_db)
         print(res)
 
-    llm = ERNIEBot(model="ernie-bot")
+    llm = ERNIEBot(model="ernie-bot", api_type="custom")
     retrieval_tool = BaizhongSearchTool(
         description="Use BaizhongSearch to retrieve documents.", db=baizhong_db
     )
     memory = WholeMemory()
-    agent = FunctionalAgentWithRetrievalTool(
-        llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
+    # agent = FunctionalAgentWithRetrievalTool(
+    #     llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
+    # )
+    agent = FunctionalAgentWithRetrievalScoreTool(
+        llm=llm,
+        knowledge_base=baizhong_db,
+        top_k=3,
+        threshold=0.1,
+        tools=[NotesTool(), retrieval_tool],
+        memory=memory,
     )
 
     queries = [
