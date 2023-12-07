@@ -33,6 +33,7 @@ class BaizhongSearchTool(Tool):
         super().__init__()
         self.db = db
         self.description = description
+        self.few_shot_examples = []
         if input_type is not None:
             self.input_type = input_type
         if output_type is not None:
@@ -40,7 +41,7 @@ class BaizhongSearchTool(Tool):
         if examples is not None:
             self.few_shot_examples = examples
 
-    async def __call__(self, query: str, top_k: int = 10, filters: Optional[dict[str, Any]] = None):
+    async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
         res = self.db.search(query, top_k, filters)
         return res
 

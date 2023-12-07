@@ -2,7 +2,7 @@ import argparse
 import asyncio
 from typing import Dict, List, Type
 
-from erniebot_agent.agents import FunctionalAgentWithRetrieval
+from erniebot_agent.agents import FunctionalAgentWithRetrievalTool
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
@@ -64,7 +64,8 @@ class NotesTool(Tool):
 
     async def __call__(self, draft: str) -> Dict[str, str]:
         # TODO: save draft to database
-        return {"draft_results": "ok"}
+        # breakpoint()
+        return {"draft_results": "保存成功"}
 
     @property
     def examples(self) -> List[Message]:
@@ -100,11 +101,11 @@ if __name__ == "__main__":
         description="Use BaizhongSearch to retrieve documents.", db=baizhong_db
     )
     memory = WholeMemory()
-    agent = FunctionalAgentWithRetrieval(
+    agent = FunctionalAgentWithRetrievalTool(
         llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     )
 
-    queries = ["OpenAI管理层变更会带来哪些影响?", "OpenAI管理层变更会带来哪些影响？并记录在笔记本里面", "量化交易", "今天天气怎么样？", "abcabc"]
+    queries = ["OpenAI管理层变更会带来哪些影响？并记录在笔记本里面", "OpenAI管理层变更会带来哪些影响?", "量化交易", "今天天气怎么样？", "abcabc"]
     for query in queries:
         response = asyncio.run(agent.async_run(query))
         print(f"query: {query}")

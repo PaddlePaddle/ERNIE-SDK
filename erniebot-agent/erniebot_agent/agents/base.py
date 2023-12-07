@@ -224,6 +224,7 @@ class Agent(BaseAgent):
 
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
         bnd_args = self._parse_tool_args(tool, tool_args)
+        # breakpoint()
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
