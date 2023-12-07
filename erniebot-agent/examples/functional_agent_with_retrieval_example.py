@@ -50,27 +50,26 @@ def offline_ann(data_path, baizhong_db):
 
 
 class NotesToolInputView(ToolParameterView):
-    drafts: str = Field(description="草稿文本")
+    draft: str = Field(description="草稿文本")
 
 
 class NotesToolOutputView(ToolParameterView):
-    draft_results: float = Field(description="草稿文本结果")
+    draft_results: str = Field(description="草稿文本结果")
 
 
 class NotesTool(Tool):
-    description: str = "草稿笔记本，用于记录信息。"
+    description: str = "用于记录和保存信息的笔记本工具"
     input_type: Type[ToolParameterView] = NotesToolInputView
     ouptut_type: Type[ToolParameterView] = NotesToolOutputView
 
     async def __call__(self, draft: str) -> Dict[str, str]:
         # TODO: save draft to database
-        # breakpoint()
         return {"draft_results": "保存成功"}
 
     @property
     def examples(self) -> List[Message]:
         return [
-            HumanMessage("OpenAI管理层变更会带来哪些影响？并记录在笔记本里面"),
+            HumanMessage("OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中"),
             AIMessage(
                 "",
                 function_call={
@@ -105,8 +104,15 @@ if __name__ == "__main__":
         llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     )
 
-    queries = ["OpenAI管理层变更会带来哪些影响？并记录在笔记本里面", "OpenAI管理层变更会带来哪些影响?", "量化交易", "今天天气怎么样？", "abcabc"]
+    queries = [
+        "请把飞桨这两个字添加到笔记本中",
+        "OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中",
+        "OpenAI管理层变更会带来哪些影响?",
+        "量化交易",
+        "今天天气怎么样？",
+        "abcabc",
+    ]
     for query in queries:
         response = asyncio.run(agent.async_run(query))
         print(f"query: {query}")
-        print(f"agent response: {response.text}")
+        print(f"agent response: {response}")
