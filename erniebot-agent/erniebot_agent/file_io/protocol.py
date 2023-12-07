@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import re
-from typing import List, Literal, TypeAlias
+from typing import List, Literal
+
+from typing_extensions import TypeAlias
 
 FilePurpose: TypeAlias = Literal["assistants", "assistants_output"]
 
