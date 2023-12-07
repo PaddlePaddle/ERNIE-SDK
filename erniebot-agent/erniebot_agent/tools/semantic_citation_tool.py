@@ -8,7 +8,8 @@ from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
 from sklearn.metrics.pairwise import cosine_similarity
-from utils import embeddings
+
+from .utils import embeddings, write_md_to_pdf
 
 
 class SemanticCitationToolInputView(ToolParameterView):
@@ -28,7 +29,16 @@ class SemanticCitationTool(Tool):
         """判断一个字符是否是标点符号"""
         return char in string.punctuation
 
-    async def __call__(self, reports: str, paragraphs: List[dict], url_index: dict):
+    async def __call__(
+        self,
+        reports: str,
+        paragraphs: List[dict],
+        url_index: dict,
+        agent_name: str,
+        report_type: str,
+        dir_path: str,
+        **kwargs,
+    ):
         list_data = reports.split("\n\n")
         documents = [item["summary"] for item in paragraphs]
         para_result = embeddings.embed_documents(documents)
@@ -44,6 +54,8 @@ class SemanticCitationTool(Tool):
                 sentence_splits = chunk_text.split("。")
                 output_sent = []
                 for sentence in sentence_splits:
+                    if not sentence:
+                        continue
                     query_result = embeddings.embed_query(sentence)
                     similarities = cosine_similarity([query_result], para_result).reshape((-1,))
                     # para_ids
@@ -61,4 +73,6 @@ class SemanticCitationTool(Tool):
                     output_sent.append(sentence)
                 chunk_text = "".join(output_sent)
                 output_text.append(chunk_text)
-        return "\n\n".join(output_text)
+        final_report = "\n\n".join(output_text)
+        path = write_md_to_pdf(agent_name + "__" + report_type, dir_path, final_report)
+        return final_report, path

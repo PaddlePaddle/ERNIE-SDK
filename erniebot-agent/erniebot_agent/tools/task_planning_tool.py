@@ -5,12 +5,13 @@ from typing import Optional, Type
 
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from prompt_utils import (
+from pydantic import Field
+
+from .prompt_utils import (
     generate_search_queries_prompt,
     generate_search_queries_with_context,
 )
-from pydantic import Field
-from utils import call_function
+from .utils import call_function
 
 
 class TaskPlanningToolInputView(ToolParameterView):
@@ -32,6 +33,7 @@ class TaskPlanningTool(Tool):
         agent_role_prompt: str,
         context: Optional[str] = None,
         model: str = "ernie-bot-8k",
+        **kwargs,
     ):
         if context is None:
             result = call_function(

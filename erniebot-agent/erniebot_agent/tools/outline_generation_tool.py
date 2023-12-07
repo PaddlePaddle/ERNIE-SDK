@@ -5,7 +5,8 @@ from typing import List, Type
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
-from utils import erniebot_chat
+
+from .utils import erniebot_chat
 
 
 class OutlineGenerationToolInputView(ToolParameterView):

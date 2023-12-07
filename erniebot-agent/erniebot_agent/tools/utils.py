@@ -2,6 +2,7 @@ import os
 import urllib
 from typing import Optional
 
+import jsonlines
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from md2pdf.core import md2pdf
 
@@ -60,6 +61,18 @@ def write_md_to_pdf(task: str, path: str, text: str) -> str:
     file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
 
-    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
-
+    # encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+    encoded_file_path = urllib.parse.quote(f"{file_path}.md")
     return encoded_file_path
+
+
+def write_to_json(filename: str, list_data: list) -> None:
+    """Write text to a file
+
+    Args:
+        text (str): The text to write
+        filename (str): The filename to write to
+    """
+    with jsonlines.open(filename, "w") as file:
+        for item in list_data:
+            file.write(item)
