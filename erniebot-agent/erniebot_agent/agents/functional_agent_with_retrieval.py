@@ -63,9 +63,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(
-                tool_name="knowledge_retrieval_tool", tool_args='{"query": "OpenAI管理层变更会带来哪些影响？"}'
-            )
+            action = AgentAction(tool_name="knowledge_retrieval_tool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
             next_step_input = HumanMessage(content=f"检索的上下文为：{output_message.content} 问句为：{prompt}")
