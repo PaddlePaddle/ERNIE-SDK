@@ -2,14 +2,14 @@ import os
 import urllib
 from typing import Optional
 
-from langchain.embeddings.openai import OpenAIEmbeddings
+from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from md2pdf.core import md2pdf
 
 import erniebot
 
 api_type = os.environ.get("api_type", None)
 access_token = os.environ.get("access_token", None)
-embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
+embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
 
 
 def erniebot_chat(messages: list, functions: Optional[str] = None, model: Optional[str] = None, **kwargs):
