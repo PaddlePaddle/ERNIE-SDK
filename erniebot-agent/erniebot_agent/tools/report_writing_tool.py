@@ -25,7 +25,7 @@ class ReportWritingToolOutputView(ToolParameterView):
 
 
 class ReportWritingTool(Tool):
-    description: str = "text ranking tool"
+    description: str = "report writing tool"
     input_type: Type[ToolParameterView] = ReportWritingToolInputView
     ouptut_type: Type[ToolParameterView] = ReportWritingToolOutputView
 

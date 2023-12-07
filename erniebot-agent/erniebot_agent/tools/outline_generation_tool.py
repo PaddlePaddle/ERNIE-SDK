@@ -17,7 +17,7 @@ class OutlineGenerationToolOutputView(ToolParameterView):
 
 
 class OutlineGenerationTool(Tool):
-    description: str = "text ranking tool"
+    description: str = "text outline generation tool"
     input_type: Type[ToolParameterView] = OutlineGenerationToolInputView
     ouptut_type: Type[ToolParameterView] = OutlineGenerationToolOutputView
 
