@@ -40,6 +40,7 @@
 from __future__ import annotations
 
 import asyncio
+import atexit
 import http
 import json
 import threading
@@ -73,6 +74,8 @@ from .utils.url import add_query_params, extract_base_url
 __all__ = ["EBClient"]
 
 _thread_context = threading.local()
+_thread_context.sessions = {}
+_thread_context.session_create_times = {}
 
 
 class EBClient(object):
@@ -127,6 +130,7 @@ class EBClient(object):
         method: str,
         url: str,
         stream: bool,
+        *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
@@ -157,6 +161,7 @@ class EBClient(object):
         method: str,
         url: str,
         stream: bool,
+        *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
@@ -220,9 +225,6 @@ class EBClient(object):
         stream: bool,
         request_timeout: Optional[float],
     ) -> requests.Response:
-        if not hasattr(_thread_context, "sessions"):
-            _thread_context.sessions = {}
-            _thread_context.session_create_times = {}
         if base_url not in _thread_context.sessions:
             _thread_context.sessions[base_url] = self._make_session()
             _thread_context.session_create_times[base_url] = time.time()
@@ -330,74 +332,74 @@ class EBClient(object):
                 yield _line
 
     def _interpret_response(
-        self, result: requests.Response
+        self, response: requests.Response
     ) -> Tuple[Union[EBResponse, Iterator[EBResponse]], bool]:
-        if "Content-Type" in result.headers and result.headers["Content-Type"].startswith(
+        if "Content-Type" in response.headers and response.headers["Content-Type"].startswith(
             "text/event-stream"
         ):
             return (
-                self._interpret_stream_response(result.iter_lines(), result.status_code, result.headers),
+                self._interpret_stream_response(response),
                 True,
             )
         else:
-            return (
-                self._interpret_response_line(
-                    result.content.decode("utf-8"),
-                    result.status_code,
-                    result.headers,
-                    stream=False,
-                ),
-                False,
-            )
+            with response:
+                return (
+                    self._interpret_response_line(
+                        response.content.decode("utf-8"),
+                        response.status_code,
+                        response.headers,
+                        stream=False,
+                    ),
+                    False,
+                )
 
     async def _interpret_async_response(
         self,
-        result: aiohttp.ClientResponse,
+        response: aiohttp.ClientResponse,
     ) -> Tuple[Union[EBResponse, AsyncIterator[EBResponse]], bool]:
-        if "Content-Type" in result.headers and result.headers["Content-Type"].startswith(
+        if "Content-Type" in response.headers and response.headers["Content-Type"].startswith(
             "text/event-stream"
         ):
             return (
-                self._interpret_async_stream_response(result.content, result.status, result.headers),
+                self._interpret_async_stream_response(response),
                 True,
             )
         else:
-            try:
-                await result.read()
-            except (aiohttp.ServerTimeoutError, asyncio.TimeoutError) as e:
-                raise errors.TimeoutError(f"Request timed out: {str(e)}") from e
-            except aiohttp.ClientError as e:
-                logging.warning("Ignoring exception.", exc_info=e)
-                logging.warning("API response body: %r", result.content)
-            return (
-                self._interpret_response_line(
-                    (await result.read()).decode("utf-8"),
-                    result.status,
-                    result.headers,
-                    stream=False,
-                ),
-                False,
-            )
+            async with response:
+                try:
+                    rbody = await response.read()
+                except (aiohttp.ServerTimeoutError, asyncio.TimeoutError) as e:
+                    raise errors.TimeoutError(f"Request timed out: {str(e)}") from e
+                else:
+                    return (
+                        self._interpret_response_line(
+                            rbody.decode("utf-8"),
+                            response.status,
+                            response.headers,
+                            stream=False,
+                        ),
+                        False,
+                    )
 
     def _interpret_stream_response(
         self,
-        rbody: Iterator[bytes],
-        rcode: int,
-        rheaders: Mapping[str, Any],
+        response: requests.Response,
     ) -> Iterator[EBResponse]:
-        for line in self._parse_stream(rbody):
-            resp = self._interpret_response_line(line, rcode, rheaders, stream=True)
-            yield resp
+        with response:
+            for line in self._parse_stream(response.iter_lines()):
+                resp = self._interpret_response_line(
+                    line, response.status_code, response.headers, stream=True
+                )
+                yield resp
 
     async def _interpret_async_stream_response(
         self,
-        rbody: aiohttp.StreamReader,
-        rcode: int,
-        rheaders: Mapping[str, Any],
+        response: aiohttp.ClientResponse,
     ) -> AsyncIterator[EBResponse]:
-        async for line in self._parse_stream_async(rbody):
-            resp = self._interpret_response_line(line, rcode, rheaders, stream=True)
-            yield resp
+        async with response:
+            async for line in self._parse_stream_async(response.content):
+                resp = self._interpret_response_line(line, response.status, response.headers, stream=True)
+                yield resp
 
     def _interpret_response_line(
         self,
@@ -434,19 +436,19 @@ class EBClient(object):
                 rheaders=rheaders,
             )
 
-        resp = EBResponse(rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
+        response = EBResponse(rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
 
         if rcode != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
                 f"The status code is not {http.HTTPStatus.OK}.",
-                rcode=resp.rcode,
-                rbody=str(resp.rbody),
-                rheaders=resp.rheaders,
+                rcode=response.rcode,
+                rbody=str(response.rbody),
+                rheaders=response.rheaders,
             )
 
         if self._resp_handler is not None:
-            resp = self._resp_handler(resp)
-        return resp
+            response = self._resp_handler(response)
+        return response
 
     def _make_session(self) -> requests.Session:
         s = requests.Session()
@@ -472,3 +474,11 @@ class EBClient(object):
     async def _make_aiohttp_session() -> AsyncIterator[aiohttp.ClientSession]:
         async with aiohttp.ClientSession() as session:
             yield session
+
+
+def _close_all_sessions(sessions: Dict[str, requests.Session]) -> None:
+    for session in sessions.values():
+        session.close()
+
+
+atexit.register(_close_all_sessions, _thread_context.sessions)
