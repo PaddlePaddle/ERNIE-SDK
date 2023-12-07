@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 from erniebot_agent.messages import Message
 from erniebot_agent.utils.json import to_pretty_json
 
-__all__ = ["color_text", "color_msg", "get_bolded_text"]
+__all__ = ["color_text", "color_msg"]
 
 COLORS = {
     "Purple": "\033[95m",
@@ -28,10 +28,6 @@ COLORS = {
     "Blue": "\033[94m",
     None: "",
 }
-
-
-def get_bolded_text(text: str) -> str:
-    return f"\033[1m{text}\033[0m"
 
 
 def color_text(text: str, color: Optional[str]) -> str:
