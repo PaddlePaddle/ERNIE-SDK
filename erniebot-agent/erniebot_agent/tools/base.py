@@ -25,6 +25,7 @@ from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent import file_io
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
@@ -175,6 +176,7 @@ class RemoteTool(BaseTool):
         version: str,
         examples: Optional[List[Message]] = None,
         tool_name_prefix: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
@@ -185,8 +187,9 @@ class RemoteTool(BaseTool):
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None:
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
-
-        self.file_manager = FileManager()
+        if file_manager is None:
+            file_manager = file_io.get_file_manager()
+        self.file_manager = file_manager
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -250,7 +253,9 @@ class RemoteTool(BaseTool):
         # create file from bytes
         if response.headers.get("Content-Disposition", None) is not None:
             file_name = response.headers["Content-Disposition"].split("filename=")[1]
-            local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+            local_file = await self.file_manager.create_file_from_bytes(
+                response.content, file_name, file_purpose="assistants_output"
+            )
         else:
             if self.tool_view.returns is None:
                 raise ValueError(f"The returns params of tool_view<{self.tool_name}> should be None")
