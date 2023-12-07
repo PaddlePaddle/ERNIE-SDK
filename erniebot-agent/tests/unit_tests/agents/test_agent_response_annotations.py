@@ -6,7 +6,7 @@ from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.file_io import get_file_manager
 
 
-class TestWholeMemory(unittest.TestCase):
+class TestAgentResponseAnnotations(unittest.TestCase):
     def setUp(self):
         self.test = ""
         self.file_manager = get_file_manager()
