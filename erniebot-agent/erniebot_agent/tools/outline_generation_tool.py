@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, List, Type
+from typing import List, Type
 
+from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
-
-from .base import Tool
+from utils import erniebot_chat
 
 
 class OutlineGenerationToolInputView(ToolParameterView):
@@ -23,7 +23,22 @@ class OutlineGenerationTool(Tool):
 
     async def __call__(
         self,
-        content: str,
-    ) -> Dict[str, List[str]]:
-        # map reduce
-        raise NotImplementedError
+        queries: List[str],
+        question: str,
+        **kwargs,
+    ):
+        ques = ""
+        for i, query in enumerate(queries):
+            ques += f"{i+1}. {query}\n"
+        messages = [
+            {
+                "role": "user",
+                "content": f"""{ques}，请根据上面的问题生成一个关于"{question}"的大纲，
+                大纲的最后章节是参考文献章节，字数控制在300字以内,并使用json的形式输出。""",
+            }
+        ]
+        outline = erniebot_chat(messages, **kwargs)
+        start_idx = outline.index("{")
+        end_idx = outline.rindex("}")
+        outline = outline[start_idx : end_idx + 1]
+        return outline
