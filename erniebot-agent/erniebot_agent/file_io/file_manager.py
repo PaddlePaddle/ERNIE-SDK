@@ -156,11 +156,11 @@ class FileManager(object):
         file_type: Literal["local", "remote"] = "local",
     ) -> Union[LocalFile, RemoteFile]:
         # Can we do this with in-memory files?
-        file_path = self._fs_create_file(
+        file_path = await self._fs_create_file(
             prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
         )
         try:
-            async with await anyio.open_file(file_path, "wb") as f:
+            async with await file_path.open("wb") as f:
                 await f.write(file_contents)
             file = await self.create_file_from_path(
                 file_path,
@@ -170,7 +170,7 @@ class FileManager(object):
             )
         finally:
             if file_type == "remote":
-                file_path.unlink()
+                await file_path.unlink()
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
@@ -189,10 +189,12 @@ class FileManager(object):
                 self._file_registry.register_file(file, allow_overwrite=True)
         return files
 
-    def _fs_create_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
+    async def _fs_create_file(
+        self, prefix: Optional[str] = None, suffix: Optional[str] = None
+    ) -> anyio.Path:
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"
-        file_path = self._save_dir / filename
-        file_path.touch()
+        file_path = anyio.Path(self._save_dir / filename)
+        await file_path.touch()
         return file_path
 
     def _fs_create_temp_dir(self) -> pathlib.Path:
