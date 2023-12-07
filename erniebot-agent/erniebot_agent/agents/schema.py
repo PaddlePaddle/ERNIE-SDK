@@ -64,10 +64,9 @@ class AgentResponse(object):
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
     @functools.cached_property  # lazy and prevent extra fime from multiple calls
-    def annotations(self) -> Optional[Dict[str, List]]:
-        annotations = None
-        if self.includes_file():
-            annotations = self.output_dict()
+    def annotations(self) -> Dict[str, List]:
+        annotations = self.output_dict()
+
         return annotations
 
     def get_last_output_file(self) -> Optional[File]:
@@ -93,13 +92,6 @@ class AgentResponse(object):
                     raise RuntimeError("File type is neither input nor output.")
         return input_files, output_files
 
-    def includes_file(self) -> bool:
-        for agent_file in self.files:
-            if agent_file.file.id in self.text:
-                return True
-        else:
-            return False
-
     def output_dict(self) -> Dict[str, List]:
         # 1. split the text into parts and add file id to each part
         file_ids = extract_file_ids(self.text)
@@ -107,6 +99,7 @@ class AgentResponse(object):
         places = []
         for file_id in file_ids:
             # remote file-id & local file-id may have different length.
+            # TODO(shiyutang): in case of multiple same file_id
             places.append((self.text.index(file_id), len(file_id)))
         else:
             sorted(places, key=lambda x: x[0])

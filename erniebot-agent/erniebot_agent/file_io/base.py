@@ -34,7 +34,7 @@ class File(metaclass=abc.ABCMeta):
         self.created_at = created_at
         self.purpose = purpose
         self.metadata = metadata
-        self._param_names = {"id", "filename", "byte_size", "created_at", "purpose", "metadata"}
+        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):

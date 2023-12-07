@@ -225,7 +225,7 @@ class Agent(BaseAgent):
         return llm_resp
 
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
-        parsed_tool_args = self._parse_tool_args(tool, tool_args)
+        parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
@@ -241,10 +241,14 @@ class Agent(BaseAgent):
         llm_ret = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
-    def _parse_tool_args(self, tool: Tool, tool_args: str) -> Dict[str, Any]:
-        args_dict = json.loads(tool_args)
+    def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
+        try:
+            args_dict = json.loads(tool_args)
+        except json.JSONDecodeError:
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+
         if not isinstance(args_dict, dict):
-            raise ValueError("`tool_args` cannot be interpreted as a dict.")
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
         return args_dict
 
     async def _sniff_and_extract_files_from_args(
