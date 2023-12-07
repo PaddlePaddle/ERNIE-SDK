@@ -126,14 +126,18 @@ def wrap_tool_with_files(func):
         file_manager = object.file_manager
         # 1. replace fileid with byte string
         for key in tool_arguments.keys():
-            if (
-                object.tool_view.parameters
-                and object.tool_view.parameters.model_fields[key].json_schema_extra
-            ):
-                json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
-                if json_schema_extra.get("format", None) in ["byte", "binary"]:
-                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-                    tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if object.tool_view.parameters:
+                if key not in object.tool_view.parameters.model_fields:
+                    raise RuntimeError(
+                        f"`{object.tool_name}` received unexpected arguments `{key}`. "
+                        f"The avaiable arguments are {list(object.tool_view.parameters.model_fields.keys())}"
+                    )
+
+                if object.tool_view.parameters.model_fields[key].json_schema_extra:
+                    json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
+                    if json_schema_extra.get("format", None) in ["byte", "binary"]:
+                        byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                        tool_arguments[key] = base64.b64encode(byte_str).decode()
 
         # 2. call tool get response
         json_response = await func(object, **tool_arguments)
