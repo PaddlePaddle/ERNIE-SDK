@@ -41,7 +41,7 @@ class LoggingHandler(CallbackHandler):
     ) -> None:
         super().__init__()
         self.log_max_length = log_max_length
-        self.open_color_role(enable_role_color)
+        self.open_role_color(enable_role_color)
 
         if logger is None:
             self.logger = default_logger
@@ -117,7 +117,7 @@ class LoggingHandler(CallbackHandler):
         error_msg = f"[{subject}][ERROR] {error}"
         self.logger.error(error_msg, *args, **kwargs)
 
-    def open_color_role(self, open: bool = True):
+    def open_role_color(self, open: bool = True):
         """
         Open or close color role in log, if open, different role will have different color.
 
