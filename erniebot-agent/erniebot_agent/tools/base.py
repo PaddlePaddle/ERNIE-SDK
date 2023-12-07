@@ -98,6 +98,37 @@ def get_file_names_from_param_view(param_view: Optional[Type[ToolParameterView]]
     return file_names
 
 
+async def parse_file_from_response(
+    response: Response, file_manager: FileManager, file_names: List[str]
+) -> Optional[File]:
+    content_type = response.headers.get("Content-Type", None)
+
+    # TODO(wj-Mcat): to parse base64 file from json response
+    if len(file_names) == 0:
+        return None
+
+    if is_json_response(response):
+        return None
+
+    # 1. parse file by content_type
+    if content_type is not None:
+        file_suffix = get_file_suffix(content_type)
+        return await file_manager.create_file_from_bytes(
+            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+        )
+
+    # 2. parse file by
+    content_disposition = response.headers.get("Content-Disposition", None)
+    if content_disposition is not None:
+        file_name = response.headers["Content-Disposition"].split("filename=")[1]
+        local_file = await file_manager.create_file_from_bytes(
+            response.content, file_name, file_purpose="assistants_output"
+        )
+        return local_file
+
+    raise ValueError("can not parse file from response")
+
+
 class Tool(BaseTool, ABC):
     description: str
     name: Optional[str] = None
@@ -204,37 +235,6 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
-    @classmethod
-    async def parse_file_from_response(
-        cls, response: Response, file_manager: FileManager, file_names: List[str]
-    ) -> Optional[File]:
-        content_type = response.headers.get("Content-Type", None)
-
-        # TODO(wj-Mcat): to parse base64 file from json response
-        if len(file_names) == 0:
-            return None
-
-        if is_json_response(response):
-            return None
-
-        # 1. parse file by content_type
-        if content_type is not None:
-            file_suffix = get_file_suffix(content_type)
-            return await file_manager.create_file_from_bytes(
-                response.content, f"tool{file_suffix}", file_purpose="assistants_output"
-            )
-
-        # 2. parse file by
-        content_disposition = response.headers.get("Content-Disposition", None)
-        if content_disposition is not None:
-            file_name = response.headers["Content-Disposition"].split("filename=")[1]
-            local_file = await file_manager.create_file_from_bytes(
-                response.content, file_name, file_purpose="assistants_output"
-            )
-            return local_file
-
-        raise ValueError("can not parse file from response")
-
     @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
         url = self.server_url + self.tool_view.uri + "?version=" + self.version
@@ -275,9 +275,7 @@ class RemoteTool(BaseTool):
 
         # parse the file from response
         returns_file_names = get_file_names_from_param_view(self.tool_view.returns)
-        file = await self.parse_file_from_response(
-            response, self.file_manager, file_names=returns_file_names
-        )
+        file = await parse_file_from_response(response, self.file_manager, file_names=returns_file_names)
 
         if file is not None:
             if len(returns_file_names) == 0:
