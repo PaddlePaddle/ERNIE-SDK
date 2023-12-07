@@ -4,9 +4,10 @@ from typing import List, Type
 
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from prompt_utils import rank_report_prompt
 from pydantic import Field
-from utils import erniebot_chat
+
+from .prompt_utils import rank_report_prompt
+from .utils import erniebot_chat
 
 
 class TextRankingToolInputView(ToolParameterView):
