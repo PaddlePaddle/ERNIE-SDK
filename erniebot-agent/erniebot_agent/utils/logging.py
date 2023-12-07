@@ -28,7 +28,7 @@ def _handle_color_pattern(s):
     color_lis = re.findall(color_pattern, s)
     origin_text = re.split(color_pattern, s)
 
-    # Preprocess, split the text by ASCII color code
+    # Preprocess: Split the text by ASCII color code
     idx_color, idx_text = 0, 0
     while idx_text < len(origin_text):
         if idx_text > 0 and origin_text[idx_text - 1] != "" and origin_text[idx_text] != "":
