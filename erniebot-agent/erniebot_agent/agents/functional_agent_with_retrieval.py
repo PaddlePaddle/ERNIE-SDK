@@ -66,7 +66,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             action = AgentAction(tool_name="knowledge_retrieval_tool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
-            next_step_input = HumanMessage(content=f"检索的上下文为：{output_message.content} 问句为：{prompt}")
+            next_step_input = HumanMessage(content=f"检索的上下文为：{output_message.content} 请回答：{prompt}")
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
