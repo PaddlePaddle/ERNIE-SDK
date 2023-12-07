@@ -14,14 +14,18 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import tempfile
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -74,7 +78,8 @@ class Tool(BaseTool, ABC):
     ouptut_type: Optional[Type[ToolParameterView]] = None
 
     def __str__(self) -> str:
-        return "<name: {0}, description: {1}>".format(self.name, self.description)
+        name = self.name if self.name else self.tool_name
+        return "<name: {0}, description: {1}>".format(name, self.description)
 
     def __repr__(self):
         return self.__str__()
@@ -110,18 +115,54 @@ class Tool(BaseTool, ABC):
         return []
 
 
+def wrap_tool_with_files(func):
+    @wraps(func)
+    async def wrapper_func(object: RemoteTool, **tool_arguments):
+        async def fileid_to_byte(file_id, file_manager):
+            file = file_manager.look_up_file_by_id(file_id)
+            byte_str = await file.read_contents()
+            return byte_str
+
+        file_manager = object.file_manager
+        # 1. replace fileid with byte string
+        for key in tool_arguments.keys():
+            if (
+                object.tool_view.parameters
+                and object.tool_view.parameters.model_fields[key].json_schema_extra
+            ):
+                json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
+                if json_schema_extra.get("format", None) in ["byte", "binary"]:
+                    byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+                    tool_arguments[key] = base64.b64encode(byte_str).decode()
+
+        # 2. call tool get response
+        json_response = await func(object, **tool_arguments)
+        return json_response
+
+    return wrapper_func
+
+
 class RemoteTool(BaseTool):
     def __init__(
         self,
         tool_view: RemoteToolView,
         server_url: str,
         headers: dict,
+        version: str,
         examples: Optional[List[Message]] = None,
+        tool_name_prefix: Optional[str] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
+        self.version = version
         self.examples = examples
+        self.tool_name_prefix = tool_name_prefix
+        # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
+        if tool_name_prefix is not None:
+            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+
+        self.file_manager = FileManager()
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -135,24 +176,72 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
+    @wrap_tool_with_files
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
-        url = self.server_url + self.tool_view.uri
+        url = self.server_url + self.tool_view.uri + "?version=" + self.version
+
+        headers = deepcopy(self.headers)
+        headers["Content-Type"] = self.tool_view.parameters_content_type
+
+        requests_inputs = {
+            "headers": headers,
+        }
+        if self.tool_view.method == "get":
+            requests_inputs["params"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "application/json":
+            requests_inputs["json"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
+            requests_inputs["data"] = tool_arguments
+        else:
+            raise ValueError(f"Unsupported content type: {self.tool_view.parameters_content_type}")
 
         if self.tool_view.method == "get":
-            response = requests.get(url, params=tool_arguments, headers=self.headers)
+            response = requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":
-            response = requests.post(url, json=tool_arguments, headers=self.headers)
+            response = requests.post(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "put":
-            response = requests.put(url, json=tool_arguments, headers=self.headers)
+            response = requests.put(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "delete":
-            response = requests.delete(url, json=tool_arguments, headers=self.headers)
+            response = requests.delete(url, **requests_inputs)  # type: ignore
         else:
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
-            raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+            raise ValueError(
+                f"The resource requested by `{self.tool_name}` returned"
+                f"{response.status_code}: {response.text}"
+            )
 
-        return response.json()
+        # parse the file from response
+        file_names = []
+        if self.tool_view.returns:
+            for key in self.tool_view.returns.model_fields.keys():
+                if self.tool_view.returns.model_fields[
+                    key
+                ].json_schema_extra and self.tool_view.returns.model_fields[key].json_schema_extra.get(
+                    "format", None
+                ) in [
+                    "byte",
+                    "binary",
+                ]:
+                    file_names.append(key)
+
+        if len(file_names) == 0:
+            return response.json()
+        elif len(file_names) != 1:
+            raise RuntimeError("The tool returns multiple files, which is not supported for now")
+
+        result = {}
+        # create file from bytes
+        file_name = response.headers["Content-Disposition"].split("filename=")[1]
+        local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
+
+        result[file_names[0]] = local_file.id
+
+        return result
+
+    def _decode_file(self):
+        pass
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
@@ -175,13 +264,22 @@ class RemoteToolkit:
     headers: dict
     examples: List[Message] = field(default_factory=list)
 
-    def __getitem__(self, tool_name: str):
+    @property
+    def tool_name_prefix(self) -> str:
+        return f"{self.info.title}/{self.info.version}"
+
+    def __getitem__(self, tool_name: str) -> RemoteTool:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
         return [
             RemoteTool(
-                path, self.servers[0].url, self.headers, examples=self.get_examples_by_name(path.name)
+                path,
+                self.servers[0].url,
+                self.headers,
+                self.info.version,
+                examples=self.get_examples_by_name(path.name),
+                tool_name_prefix=self.tool_name_prefix,
             )
             for path in self.paths
         ]
@@ -222,6 +320,11 @@ class RemoteToolkit:
             tool_names = [name for name in tool_names if name]
 
             if tool_name in tool_names:
+                # 3. prepend `tool_name_prefix` to all tool names in examples
+                for example in examples:
+                    if isinstance(example, AIMessage) and example.function_call is not None:
+                        original_tool_name = example.function_call["name"]
+                        example.function_call["name"] = f"{self.tool_name_prefix}/{original_tool_name}"
                 final_exampels.extend(examples)
 
         return final_exampels
@@ -230,7 +333,12 @@ class RemoteToolkit:
         paths = [path for path in self.paths if path.name == tool_name]
         assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
         return RemoteTool(
-            paths[0], self.servers[0].url, self.headers, examples=self.get_examples_by_name(tool_name)
+            paths[0],
+            self.servers[0].url,
+            self.headers,
+            self.info.version,
+            examples=self.get_examples_by_name(tool_name),
+            tool_name_prefix=self.tool_name_prefix,
         )
 
     def to_openapi_dict(self) -> dict:
@@ -270,7 +378,7 @@ class RemoteToolkit:
         component_schemas = openapi_dict["components"]["schemas"]
         fields = {}
         for schema_name, schema in component_schemas.items():
-            parameter_view = ToolParameterView.from_openapi_dict(schema_name, schema)
+            parameter_view = ToolParameterView.from_openapi_dict(schema)
             fields[schema_name] = parameter_view
 
         # paths
@@ -281,6 +389,7 @@ class RemoteToolkit:
                     RemoteToolView.from_openapi_dict(
                         uri=path,
                         method=method,
+                        version=info.version,
                         path_info=path_method_info,
                         parameters_views=fields,
                     )
@@ -312,7 +421,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token  # type: ignore
+            access_token = erniebot.access_token
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
@@ -322,11 +431,16 @@ class RemoteToolkit:
         return headers
 
     @classmethod
-    def from_url(cls, url: str, access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_url(
+        cls, url: str, version: Optional[str] = None, access_token: Optional[str] = None
+    ) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith("/"):
             url += "/"
         openapi_yaml_url = url + ".well-known/openapi.yaml"
+
+        if version:
+            openapi_yaml_url = openapi_yaml_url + "?version=" + version
 
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))

@@ -64,7 +64,7 @@ class ImageGenerationTool(Tool):
         height: int = 512,
         image_num: int = 1,
     ) -> Dict[str, List[str]]:
-        response = erniebot.Image.create(  # type: ignore
+        response = erniebot.Image.create(
             model="ernie-vilg-v2",
             prompt=prompt,
             width=width,

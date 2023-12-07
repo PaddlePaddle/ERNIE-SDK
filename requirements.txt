@@ -3,4 +3,5 @@ bce-python-sdk
 colorlog
 jsonschema >= 4.19
 requests >= 2.20
+tenacity
 typing_extensions >= 4.8.0

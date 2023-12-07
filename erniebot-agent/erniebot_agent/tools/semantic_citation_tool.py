@@ -20,7 +20,7 @@ class SemanticCitationToolOutputView(ToolParameterView):
 
 
 class SemanticCitationTool(Tool):
-    description: str = "text ranking tool"
+    description: str = "semantic citation tool"
     input_type: Type[ToolParameterView] = SemanticCitationToolInputView
     ouptut_type: Type[ToolParameterView] = SemanticCitationToolOutputView
 

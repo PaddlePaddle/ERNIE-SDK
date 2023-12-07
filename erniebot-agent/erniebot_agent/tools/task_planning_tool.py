@@ -22,7 +22,7 @@ class TaskPlanningToolOutputView(ToolParameterView):
 
 
 class TaskPlanningTool(Tool):
-    description: str = "text summarization tool"
+    description: str = "query task planning tool"
     input_type: Type[ToolParameterView] = TaskPlanningToolInputView
     ouptut_type: Type[ToolParameterView] = TaskPlanningToolOutputView
 

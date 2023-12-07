@@ -18,7 +18,7 @@ class IntentDetectionToolOutputView(ToolParameterView):
 
 
 class IntentDetectionTool(Tool):
-    description: str = "text ranking tool"
+    description: str = "query intent detection tool"
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
 

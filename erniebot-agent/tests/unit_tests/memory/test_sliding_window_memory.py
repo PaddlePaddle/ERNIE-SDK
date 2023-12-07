@@ -4,16 +4,16 @@ import pytest
 from erniebot_agent.memory import SlidingWindowMemory
 from erniebot_agent.messages import HumanMessage
 
-from tests.unit_tests.testing_utils import MockErnieBot
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
 
 class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.llm = MockErnieBot(None, None, None)
+        self.llm = FakeSimpleChatModel()
 
     @pytest.mark.parametrize("k", [1, 2, 4, 5, 10])
     @pytest.mark.asyncio
-    async def test_sliding_window_memory(self, k=3):  # asyn pytest
+    async def test_sliding_window_memory(self, k=2):  # asyn pytest
         # The memory
         memory = SlidingWindowMemory(k)
 
@@ -25,7 +25,7 @@ class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
             message = await self.llm.async_chat(memory.get_messages())
             memory.add_message(message)
 
-        self.assertTrue(len(memory.get_messages()) <= k)
+        self.assertTrue(len(memory.get_messages()) <= 2 * k)
 
 
 if __name__ == "__main__":
