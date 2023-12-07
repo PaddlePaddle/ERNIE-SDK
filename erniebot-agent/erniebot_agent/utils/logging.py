@@ -28,7 +28,7 @@ def _handle_color_pattern(s):
     color_lis = re.findall(color_pattern, s)
     origin_text = re.split(color_pattern, s)
 
-    # Preprocess
+    # Preprocess, split the text by ASCII color code
     idx_color, idx_text = 0, 0
     while idx_text < len(origin_text):
         if idx_text > 0 and origin_text[idx_text - 1] != "" and origin_text[idx_text] != "":
@@ -41,6 +41,7 @@ def _handle_color_pattern(s):
             idx_color += 1
 
     # Process the wrong sequence
+    # Set the color after reset code to previous color
     stack = []
     for i in range(len(origin_text)):
         if origin_text[i] in color_lis:
@@ -51,6 +52,7 @@ def _handle_color_pattern(s):
                     origin_text[i] = stack[-1]
             else:
                 stack.append(color)
+
     return "".join(origin_text)
 
 
