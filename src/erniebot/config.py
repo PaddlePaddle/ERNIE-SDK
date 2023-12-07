@@ -151,7 +151,10 @@ class NumberItem(_ConfigItem):
         self.ensure_integer = ensure_integer
 
     def factory(self, env_val: str) -> Any:
-        return float(env_val)
+        if self.ensure_integer:
+            return int(env_val)
+        else:
+            return float(env_val)
 
     def _validate(self, val: Any) -> None:
         if not isinstance(val, int if self.ensure_integer else numbers.Real):
