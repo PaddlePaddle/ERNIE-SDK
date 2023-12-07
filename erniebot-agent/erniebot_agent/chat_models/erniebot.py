@@ -116,7 +116,7 @@ class ERNIEBot(ChatModel):
                 cfg_dict[name] = kwargs[name]
 
         # TODO: Improve this when erniebot typing issue is fixed.
-        response: Any = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)  # type: ignore
+        response: Any = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
