@@ -20,14 +20,12 @@ from erniebot_agent.utils.json import to_pretty_json
 __all__ = ["color_text", "color_msg", "get_bolded_text"]
 
 COLORS = {
-    "Purple": "\033[95m",  # Purple
-    "Green": "\033[92m",  # Green
-    "Yellow": "\033[93m",  # Yellow
-    "Red": "\033[91m",  # Red
-    "Bold Red": "\033[91m" + "\033[1m",  # Bold Red
+    "Purple": "\033[95m",
+    "Green": "\033[92m",
+    "Yellow": "\033[93m",
+    "Red": "\033[91m",
     "RESET": "\033[0m",
     "Blue": "\033[94m",
-    "Bold Blue": "\033[94m" + "\033[1m",
     None: "",
 }
 
@@ -64,7 +62,6 @@ def _color_by_role(msg: Message, role_color: dict, max_length: int):
         if isinstance(v, dict):
             v = "\n" + to_pretty_json(v)
         elif isinstance(v, str):
-            # print(v)
             if len(v) >= max_length:
                 v = v[:max_length] + "..."
         if v:
