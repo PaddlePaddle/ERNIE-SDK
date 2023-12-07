@@ -66,7 +66,7 @@ def create_local_file_from_path(
         raise FileNotFoundError(f"File {file_path} does not exist.")
     file_id = _generate_local_file_id()
     filename = file_path.name
-    byte_size = file_path.stat(follow_symlinks=True).st_size
+    byte_size = file_path.stat().st_size
     created_at = int(time.time())
     file = LocalFile(
         id=file_id,
