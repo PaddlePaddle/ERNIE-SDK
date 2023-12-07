@@ -31,6 +31,8 @@ from typing import (
     overload,
 )
 
+import tenacity
+
 import erniebot.constants as constants
 import erniebot.errors as errors
 import erniebot.utils.logging as logging
@@ -68,8 +70,8 @@ class EBResource(object):
         if api_type is None:
             raise RuntimeError("API type is not configured.")
         self.api_type = api_type
-        self.timeout = self._cfg["timeout"]
-        self.retry_after = self._cfg["retry_interval"]
+        self.max_retries = self._cfg["max_retries"] or 0
+        self.retry_after = (self._cfg["min_retry_delay"] or 0, self._cfg["max_retry_delay"] or 0)
 
         self._backend = build_backend(
             self.api_type,
@@ -135,37 +137,34 @@ class EBResource(object):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        if self.timeout is None:
-            return self._request(
-                method=method,
-                path=path,
-                stream=stream,
-                params=params,
-                headers=headers,
-                files=files,
-                request_timeout=request_timeout,
-            )
-        else:
-            st_time = time.time()
-            while True:
-                try:
-                    return self._request(
-                        method=method,
-                        path=path,
-                        stream=stream,
-                        params=params,
-                        headers=headers,
-                        files=files,
-                        request_timeout=request_timeout,
-                    )
-                except (errors.TryAgain, errors.RateLimitError, errors.TimeoutError):
-                    if time.time() > st_time + self.timeout:
-                        logging.error("Operation timed out. No more attempts.")
-                        raise
-                    else:
-                        retry_after: float = 0 if self.retry_after is None else self.retry_after
-                        logging.info("Another attempt will be made after %.1f seconds.", retry_after)
-                        time.sleep(retry_after)
+        retrying = tenacity.Retrying(
+            stop=tenacity.stop_after_attempt(self.max_retries + 1),
+            wait=tenacity.wait_exponential(multiplier=1, max=self.retry_after[1], min=self.retry_after[0])
+            + tenacity.wait_random(min=0, max=0.5),
+            retry=(
+                tenacity.retry_if_exception_type(errors.TryAgain)
+                | tenacity.retry_if_exception_type(errors.RateLimitError)
+                | tenacity.retry_if_exception_type(errors.TimeoutError)
+            ),
+            before_sleep=lambda retry_state: logging.warning(
+                "Retrying requests: Attempt %s ended with: %s",
+                retry_state.attempt_number,
+                retry_state.outcome,
+            ),
+            reraise=True,
+        )
+        for attempt in retrying:
+            with attempt:
+                return self._request(
+                    method=method,
+                    path=path,
+                    stream=stream,
+                    params=params,
+                    headers=headers,
+                    files=files,
+                    request_timeout=request_timeout,
+                )
+        raise AssertionError
 
     @overload
     async def arequest(
@@ -221,37 +220,34 @@ class EBResource(object):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        if self.timeout is None:
-            return await self._arequest(
-                method=method,
-                path=path,
-                stream=stream,
-                params=params,
-                headers=headers,
-                files=files,
-                request_timeout=request_timeout,
-            )
-        else:
-            st_time = time.time()
-            while True:
-                try:
-                    return await self._arequest(
-                        method=method,
-                        path=path,
-                        stream=stream,
-                        params=params,
-                        headers=headers,
-                        files=files,
-                        request_timeout=request_timeout,
-                    )
-                except (errors.TryAgain, errors.RateLimitError, errors.TimeoutError):
-                    if time.time() > st_time + self.timeout:
-                        logging.info("Operation timed out. No more attempts.")
-                        raise
-                    else:
-                        retry_after: float = 0 if self.retry_after is None else self.retry_after
-                        logging.info("Another attempt will be made after %.1f seconds.", retry_after)
-                        await asyncio.sleep(retry_after)
+        async_retrying = tenacity.AsyncRetrying(
+            stop=tenacity.stop_after_attempt(self.max_retries + 1),
+            wait=tenacity.wait_exponential(multiplier=1, max=self.retry_after[1], min=self.retry_after[0])
+            + tenacity.wait_random(min=0, max=0.5),
+            retry=(
+                tenacity.retry_if_exception_type(errors.TryAgain)
+                | tenacity.retry_if_exception_type(errors.RateLimitError)
+                | tenacity.retry_if_exception_type(errors.TimeoutError)
+            ),
+            before_sleep=lambda retry_state: logging.warning(
+                "Retrying requests: Attempt %s ended with: %s",
+                retry_state.attempt_number,
+                retry_state.outcome,
+            ),
+            reraise=True,
+        )
+        async for attempt in async_retrying:
+            with attempt:
+                return await self._arequest(
+                    method=method,
+                    path=path,
+                    stream=stream,
+                    params=params,
+                    headers=headers,
+                    files=files,
+                    request_timeout=request_timeout,
+                )
+        raise AssertionError
 
     @final
     def poll(
@@ -266,7 +262,7 @@ class EBResource(object):
     ) -> EBResponse:
         st_time = time.time()
         while True:
-            resp = self._request(
+            resp = self.request(
                 method=method,
                 path=path,
                 stream=False,
@@ -295,7 +291,7 @@ class EBResource(object):
     ) -> EBResponse:
         st_time = time.time()
         while True:
-            resp = await self._arequest(
+            resp = await self.arequest(
                 method=method,
                 path=path,
                 stream=False,

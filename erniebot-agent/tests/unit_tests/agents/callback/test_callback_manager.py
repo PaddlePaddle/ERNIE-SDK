@@ -8,9 +8,7 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage
 from erniebot_agent.tools.base import Tool
 
-from tests.unit_tests.testing_utils.mocks.mock_callback_handler import (
-    MockCallbackHandler,
-)
+from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 
 
 @pytest.mark.asyncio
@@ -29,8 +27,8 @@ async def test_callback_manager_hit():
     llm = mock.Mock(spec=ChatModel)
     tool = mock.Mock(spec=Tool)
 
-    handler1 = MockCallbackHandler()
-    handler2 = MockCallbackHandler()
+    handler1 = CountingCallbackHandler()
+    handler2 = CountingCallbackHandler()
     callback_manager = CallbackManager(handlers=[handler1, handler2])
 
     await callback_manager.on_run_start(agent, "")
@@ -54,8 +52,8 @@ async def test_callback_manager_hit():
 
 @pytest.mark.asyncio
 async def test_callback_manager_add_remove_handlers():
-    handler1 = MockCallbackHandler()
-    handler2 = MockCallbackHandler()
+    handler1 = CountingCallbackHandler()
+    handler2 = CountingCallbackHandler()
     callback_manager = CallbackManager(handlers=[handler1])
     assert len(callback_manager.handlers) == 1
     with pytest.raises(RuntimeError):
