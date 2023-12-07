@@ -36,12 +36,12 @@ class LoggingHandler(CallbackHandler):
     def __init__(
         self,
         log_max_length: int = 100,
-        color_role: bool = True,
+        enable_role_color: bool = True,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         super().__init__()
         self.log_max_length = log_max_length
-        self.open_color_role(color_role)
+        self.open_color_role(enable_role_color)
 
         if logger is None:
             self.logger = default_logger
