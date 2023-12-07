@@ -100,7 +100,7 @@ if __name__ == "__main__":
         llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool()], memory=memory
     )
 
-    queries = ["OpenAI管理层变更会带来哪些影响？并记录在笔记本里面", "今天天气怎么样？", "abcabc"]
+    queries = ["OpenAI管理层变更会带来哪些影响?", "量化交易", "今天天气怎么样？", "abcabc"]
     for query in queries:
         response = asyncio.run(agent.async_run(query))
         print(f"query: {query}")

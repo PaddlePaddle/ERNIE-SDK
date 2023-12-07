@@ -90,6 +90,7 @@ class FunctionalAgent(Agent):
     ) -> Optional[Message]:
         maybe_action = await self._async_plan(step_input, chat_history)
         if isinstance(maybe_action, AgentAction):
+            breakpoint()
             action: AgentAction = maybe_action
             tool_resp = await self._async_run_tool(tool_name=action.tool_name, tool_args=action.tool_args)
             actions.append(action)
@@ -112,7 +113,7 @@ class FunctionalAgent(Agent):
         chat_history.append(output_message)
         if output_message.function_call is not None:
             return AgentAction(
-                tool_name=output_message.function_call["name"],  # type: ignore
+                tool_name=output_message.function_call["name"],
                 tool_args=output_message.function_call["arguments"],
             )
         else:

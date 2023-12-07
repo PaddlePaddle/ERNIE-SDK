@@ -3,7 +3,7 @@ from typing import List
 
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
-from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
+from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.utils.logging import logger
@@ -36,15 +36,15 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
-            step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
-            )
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
 
             chat_history.append(HumanMessage(content=prompt))
 
+            step_input = HumanMessage(
+                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
+            )
             fake_chat_history = chat_history.copy()
             fake_chat_history.append(step_input)
             llm_resp = await self._async_run_llm(
@@ -57,12 +57,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
 
             chat_history.append(
                 AIMessage(
-                    content="",
-                    function_call={
-                        "name": "knowledge_retrieval_tool",
-                        "thoughts": "这是一个检索的需求，我需要在knowledge_retrieval_tool知识库中检索出与输入的query相关的段落，并返回给用户。",
-                        "arguments": '{"query": "%s"}' % prompt,
-                    },
+                    content=output_message.content,
+                    function_call=None,
                 )
             )
 
@@ -72,14 +68,14 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
             actions_taken.append(action)
             # return response
-            next_step_input = FunctionMessage(name=action.tool_name, content=output_message.content)
+            next_step_input = HumanMessage(content=f"检索的上下文为：{output_message.content} 问句为：{prompt}")
+
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
                     next_step_input, chat_history, actions_taken, files_involved
                 )
                 if curr_step_output is None:
-                    print(chat_history)
                     response = self._create_finished_response(chat_history, actions_taken, files_involved)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
