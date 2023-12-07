@@ -17,6 +17,7 @@ import inspect
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
+from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
@@ -51,31 +52,33 @@ class Agent(BaseAgent):
         llm: ChatModel,
         tools: Union[ToolManager, List[Tool]],
         memory: Memory,
-        system_message: Optional[SystemMessage] = None,
         *,
+        system_message: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
-        file_manager: Optional[FileManager] = FileManager(),
+        file_manager: Optional[FileManager] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
         self.memory = memory
+        if isinstance(tools, ToolManager):
+            self._tool_manager = tools
+        else:
+            self._tool_manager = ToolManager(tools)
         # 1. Get system message exist in memory
         # OR 2. overwrite by the system_message paased in the Agent.
         if system_message:
             self.system_message = system_message
         else:
             self.system_message = memory.get_system_message()
-        if isinstance(tools, ToolManager):
-            self._tool_manager = tools
-        else:
-            self._tool_manager = ToolManager(tools)
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
             self._callback_manager = callbacks
         else:
             self._callback_manager = CallbackManager(callbacks)
-        self.file_manager = file_manager
+        if file_manager is None:
+            file_manager = file_io.get_file_manager()
+        self._file_manager = file_manager
 
     async def async_run(self, prompt: str) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
@@ -256,23 +259,23 @@ class Agent(BaseAgent):
         for val in args.values():
             if isinstance(val, str):
                 if is_local_file_id(val):
-                    if self.file_manager is None:
+                    if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.look_up_file_by_id(val)
+                    file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
                         raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
                 elif is_remote_file_id(val):
-                    if self.file_manager is None:
+                    if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.look_up_file_by_id(val)
+                    file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
-                        file = await self.file_manager.retrieve_remote_file_by_id(val)
+                        file = await self._file_manager.retrieve_remote_file_by_id(val)
                 else:
                     continue
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))

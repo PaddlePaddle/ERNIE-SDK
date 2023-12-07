@@ -16,11 +16,23 @@ import abc
 
 
 class File(metaclass=abc.ABCMeta):
-    def __init__(self, id: str, filename: str, created_at: int) -> None:
+    def __init__(
+        self,
+        *,
+        id: str,
+        filename: str,
+        bytes: int,
+        created_at: int,
+        purpose: str,
+        meta: str,
+    ) -> None:
         super().__init__()
         self.id = id
         self.filename = filename
+        self.bytes = bytes
         self.created_at = created_at
+        self.purpose = purpose
+        self.meta = meta
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -41,6 +53,9 @@ class File(metaclass=abc.ABCMeta):
             [
                 f"id: {repr(self.id)}",
                 f"filename: {repr(self.filename)}",
+                f"bytes: {repr(self.bytes)}",
                 f"created_at: {repr(self.created_at)}",
+                f"purpose: {repr(self.purpose)}",
+                f"meta: {repr(self.meta)}",
             ]
         )
