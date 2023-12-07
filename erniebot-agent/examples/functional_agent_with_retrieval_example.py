@@ -87,9 +87,9 @@ if __name__ == "__main__":
     erniebot.access_token = args.access_token
     baizhong_db = BaizhongSearch(
         base_url=args.base_url,
-        project_name="finance_assistant1",
-        remark="finance assistant test dataset",
-        project_id=args.project_id,
+        project_name="construct_assistant2",
+        remark="construction assistant test dataset",
+        project_id=args.project_id if args.project_id != -1 else None,
     )
     print(baizhong_db.project_id)
     if args.indexing:
