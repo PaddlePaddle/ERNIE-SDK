@@ -15,6 +15,7 @@
 import pathlib
 import time
 import uuid
+from typing import Any, Dict
 
 import anyio
 from erniebot_agent.file_io.base import File
@@ -31,10 +32,10 @@ class LocalFile(File):
         *,
         id: str,
         filename: str,
-        bytes: int,
+        byte_size: int,
         created_at: int,
         purpose: FilePurpose,
-        meta: str,
+        meta: Dict[str, Any],
         path: pathlib.Path,
     ) -> None:
         if not is_local_file_id(id):
@@ -42,7 +43,7 @@ class LocalFile(File):
         super().__init__(
             id=id,
             filename=filename,
-            bytes=bytes,
+            byte_size=byte_size,
             created_at=created_at,
             purpose=purpose,
             meta=meta,
@@ -59,18 +60,18 @@ class LocalFile(File):
 
 
 def create_local_file_from_path(
-    file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: str
+    file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: Dict[str, Any]
 ) -> LocalFile:
     if not file_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist.")
     file_id = _generate_local_file_id()
     filename = file_path.name
-    bytes = file_path.stat().st_size
+    byte_size = file_path.stat(follow_symlinks=True).st_size
     created_at = int(time.time())
     file = LocalFile(
         id=file_id,
         filename=filename,
-        bytes=bytes,
+        byte_size=byte_size,
         created_at=created_at,
         purpose=file_purpose,
         meta=file_meta,

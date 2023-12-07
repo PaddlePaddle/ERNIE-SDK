@@ -29,10 +29,10 @@ class RemoteFile(File):
         *,
         id: str,
         filename: str,
-        bytes: int,
+        byte_size: int,
         created_at: int,
         purpose: FilePurpose,
-        meta: str,
+        meta: Dict[str, Any],
         client: "RemoteFileClient",
     ) -> None:
         if not is_remote_file_id(id):
@@ -40,7 +40,7 @@ class RemoteFile(File):
         super().__init__(
             id=id,
             filename=filename,
-            bytes=bytes,
+            byte_size=byte_size,
             created_at=created_at,
             purpose=purpose,
             meta=meta,
@@ -58,7 +58,7 @@ class RemoteFile(File):
 class RemoteFileClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def upload_file(
-        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: str
+        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: Dict[str, Any]
     ) -> RemoteFile:
         raise NotImplementedError
 
@@ -94,7 +94,7 @@ class AIStudioFileClient(RemoteFileClient):
         self._session = aiohttp_session
 
     async def upload_file(
-        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: str
+        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_meta: Dict[str, Any]
     ) -> RemoteFile:
         url = self._get_url(self._UPLOAD_ENDPOINT)
         headers: Dict[str, str] = {}
@@ -103,7 +103,7 @@ class AIStudioFileClient(RemoteFileClient):
             form_data = aiohttp.FormData()
             form_data.add_field("file", file, filename=file_path.name)
             form_data.add_field("purpose", file_purpose)
-            form_data.add_field("meta", file_meta)
+            form_data.add_field("meta", json.dumps(file_meta))
             resp_bytes = await self._request(
                 "POST",
                 url,
@@ -177,13 +177,20 @@ class AIStudioFileClient(RemoteFileClient):
         }
 
     def _build_file_obj_from_dict(self, dict_: Dict[str, Any]) -> RemoteFile:
+        meta: Dict[str, Any]
+        if "meta" in dict_:
+            meta = json.loads(dict_["meta"])
+            if not isinstance(meta, dict):
+                raise ValueError(f"Invalid meta: {dict_['meta']}")
+        else:
+            meta = {}
         return RemoteFile(
             id=dict_["fileId"],
             filename=dict_["fileName"],
-            bytes=dict_["bytes"],
+            byte_size=dict_["bytes"],
             created_at=dict_["createTime"],
             purpose=dict_["purpose"],
-            meta=dict_.get("meta", ""),
+            meta=meta,
             client=self,
         )
 

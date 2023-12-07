@@ -17,7 +17,7 @@ import pathlib
 import tempfile
 import uuid
 import weakref
-from typing import Literal, Optional, Union, overload
+from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 import anyio
 from erniebot_agent.file_io.base import File
@@ -71,8 +71,8 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = ...,
+        file_purpose: FilePurpose = ...,
+        file_meta: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
@@ -82,8 +82,8 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = ...,
+        file_purpose: FilePurpose = ...,
+        file_meta: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
@@ -92,8 +92,8 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = None,
+        file_purpose: FilePurpose = "assistants",
+        file_meta: Optional[Dict[str, Any]] = None,
         file_type: Literal["local", "remote"] = "local",
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
@@ -106,17 +106,17 @@ class FileManager(object):
         return file
 
     async def create_local_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[str]
+        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[Dict[str, Any]]
     ) -> LocalFile:
-        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_meta or "")
+        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_meta or {})
         self._file_registry.register_file(file)
         return file
 
     async def create_remote_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[str]
+        self, file_path: FilePath, file_purpose: FilePurpose, file_meta: Optional[Dict[str, Any]]
     ) -> RemoteFile:
         file = await self.remote_file_client.upload_file(
-            pathlib.Path(file_path), file_purpose, file_meta or ""
+            pathlib.Path(file_path), file_purpose, file_meta or {}
         )
         if self._auto_register:
             self._file_registry.register_file(file)
@@ -128,8 +128,8 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = ...,
+        file_purpose: FilePurpose = ...,
+        file_meta: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
@@ -140,8 +140,8 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = ...,
+        file_purpose: FilePurpose = ...,
+        file_meta: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
@@ -151,32 +151,43 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose,
-        file_meta: Optional[str] = None,
+        file_purpose: FilePurpose = "assistants",
+        file_meta: Optional[Dict[str, Any]] = None,
         file_type: Literal["local", "remote"] = "local",
     ) -> Union[LocalFile, RemoteFile]:
         # Can we do this with in-memory files?
         file_path = self._fs_create_file(
             prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
         )
-        async with await anyio.open_file(file_path, "wb") as f:
-            await f.write(file_contents)
-        file = await self.create_file_from_path(
-            file_path,
-            file_purpose=file_purpose,
-            file_meta=file_meta,
-            file_type=file_type,
-        )
+        try:
+            async with await anyio.open_file(file_path, "wb") as f:
+                await f.write(file_contents)
+            file = await self.create_file_from_path(
+                file_path,
+                file_purpose=file_purpose,
+                file_meta=file_meta,
+                file_type=file_type,
+            )
+        finally:
+            if file_type == "remote":
+                file_path.unlink()
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
         file = await self.remote_file_client.retrieve_file(file_id)
         if self._auto_register:
-            self._file_registry.register_file(file)
+            self._file_registry.register_file(file, allow_overwrite=True)
         return file
 
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
         return self._file_registry.look_up_file(file_id)
+
+    async def list_remote_files(self) -> List[RemoteFile]:
+        files = await self.remote_file_client.list_files()
+        if self._auto_register:
+            for file in files:
+                self._file_registry.register_file(file, allow_overwrite=True)
+        return files
 
     def _fs_create_file(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> pathlib.Path:
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"

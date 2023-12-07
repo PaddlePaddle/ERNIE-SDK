@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+from typing import Any, Dict
 
 
 class File(metaclass=abc.ABCMeta):
@@ -21,15 +22,15 @@ class File(metaclass=abc.ABCMeta):
         *,
         id: str,
         filename: str,
-        bytes: int,
+        byte_size: int,
         created_at: int,
         purpose: str,
-        meta: str,
+        meta: Dict[str, Any],
     ) -> None:
         super().__init__()
         self.id = id
         self.filename = filename
-        self.bytes = bytes
+        self.byte_size = byte_size
         self.created_at = created_at
         self.purpose = purpose
         self.meta = meta
@@ -53,7 +54,7 @@ class File(metaclass=abc.ABCMeta):
             [
                 f"id: {repr(self.id)}",
                 f"filename: {repr(self.filename)}",
-                f"bytes: {repr(self.bytes)}",
+                f"byte_size: {repr(self.byte_size)}",
                 f"created_at: {repr(self.created_at)}",
                 f"purpose: {repr(self.purpose)}",
                 f"meta: {repr(self.meta)}",
