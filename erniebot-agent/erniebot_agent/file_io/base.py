@@ -13,20 +13,28 @@
 # limitations under the License.
 
 import abc
+from typing import Any, Dict
 
 
 class File(metaclass=abc.ABCMeta):
     def __init__(
-        self, *, id: str, filename: str, created_at: int, bytes: int = 0, purpose: str = "", meta: str = ""
-    ) -> None:  # TODO: init for test purpose
+        self,
+        *,
+        id: str,
+        filename: str,
+        byte_size: int,
+        created_at: int,
+        purpose: str,
+        metadata: Dict[str, Any],
+    ) -> None:
         super().__init__()
         self.id = id
         self.filename = filename
+        self.byte_size = byte_size
         self.created_at = created_at
-        self.bytes = bytes
         self.purpose = purpose
-        self.meta = meta
-        self._param_names = {"id", "filename", "created_at", "bytes", "purpose", "meta"}
+        self.metadata = metadata
+        self._param_names = {"id", "filename", "byte_size", "created_at", "purpose", "metadata"}
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -50,6 +58,9 @@ class File(metaclass=abc.ABCMeta):
             [
                 f"id: {repr(self.id)}",
                 f"filename: {repr(self.filename)}",
+                f"byte_size: {repr(self.byte_size)}",
                 f"created_at: {repr(self.created_at)}",
+                f"purpose: {repr(self.purpose)}",
+                f"metadata: {repr(self.metadata)}",
             ]
         )
