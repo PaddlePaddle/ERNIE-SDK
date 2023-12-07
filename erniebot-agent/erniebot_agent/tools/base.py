@@ -207,9 +207,10 @@ class RemoteTool(BaseTool):
             raise ValueError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
+            logger.debug(f"The resource requested returned the following headers: {response.headers}")
             raise ValueError(
-                f"The resource requested by `{self.tool_name}` returned"
-                f"{response.status_code}: {response.text}"
+                f"The resource requested by `{self.tool_name}` "
+                f"returned {response.status_code}: {response.text}"
             )
 
         # parse the file from response
@@ -445,7 +446,8 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                raise ValueError(f"the resource is invalid, the error message is: {response.text}")
+                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                raise ValueError(f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}")
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():
@@ -480,9 +482,8 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                raise ValueError(
-                    f"Invalid resource, status_code: {response.status_code}, error message: {response.text}"
-                )
+                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                raise ValueError(f"`{examples_yaml_url}` returned {response.status_code}: {response.text}")
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():
