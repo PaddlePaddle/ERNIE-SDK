@@ -34,6 +34,7 @@ class File(metaclass=abc.ABCMeta):
         self.created_at = created_at
         self.purpose = purpose
         self.metadata = metadata
+        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -44,6 +45,9 @@ class File(metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
+
+    def to_dict(self) -> dict:
+        return {k: getattr(self, k) for k in self._param_names}
 
     @abc.abstractmethod
     async def read_contents(self) -> bytes:
