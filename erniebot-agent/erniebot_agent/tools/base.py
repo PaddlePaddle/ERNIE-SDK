@@ -185,6 +185,12 @@ def wrap_tool_with_files(func):
         # 1. replace fileid with byte string
         parameter_file_names = get_file_names_from_param_view(object.tool_view.parameters)
         for key in tool_arguments.keys():
+            if object.tool_view.parameters:
+                if key not in object.tool_view.parameters.model_fields:
+                    raise RuntimeError(
+                        f"`{object.tool_name}` received unexpected arguments `{key}`. "
+                        f"The avaiable arguments are {list(object.tool_view.parameters.model_fields.keys())}"
+                    )
             if key not in parameter_file_names:
                 continue
             if object.tool_view.parameters is None:
@@ -245,7 +251,6 @@ class RemoteTool(BaseTool):
         requests_inputs = {
             "headers": headers,
         }
-
         if self.tool_view.method == "get":
             requests_inputs["params"] = tool_arguments
         elif self.tool_view.parameters_content_type == "application/json":
