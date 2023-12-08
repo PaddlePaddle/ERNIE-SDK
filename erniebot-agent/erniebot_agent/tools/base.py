@@ -25,6 +25,8 @@ from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from erniebot_agent import file_io
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
@@ -34,10 +36,12 @@ from erniebot_agent.tools.schema import (
     ToolParameterView,
     scrub_dict,
 )
+from erniebot_agent.utils.common import get_file_suffix, is_json_response
 from erniebot_agent.utils.http import url_file_exists
 from erniebot_agent.utils.logging import logger
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
+from requests import Response
 from yaml import safe_dump
 
 import erniebot
@@ -69,6 +73,60 @@ class BaseTool(ABC):
     @abstractmethod
     def function_call_schema(self) -> dict:
         raise NotImplementedError
+
+
+def get_file_names_from_param_view(param_view: Optional[Type[ToolParameterView]] = None) -> List[str]:
+    """get file names from tool parameter view
+
+    Args:
+        param_view (ToolParameterView): the ToolParameterView pydantic class
+
+    Returns:
+        List[str]: the names of file
+    """
+    if param_view is None:
+        return []
+    file_names = []
+    for key in param_view.model_fields.keys():
+        if param_view.model_fields[key].json_schema_extra and param_view.model_fields[
+            key
+        ].json_schema_extra.get("format", None) in [
+            "byte",
+            "binary",
+        ]:
+            file_names.append(key)
+    return file_names
+
+
+async def parse_file_from_response(
+    response: Response, file_manager: FileManager, file_names: List[str]
+) -> Optional[File]:
+    content_type = response.headers.get("Content-Type", None)
+
+    # TODO(wj-Mcat): to parse base64 file from json response
+    if len(file_names) == 0:
+        return None
+
+    if is_json_response(response):
+        return None
+
+    # 1. parse file by content_type
+    if content_type is not None:
+        file_suffix = get_file_suffix(content_type)
+        return await file_manager.create_file_from_bytes(
+            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+        )
+
+    # 2. parse file by
+    content_disposition = response.headers.get("Content-Disposition", None)
+    if content_disposition is not None:
+        file_name = response.headers["Content-Disposition"].split("filename=")[1]
+        local_file = await file_manager.create_file_from_bytes(
+            response.content, file_name, file_purpose="assistants_output"
+        )
+        return local_file
+
+    raise ValueError("can not parse file from response")
 
 
 class Tool(BaseTool, ABC):
@@ -125,6 +183,7 @@ def wrap_tool_with_files(func):
 
         file_manager = object.file_manager
         # 1. replace fileid with byte string
+        parameter_file_names = get_file_names_from_param_view(object.tool_view.parameters)
         for key in tool_arguments.keys():
             if object.tool_view.parameters:
                 if key not in object.tool_view.parameters.model_fields:
@@ -132,12 +191,12 @@ def wrap_tool_with_files(func):
                         f"`{object.tool_name}` received unexpected arguments `{key}`. "
                         f"The avaiable arguments are {list(object.tool_view.parameters.model_fields.keys())}"
                     )
-
-                if object.tool_view.parameters.model_fields[key].json_schema_extra:
-                    json_schema_extra = object.tool_view.parameters.model_fields[key].json_schema_extra
-                    if json_schema_extra.get("format", None) in ["byte", "binary"]:
-                        byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-                        tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if key not in parameter_file_names:
+                continue
+            if object.tool_view.parameters is None:
+                break
+            byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
+            tool_arguments[key] = base64.b64encode(byte_str).decode()
 
         # 2. call tool get response
         json_response = await func(object, **tool_arguments)
@@ -155,6 +214,7 @@ class RemoteTool(BaseTool):
         version: str,
         examples: Optional[List[Message]] = None,
         tool_name_prefix: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
@@ -165,8 +225,9 @@ class RemoteTool(BaseTool):
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None:
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
-
-        self.file_manager = FileManager()
+        if file_manager is None:
+            file_manager = file_io.get_file_manager()
+        self.file_manager = file_manager
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -218,35 +279,21 @@ class RemoteTool(BaseTool):
             )
 
         # parse the file from response
-        file_names = []
-        if self.tool_view.returns:
-            for key in self.tool_view.returns.model_fields.keys():
-                if self.tool_view.returns.model_fields[
-                    key
-                ].json_schema_extra and self.tool_view.returns.model_fields[key].json_schema_extra.get(
-                    "format", None
-                ) in [
-                    "byte",
-                    "binary",
-                ]:
-                    file_names.append(key)
+        returns_file_names = get_file_names_from_param_view(self.tool_view.returns)
+        file = await parse_file_from_response(response, self.file_manager, file_names=returns_file_names)
 
-        if len(file_names) == 0:
+        if file is not None:
+            if len(returns_file_names) == 0:
+                raise ValueError("Can not find file field defination in openapi.yaml")
+
+            return {returns_file_names[0]: file.id}
+
+        if len(returns_file_names) == 0:
             return response.json()
-        elif len(file_names) != 1:
-            raise RuntimeError("The tool returns multiple files, which is not supported for now")
+        elif len(returns_file_names) != 1:
+            raise NotImplementedError("The tool returns multiple files, which is not supported for now")
 
-        result = {}
-        # create file from bytes
-        file_name = response.headers["Content-Disposition"].split("filename=")[1]
-        local_file = await self.file_manager.create_file_from_bytes(response.content, file_name)
-
-        result[file_names[0]] = local_file.id
-
-        return result
-
-    def _decode_file(self):
-        pass
+        # TODO(wj-Mcat): handle more complex file situations
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()

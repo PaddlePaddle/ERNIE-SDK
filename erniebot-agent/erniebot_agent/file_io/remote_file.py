@@ -13,29 +13,38 @@
 # limitations under the License.
 
 import abc
-import asyncio
-import functools
+import inspect
+import json
 import pathlib
-import time
-import uuid
-from typing import ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 
-import anyio
-from baidubce.auth.bce_credentials import BceCredentials
-from baidubce.bce_client_configuration import BceClientConfiguration
-from baidubce.services.bos.bos_client import BosClient
+import aiohttp
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import (
-    build_remote_file_id_from_uuid,
-    is_remote_file_id,
-)
+from erniebot_agent.file_io.protocol import FilePurpose, is_remote_file_id
 
 
 class RemoteFile(File):
-    def __init__(self, id: str, filename: str, created_at: int, client: "RemoteFileClient") -> None:
+    def __init__(
+        self,
+        *,
+        id: str,
+        filename: str,
+        byte_size: int,
+        created_at: int,
+        purpose: FilePurpose,
+        metadata: Dict[str, Any],
+        client: "RemoteFileClient",
+    ) -> None:
         if not is_remote_file_id(id):
-            raise ValueError("Invalid file ID: {id}")
-        super().__init__(id=id, filename=filename, created_at=created_at)
+            raise ValueError(f"Invalid file ID: {id}")
+        super().__init__(
+            id=id,
+            filename=filename,
+            byte_size=byte_size,
+            created_at=created_at,
+            purpose=purpose,
+            metadata=metadata,
+        )
         self._client = client
 
     async def read_contents(self) -> bytes:
@@ -48,7 +57,9 @@ class RemoteFile(File):
 
 class RemoteFileClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    async def upload_file(self, file_path: pathlib.Path) -> RemoteFile:
+    async def upload_file(
+        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+    ) -> RemoteFile:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -68,86 +79,135 @@ class RemoteFileClient(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class BOSFileClient(RemoteFileClient):
-    _ENDPOINT: ClassVar[str] = "bj.bcebos.com"
+class AIStudioFileClient(RemoteFileClient):
+    _BASE_URL: ClassVar[str] = "https://sandbox-aistudio.baidu.com"
+    _UPLOAD_ENDPOINT: ClassVar[str] = "/llm/lmapp/files"
+    _RETRIEVE_ENDPOINT: ClassVar[str] = "/llm/lmapp/files/{file_id}"
+    _RETRIEVE_CONTENTS_ENDPOINT: ClassVar[str] = "/llm/lmapp/files/{file_id}/content"
+    _LIST_ENDPOINT: ClassVar[str] = "/llm/lmapp/files"
 
-    def __init__(self, ak: str, sk: str, bucket_name: str, prefix: str) -> None:
+    def __init__(
+        self, access_token: str, *, aiohttp_session: Optional[aiohttp.ClientSession] = None
+    ) -> None:
         super().__init__()
-        self.bucket_name = bucket_name
-        self.prefix = prefix
-        config = BceClientConfiguration(credentials=BceCredentials(ak, sk), endpoint=self._ENDPOINT)
-        self._bos_client = BosClient(config=config)
+        self._access_token = access_token
+        self._session = aiohttp_session
 
-    async def upload_file(self, file_path: pathlib.Path) -> RemoteFile:
-        file_id = self._generate_file_id()
-        filename = file_path.name
-        created_at = int(time.time())
-        user_metadata: Dict[str, str] = {"id": file_id, "filename": filename, "created_at": str(created_at)}
-        async with await anyio.open_file(file_path, mode="rb") as f:
-            data = await f.read()
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(
-            None,
-            functools.partial(
-                self._bos_client.put_object_from_string,
-                bucket=self.bucket_name,
-                key=self._get_key(file_id),
-                data=data,
-                user_metadata=user_metadata,
-            ),
-        )
-        return RemoteFile(
-            id=file_id,
-            filename=filename,
-            created_at=created_at,
-            client=self,
-        )
+    async def upload_file(
+        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+    ) -> RemoteFile:
+        url = self._get_url(self._UPLOAD_ENDPOINT)
+        headers: Dict[str, str] = {}
+        headers.update(self._get_default_headers())
+        with file_path.open("rb") as file:
+            form_data = aiohttp.FormData()
+            form_data.add_field("file", file, filename=file_path.name)
+            form_data.add_field("purpose", file_purpose)
+            form_data.add_field("meta", json.dumps(file_metadata))
+            resp_bytes = await self._request(
+                "POST",
+                url,
+                data=form_data,
+                headers=headers,
+                raise_for_status=True,
+            )
+        result = self._get_result_from_response_body(resp_bytes)
+        return self._build_file_obj_from_dict(result)
 
     async def retrieve_file(self, file_id: str) -> RemoteFile:
-        loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(
-            None,
-            functools.partial(
-                self._bos_client.get_object_meta_data, self.bucket_name, self._get_key(file_id)
-            ),
+        url = self._get_url(self._RETRIEVE_ENDPOINT).format(file_id=file_id)
+        headers: Dict[str, str] = {}
+        headers.update(self._get_default_headers())
+        resp_bytes = await self._request(
+            "GET",
+            url,
+            headers=headers,
+            raise_for_status=True,
         )
-        user_metadata = {
-            "id": response.metadata.bce_meta_id,
-            "filename": response.metadata.bce_meta_filename,
-            "created_at": int(response.metadata.bce_meta_created_at),
-        }
-        if file_id != user_metadata["id"]:
-            raise RuntimeError("`file_id` is not the same as the one in metadata.")
+        result = self._get_result_from_response_body(resp_bytes)
+        return self._build_file_obj_from_dict(result)
 
+    async def retrieve_file_contents(self, file_id: str) -> bytes:
+        url = self._get_url(self._RETRIEVE_CONTENTS_ENDPOINT).format(file_id=file_id)
+        headers: Dict[str, str] = {}
+        headers.update(self._get_default_headers())
+        resp_bytes = await self._request(
+            "GET",
+            url,
+            headers=headers,
+            raise_for_status=True,
+        )
+        return resp_bytes
+
+    async def list_files(self) -> List[RemoteFile]:
+        url = self._get_url(self._LIST_ENDPOINT)
+        headers: Dict[str, str] = {}
+        headers.update(self._get_default_headers())
+        resp_bytes = await self._request(
+            "GET",
+            url,
+            headers=headers,
+            raise_for_status=True,
+        )
+        result = self._get_result_from_response_body(resp_bytes)
+        files: List[RemoteFile] = []
+        for item in result:
+            file = self._build_file_obj_from_dict(item)
+            files.append(file)
+        return files
+
+    async def delete_file(self, file_id: str) -> None:
+        raise RuntimeError(f"`{self.__class__.__name__}.{inspect.stack()[0][3]}` is not supported.")
+
+    async def _request(self, *args: Any, **kwargs: Any) -> bytes:
+        if self._session is not None:
+            async with self._session.request(*args, **kwargs) as response:
+                return await response.read()
+        else:
+            async with aiohttp.ClientSession(**self._get_session_config()) as session:
+                async with session.request(*args, **kwargs) as response:
+                    return await response.read()
+
+    def _get_session_config(self) -> Dict[str, Any]:
+        return {}
+
+    def _get_default_headers(self) -> Dict[str, str]:
+        return {
+            "Authorization": f"token {self._access_token}",
+        }
+
+    def _build_file_obj_from_dict(self, dict_: Dict[str, Any]) -> RemoteFile:
+        metadata: Dict[str, Any]
+        if "meta" in dict_:
+            metadata = json.loads(dict_["meta"])
+            if not isinstance(metadata, dict):
+                raise ValueError(f"Invalid metadata: {dict_['meta']}")
+        else:
+            metadata = {}
         return RemoteFile(
-            id=user_metadata["id"],
-            filename=user_metadata["filename"],
-            created_at=user_metadata["created_at"],
+            id=dict_["fileId"],
+            filename=dict_["fileName"],
+            byte_size=dict_["bytes"],
+            created_at=dict_["createTime"],
+            purpose=dict_["purpose"],
+            metadata=metadata,
             client=self,
         )
 
-    async def retrieve_file_contents(self, file_id: str) -> bytes:
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            None,
-            functools.partial(
-                self._bos_client.get_object_as_string, self.bucket_name, self._get_key(file_id)
-            ),
-        )
-        return result
+    def _get_result_from_response_body(self, resp_body: bytes) -> Any:
+        decoded_resp_body = resp_body.decode("utf-8")
+        try:
+            resp_dict = json.loads(decoded_resp_body)
+        except json.JSONDecodeError:
+            raise RuntimeError(f"The response body is not valid JSON: {decoded_resp_body}")
+        if not isinstance(resp_dict, dict):
+            raise RuntimeError(f"The response body can not be parsed as a dict: {decoded_resp_body}")
+        if resp_dict.get("errorCode", -1) != 0:
+            raise RuntimeError(f"An error was encountered. Response body: {resp_dict}")
+        if "result" not in resp_dict:
+            raise RuntimeError(f"The response body does not contain the 'result' key: {resp_dict}")
+        return resp_dict["result"]
 
-    async def list_files(self) -> List[RemoteFile]:
-        raise RuntimeError(f"`{self.__class__.__name__}.list_files` is not supported.")
-
-    async def delete_file(self, file_id: str) -> None:
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(
-            None, functools.partial(self._bos_client.delete_object, self.bucket_name, self._get_key(file_id))
-        )
-
-    def _get_key(self, file_id: str) -> str:
-        return self.prefix + file_id
-
-    @staticmethod
-    def _generate_file_id() -> str:
-        return build_remote_file_id_from_uuid(str(uuid.uuid1()))
+    @classmethod
+    def _get_url(cls, path: str) -> str:
+        return f"{cls._BASE_URL}{path}"

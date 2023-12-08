@@ -1,0 +1,57 @@
+openapi: 3.0.1
+info:
+  title: 高精度通用OCR
+  description: 用于提取并识别图片中的文字及位置信息 v1.0
+  version: v1.0
+servers:
+- url: https://www.some-endpoint.com
+  description: aistudio tool server
+paths:
+  /OCR:
+    post:
+      summary: 文字识别
+      description: 用于提取并识别图片上的文字及位置信息
+      operationId: OCR
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OCR'
+        x-body-ignore: true
+      responses:
+        "200":
+          description: response success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResponse'
+              x-response-type: form
+          x-responses-ignore: true
+      x-func-id: 74f2ad47-ef46-4ddf-9320-df72fa0e626f
+      x-param-ignore: true
+      x-headers-ignore: true
+components:
+  schemas:
+    OCR:
+      required:
+      - image
+      type: object
+      properties:
+        image:
+          type: string
+          description: 提取该图片的文字信息
+          default: ""
+          format: byte
+          x-form-type: string
+        language_type:
+          type: object
+          description: 将图片中的文字以该语言类型呈现，支持：- auto_detect：自动检测语言，并识别 - CHN_ENG：中英文混合 - ENG：英文 - JAP：日语 - KOR：韩语 - FRE：法语 - SPA：西班牙语 - POR：葡萄牙语 - GER：德语 - ITA：意大利语 - RUS：俄语 - DAN：丹麦语 - DUT：荷兰语 - MAL：马来语 - SWE：瑞典语 - IND：印尼语 - POL：波兰语 - ROM：罗马尼亚语 - TUR：土耳其语 - GRE：希腊语 - HUN：匈牙利语 - THA：泰语 - VIE：越南语 - ARA：阿拉伯语 - HIN：印地语
+    OCRResponse:
+      type: object
+      properties: {}
+  securitySchemes:
+    apiKey_access_token:
+      type: apiKey
+      name: access_token
+      in: query
