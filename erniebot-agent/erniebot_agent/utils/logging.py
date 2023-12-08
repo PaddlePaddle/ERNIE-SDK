@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import os
 import re
 from typing import Optional
+
+from erniebot_agent.utils.output_style import ColorText
 
 __all__ = ["logger", "setup_logging"]
 
@@ -67,14 +70,79 @@ class ColorFormatter(logging.Formatter):
     }
 
     def format(self, record):
+        # color the message
+        origin_args = record.args
+        if record.args:
+            record_lis = list(record.args)
+            for i in range(len(record_lis)):
+                if isinstance(record_lis[i], ColorText):
+                    record_lis[i] = record_lis[i].get_colored_text()
+            record.args = tuple(record_lis)
+
         log_message = super(ColorFormatter, self).format(record)
+
         log_message = _handle_color_pattern(
             self.COLORS.get(record.levelname, "") + log_message + self.COLORS["RESET"]
         )
+        record.args = origin_args
         return log_message
 
 
-def setup_logging(verbosity: Optional[str] = None, use_standard_format: bool = True) -> None:
+class FileFormatter(logging.Formatter):
+    def format(self, record):
+        output = []
+        if record.args:
+            for arg in record.args:
+                if isinstance(arg, ColorText):
+                    self.extract_content(arg.text, output)
+                    # breakpoint()
+        log_message = ""
+        if output:
+            log_message += json.dumps(output, indent=2, ensure_ascii=False)
+        # breakpoint()
+        return log_message
+
+    def extract_content(self, text, output: list):
+        """Extract the content from message and convert to json format."""
+        if isinstance(text, list):
+            # List of messages
+            chat_lis = []
+            func_lis = []
+            for i in range(len(text)):
+                if hasattr(text[i], "role"):
+                    chat_res, func_res = self.handle_message(text[i])
+                    chat_lis.append(chat_res)
+                    if func_res:
+                        func_lis.append(func_res)
+            output.append({"conversation": chat_lis.copy()})
+            if func_lis:
+                output.append({"function_call": func_lis.copy()})
+
+        elif isinstance(text, str):
+            # Only handle Message Type
+            pass
+        else:
+            # Message type
+            if hasattr(text, "role"):
+                chat_res, func_res = self.handle_message(text)
+                output.append({"conversation": [chat_res]})
+                if func_res:
+                    output.append({"function_call": [func_res]})
+
+    def handle_message(self, message):
+        if message.role == "function":
+            func_dict = {
+                "name": message.name,
+                "arguments": message.content,
+            }
+            return message.to_dict(), func_dict
+        else:
+            return message.to_dict(), None
+
+
+def setup_logging(
+    verbosity: Optional[str] = None, use_standard_format: bool = True, use_file_handler: bool = False
+) -> None:
     """Configures logging for the ERNIE Bot Agent library.
 
     Args:
@@ -96,7 +164,19 @@ def setup_logging(verbosity: Optional[str] = None, use_standard_format: bool = T
 
         logger.setLevel(numeric_level)
         logger.propagate = False
+
         if use_standard_format and not logger.hasHandlers():
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
             logger.addHandler(console_handler)
+
+        if use_file_handler:
+            log_file_path = os.getenv("EB_LOGGING_FILE")
+
+            if log_file_path is not None:
+                file_name = os.path.join(log_file_path, "erniebot-agent.log")
+                file_handler = logging.FileHandler(file_name)
+            else:
+                file_handler = logging.FileHandler("erniebot-agent.log")
+            file_handler.setFormatter(FileFormatter("%(message)s"))
+            logger.addHandler(file_handler)
