@@ -124,7 +124,12 @@ async def parse_file_from_response(
         )
         return local_file
 
-    raise RemoteToolError("can not parse file from response")
+    if is_json_response(response):
+        raise RemoteToolError("Can not parse file from response: the type of data from response is json")
+    raise RemoteToolError(
+        "Can not parse file from response: the type of data from response is not json, "
+        "and can not find `Content-Disposition` or `Content-Type` field from response header."
+    )
 
 
 class Tool(BaseTool, ABC):
