@@ -26,4 +26,4 @@ class RemoteToolError(Exception):
         if not self.stage:
             return self.message
 
-        return f"There is an erorr in stage<{self.stage}>. The error message is: {self.message}"
+        return f"An error occured in stage <{self.stage}>. The error message is {self.message}"
