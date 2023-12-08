@@ -36,6 +36,7 @@ COLORS = {
 
 class ColorText:
     role_color: dict
+    max_length: int
 
     def __init__(self, text: Union[str, Message, List[Message]], role: Optional[str] = None):
         self.text = text
@@ -45,8 +46,12 @@ class ColorText:
         return str(self.text)
 
     @classmethod
-    def set_global_role_color(cls, value):
+    def set_global_role_color(cls, value: dict):
         cls.role_color = value
+
+    @classmethod
+    def set_global_max_length(cls, max_length: int):
+        cls.max_length = max_length
 
     def get_colored_text(self):
         if isinstance(self.text, str):
@@ -64,9 +69,8 @@ class ColorText:
         else:
             return COLORS[color] + str(text) + COLORS["RESET"]
 
-    def colorize_msg(
-        self, message: Union[Message, List[Message]], role_color: dict, max_length: int = 100
-    ) -> str:
+    def colorize_msg(self, message: Union[Message, List[Message]], role_color: dict) -> str:
+        max_length = self.max_length if self.max_length else 100
         res = ""
         if isinstance(message, list):
             for msg in message:

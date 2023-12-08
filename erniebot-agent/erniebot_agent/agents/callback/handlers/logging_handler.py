@@ -40,7 +40,7 @@ class LoggingHandler(CallbackHandler):
         logger: Optional[logging.Logger] = None,
     ) -> None:
         super().__init__()
-        self.log_max_length = log_max_length
+        ColorText.set_global_max_length(log_max_length)
         self.open_role_color(enable_role_color)
 
         if logger is None:
