@@ -103,16 +103,13 @@ async def parse_file_from_response(
 ) -> Optional[File]:
     content_type = response.headers.get("Content-Type", None)
 
-    # TODO(wj-Mcat): to parse base64 file from json response
-    if len(file_names) == 0:
-        return None
-
-    if is_json_response(response):
+    if is_json_response(response) and len(file_names) == 0:
         return None
 
     # 1. parse file by content_type
     if content_type is not None:
         file_suffix = get_file_suffix(content_type)
+        file_name = f"tool{file_suffix}"
         return await file_manager.create_file_from_bytes(
             response.content, f"tool{file_suffix}", file_purpose="assistants_output"
         )
@@ -279,16 +276,18 @@ class RemoteTool(BaseTool):
 
         if file is not None:
             if len(returns_file_names) == 0:
-                raise ValueError("Can not find file field defination in openapi.yaml")
+                return {self.tool_view.returns_ref_uri: file.id}
 
             return {returns_file_names[0]: file.id}
 
         if len(returns_file_names) == 0:
             return response.json()
-        elif len(returns_file_names) != 1:
-            raise NotImplementedError("The tool returns multiple files, which is not supported for now")
 
-        # TODO(wj-Mcat): handle more complex file situations
+        raise ValueError(
+            f"You have defined the files: <{returns_file_names}>, but can not parse file from response. "
+            "Please make sure that there are `Content-Disposition` or `Content-Type` field "
+            "in response headers."
+        )
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
