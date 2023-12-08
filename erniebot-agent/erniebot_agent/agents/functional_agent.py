@@ -19,6 +19,7 @@ from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import (
@@ -59,11 +60,11 @@ class FunctionalAgent(Agent):
         else:
             self.max_steps = _MAX_STEPS
 
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
-        ask = HumanMessage(content=prompt)
+        ask = HumanMessage(content=prompt, files=files)
 
         num_steps_taken = 0
         next_step_input: Message = ask
