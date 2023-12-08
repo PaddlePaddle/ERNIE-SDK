@@ -77,9 +77,8 @@ class HumanMessage(Message):
     def __init__(self, content: str, files: Optional[List[File]] = None):
         self.files = files
         if self.files is not None:
-            prompt = "这句话中包含的文件如下： \n"
-            for file in self.files:
-                prompt += f"file_id: {file.id}, file_name: {file.filename}\n"
+            prompt_parts = ["这句话中包含的文件如下："] + [f"file_id: {file.id}" for file in self.files]
+            prompt = "\n".join(prompt_parts)
             content = content + prompt
         super().__init__(role="user", content=content)
 
