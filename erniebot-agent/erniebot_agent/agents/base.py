@@ -27,6 +27,7 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
@@ -41,7 +42,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
     memory: Memory
 
     @abc.abstractmethod
-    async def async_run(self, prompt: str) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
 
@@ -79,9 +80,9 @@ class Agent(BaseAgent):
             file_manager = file_io.get_file_manager()
         self._file_manager = file_manager
 
-    async def async_run(self, prompt: str) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
-        agent_resp = await self._async_run(prompt)
+        agent_resp = await self._async_run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
@@ -200,7 +201,7 @@ class Agent(BaseAgent):
         demo.launch(**launch_kwargs)
 
     @abc.abstractmethod
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
