@@ -37,6 +37,7 @@ from erniebot_agent.tools.schema import (
     scrub_dict,
 )
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
+from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
 from erniebot_agent.utils.logging import logger
 from openapi_spec_validator import validate
@@ -123,7 +124,7 @@ async def parse_file_from_response(
         )
         return local_file
 
-    raise ValueError("can not parse file from response")
+    raise RemoteToolError("can not parse file from response")
 
 
 class Tool(BaseTool, ABC):
@@ -247,10 +248,13 @@ class RemoteTool(BaseTool):
             requests_inputs["params"] = tool_arguments
         elif self.tool_view.parameters_content_type == "application/json":
             requests_inputs["json"] = tool_arguments
-        elif self.tool_view.parameters_content_type == "application/x-www-form-urlencoded":
+        elif self.tool_view.parameters_content_type in [
+            "application/x-www-form-urlencoded",
+            "multipart/form-data",
+        ]:
             requests_inputs["data"] = tool_arguments
         else:
-            raise ValueError(f"Unsupported content type: {self.tool_view.parameters_content_type}")
+            raise RemoteToolError(f"Unsupported content type: {self.tool_view.parameters_content_type}")
 
         if self.tool_view.method == "get":
             response = requests.get(url, **requests_inputs)  # type: ignore
@@ -261,11 +265,11 @@ class RemoteTool(BaseTool):
         elif self.tool_view.method == "delete":
             response = requests.delete(url, **requests_inputs)  # type: ignore
         else:
-            raise ValueError(f"method<{self.tool_view.method}> is invalid")
+            raise RemoteToolError(f"method<{self.tool_view.method}> is invalid")
 
         if response.status_code != 200:
             logger.debug(f"The resource requested returned the following headers: {response.headers}")
-            raise ValueError(
+            raise RemoteToolError(
                 f"The resource requested by `{self.tool_name}` "
                 f"returned {response.status_code}: {response.text}"
             )
@@ -283,7 +287,7 @@ class RemoteTool(BaseTool):
         if len(returns_file_names) == 0:
             return response.json()
 
-        raise ValueError(
+        raise RemoteToolError(
             f"You have defined the files: <{returns_file_names}>, but can not parse file from response. "
             "Please make sure that there are `Content-Disposition` or `Content-Type` field "
             "in response headers."
@@ -459,7 +463,7 @@ class RemoteToolkit:
             access_token (Optional[str]): the path of openapi yaml file
         """
         if not validate_openapi_yaml(file):
-            raise ValueError(f"invalid openapi yaml file: {file}")
+            raise RemoteToolError(f"invalid openapi yaml file: {file}")
 
         spec_dict, _ = read_from_filename(file)
         return cls.from_openapi_dict(spec_dict, access_token=access_token)
@@ -492,11 +496,13 @@ class RemoteToolkit:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
                 logger.debug(f"The resource requested returned the following headers: {response.headers}")
-                raise ValueError(f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}")
+                raise RemoteToolError(
+                    f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}"
+                )
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():
-                raise ValueError(f"the content is empty from: {openapi_yaml_url}")
+                raise RemoteToolError(f"the content is empty from: {openapi_yaml_url}")
 
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
@@ -528,11 +534,13 @@ class RemoteToolkit:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
                 logger.debug(f"The resource requested returned the following headers: {response.headers}")
-                raise ValueError(f"`{examples_yaml_url}` returned {response.status_code}: {response.text}")
+                raise RemoteToolError(
+                    f"`{examples_yaml_url}` returned {response.status_code}: {response.text}"
+                )
 
             file_content = response.content.decode("utf-8")
             if not file_content.strip():
-                raise ValueError(f"the content is empty from: {examples_yaml_url}")
+                raise RemoteToolError(f"the content is empty from: {examples_yaml_url}")
 
             file_path = os.path.join(temp_dir, "examples.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
@@ -566,7 +574,7 @@ class RemoteToolkit:
                         }  # type: ignore
                     messages.append(AIMessage("", function_call=function_call))
                 else:
-                    raise ValueError(f"invald role: <{example['role']}>")
+                    raise RemoteToolError(f"invald role: <{example['role']}>")
         return messages
 
     @classmethod
@@ -581,7 +589,7 @@ class RemoteToolkit:
         """
         content: dict = read_from_filename(file)[0]
         if len(content) == 0 or "examples" not in content:
-            raise ValueError("invalid examples configuration file")
+            raise RemoteToolError("invalid examples configuration file")
         return cls.load_examples_dict(content)
 
     def function_call_schemas(self) -> List[dict]:

@@ -14,3 +14,7 @@ class BaizhongError(Exception):
             docs_message = f" error code is {self.error_code}"
             return "error message is " + self.message + docs_message
         return self.message
+
+
+class RemoteToolError(Exception):
+    pass
