@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from collections import OrderedDict
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from prompt_utils import generate_reference, get_report_by_type
 from pydantic import Field
-from semantic_citation_tool import SemanticCitationTool
-from utils import call_function, erniebot_chat, write_md_to_pdf
+
+from .prompt_utils import generate_reference, get_report_by_type
+from .utils import call_function, erniebot_chat
 
 TOKEN_MAX_LENGTH = 8000
 
@@ -34,12 +33,10 @@ class ReportWritingTool(Tool):
         question: str,
         research_summary: str,
         report_type: str,
-        agent_name: str,
         agent_role_prompt: str,
-        dir_path: str,
-        paragraphs: Optional[List[dict]] = None,
         meta_data: Optional[OrderedDict] = None,
         outline=None,
+        **kwargs,
     ):
         # map reduce
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
@@ -73,7 +70,4 @@ class ReportWritingTool(Tool):
         if meta_data:
             for index, (key, val) in enumerate(meta_data.items()):
                 url_index[val] = {"name": key, "index": index + 1}
-        citation_tool = SemanticCitationTool()
-        final_report = asyncio.run(citation_tool.__call__(final_report, paragraphs, url_index))
-        path = write_md_to_pdf(agent_name + "__" + report_type, dir_path, final_report)
-        return final_report, path
+        return final_report, url_index

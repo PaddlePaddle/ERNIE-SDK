@@ -12,7 +12,8 @@ from langchain.schema import Document, StrOutputParser
 from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
 from pydantic import Field
-from utils import access_token
+
+from .utils import access_token
 
 
 class TextSummarizationToolInputView(ToolParameterView):
