@@ -1,6 +1,6 @@
 import os
-import urllib
-from typing import Optional
+import urllib.parse
+from typing import Any, Optional
 
 from langchain.embeddings.openai import OpenAIEmbeddings
 from md2pdf.core import md2pdf
@@ -60,6 +60,6 @@ def write_md_to_pdf(task: str, path: str, text: str) -> str:
     file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
 
-    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+    encoded_file_path: Any = urllib.parse.quote(f"{file_path}.pdf")
 
     return encoded_file_path
