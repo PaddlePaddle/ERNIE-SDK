@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import abc
-import inspect
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
+from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
@@ -27,6 +27,7 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
@@ -41,7 +42,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
     memory: Memory
 
     @abc.abstractmethod
-    async def async_run(self, prompt: str) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
 
@@ -51,35 +52,37 @@ class Agent(BaseAgent):
         llm: ChatModel,
         tools: Union[ToolManager, List[Tool]],
         memory: Memory,
-        system_message: Optional[SystemMessage] = None,
         *,
+        system_message: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
-        file_manager: Optional[FileManager] = FileManager(),
+        file_manager: Optional[FileManager] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
         self.memory = memory
+        if isinstance(tools, ToolManager):
+            self._tool_manager = tools
+        else:
+            self._tool_manager = ToolManager(tools)
         # 1. Get system message exist in memory
         # OR 2. overwrite by the system_message paased in the Agent.
         if system_message:
             self.system_message = system_message
         else:
             self.system_message = memory.get_system_message()
-        if isinstance(tools, ToolManager):
-            self._tool_manager = tools
-        else:
-            self._tool_manager = ToolManager(tools)
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
             self._callback_manager = callbacks
         else:
             self._callback_manager = CallbackManager(callbacks)
-        self.file_manager = file_manager
+        if file_manager is None:
+            file_manager = file_io.get_file_manager()
+        self._file_manager = file_manager
 
-    async def async_run(self, prompt: str) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
-        agent_resp = await self._async_run(prompt)
+        agent_resp = await self._async_run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
@@ -198,7 +201,7 @@ class Agent(BaseAgent):
         demo.launch(**launch_kwargs)
 
     @abc.abstractmethod
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
@@ -223,12 +226,12 @@ class Agent(BaseAgent):
         return llm_resp
 
     async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
-        bnd_args = self._parse_tool_args(tool, tool_args)
+        parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = await self._sniff_and_extract_files_from_args(bnd_args.arguments, tool, "input")
-        tool_ret = await tool(*bnd_args.args, **bnd_args.kwargs)
+        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
+        tool_ret = await tool(**parsed_tool_args)
         output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
@@ -239,15 +242,15 @@ class Agent(BaseAgent):
         llm_ret = await self.llm.async_chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
-    def _parse_tool_args(self, tool: Tool, tool_args: str) -> inspect.BoundArguments:
-        args_dict = json.loads(tool_args)
+    def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
+        try:
+            args_dict = json.loads(tool_args)
+        except json.JSONDecodeError:
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+
         if not isinstance(args_dict, dict):
-            raise ValueError("`tool_args` cannot be interpreted as a dict.")
-        # TODO: Check types
-        sig = inspect.signature(tool.__call__)
-        bnd_args = sig.bind(**args_dict)
-        bnd_args.apply_defaults()
-        return bnd_args
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
+        return args_dict
 
     async def _sniff_and_extract_files_from_args(
         self, args: Dict[str, Any], tool: Tool, file_type: Literal["input", "output"]
@@ -256,23 +259,23 @@ class Agent(BaseAgent):
         for val in args.values():
             if isinstance(val, str):
                 if is_local_file_id(val):
-                    if self.file_manager is None:
+                    if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.look_up_file_by_id(val)
+                    file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
                         raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
                 elif is_remote_file_id(val):
-                    if self.file_manager is None:
+                    if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
                         )
                         continue
-                    file = self.file_manager.look_up_file_by_id(val)
+                    file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
-                        file = await self.file_manager.retrieve_remote_file_by_id(val)
+                        file = await self._file_manager.retrieve_remote_file_by_id(val)
                 else:
                     continue
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))

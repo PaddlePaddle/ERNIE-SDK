@@ -24,6 +24,7 @@ from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
+from erniebot_agent.utils.output_style import color_msg, color_text
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
@@ -32,8 +33,16 @@ if TYPE_CHECKING:
 class LoggingHandler(CallbackHandler):
     logger: logging.Logger
 
-    def __init__(self, logger: Optional[logging.Logger] = None) -> None:
+    def __init__(
+        self,
+        log_max_length: int = 100,
+        enable_role_color: bool = True,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
         super().__init__()
+        self.log_max_length = log_max_length
+        self.open_role_color(enable_role_color)
+
         if logger is None:
             self.logger = default_logger
         else:
@@ -41,9 +50,9 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
-            "%s is about to start running with input: %s\n",
+            "%s is about to start running with input:\n %s\n",
             agent.__class__.__name__,
-            prompt,
+            color_text(prompt, self.role_color.get("user")),
             subject="Run",
             state="Start",
         )
@@ -53,16 +62,16 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s is about to start running with input:\n%s\n",
             llm.__class__.__name__,
-            messages,
+            color_msg(messages, self.role_color, self.log_max_length),
             subject="LLM",
             state="Start",
         )
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         self.agent_info(
-            "%s finished running with output: %s\n",
+            "%s finished running with output: \n%s\n",
             llm.__class__.__name__,
-            response.message,
+            color_msg(response.message, self.role_color, self.log_max_length),
             subject="LLM",
             state="End",
         )
@@ -73,19 +82,21 @@ class LoggingHandler(CallbackHandler):
         pass
 
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
+        js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
             "%s is about to start running with input:\n%s\n",
-            tool.__class__.__name__,
-            to_pretty_json(input_args, from_json=True),
+            color_text(tool.__class__.__name__, self.role_color.get("function")),
+            color_text(js_inputs, self.role_color.get("function")),
             subject="Tool",
             state="Start",
         )
 
     async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
+        js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
             "%s finished running with output:\n%s\n",
-            tool.__class__.__name__,
-            to_pretty_json(response.json, from_json=True),
+            color_text(tool.__class__.__name__, self.role_color.get("function")),
+            color_text(js_inputs, self.role_color.get("function")),
             subject="Tool",
             state="End",
         )
@@ -105,3 +116,15 @@ class LoggingHandler(CallbackHandler):
     def agent_error(self, error: Union[Exception, KeyboardInterrupt], *args, subject, **kwargs) -> None:
         error_msg = f"[{subject}][ERROR] {error}"
         self.logger.error(error_msg, *args, **kwargs)
+
+    def open_role_color(self, open: bool = True):
+        """
+        Open or close color role in log, if open, different role will have different color.
+
+        Args:
+            open (bool, optional): whether or not to open. Defaults to True.
+        """
+        if open:
+            self.role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
+        else:
+            self.role_color = {}
