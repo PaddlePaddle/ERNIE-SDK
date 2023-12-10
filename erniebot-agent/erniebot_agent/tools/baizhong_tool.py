@@ -43,7 +43,7 @@ class BaizhongSearchTool(Tool):
 
     async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
         res = self.db.search(query, top_k, filters)
-        return res
+        return {"documents": res}
 
     @property
     def examples(

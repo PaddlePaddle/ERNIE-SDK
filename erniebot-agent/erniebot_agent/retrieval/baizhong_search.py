@@ -1,4 +1,3 @@
-import base64
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
@@ -157,8 +156,6 @@ class BaizhongSearch:
             for item in result["hits"]:
                 content = item["_source"]["doc"]
                 score = item["_score"]
-
-                content = base64.b64decode(content).decode("utf-8")
                 json_data = json.loads(content)
 
                 json_data["score"] = score
