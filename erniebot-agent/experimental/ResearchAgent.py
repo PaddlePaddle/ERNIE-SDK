@@ -122,6 +122,7 @@ class ResearchAgent(Agent):
         else:
             outline = None
         # Conduct Research
+        breakpoint()
         report, url_index = await self.report_writing(
             question=self.query,
             research_summary=research_summary,
