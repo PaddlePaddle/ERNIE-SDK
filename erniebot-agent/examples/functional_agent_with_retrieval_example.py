@@ -1,11 +1,10 @@
 import argparse
 import asyncio
-from typing import Dict, List, Type
+from typing import List
 
 from erniebot_agent.agents import FunctionalAgentWithRetrievalScoreTool
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
-from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
 from erniebot_agent.tools.baizhong_tool import (
@@ -14,11 +13,9 @@ from erniebot_agent.tools.baizhong_tool import (
     BaizhongSearchToolOutputView,
     SearchResponseDocument,
 )
-from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
+from erniebot_agent.tools.base import RemoteToolkit
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
-from pydantic import Field
 from tqdm import tqdm
 
 import erniebot
@@ -52,38 +49,6 @@ def offline_ann(data_path, baizhong_db):
         list_data.append(example)
     res = baizhong_db.add_documents(documents=list_data)
     return res
-
-
-class NotesToolInputView(ToolParameterView):
-    draft: str = Field(description="草稿文本")
-
-
-class NotesToolOutputView(ToolParameterView):
-    draft_results: str = Field(description="草稿文本结果")
-
-
-class NotesTool(Tool):
-    description: str = "用于记录和保存信息的笔记本工具"
-    input_type: Type[ToolParameterView] = NotesToolInputView
-    ouptut_type: Type[ToolParameterView] = NotesToolOutputView
-
-    async def __call__(self, draft: str) -> Dict[str, str]:
-        # TODO: save draft to database
-        return {"draft_results": "保存成功"}
-
-    @property
-    def examples(self) -> List[Message]:
-        return [
-            HumanMessage("OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中"),
-            AIMessage(
-                "",
-                function_call={
-                    "name": self.tool_name,
-                    "thoughts": f"用户想保存笔记，我可以使用{self.tool_name}工具来保存，其中`draft`字段的内容为：'搜索的草稿'。",
-                    "arguments": '{"draft": "搜索的草稿"}',
-                },
-            ),
-        ]
 
 
 if __name__ == "__main__":
@@ -150,6 +115,7 @@ if __name__ == "__main__":
         # "今天天气怎么样？",
         # "abcabc",
     ]
+    toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
         memory = WholeMemory()
         agent = FunctionalAgentWithRetrievalScoreTool(
@@ -157,7 +123,7 @@ if __name__ == "__main__":
             knowledge_base=baizhong_db,
             top_k=3,
             threshold=0.1,
-            tools=[NotesTool(), retrieval_tool],
+            tools=toolkit.get_tools() + [retrieval_tool],
             memory=memory,
         )
         response = asyncio.run(agent.async_run(query))
