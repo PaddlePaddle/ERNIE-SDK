@@ -67,6 +67,16 @@ def validate_openapi_yaml(yaml_file: str) -> bool:
 
 
 class BaseTool(ABC):
+    @property
+    @abstractmethod
+    def tool_name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def examples(self) -> List[Message]:
+        raise NotImplementedError
+
     @abstractmethod
     async def __call__(self, *args: Any, **kwds: Any) -> Any:
         raise NotImplementedError
@@ -273,11 +283,15 @@ class RemoteTool(BaseTool):
         self.headers = headers
         self.version = version
         self.file_manager = file_manager
-        self.examples = examples
+        self._examples = examples
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None:
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+
+    @property
+    def examples(self) -> List[Message]:
+        return self._examples or []
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -360,8 +374,7 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
-        if self.examples is not None:
-            schema["examples"] = [example.to_dict() for example in self.examples]
+        schema["examples"] = [example.to_dict() for example in self.examples]
 
         return schema or {}
 

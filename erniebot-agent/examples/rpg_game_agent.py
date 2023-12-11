@@ -28,7 +28,7 @@ from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.ImageGenerateTool import (
     ImageGenerationTool,  # 目前为remotetool，如做直接展示可以替换为yinian
 )
@@ -72,7 +72,7 @@ class GameAgent(Agent):
         self,
         model: str,
         script: str,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         system_message: Optional[SystemMessage] = None,
         access_token: Union[str, None] = None,
         max_round: int = 3,

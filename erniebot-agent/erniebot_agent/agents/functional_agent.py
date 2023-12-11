@@ -28,7 +28,7 @@ from erniebot_agent.messages import (
     Message,
     SystemMessage,
 )
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 
 _MAX_STEPS = 5
 
@@ -37,7 +37,7 @@ class FunctionalAgent(Agent):
     def __init__(
         self,
         llm: ChatModel,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         system_message: Optional[SystemMessage] = None,
         *,

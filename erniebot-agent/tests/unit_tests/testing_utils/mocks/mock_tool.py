@@ -19,14 +19,6 @@ class FakeTool(BaseTool):
         return self.name
 
     @property
-    def input_type(self):
-        raise AttributeError("`input_type` is not yet supported.")
-
-    @property
-    def output_type(self):
-        raise AttributeError("`output_type` is not yet supported.")
-
-    @property
     def examples(self):
         return []
 

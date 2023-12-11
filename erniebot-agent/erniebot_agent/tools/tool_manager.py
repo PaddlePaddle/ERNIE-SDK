@@ -15,7 +15,7 @@
 import json
 from typing import Dict, List, final
 
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 
 
 @final
@@ -26,22 +26,22 @@ class ToolManager(object):
     https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
     """
 
-    def __init__(self, tools: List[Tool]) -> None:
+    def __init__(self, tools: List[BaseTool]) -> None:
         super().__init__()
-        self._tools: Dict[str, Tool] = {}
+        self._tools: Dict[str, BaseTool] = {}
         for tool in tools:
             self.add_tool(tool)
 
-    def __getitem__(self, tool_name: str) -> Tool:
+    def __getitem__(self, tool_name: str) -> BaseTool:
         return self.get_tool(tool_name)
 
-    def add_tool(self, tool: Tool) -> None:
+    def add_tool(self, tool: BaseTool) -> None:
         tool_name = tool.tool_name
         if tool_name in self._tools:
             raise RuntimeError(f"Name {repr(tool_name)} is already registered.")
         self._tools[tool_name] = tool
 
-    def remove_tool(self, tool: Tool) -> None:
+    def remove_tool(self, tool: BaseTool) -> None:
         tool_name = tool.tool_name
         if tool_name not in self._tools:
             raise RuntimeError(f"Name {repr(tool_name)} is not registered.")
@@ -49,12 +49,12 @@ class ToolManager(object):
             raise RuntimeError(f"The tool with the registered name {repr(tool_name)} is not the given tool.")
         self._tools.pop(tool_name)
 
-    def get_tool(self, tool_name: str) -> Tool:
+    def get_tool(self, tool_name: str) -> BaseTool:
         if tool_name not in self._tools:
             raise RuntimeError(f"Name {repr(tool_name)} is not registered.")
         return self._tools[tool_name]
 
-    def get_tools(self) -> List[Tool]:
+    def get_tools(self) -> List[BaseTool]:
         return list(self._tools.values())
 
     def get_tool_names(self) -> str:
