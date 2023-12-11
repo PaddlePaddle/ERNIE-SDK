@@ -18,7 +18,7 @@ erniebot.ChatCompletion.create(
     disable_search: Union[bool, NotGiven] = ...,
     enable_citation: Union[bool, NotGiven] = ...,
     user_id: Union[str, NotGiven] = ...,
-    tool_choice: Union[str, NotGiven] = ...,
+    tool_choice: Union[dict, NotGiven] = ...,
     stream: Union[bool, NotGiven] = ...,
     validate_functions: bool = ...,
     headers: Optional[HeadersType] = ...,
@@ -42,7 +42,7 @@ erniebot.ChatCompletion.create(
 | disable_search | bool | 否 | 如果设置此参数为`True`，则禁用搜索引擎。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
 | enable_citation | bool | 否 | 如果设置此参数为`True`，则开启上角标返回。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
 | system | bool | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
-| tool_choice | str | 否 | 使模型为指定函数生成函数调用信息。 |
+| tool_choice | dict | 否 | 使模型选择指定的工具。 |
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 | stream | bool | 否 | 如果设置此参数为`True`，则流式返回数据。默认为`False`。 |
 | validate_functions | bool | 否 | 是否对`functions`进行格式校验。 |
