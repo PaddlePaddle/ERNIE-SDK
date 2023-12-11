@@ -20,7 +20,6 @@ from .resources import (
     ChatCompletion,
     ChatCompletionResponse,
     ChatCompletionWithPlugins,
-    ChatFile,
     Embedding,
     EmbeddingResponse,
     Image,
@@ -37,7 +36,6 @@ __version__ = VERSION
 __all__ = [
     "ChatCompletion",
     "ChatCompletionWithPlugins",
-    "ChatFile",
     "Embedding",
     "FineTuningTask",
     "FineTuningJob",

@@ -28,11 +28,11 @@ from typing import (
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
-from erniebot.response import EBResponse
 from erniebot.types import ConfigDictType, HeadersType, RequestWithStream
-from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args
+from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args, transform
 
 from .abc import CreatableWithStreaming
+from .chat_completion import ChatCompletionResponse
 from .resource import EBResource
 
 __all__ = ["ChatCompletionWithPlugins"]
@@ -43,6 +43,14 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         APIType.QIANFAN,
         APIType.CUSTOM,
     )
+    _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
+        APIType.QIANFAN: {
+            "path": "/erniebot/plugins",
+        },
+        APIType.CUSTOM: {
+            "path": "/erniebot/plugins_v3",
+        },
+    }
 
     @overload
     @classmethod
@@ -51,12 +59,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> EBResponse:
+    ) -> ChatCompletionResponse:
         ...
 
     @overload
@@ -66,12 +75,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Literal[True],
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> Iterator[EBResponse]:
+    ) -> Iterator[ChatCompletionResponse]:
         ...
 
     @overload
@@ -81,12 +91,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: bool,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> Union[EBResponse, Iterator[EBResponse]]:
+    ) -> Union[ChatCompletionResponse, Iterator[ChatCompletionResponse]]:
         ...
 
     @classmethod
@@ -95,16 +106,18 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
-    ) -> Union[EBResponse, Iterator[EBResponse]]:
+    ) -> Union[ChatCompletionResponse, Iterator[ChatCompletionResponse]]:
         config = _config_ or {}
         resource = cls(**config)
         kwargs = filter_args(
             messages=messages,
+            functions=functions,
             plugins=plugins,
             user_id=user_id,
             stream=stream,
@@ -114,7 +127,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         if request_timeout is not None:
             kwargs["request_timeout"] = request_timeout
         resp = resource.create_resource(**kwargs)
-        return resp
+        return transform(ChatCompletionResponse.from_mapping, resp)
 
     @overload
     @classmethod
@@ -123,12 +136,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> EBResponse:
+    ) -> ChatCompletionResponse:
         ...
 
     @overload
@@ -138,12 +152,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Literal[True],
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> AsyncIterator[EBResponse]:
+    ) -> AsyncIterator[ChatCompletionResponse]:
         ...
 
     @overload
@@ -153,12 +168,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: bool,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
-    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
         ...
 
     @classmethod
@@ -167,17 +183,19 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         messages: List[dict],
         plugins: List[str],
         *,
+        functions: Union[List[dict], NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
-    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
         config = _config_ or {}
         resource = cls(**config)
         kwargs = filter_args(
             messages=messages,
             plugins=plugins,
+            functions=functions,
             user_id=user_id,
             stream=stream,
         )
@@ -186,7 +204,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         if request_timeout is not None:
             kwargs["request_timeout"] = request_timeout
         resp = await resource.acreate_resource(**kwargs)
-        return resp
+        return transform(ChatCompletionResponse.from_mapping, resp)
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> RequestWithStream:
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
@@ -196,6 +214,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         valid_keys = {
             "messages",
             "plugins",
+            "functions",
             "user_id",
             "stream",
             "headers",
@@ -219,7 +238,8 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
 
         # path
         if self.api_type in self.SUPPORTED_API_TYPES:
-            path = "/erniebot/plugins"
+            api_info = self._API_INFO_DICT[self.api_type]
+            path = api_info["path"]
         else:
             raise errors.UnsupportedAPITypeError(
                 f"Supported API types: {self.get_supported_api_type_names()}"
@@ -229,6 +249,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         params = {}
         params["messages"] = messages
         params["plugins"] = plugins
+        _set_val_if_key_exists(kwargs, params, "functions")
         _set_val_if_key_exists(kwargs, params, "user_id")
         _set_val_if_key_exists(kwargs, params, "stream")
 

@@ -115,11 +115,23 @@ class ERNIEBot(ChatModel):
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
+        # import pdb;pdb.set_trace()
+
         # TODO: Improve this when erniebot typing issue is fixed.
         if cfg_dict.get("plugins", None):  # TODO(shiyutang）: replace this when plugin is compact
-            response = await erniebot.ChatCompletionWithPlugins.acreate(
-                stream=stream, **{"plugins": cfg_dict["plugins"], "functions": cfg_dict["functions"]}
-            )
+            cfg_dict["_config_"]["api_base_url"] = "http://10.154.81.14:8868/ernie-foundry/v1"
+            # cfg_dict["_config_"]["api_base_url"] = "http://10.12.107.243:8871/ernie-foundry/v1"
+            cfg_dict["_config_"]["api_type"] = "custom"
+            cfg_dict.pop("model", None)
+            cfg_dict.pop("top_p", None)
+            cfg_dict.pop("temperature", None)
+            cfg_dict.pop("penalty_score", None)
+            cfg_dict.pop("system", None)
+
+            response = await erniebot.ChatCompletionWithPlugins.acreate(stream=stream, **cfg_dict)
+            # response = await erniebot.ChatCompletionWithPlugins.acreate(
+            # stream=stream, **{"_config_": cfg_dict["_config_"], "plugins": cfg_dict["plugins"],
+            # "functions": cfg_dict["functions"], "messages": cfg_dict["messages"]})
         else:
             response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
 
