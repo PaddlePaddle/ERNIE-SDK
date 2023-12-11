@@ -15,12 +15,12 @@
 import asyncio
 import pathlib
 import weakref
-from typing import Any, Awaitable, Callable, NoReturn, Optional, TypeAlias, final
+from typing import Any, Awaitable, Callable, NoReturn, Optional, final
 
 import anyio
 from erniebot_agent.file_io.remote_file import RemoteFile
 from erniebot_agent.utils.logging import logger
-from typing_extensions import Self
+from typing_extensions import Self, TypeAlias
 
 _DEFAULT_CACHE_TIMEOUT = 3600
 
