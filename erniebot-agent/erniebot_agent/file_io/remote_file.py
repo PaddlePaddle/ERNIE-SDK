@@ -182,7 +182,7 @@ class AIStudioFileClient(RemoteFileClient):
 
     def _build_file_obj_from_dict(self, dict_: Dict[str, Any]) -> RemoteFile:
         metadata: Dict[str, Any]
-        if "meta" in dict_:
+        if dict_.get("meta"):
             metadata = json.loads(dict_["meta"])
             if not isinstance(metadata, dict):
                 raise ValueError(f"Invalid metadata: {dict_['meta']}")
