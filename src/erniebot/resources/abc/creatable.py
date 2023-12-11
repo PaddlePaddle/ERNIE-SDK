@@ -96,6 +96,7 @@ class CreatableWithStreaming(Resource):
         if isinstance(resp, EBResponse):
             resp = self._postprocess_create(resp)
         else:
+            # See https://github.com/python/mypy/issues/16590
             resp = cast(AsyncIterator[EBResponse], resp)
             resp = self._postprocess_create(resp)
         return resp
