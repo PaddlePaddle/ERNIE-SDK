@@ -211,7 +211,6 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search: Whether to disable the search engine.
             enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
-            tool_choice: Forces the model to choose the given tool.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
             headers: Additional headers to send with the request.
@@ -367,7 +366,6 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search: Whether to disable the search engine.
             enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
-            tool_choice: Forces the model to choose the given tool.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
             headers: Additional headers to send with the request.
