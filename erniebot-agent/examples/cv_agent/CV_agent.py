@@ -2,7 +2,7 @@ import asyncio
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.tools.base import RemoteToolkit
 
@@ -18,7 +18,7 @@ llm = ERNIEBot(model="ernie-bot", api_type="custom")
 # llm = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token="<your-access-token>")
 toolkit = CVToolkit()
 memory = WholeMemory()
-file_manager = get_file_manager()
+file_manager = get_global_file_manager()
 agent = FunctionalAgent(llm=llm, tools=toolkit.tools, memory=memory, file_manager=file_manager)
 
 

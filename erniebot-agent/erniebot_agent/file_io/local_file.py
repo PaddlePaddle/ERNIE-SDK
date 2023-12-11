@@ -26,6 +26,27 @@ from erniebot_agent.file_io.protocol import (
 )
 
 
+def create_local_file_from_path(
+    file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+) -> "LocalFile":
+    if not file_path.exists():
+        raise FileNotFoundError(f"File {file_path} does not exist.")
+    file_id = _generate_local_file_id()
+    filename = file_path.name
+    byte_size = file_path.stat().st_size
+    created_at = int(time.time())
+    file = LocalFile(
+        id=file_id,
+        filename=filename,
+        byte_size=byte_size,
+        created_at=created_at,
+        purpose=file_purpose,
+        metadata=file_metadata,
+        path=file_path,
+    )
+    return file
+
+
 class LocalFile(File):
     def __init__(
         self,
@@ -57,27 +78,6 @@ class LocalFile(File):
         attrs_str = super()._get_attrs_str()
         attrs_str += f", path: {repr(self.path)}"
         return attrs_str
-
-
-def create_local_file_from_path(
-    file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
-) -> LocalFile:
-    if not file_path.exists():
-        raise FileNotFoundError(f"File {file_path} does not exist.")
-    file_id = _generate_local_file_id()
-    filename = file_path.name
-    byte_size = file_path.stat().st_size
-    created_at = int(time.time())
-    file = LocalFile(
-        id=file_id,
-        filename=filename,
-        byte_size=byte_size,
-        created_at=created_at,
-        purpose=file_purpose,
-        metadata=file_metadata,
-        path=file_path,
-    )
-    return file
 
 
 def _generate_local_file_id():

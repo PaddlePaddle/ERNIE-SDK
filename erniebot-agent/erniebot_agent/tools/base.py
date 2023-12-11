@@ -164,7 +164,7 @@ class RemoteTool(BaseTool):
         if tool_name_prefix is not None:
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
         if file_manager is None:
-            file_manager = file_io.get_file_manager()
+            file_manager = file_io.get_global_file_manager()
         self.file_manager = file_manager
 
     def __str__(self) -> str:

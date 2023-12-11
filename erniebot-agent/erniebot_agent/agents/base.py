@@ -15,7 +15,7 @@
 import abc
 import inspect
 import json
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union, final
 
 from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -77,9 +77,10 @@ class Agent(BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
-            file_manager = file_io.get_file_manager()
+            file_manager = file_io.get_global_file_manager()
         self._file_manager = file_manager
 
+    @final
     async def async_run(self, prompt: str) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         agent_resp = await self._async_run(prompt)
@@ -204,6 +205,7 @@ class Agent(BaseAgent):
     async def _async_run(self, prompt: str) -> AgentResponse:
         raise NotImplementedError
 
+    @final
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
         tool = self._tool_manager.get_tool(tool_name)
         await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
@@ -215,6 +217,7 @@ class Agent(BaseAgent):
         await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
+    @final
     async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:

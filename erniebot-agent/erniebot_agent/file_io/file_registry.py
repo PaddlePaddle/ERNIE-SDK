@@ -12,44 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, final
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.utils.misc import Singleton
 
 
-class FileRegistry(metaclass=Singleton):
+class BaseFileRegistry(object):
+    def register_file(self, file: File, *, allow_overwrite: bool = False) -> None:
+        raise NotImplementedError
+
+    def unregister_file(self, file: File) -> None:
+        raise NotImplementedError
+
+    def look_up_file(self, file_id: str) -> Optional[File]:
+        raise NotImplementedError
+
+    def list_files(self) -> List[File]:
+        raise NotImplementedError
+
+
+class FileRegistry(BaseFileRegistry):
     def __init__(self) -> None:
         super().__init__()
         self._id_to_file: Dict[str, File] = {}
-        self._lock = threading.Lock()
 
     def register_file(self, file: File, *, allow_overwrite: bool = False) -> None:
         file_id = file.id
-        with self._lock:
-            if not allow_overwrite and file_id in self._id_to_file:
-                raise RuntimeError(f"ID {repr(file_id)} is already registered.")
-            self._id_to_file[file_id] = file
+        if not allow_overwrite and file_id in self._id_to_file:
+            raise RuntimeError(f"ID {repr(file_id)} is already registered.")
+        self._id_to_file[file_id] = file
 
     def unregister_file(self, file: File) -> None:
         file_id = file.id
-        with self._lock:
-            if file_id not in self._id_to_file:
-                raise RuntimeError(f"ID {repr(file_id)} is not registered.")
-            self._id_to_file.pop(file_id)
+        if file_id not in self._id_to_file:
+            raise RuntimeError(f"ID {repr(file_id)} is not registered.")
+        self._id_to_file.pop(file_id)
 
     def look_up_file(self, file_id: str) -> Optional[File]:
-        with self._lock:
-            return self._id_to_file.get(file_id, None)
+        return self._id_to_file.get(file_id, None)
 
     def list_files(self) -> List[File]:
-        with self._lock:
-            return list(self._id_to_file.values())
+        return list(self._id_to_file.values())
 
 
-_file_registry = FileRegistry()
+@final
+class GlobalFileRegistry(FileRegistry, metaclass=Singleton):
+    pass
 
 
-def get_file_registry() -> FileRegistry:
-    return _file_registry
+def get_global_file_registry() -> GlobalFileRegistry:
+    return GlobalFileRegistry()

@@ -39,7 +39,7 @@ class File(metaclass=abc.ABCMeta):
         if isinstance(other, File):
             return self.id == other.id
         else:
-            return False
+            return NotImplemented
 
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()

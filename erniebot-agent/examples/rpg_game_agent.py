@@ -23,7 +23,7 @@ import gradio as gr
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
@@ -85,7 +85,7 @@ class GameAgent(Agent):
             tools=tools,
             system_message=system_message,
         )
-        self.file_manager: FileManager = get_file_manager()
+        self.file_manager: FileManager = get_global_file_manager()
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
         tool_response = await self._async_run_tool(

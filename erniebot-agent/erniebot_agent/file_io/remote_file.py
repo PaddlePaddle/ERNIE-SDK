@@ -47,6 +47,10 @@ class RemoteFile(File):
         )
         self._client = client
 
+    @property
+    def client(self) -> "RemoteFileClient":
+        return self._client
+
     async def read_contents(self) -> bytes:
         file_contents = await self._client.retrieve_file_contents(self.id)
         return file_contents
