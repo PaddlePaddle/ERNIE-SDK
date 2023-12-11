@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import string
-from typing import List, Type
+from typing import Type
 
-import numpy as np
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
-from sklearn.metrics.pairwise import cosine_similarity
 
-from .utils import embeddings, write_md_to_pdf
+from .utils import write_md_to_pdf
 
 
 class SemanticCitationToolInputView(ToolParameterView):
@@ -32,16 +30,14 @@ class SemanticCitationTool(Tool):
     async def __call__(
         self,
         reports: str,
-        paragraphs: List[dict],
         url_index: dict,
         agent_name: str,
         report_type: str,
         dir_path: str,
+        aurora_db,
         **kwargs,
     ):
         list_data = reports.split("\n\n")
-        documents = [item["summary"] for item in paragraphs]
-        para_result = embeddings.embed_documents(documents)
         output_text = []
         for chunk_text in list_data:
             if "参考文献" in chunk_text:
@@ -56,17 +52,12 @@ class SemanticCitationTool(Tool):
                 for sentence in sentence_splits:
                     if not sentence:
                         continue
-                    query_result = embeddings.embed_query(sentence)
-                    similarities = cosine_similarity([query_result], para_result).reshape((-1,))
-                    # para_ids
-                    sorted_ix = np.argsort(-similarities)
-                    idx = sorted_ix[0]
-                    source = paragraphs[idx]
-                    # to skip white space
+                    query_result = aurora_db.search(query=sentence, top_k=1, filters=None)
+                    source = query_result[0]["meta"]
                     if len(sentence.strip()) > 0:
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
-                        if similarities[idx] >= 0.9:
+                        if query_result[0]["score"] >= 0.9:
                             sentence += (
                                 f"<sup>[\\[{url_index[source['url']]['index']}\\]]({source['url']})</sup>"
                             )

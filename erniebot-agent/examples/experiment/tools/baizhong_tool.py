@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import Any, List, Optional, Type
 
 from erniebot_agent.messages import AIMessage, HumanMessage
+from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from pydantic import Field
-
-from .base import Tool
 
 
 class BaizhongSearchToolInputView(ToolParameterView):
