@@ -98,8 +98,7 @@ class FileFormatter(logging.Formatter):
                     # breakpoint()
         log_message = ""
         if output:
-            log_message += json.dumps(output, indent=2, ensure_ascii=False)
-        # breakpoint()
+            log_message += json.dumps(output, indent=2, ensure_ascii=False) + ","
         return log_message
 
     def extract_content(self, text, output: list):
@@ -148,6 +147,7 @@ def setup_logging(
     Args:
         verbosity: A value indicating the logging level.
         use_standard_format: If True, use the library's standard logging format.
+        use_file_handler: If True, use the library's file handler.
 
     Raises:
         ValueError: If the provided verbosity is not a valid logging level.
