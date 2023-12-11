@@ -14,7 +14,6 @@
 
 from .chat_completion import ChatCompletion, ChatCompletionResponse
 from .chat_completion_with_plugins import ChatCompletionWithPlugins
-from .chat_file import ChatFile
 from .embedding import Embedding, EmbeddingResponse
 from .fine_tuning import FineTuningJob, FineTuningTask
 from .image import Image, ImageResponse, ImageV1, ImageV2
@@ -22,7 +21,6 @@ from .image import Image, ImageResponse, ImageV1, ImageV2
 __all__ = [
     "ChatCompletion",
     "ChatCompletionWithPlugins",
-    "ChatFile",
     "Embedding",
     "Image",
     "ImageV1",

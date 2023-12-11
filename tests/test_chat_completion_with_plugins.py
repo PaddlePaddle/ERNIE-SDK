@@ -31,7 +31,7 @@ def create_chat_completion_with_plugins():
         plugins=["eChart"],
         stream=False,
     )
-    print(response.result)
+    print(response.get_result())
 
 
 def create_chat_completion_with_plugins_stream():
@@ -47,7 +47,7 @@ def create_chat_completion_with_plugins_stream():
     )
 
     for item in response:
-        sys.stdout.write(item.result)
+        sys.stdout.write(item.get_result())
         sys.stdout.flush()
     sys.stdout.write("\n")
 

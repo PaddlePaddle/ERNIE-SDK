@@ -474,7 +474,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         if self.api_type is not APIType.AISTUDIO:
             # The AI Studio backend automatically injects `user_id`.
             _set_val_if_key_exists(kwargs, params, "user_id")
-        _set_val_if_key_exists(kwargs, params, "function_chioce")
+        _set_val_if_key_exists(kwargs, params, "tool_choice")
         _set_val_if_key_exists(kwargs, params, "extra_data")
         _set_val_if_key_exists(kwargs, params, "stream")
 
