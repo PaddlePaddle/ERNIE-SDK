@@ -1,5 +1,5 @@
 import os
-import urllib
+import urllib.parse
 from typing import Optional
 
 import jsonlines
