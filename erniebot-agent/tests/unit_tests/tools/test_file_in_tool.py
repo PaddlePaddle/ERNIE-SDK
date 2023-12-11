@@ -23,6 +23,7 @@ import uuid
 
 import uvicorn
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.tools.base import RemoteToolkit
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -148,7 +149,8 @@ class TestToolWithFile(unittest.TestCase):
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            file_manager = FileManager()
+            file_registry = FileRegistry()
+            file_manager = FileManager(file_registry)
             input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
             result = asyncio.run(tool(file=input_file.id))
             self.assertIn("response_file", result)

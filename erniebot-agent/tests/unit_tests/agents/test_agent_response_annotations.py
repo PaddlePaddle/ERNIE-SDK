@@ -3,13 +3,13 @@ import unittest
 from typing import List, Literal
 
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 
 
 class TestAgentResponseAnnotations(unittest.TestCase):
     def setUp(self):
         self.test = ""
-        self.file_manager = get_file_manager()
+        self.file_manager = get_global_file_manager()
         self.file1 = asyncio.run(self.file_manager.create_file_from_bytes(b"test1", "test1.txt"))
         self.file2 = asyncio.run(self.file_manager.create_file_from_bytes(b"test2", "test2.txt"))
 
