@@ -119,16 +119,19 @@ async def parse_file_from_response(
     # 2. parse file from file_mimetypes
     if len(file_mimetypes) > 1:
         raise RemoteToolError(
-            "There are multi file-mimetypes defined in response schema, "
-            "it only support one file mime-type in response.",
+            "Multiple file MIME types are defined in the Response Schema. Currently, only single "
+            "file output is supported. Please ensure that only one file MIME type is defined in "
+            "the Response Schema.",
             stage="Output parsing",
         )
 
     if len(file_mimetypes) == 1:
-        file_suffix = get_file_suffix(list(file_mimetypes.values())[0])
-        return await file_manager.create_file_from_bytes(
-            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
-        )
+        file_mimetype = list(file_mimetypes.values())[0]
+        if file_mimetype is not None:
+            file_suffix = get_file_suffix(file_mimetype)
+            return await file_manager.create_file_from_bytes(
+                response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+            )
 
     # 3. parse file by content_type
     content_type = response.headers.get("Content-Type", None)
@@ -324,9 +327,9 @@ class RemoteTool(BaseTool):
             return response.json()
 
         raise RemoteToolError(
-            f"You have defined the files: <{returns_file_mimetypes}>, but can not parse file from response. "
-            "Please make sure that there are `Content-Disposition` or `Content-Type` field "
-            "in response headers.",
+            f"<{list(returns_file_mimetypes.keys())}> are defined but cannot be processed from the "
+            "response. Please ensure that the response headers contain either the Content-Disposition "
+            "or Content-Type field.",
             stage="Output parsing",
         )
 
