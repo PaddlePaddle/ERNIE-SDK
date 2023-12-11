@@ -35,26 +35,23 @@ class TaskPlanningTool(Tool):
         model: str = "ernie-bot-8k",
         **kwargs,
     ):
-        if context is None:
+        if not context:
             result = call_function(
                 action=generate_search_queries_prompt(question),
                 agent_role_prompt=agent_role_prompt,
                 temperature=0.7,
             )
         else:
-            for i in range(3):
-                try:
-                    result = call_function(
-                        action=generate_search_queries_with_context(context, question),
-                        agent_role_prompt=agent_role_prompt,
-                        temperature=0.7,
-                    )
-                    start_idx = result.index("[")
-                    end_idx = result.rindex("]")
-                    result = result[start_idx : end_idx + 1]
-                    break
-                except Exception as e:
-                    print(e)
-                    continue
+            try:
+                result = call_function(
+                    action=generate_search_queries_with_context(context, question),
+                    agent_role_prompt=agent_role_prompt,
+                    temperature=0.7,
+                )
+                start_idx = result.index("[")
+                end_idx = result.rindex("]")
+                result = result[start_idx : end_idx + 1]
+            except Exception as e:
+                print(e)
 
         return json.loads(result)

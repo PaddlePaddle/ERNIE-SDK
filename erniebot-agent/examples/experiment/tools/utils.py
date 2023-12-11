@@ -3,14 +3,13 @@ import urllib.parse
 from typing import Optional
 
 import jsonlines
-from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
+from erniebot_agent.retrieval.document import Document
 from md2pdf.core import md2pdf
 
 import erniebot
 
 api_type = os.environ.get("api_type", None)
 access_token = os.environ.get("access_token", None)
-embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
 
 
 def erniebot_chat(messages: list, functions: Optional[str] = None, model: Optional[str] = None, **kwargs):
@@ -85,3 +84,14 @@ def json_correct(json_data):
     end_idx = res.rindex("}")
     corrected_data = res[start_idx : end_idx + 1]
     return corrected_data
+
+
+def add_citation(paragraphs, aurora_db):
+    list_data = []
+    for item in paragraphs:
+        example = {"title": item["name"], "content_se": item["summary"]}
+        example = Document.from_dict(example)
+        example.meta["url"] = item["url"]
+        list_data.append(example)
+    res = aurora_db.add_documents(documents=list_data)
+    return res

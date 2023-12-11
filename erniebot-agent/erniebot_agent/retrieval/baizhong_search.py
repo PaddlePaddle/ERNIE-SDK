@@ -1,4 +1,3 @@
-import base64
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
@@ -155,8 +154,9 @@ class BaizhongSearch:
             list_data = []
             for item in result["hits"]:
                 content = item["_source"]["doc"]
-                content = base64.b64decode(content).decode("utf-8")
+                score = item["_score"]
                 json_data = json.loads(content)
+                json_data["score"] = score
                 list_data.append(json_data)
             return list_data
         else:
@@ -286,7 +286,8 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {"projectId": project_id}
-        res = requests.post(f"{cls.base_url}/baizhong/web-api/v2/project/delete", json=json_data)
+        base_url = "http://aistudio.auro.baidu-int.com"
+        res = requests.post(f"{base_url}/baizhong/web-api/v2/project/delete", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
