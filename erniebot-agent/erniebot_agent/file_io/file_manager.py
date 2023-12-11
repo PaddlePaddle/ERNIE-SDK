@@ -160,8 +160,6 @@ class FileManager(object):
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
-        print("here!")
-        print(self._remote_file_client)
         # Can we do this with in-memory files?
         file_path = await self._fs_create_file(
             prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
