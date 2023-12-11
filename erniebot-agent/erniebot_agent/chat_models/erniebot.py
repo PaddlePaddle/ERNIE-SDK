@@ -110,13 +110,22 @@ class ERNIEBot(ChatModel):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system"]
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
         # TODO: Improve this when erniebot typing issue is fixed.
-        response: Any = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+        if cfg_dict.get("plugins", None):  # TODO(shiyutang）: replace this when plugin is compact
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                stream=stream, **{"plugins": cfg_dict["plugins"], "functions": cfg_dict["functions"]}
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+
+        if response.get("plugin_info", None):
+            print("#### Plugin Info #### \n", response["plugin_info"])
+
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:

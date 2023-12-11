@@ -77,6 +77,7 @@ class HumanMessage(Message):
     def __init__(self, content: str, files: Optional[List[File]] = None):
         self.files = files
         if self.files is not None:
+            # TODO: 测试；fileuuidname
             prompt_parts = ["这句话中包含的文件如下："] + [
                 f"<file_id>{file.id}</file_id><file>{file.filename}</file><url>{file.URL}</url>"
                 for file in self.files

@@ -110,7 +110,7 @@ class FunctionalAgent(Agent):
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
-            # plugins = ["ChatFile", "eChart"] # pass in a list of possible plugins here
+            plugins=["ChatFile", "eChart"],  # pass in a list of possible plugins here
         )
         output_message = llm_resp.message  # 润色了？是的，第一轮是调用工具content=None，第二轮是根据工具结果润色。
         chat_history.append(output_message)
