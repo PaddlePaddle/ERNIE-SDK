@@ -411,7 +411,6 @@ class RemoteToolkit:
                 stage="Loading",
             )
 
-        assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
         return RemoteTool(
             paths[0],
             self.servers[0].url,
