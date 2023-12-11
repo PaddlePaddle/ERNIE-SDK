@@ -76,9 +76,9 @@ class BaseTool(ABC):
         raise NotImplementedError
 
 
-def get_file_mimetype_from_param_view(
+def get_file_info_from_param_view(
     param_view: Optional[Type[ToolParameterView]] = None,
-) -> Dict[str, str]:
+) -> Dict[str, Dict[str, str]]:
     """get file names from tool parameter view
 
     Args:
@@ -90,34 +90,53 @@ def get_file_mimetype_from_param_view(
     if param_view is None:
         return {}
 
-    file_names = {}
+    file_infos = {}
     for key in param_view.model_fields.keys():
         json_schema_extra = param_view.model_fields[key].json_schema_extra
         if json_schema_extra and json_schema_extra.get("format", None) in [
             "byte",
             "binary",
         ]:
-            file_names[key] = json_schema_extra["x-ebagent-file-mime-type"]
-    return file_names
+            file_infos[key] = deepcopy(json_schema_extra)
+    return file_infos
 
 
 async def parse_file_from_response(
-    response: Response, file_manager: FileManager, file_mimetypes: Dict[str, str]
+    response: Response,
+    file_manager: FileManager,
+    file_infos: Dict[str, Dict[str, str]],
+    file_metadata: Dict[str, str],
 ) -> Optional[File]:
-    if is_json_response(response) and len(file_mimetypes) == 0:
-        return None
+    if is_json_response(response):
+        if len(file_infos) == 0:
+            return None
+
+        file_name = list(file_infos.keys())[0]
+        # parse from body
+        content = response.json()[file_name]
+        format, mime_type = (
+            file_infos[file_name]["format"],
+            file_infos[file_name]["x-ebagent-file-mime-type"],
+        )
+        if format == "byte":
+            content = base64.b64decode(content)
+
+        file_suffix = get_file_suffix(mime_type)
+        return await file_manager.create_file_from_bytes(
+            content, f"tool-{file_suffix}", file_purpose="assistants_output", file_metadata=file_metadata
+        )
 
     # 1. parse file by `Content-Disposition`
     content_disposition = response.headers.get("Content-Disposition", None)
     if content_disposition is not None:
         file_name = response.headers["Content-Disposition"].split("filename=")[1]
         local_file = await file_manager.create_file_from_bytes(
-            response.content, file_name, file_purpose="assistants_output"
+            response.content, file_name, file_purpose="assistants_output", file_metadata=file_metadata
         )
         return local_file
 
     # 2. parse file from file_mimetypes
-    if len(file_mimetypes) > 1:
+    if len(file_infos) > 1:
         raise RemoteToolError(
             "Multiple file MIME types are defined in the Response Schema. Currently, only single "
             "file output is supported. Please ensure that only one file MIME type is defined in "
@@ -125,12 +144,16 @@ async def parse_file_from_response(
             stage="Output parsing",
         )
 
-    if len(file_mimetypes) == 1:
-        file_mimetype = list(file_mimetypes.values())[0]
+    if len(file_infos) == 1:
+        file_name = list(file_infos.keys())[0]
+        file_mimetype = file_infos[file_name].get("x-ebagent-file-mime-type", None)
         if file_mimetype is not None:
             file_suffix = get_file_suffix(file_mimetype)
             return await file_manager.create_file_from_bytes(
-                response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+                response.content,
+                f"tool-{file_suffix}",
+                file_purpose="assistants_output",
+                file_metadata=file_metadata,
             )
 
     # 3. parse file by content_type
@@ -138,7 +161,10 @@ async def parse_file_from_response(
     if content_type is not None:
         file_suffix = get_file_suffix(content_type)
         return await file_manager.create_file_from_bytes(
-            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+            response.content,
+            f"tool-{file_suffix}",
+            file_purpose="assistants_output",
+            file_metadata=file_metadata,
         )
 
     if is_json_response(response):
@@ -207,7 +233,7 @@ def wrap_tool_with_files(func):
 
         file_manager = object.file_manager
         # 1. replace fileid with byte string
-        parameter_file_mimetypes = get_file_mimetype_from_param_view(object.tool_view.parameters)
+        parameter_file_info = get_file_info_from_param_view(object.tool_view.parameters)
         for key in tool_arguments.keys():
             if object.tool_view.parameters:
                 if key not in object.tool_view.parameters.model_fields:
@@ -217,7 +243,7 @@ def wrap_tool_with_files(func):
                         f"The avaiable arguments are {keys}",
                         stage="Input parsing",
                     )
-            if key not in parameter_file_mimetypes:
+            if key not in parameter_file_info:
                 continue
             if object.tool_view.parameters is None:
                 break
@@ -309,23 +335,24 @@ class RemoteTool(BaseTool):
             )
 
         # parse the file from response
-        returns_file_mimetypes = get_file_mimetype_from_param_view(self.tool_view.returns)
+        returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
+        file_metadata = {"tool_name": self.tool_name}
         file = await parse_file_from_response(
-            response, self.file_manager, file_mimetypes=returns_file_mimetypes
+            response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
 
         if file is not None:
-            if len(returns_file_mimetypes) == 0:
+            if len(returns_file_infos) == 0:
                 return {self.tool_view.returns_ref_uri: file.id}
 
-            file_name = list(returns_file_mimetypes.keys())[0]
+            file_name = list(returns_file_infos.keys())[0]
             return {file_name: file.id}
 
-        if len(returns_file_mimetypes) == 0:
+        if len(returns_file_infos) == 0:
             return response.json()
 
         raise RemoteToolError(
-            f"<{list(returns_file_mimetypes.keys())}> are defined but cannot be processed from the "
+            f"<{list(returns_file_infos.keys())}> are defined but cannot be processed from the "
             "response. Please ensure that the response headers contain either the Content-Disposition "
             "or Content-Type field.",
             stage="Output parsing",
