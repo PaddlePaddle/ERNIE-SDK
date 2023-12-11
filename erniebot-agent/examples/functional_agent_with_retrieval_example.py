@@ -1,18 +1,12 @@
 import argparse
 import asyncio
-from typing import List
 
 from erniebot_agent.agents import FunctionalAgentWithRetrievalScoreTool
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
-from erniebot_agent.tools.baizhong_tool import (
-    BaizhongSearchTool,
-    BaizhongSearchToolInputView,
-    BaizhongSearchToolOutputView,
-    SearchResponseDocument,
-)
+from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
 from erniebot_agent.tools.base import RemoteToolkit
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
@@ -66,36 +60,9 @@ if __name__ == "__main__":
         print(res)
 
     llm = ERNIEBot(model="ernie-bot", api_type="custom")
-    input_view = BaizhongSearchToolInputView.from_dict(
-        {
-            "query": {"type": str, "description": "查询语句"},
-            "top_k": {"type": int, "description": "返回结果数量"},
-        }
-    )
-
-    respone_view_type = SearchResponseDocument.from_dict(
-        field_map={
-            "id": {"type": str, "description": "检索结果的文本的id"},
-            "title": {"type": str, "description": "检索结果的标题"},
-            "document": {"type": str, "description": "检索结果的内容"},
-        }
-    )
-
-    output_view = BaizhongSearchToolOutputView.from_dict(
-        field_map={
-            "documents": {
-                "type": List[respone_view_type],  # type: ignore
-                "description": "检索结果，内容和用户输入query相关的段落",
-            }
-        }
-    )
 
     retrieval_tool = BaizhongSearchTool(
-        description="Use Baizhong Search to retrieve documents.",
-        db=baizhong_db,
-        threshold=0.1,
-        input_type=input_view,
-        output_type=output_view,
+        description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1
     )
 
     # agent = FunctionalAgentWithRetrievalTool(
