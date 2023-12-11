@@ -233,7 +233,10 @@ class Agent(BaseAgent):
         # or can we have the tools introspect about this?
         input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
         tool_ret = await tool(**parsed_tool_args)
-        output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        if isinstance(tool_ret, dict):
+            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        else:
+            output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
