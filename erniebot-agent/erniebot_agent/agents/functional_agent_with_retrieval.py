@@ -104,18 +104,15 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
 
             chat_history.append(HumanMessage(content=prompt))
 
-            step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
-            )
-            fake_chat_history: List[Message] = []
-            fake_chat_history.append(step_input)
-            llm_resp = await self._async_run_llm(
-                messages=fake_chat_history,
-                functions=None,
-                system=self.system_message.content if self.system_message is not None else None,
-            )
-            # Get RAG results
-            output_message = llm_resp.message
+            outputs = []
+            for item in results["documents"]:
+                outputs.append(
+                    {
+                        "id": item["id"],
+                        "title": item["title"],
+                        "document": item["content_se"],
+                    }
+                )
 
             chat_history.append(
                 AIMessage(
@@ -132,7 +129,9 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             action = AgentAction(tool_name="BaizhongSearchTool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
-            next_step_input = FunctionMessage(name=action.tool_name, content=output_message.content)
+            next_step_input = FunctionMessage(
+                name=action.tool_name, content=json.dumps({"documents": outputs}, ensure_ascii=False)
+            )
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
@@ -158,7 +157,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
-        response = await self._async_run_llm(messages)
+        response = await self._async_run_llm_without_hooks(messages)
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results
@@ -219,7 +218,9 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             action = AgentAction(tool_name="BaizhongSearchTool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
-            next_step_input = FunctionMessage(name=action.tool_name, content=str({"documents": outputs}))
+            next_step_input = FunctionMessage(
+                name=action.tool_name, content=json.dumps({"documents": outputs}, ensure_ascii=False)
+            )
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
