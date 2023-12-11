@@ -10,22 +10,22 @@ from .base import Tool
 
 
 class BaizhongSearchToolInputView(ToolParameterView):
-    query: str = Field(description="Query")
-    top_k: int = Field(description="Number of results to return")
+    query: str = Field(description="查询语句")
+    top_k: int = Field(description="返回结果数量")
 
 
 class SearchResponseDocument(ToolParameterView):
-    id: str = Field(description="text id")
-    title: str = Field(description="title")
-    document: str = Field(description="content")
+    id: str = Field(description="检索结果的文本的id")
+    title: str = Field(description="检索结果的标题")
+    document: str = Field(description="检索结果的内容")
 
 
 class BaizhongSearchToolOutputView(ToolParameterView):
-    documents: List[SearchResponseDocument] = Field(description="research results")
+    documents: List[SearchResponseDocument] = Field(description="检索结果，内容和用户输入query相关的段落")
 
 
 class BaizhongSearchTool(Tool):
-    description: str = "aurora search tool"
+    description: str = "在知识库中检索与用户输入query相关的段落"
     input_type: Type[ToolParameterView] = BaizhongSearchToolInputView
     ouptut_type: Type[ToolParameterView] = BaizhongSearchToolOutputView
 
