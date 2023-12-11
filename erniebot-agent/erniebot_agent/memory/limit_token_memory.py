@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 
-from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import Message
+from erniebot_agent.memory import Memory
+from erniebot_agent.messages import AIMessage, Message
 
 
-class LimitTokenMemory(Memory):
+class LimitTokensMemory(Memory):
     """This class controls max tokens less than max_token_limit.
     If tokens >= max_token_limit, pop message from memory.
     """
 
-    def __init__(self, max_token_limit=None):
+    def __init__(self, max_token_limit=6000):
         super().__init__()
         self.max_token_limit = max_token_limit
-        self.token_length = 0
+        self.mem_token_count = 0
 
         assert (
             max_token_limit is None
@@ -35,17 +34,20 @@ class LimitTokenMemory(Memory):
             max_token_limit=max_token_limit
         )
 
-    def add_messages(self, messages: List[Message]):
-        super().add_messages(messages)
-        self.prune_message(messages)
+    def add_message(self, message: Message):
+        super().add_message(message)
+        # TODO(shiyutang): 仅在添加AIMessage时截断会导致HumanMessage传入到LLM时可能长度超限
+        # 最优方案为每条message产生时确定token_count，从而在每次加入message时都进行prune_message
+        if isinstance(message, AIMessage):
+            self.prune_message()
 
-    def prune_message(self, messages):
-        for m in messages:
-            self.token_length += len(m.content)
+    def prune_message(self):
+        self.mem_token_count += self.msg_manager.messages[-1].token_count
+        self.mem_token_count += self.msg_manager.messages[-2].token_count  # add human message token length
         if self.max_token_limit is not None:
-            while self.token_length > self.max_token_limit:
+            while self.mem_token_count > self.max_token_limit:
                 deleted_message = self.msg_manager.pop_message()
-                self.token_length -= len(deleted_message.content)
+                self.mem_token_count -= deleted_message.token_count
             else:
                 # if delete all
                 if len(self.get_messages()) == 0:

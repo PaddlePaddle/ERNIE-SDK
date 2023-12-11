@@ -1,59 +1,45 @@
 from __future__ import annotations
 
-import logging
-from typing import (
-    Any,
-    AsyncIterator,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, AsyncIterator, Dict, Iterator, List, Mapping, Optional
 
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForLLMRun,
     CallbackManagerForLLMRun,
 )
-from langchain.llms.base import LLM, create_base_retry_decorator
+from langchain.llms.base import LLM
 from langchain.llms.utils import enforce_stop_tokens
 from langchain.pydantic_v1 import Field, root_validator
 from langchain.schema.output import GenerationChunk
 from langchain.utils import get_from_dict_or_env
-
-logger = logging.getLogger(__name__)
 
 
 class ErnieBot(LLM):
     """ERNIE Bot large language models.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access
-    token.
+    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
 
-            from langchain.llms import ErnieBot
+            from erniebot_agent.extensions.langchain.llms import ErnieBot
             erniebot = ErnieBot(model="ernie-bot")
     """
 
     client: Any = None
-    max_retries: int = 6
-    """Maximum number of retries to make when generating."""
     aistudio_access_token: Optional[str] = None
     """AI Studio access token."""
-    streaming: Optional[bool] = False
+    max_retries: int = 6
+    """Maximum number of retries to make when generating."""
+    streaming: bool = False
     """Whether to stream the results or not."""
+
     model: str = "ernie-bot"
     """Model to use."""
-    top_p: Optional[float] = 0.8
-    """Parameter of nucleus sampling that affects the diversity of generated content."""
     temperature: Optional[float] = 0.95
     """Sampling temperature to use."""
+    top_p: Optional[float] = 0.8
+    """Parameter of nucleus sampling that affects the diversity of generated content."""
     penalty_score: Optional[float] = 1
     """Penalty assigned to tokens that have been generated."""
     request_timeout: Optional[int] = 60
@@ -84,7 +70,7 @@ class ErnieBot(LLM):
             "api_type": "aistudio",
             "access_token": self.aistudio_access_token,
         }
-        return {**{"_config_": auth_cfg}, **self._default_params}
+        return {**{"_config_": {"max_retries": self.max_retries, **auth_cfg}}, **self._default_params}
 
     @property
     def _llm_type(self) -> str:
@@ -98,6 +84,7 @@ class ErnieBot(LLM):
             "aistudio_access_token",
             "EB_ACCESS_TOKEN",
         )
+
         try:
             import erniebot
 
@@ -125,7 +112,7 @@ class ErnieBot(LLM):
             params.update(kwargs)
             params["messages"] = [self._build_user_message_from_prompt(prompt)]
             params["stream"] = False
-            response = _create_completion_with_retry(self, run_manager=run_manager, **params)
+            response = self.client.create(**params)
             text = response["result"]
             if stop is not None:
                 text = enforce_stop_tokens(text, stop)
@@ -148,7 +135,7 @@ class ErnieBot(LLM):
             params.update(kwargs)
             params["messages"] = [self._build_user_message_from_prompt(prompt)]
             params["stream"] = False
-            response = await _acreate_completion_with_retry(self, run_manager=run_manager, **params)
+            response = await self.client.acreate(**params)
             text = response["result"]
             if stop is not None:
                 text = enforce_stop_tokens(text, stop)
@@ -167,7 +154,7 @@ class ErnieBot(LLM):
         params.update(kwargs)
         params["messages"] = [self._build_user_message_from_prompt(prompt)]
         params["stream"] = True
-        for resp in _create_completion_with_retry(self, run_manager=run_manager, **params):
+        for resp in self.client.create(**params):
             chunk = self._build_chunk_from_response(resp)
             yield chunk
             if run_manager:
@@ -186,7 +173,7 @@ class ErnieBot(LLM):
         params.update(kwargs)
         params["messages"] = [self._build_user_message_from_prompt(prompt)]
         params["stream"] = True
-        async for resp in await _acreate_completion_with_retry(self, run_manager=run_manager, **params):
+        async for resp in await self.client.acreate(**params):
             chunk = self._build_chunk_from_response(resp)
             yield chunk
             if run_manager:
@@ -197,46 +184,3 @@ class ErnieBot(LLM):
 
     def _build_user_message_from_prompt(self, prompt: str) -> Dict[str, str]:
         return {"role": "user", "content": prompt}
-
-
-def _create_completion_with_retry(
-    llm: ErnieBot,
-    run_manager: Optional[CallbackManagerForLLMRun] = None,
-    **kwargs: Any,
-) -> Any:
-    retry_decorator = _create_retry_decorator(llm, run_manager=run_manager)
-
-    @retry_decorator
-    def _client_create(**kwargs: Any) -> Any:
-        return llm.client.create(**kwargs)
-
-    return _client_create(**kwargs)
-
-
-async def _acreate_completion_with_retry(
-    llm: ErnieBot,
-    run_manager: Optional[AsyncCallbackManagerForLLMRun] = None,
-    **kwargs: Any,
-) -> Any:
-    retry_decorator = _create_retry_decorator(llm, run_manager=run_manager)
-
-    @retry_decorator
-    async def _client_acreate(**kwargs: Any) -> Any:
-        return await llm.client.acreate(**kwargs)
-
-    return await _client_acreate(**kwargs)
-
-
-def _create_retry_decorator(
-    llm: ErnieBot,
-    run_manager: Optional[Union[AsyncCallbackManagerForLLMRun, CallbackManagerForLLMRun]] = None,
-) -> Callable[[Any], Any]:
-    import erniebot
-
-    errors: List[Type[BaseException]] = [
-        erniebot.errors.TimeoutError,
-        erniebot.errors.RequestLimitError,
-    ]
-    return create_base_retry_decorator(
-        error_types=errors, max_retries=llm.max_retries, run_manager=run_manager
-    )

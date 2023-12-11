@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot.utils.logging import logger
+import logging
 
 import erniebot
 
@@ -76,7 +76,7 @@ def test_function_calling():
 
 
 if __name__ == "__main__":
-    logger.set_level("WARNING")
+    logging.basicConfig(level=logging.WARNING)
 
     erniebot.api_type = "qianfan"
 

@@ -17,9 +17,9 @@ from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Any, List, Union, final
 
-from erniebot_agent.agents.callback.events import EventType
+from erniebot_agent.agents.callback.event import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.schema import AgentResponse
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
@@ -40,14 +40,14 @@ class CallbackManager(object):
 
     def add_handler(self, handler: CallbackHandler):
         if handler in self._handlers:
-            raise ValueError(f"The callback handler {handler} is already registered.")
+            raise RuntimeError(f"The callback handler {handler} is already registered.")
         self._handlers.append(handler)
 
     def remove_handler(self, handler):
         try:
             self._handlers.remove(handler)
         except ValueError as e:
-            raise ValueError(f"The callback handler {handler} is not registered.") from e
+            raise RuntimeError(f"The callback handler {handler} is not registered.") from e
 
     def set_handlers(self, handlers: List[CallbackHandler]):
         self._handlers = []
@@ -71,7 +71,7 @@ class CallbackManager(object):
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         await self.handle_event(EventType.LLM_START, agent=agent, llm=llm, messages=messages)
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: Message) -> None:
+    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         await self.handle_event(EventType.LLM_END, agent=agent, llm=llm, response=response)
 
     async def on_llm_error(
@@ -82,7 +82,7 @@ class CallbackManager(object):
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         await self.handle_event(EventType.TOOL_START, agent=agent, tool=tool, input_args=input_args)
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: str) -> None:
+    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
         await self.handle_event(EventType.TOOL_END, agent=agent, tool=tool, response=response)
 
     async def on_tool_error(

@@ -15,9 +15,8 @@
 # limitations under the License.
 
 import asyncio
+import logging
 import sys
-
-from erniebot.utils.logging import logger
 
 import erniebot
 
@@ -75,7 +74,7 @@ async def test_chat_completion_aio(target, args):
 
 
 if __name__ == "__main__":
-    logger.set_level("WARNING")
+    logging.basicConfig(level=logging.WARNING)
 
     erniebot.api_type = "qianfan"
 

@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import sys
-
-from erniebot.utils.logging import logger
 
 import erniebot
 
@@ -64,7 +63,7 @@ def create_chat_completion_stream(model):
 
 
 if __name__ == "__main__":
-    logger.set_level("WARNING")
+    logging.basicConfig(level=logging.WARNING)
 
     erniebot.api_type = "qianfan"
 

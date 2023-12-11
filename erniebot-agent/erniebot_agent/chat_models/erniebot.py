@@ -130,6 +130,6 @@ class ERNIEBot(ChatModel):
                 thoughts=response.function_call["thoughts"],
                 arguments=response.function_call["arguments"],
             )
-            return output_type(content="", function_call=function_call)
+            return output_type(content="", function_call=function_call, token_usage=response.usage)
         else:
-            return output_type(content=response.result, function_call=None)
+            return output_type(content=response.result, function_call=None, token_usage=response.usage)

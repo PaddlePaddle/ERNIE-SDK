@@ -1,56 +1,65 @@
-import asyncio
 import unittest
 
-from erniebot_agent.memory import LimitTokenMemory
-from erniebot_agent.messages import HumanMessage
+import pytest
+from erniebot_agent.memory import LimitTokensMemory
+from erniebot_agent.messages import HumanMessage, SystemMessage
 
-from tests.unit_tests.testing_utils import MockErnieBot
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
 
-class Testlimit_tokenMemory(unittest.TestCase):
+class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.llm = MockErnieBot(None, None, None)
+        self.llm = FakeSimpleChatModel()
 
-    def test_limit_token_memory(self):
-        async def run_limit_token_memory():
-            messages = [
-                HumanMessage(content="What is the purpose of model regularization?"),
-            ]
-            memory = LimitTokenMemory(4000)
-            # memory =
-            memory.add_messages(messages)
-            message = await self.llm.async_chat(messages)
-            memory.add_messages([message])
-            memory.add_messages([HumanMessage("OK, what else?")])
+    @pytest.mark.asyncio
+    async def test_limit_token_memory(self):
+        messages = HumanMessage(content="What is the purpose of model regularization?")
+
+        memory = LimitTokensMemory(4000)
+        memory.add_message(messages)
+        message = await self.llm.async_chat([messages])
+        memory.add_message(message)
+        memory.add_message(HumanMessage("OK, what else?"))
+        message = await self.llm.async_chat(memory.get_messages())
+        self.assertTrue(message is not None)
+
+    @pytest.mark.asyncio
+    async def test_limit_token_memory_truncate_tokens(self, k=3):  # truncate through returned message
+        # The memory
+        memory = LimitTokensMemory(20)
+
+        for _ in range(k):
+            # 2 times of human message
+            memory.add_message(HumanMessage(content="What is the purpose of model regularization?"))
+
+            # AI message
             message = await self.llm.async_chat(memory.get_messages())
-            self.assertTrue(message is not None)
+            memory.add_message(message)
 
-        asyncio.run(run_limit_token_memory())
+        self.assertTrue(memory.mem_token_count <= 20)
 
-    def test_limit_token_memory_exceed_tokens(self):
-        messages = [
-            HumanMessage(content="What is the purpose of model regularization?"),
-        ]
-        memory = LimitTokenMemory(10)
-        with self.assertRaises(RuntimeError):
-            memory.add_messages(messages)
+    @pytest.mark.asyncio
+    async def test_limit_token_memory_truncate_tokens_system_message(
+        self, k=10
+    ):  # truncate through returned message
+        # The memory
+        memory = LimitTokensMemory(100)
 
-    def test_limit_token_memory_truncate_tokens(self):  # truncate through returned message
-        async def run_limit_token_memory_truncate_tokens(k=3):
-            # The memory
-            memory = LimitTokenMemory(100)
+        # Keypoint 1: system message 的存取
+        memory.system_message = SystemMessage("你是一个善于回答图像相关问题的agent。")
+        self.assertTrue(memory.system_message.content == "你是一个善于回答图像相关问题的agent。")
 
-            for _ in range(k):
-                # 2 times of human message
-                memory.add_messages([HumanMessage(content="What is the purpose of model regularization?")])
+        for _ in range(k):
+            # 2 times of human message
+            memory.add_message(HumanMessage(content="这个图像中的内容是什么？"))
 
-                # AI message
-                message = await self.llm.async_chat(memory.get_messages())
-                memory.add_messages([message])
+            # AI message
+            message = await self.llm.async_chat(memory.get_messages())
+            memory.add_message(message)
 
-            self.assertTrue(memory.token_length <= 100)
-
-        asyncio.run(run_limit_token_memory_truncate_tokens())
+        # Keypoint 2:没有传入token_count 的fallback情况，此时也能正确裁剪信息
+        self.assertTrue(memory.mem_token_count <= 100)
+        self.assertTrue(len(memory.get_messages()) < 2 * k)
 
 
 if __name__ == "__main__":

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 
 class BasePromptTemplate(ABC):
-    def __init__(self, input_variables: List[str]):
-        self.input_variables: List[str] = input_variables
+    def __init__(self, input_variables: Optional[List[str]]):
+        self.input_variables: Optional[List[str]] = input_variables
 
     @abstractmethod
     def format(self, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def format_prompt(self):
+    def format_as_message(self, message_class, **kwargs):
         raise NotImplementedError
