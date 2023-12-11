@@ -98,7 +98,7 @@ class Agent(BaseAgent):
     def launch_gradio_demo(self, **launch_kwargs: Any):
         # TODO: Unified optional dependencies management
         try:
-            import gradio as gr # type: ignore
+            import gradio as gr  # type: ignore
         except ImportError:
             raise ImportError(
                 "Could not import gradio, which is required for `launch_gradio_demo()`."

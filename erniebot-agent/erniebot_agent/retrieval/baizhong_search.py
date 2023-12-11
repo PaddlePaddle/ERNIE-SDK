@@ -4,9 +4,10 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 import requests
+from tqdm import tqdm
+
 from erniebot_agent.utils.exception import BaizhongError
 from erniebot_agent.utils.logging import logger
-from tqdm import tqdm
 
 from .document import Document
 
@@ -180,7 +181,7 @@ class BaizhongSearch:
             documents.
 
         """
-        if type(documents[0]) == Document:
+        if isinstance(documents[0], Document):
             list_dicts = [item.to_dict() for item in documents]
         all_data = []
         for i in tqdm(range(0, len(list_dicts), batch_size)):

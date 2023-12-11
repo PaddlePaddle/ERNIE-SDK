@@ -17,7 +17,7 @@
 import subprocess
 import sys
 
-DEFAULT_FILES = ("erniebot",)
+DEFAULT_FILES = ("src",)
 
 
 def main():

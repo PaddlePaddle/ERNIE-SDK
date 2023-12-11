@@ -18,6 +18,7 @@ import uuid
 from typing import Any, Dict
 
 import anyio
+
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import (
     FilePurpose,

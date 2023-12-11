@@ -1,5 +1,6 @@
 [tool.isort]
 profile = 'black'
+src_paths = ['erniebot_agent']
 
 [tool.black]
 line-length = 109

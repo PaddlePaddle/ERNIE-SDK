@@ -22,10 +22,11 @@ import unittest
 import uuid
 
 import uvicorn
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools.base import RemoteToolkit
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+
+from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.tools.base import RemoteToolkit
 
 PYYAML_CONTENT = """openapi: 3.0.1
 info:

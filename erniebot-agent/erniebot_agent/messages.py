@@ -13,9 +13,9 @@
 
 from typing import Dict, List, Optional, TypedDict
 
-from erniebot_agent.file_io.base import File
-
 import erniebot.utils.token_helper as token_helper
+
+from erniebot_agent.file_io.base import File
 
 
 class Message:

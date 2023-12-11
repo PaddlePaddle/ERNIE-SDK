@@ -14,9 +14,10 @@
 
 from typing import Any, List, Optional
 
+from jinja2 import Environment, meta
+
 from erniebot_agent.messages import HumanMessage
 from erniebot_agent.prompt import BasePromptTemplate
-from jinja2 import Environment, meta
 
 
 def jinja2_formatter(template: str, **kwargs: Any) -> str:
