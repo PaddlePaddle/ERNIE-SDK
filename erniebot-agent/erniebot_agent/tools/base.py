@@ -116,15 +116,7 @@ async def parse_file_from_response(
         )
         return local_file
 
-    content_type = response.headers.get("Content-Type", None)
-    # 2. parse file by content_type
-    if content_type is not None:
-        file_suffix = get_file_suffix(content_type)
-        return await file_manager.create_file_from_bytes(
-            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
-        )
-
-    # 3. parse file from file_mimetypes
+    # 2. parse file from file_mimetypes
     if len(file_mimetypes) > 1:
         raise RemoteToolError(
             "There are multi file-mimetypes defined in response schema, "
@@ -133,7 +125,15 @@ async def parse_file_from_response(
         )
 
     if len(file_mimetypes) == 1:
-        file_suffix = get_file_suffix(list(file_mimetypes.keys())[0])
+        file_suffix = get_file_suffix(list(file_mimetypes.values())[0])
+        return await file_manager.create_file_from_bytes(
+            response.content, f"tool{file_suffix}", file_purpose="assistants_output"
+        )
+
+    # 3. parse file by content_type
+    content_type = response.headers.get("Content-Type", None)
+    if content_type is not None:
+        file_suffix = get_file_suffix(content_type)
         return await file_manager.create_file_from_bytes(
             response.content, f"tool{file_suffix}", file_purpose="assistants_output"
         )
