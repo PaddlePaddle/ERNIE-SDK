@@ -101,7 +101,7 @@ class FileManager(object):
         *,
         file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: Literal["local"] = ...,
+        file_type: Literal["local"],
     ) -> LocalFile:
         ...
 
@@ -116,15 +116,28 @@ class FileManager(object):
     ) -> RemoteFile:
         ...
 
+    @overload
+    async def create_file_from_path(
+        self,
+        file_path: FilePath,
+        *,
+        file_purpose: FilePurpose = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
+        file_type: None = ...,
+    ) -> Union[LocalFile, RemoteFile]:
+        ...
+
     async def create_file_from_path(
         self,
         file_path: FilePath,
         *,
         file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
-        file_type: Literal["local", "remote"] = "local",
+        file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
+        if file_type is None:
+            file_type = self._get_default_file_type()
         if file_type == "local":
             file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
@@ -153,7 +166,7 @@ class FileManager(object):
         *,
         file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: Literal["local"] = ...,
+        file_type: Literal["local"],
     ) -> LocalFile:
         ...
 
@@ -169,6 +182,18 @@ class FileManager(object):
     ) -> RemoteFile:
         ...
 
+    @overload
+    async def create_file_from_bytes(
+        self,
+        file_contents: bytes,
+        filename: str,
+        *,
+        file_purpose: FilePurpose = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
+        file_type: None = ...,
+    ) -> Union[LocalFile, RemoteFile]:
+        ...
+
     async def create_file_from_bytes(
         self,
         file_contents: bytes,
@@ -176,8 +201,10 @@ class FileManager(object):
         *,
         file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
-        file_type: Literal["local", "remote"] = "local",
+        file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
+        if file_type is None:
+            file_type = self._get_default_file_type()
         file_path = self._get_unique_file_path(
             prefix=pathlib.PurePath(filename).stem,
             suffix=pathlib.PurePath(filename).suffix,
@@ -288,6 +315,12 @@ class FileManager(object):
             init_cache_in_sync=init_cache_in_sync,
         )
         return bind_cache_to_remote_file(cache, file)
+
+    def _get_default_file_type(self) -> Literal["local", "remote"]:
+        if self._remote_file_client is not None:
+            return "remote"
+        else:
+            return "local"
 
     def _get_unique_file_path(
         self, prefix: Optional[str] = None, suffix: Optional[str] = None
