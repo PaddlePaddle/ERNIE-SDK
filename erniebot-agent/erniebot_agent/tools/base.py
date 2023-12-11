@@ -25,7 +25,7 @@ from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
-from erniebot_agent import file_io
+from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
@@ -221,22 +221,20 @@ class RemoteTool(BaseTool):
         server_url: str,
         headers: dict,
         version: str,
+        file_manager: FileManager,
         examples: Optional[List[Message]] = None,
         tool_name_prefix: Optional[str] = None,
-        file_manager: Optional[FileManager] = None,
     ) -> None:
         self.tool_view = tool_view
         self.server_url = server_url
         self.headers = headers
         self.version = version
+        self.file_manager = file_manager
         self.examples = examples
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None:
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
-        if file_manager is None:
-            file_manager = file_io.get_file_manager()
-        self.file_manager = file_manager
 
     def __str__(self) -> str:
         return "<name: {0}, server_url: {1}, description: {2}>".format(
@@ -329,6 +327,7 @@ class RemoteToolkit:
     info: EndpointInfo
     servers: List[Endpoint]
     paths: List[RemoteToolView]
+    file_manager: FileManager
 
     component_schemas: dict[str, Type[ToolParameterView]]
     headers: dict
@@ -348,6 +347,7 @@ class RemoteToolkit:
                 self.servers[0].url,
                 self.headers,
                 self.info.version,
+                file_manager=self.file_manager,
                 examples=self.get_examples_by_name(path.name),
                 tool_name_prefix=self.tool_name_prefix,
             )
@@ -401,12 +401,22 @@ class RemoteToolkit:
 
     def get_tool(self, tool_name: str) -> RemoteTool:
         paths = [path for path in self.paths if path.name == tool_name]
-        assert len(paths) == 1, f"tool<{tool_name}> not found in paths"
+        if len(paths) == 0:
+            raise RemoteToolError(
+                f"`{tool_name}` not found under RemoteToolkit `{self.tool_name_prefix}`", stage="Loading"
+            )
+        elif len(paths) > 1:
+            raise RemoteToolError(
+                f"Found duplicate `{tool_name}` under RemoteToolkit `{self.tool_name_prefix}`",
+                stage="Loading",
+            )
+
         return RemoteTool(
             paths[0],
             self.servers[0].url,
             self.headers,
             self.info.version,
+            file_manager=self.file_manager,
             examples=self.get_examples_by_name(tool_name),
             tool_name_prefix=self.tool_name_prefix,
         )
@@ -439,7 +449,10 @@ class RemoteToolkit:
 
     @classmethod
     def from_openapi_dict(
-        cls, openapi_dict: Dict[str, Any], access_token: Optional[str] = None
+        cls,
+        openapi_dict: Dict[str, Any],
+        access_token: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
     ) -> RemoteToolkit:
         info = EndpointInfo(**openapi_dict["info"])
         servers = [Endpoint(**server) for server in openapi_dict.get("servers", [])]
@@ -465,6 +478,9 @@ class RemoteToolkit:
                     )
                 )
 
+        if file_manager is None:
+            file_manager = get_file_manager(access_token)
+
         return RemoteToolkit(
             openapi=openapi_dict["openapi"],
             info=info,
@@ -472,10 +488,13 @@ class RemoteToolkit:
             paths=paths,
             component_schemas=fields,
             headers=cls._get_authorization_headers(access_token),
-        )  # type: ignore
+            file_manager=file_manager,
+        )
 
     @classmethod
-    def from_openapi_file(cls, file: str, access_token: Optional[str] = None) -> RemoteToolkit:
+    def from_openapi_file(
+        cls, file: str, access_token: Optional[str] = None, file_manager: Optional[FileManager] = None
+    ) -> RemoteToolkit:
         """only support openapi v3.0.1
 
         Args:
@@ -486,7 +505,7 @@ class RemoteToolkit:
             raise RemoteToolError(f"invalid openapi yaml file: {file}", stage="Loading")
 
         spec_dict, _ = read_from_filename(file)
-        return cls.from_openapi_dict(spec_dict, access_token=access_token)
+        return cls.from_openapi_dict(spec_dict, access_token=access_token, file_manager=file_manager)
 
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
@@ -502,7 +521,11 @@ class RemoteToolkit:
 
     @classmethod
     def from_url(
-        cls, url: str, version: Optional[str] = None, access_token: Optional[str] = None
+        cls,
+        url: str,
+        version: Optional[str] = None,
+        access_token: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
     ) -> RemoteToolkit:
         # 1. download openapy.yaml file to temp directory
         if not url.endswith("/"):
@@ -528,7 +551,9 @@ class RemoteToolkit:
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
-            toolkit = RemoteToolkit.from_openapi_file(file_path, access_token=access_token)
+            toolkit = RemoteToolkit.from_openapi_file(
+                file_path, access_token=access_token, file_manager=file_manager
+            )
             for server in toolkit.servers:
                 server.url = url
 
