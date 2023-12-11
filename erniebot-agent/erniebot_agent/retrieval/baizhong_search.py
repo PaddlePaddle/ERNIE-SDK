@@ -286,8 +286,7 @@ class BaizhongSearch:
             BaizhongError: If the API request fails, this exception is raised with details about the error.
         """
         json_data = {"projectId": project_id}
-        base_url = "http://aistudio.auro.baidu-int.com"
-        res = requests.post(f"{base_url}/baizhong/web-api/v2/project/delete", json=json_data)
+        res = requests.post(f"{cls.base_url}/baizhong/web-api/v2/project/delete", json=json_data)
         if res.status_code == 200:
             result = res.json()
             if result["errCode"] != 0:
