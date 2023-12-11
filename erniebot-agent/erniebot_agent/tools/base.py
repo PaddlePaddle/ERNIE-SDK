@@ -304,7 +304,10 @@ class RemoteTool(BaseTool):
             return {returns_file_names[0]: file.id}
 
         if len(returns_file_names) == 0:
-            return response.json()
+            import pdb
+
+            pdb.set_trace()
+            return response.json()  # returns the content from
 
         raise RemoteToolError(
             f"You have defined the files: <{returns_file_names}>, but can not parse file from response. "

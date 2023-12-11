@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import abc
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 class File(metaclass=abc.ABCMeta):
@@ -26,6 +26,7 @@ class File(metaclass=abc.ABCMeta):
         created_at: int,
         purpose: str,
         metadata: Dict[str, Any],
+        URL: Optional[str] = None,
     ) -> None:
         super().__init__()
         self.id = id
@@ -34,7 +35,8 @@ class File(metaclass=abc.ABCMeta):
         self.created_at = created_at
         self.purpose = purpose
         self.metadata = metadata
-        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
+        self.URL = URL
+        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata", "URL"]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -62,5 +64,6 @@ class File(metaclass=abc.ABCMeta):
                 f"created_at: {repr(self.created_at)}",
                 f"purpose: {repr(self.purpose)}",
                 f"metadata: {repr(self.metadata)}",
+                f"URL: {repr(self.URL)}",
             ]
         )
