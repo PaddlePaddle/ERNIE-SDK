@@ -50,7 +50,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             files_involved: List[AgentFile] = []
 
             chat_history.append(step_input)
-            llm_resp = await self._async_run_llm(
+            llm_resp = await self._async_run_llm_without_hooks(
                 messages=chat_history,
                 functions=None,
                 system=self.system_message.content if self.system_message is not None else None,
@@ -107,6 +107,10 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
 
+            tool_args = '{"query": "%s"}' % prompt
+            tool = self._tool_manager.get_tool("BaizhongSearchTool")
+            await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+
             chat_history.append(HumanMessage(content=prompt))
 
             outputs = []
@@ -134,9 +138,10 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             action = AgentAction(tool_name="BaizhongSearchTool", tool_args='{"query": "%s"}' % prompt)
             actions_taken.append(action)
             # return response
-            next_step_input = FunctionMessage(
-                name=action.tool_name, content=json.dumps({"documents": outputs}, ensure_ascii=False)
-            )
+            tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
+            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
