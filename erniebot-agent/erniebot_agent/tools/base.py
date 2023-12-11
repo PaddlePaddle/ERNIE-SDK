@@ -102,7 +102,10 @@ def get_file_info_from_param_view(
 
 
 async def parse_file_from_response(
-    response: Response, file_manager: FileManager, file_infos: Dict[str, Dict[str, str]]
+    response: Response,
+    file_manager: FileManager,
+    file_infos: Dict[str, Dict[str, str]],
+    file_metadata: Dict[str, str],
 ) -> Optional[File]:
     if is_json_response(response):
         if len(file_infos) == 0:
@@ -120,7 +123,7 @@ async def parse_file_from_response(
 
         file_suffix = get_file_suffix(mime_type)
         return await file_manager.create_file_from_bytes(
-            content, f"tool-{file_suffix}", file_purpose="assistants_output"
+            content, f"tool-{file_suffix}", file_purpose="assistants_output", file_metadata=file_metadata
         )
 
     # 1. parse file by `Content-Disposition`
@@ -128,7 +131,7 @@ async def parse_file_from_response(
     if content_disposition is not None:
         file_name = response.headers["Content-Disposition"].split("filename=")[1]
         local_file = await file_manager.create_file_from_bytes(
-            response.content, file_name, file_purpose="assistants_output"
+            response.content, file_name, file_purpose="assistants_output", file_metadata=file_metadata
         )
         return local_file
 
@@ -147,7 +150,10 @@ async def parse_file_from_response(
         if file_mimetype is not None:
             file_suffix = get_file_suffix(file_mimetype)
             return await file_manager.create_file_from_bytes(
-                response.content, f"tool-{file_suffix}", file_purpose="assistants_output"
+                response.content,
+                f"tool-{file_suffix}",
+                file_purpose="assistants_output",
+                file_metadata=file_metadata,
             )
 
     # 3. parse file by content_type
@@ -155,7 +161,10 @@ async def parse_file_from_response(
     if content_type is not None:
         file_suffix = get_file_suffix(content_type)
         return await file_manager.create_file_from_bytes(
-            response.content, f"tool-{file_suffix}", file_purpose="assistants_output"
+            response.content,
+            f"tool-{file_suffix}",
+            file_purpose="assistants_output",
+            file_metadata=file_metadata,
         )
 
     if is_json_response(response):
@@ -327,10 +336,9 @@ class RemoteTool(BaseTool):
 
         # parse the file from response
         returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
+        file_metadata = {"tool_name": self.tool_name}
         file = await parse_file_from_response(
-            response,
-            self.file_manager,
-            file_infos=returns_file_infos,
+            response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
 
         if file is not None:
