@@ -93,6 +93,7 @@ if __name__ == "__main__":
     retrieval_tool = BaizhongSearchTool(
         description="Use Baizhong Search to retrieve documents.",
         db=baizhong_db,
+        threshold=0.1,
         input_type=input_view,
         output_type=output_view,
     )
@@ -110,10 +111,10 @@ if __name__ == "__main__":
     #     "abcabc",
     # ]
     queries = [
-        # "量化交易",
+        "量化交易",
         "城市景观照明中有过度照明的规定是什么？",
-        # "今天天气怎么样？",
-        # "abcabc",
+        "今天天气怎么样？",
+        "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:

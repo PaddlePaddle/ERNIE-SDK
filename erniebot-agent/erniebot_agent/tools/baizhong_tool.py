@@ -29,7 +29,9 @@ class BaizhongSearchTool(Tool):
     input_type: Type[ToolParameterView] = BaizhongSearchToolInputView
     ouptut_type: Type[ToolParameterView] = BaizhongSearchToolOutputView
 
-    def __init__(self, description, db, input_type=None, output_type=None, examples=None) -> None:
+    def __init__(
+        self, description, db, threshold: float = 0.0, input_type=None, output_type=None, examples=None
+    ) -> None:
         super().__init__()
         self.db = db
         self.description = description
@@ -40,7 +42,7 @@ class BaizhongSearchTool(Tool):
             self.ouptut_type = output_type
         if examples is not None:
             self.few_shot_examples = examples
-        self.threshold = 0.1
+        self.threshold = threshold
 
     async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
         documents = self.db.search(query, top_k, filters)
