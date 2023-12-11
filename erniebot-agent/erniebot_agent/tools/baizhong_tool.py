@@ -40,10 +40,12 @@ class BaizhongSearchTool(Tool):
             self.ouptut_type = output_type
         if examples is not None:
             self.few_shot_examples = examples
+        self.threshold = 0.1
 
     async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
-        res = self.db.search(query, top_k, filters)
-        return {"documents": res}
+        documents = self.db.search(query, top_k, filters)
+        documents = [item for item in documents if item["score"] > self.threshold]
+        return {"documents": documents}
 
     @property
     def examples(

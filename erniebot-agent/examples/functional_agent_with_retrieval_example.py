@@ -99,18 +99,10 @@ if __name__ == "__main__":
     retrieval_tool = BaizhongSearchTool(
         description="Use BaizhongSearch to retrieve documents.", db=baizhong_db
     )
-    memory = WholeMemory()
+
     # agent = FunctionalAgentWithRetrievalTool(
     #     llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     # )
-    agent = FunctionalAgentWithRetrievalScoreTool(
-        llm=llm,
-        knowledge_base=baizhong_db,
-        top_k=3,
-        threshold=0.1,
-        tools=[NotesTool(), retrieval_tool],
-        memory=memory,
-    )
 
     # queries = [
     #     "请把飞桨这两个字添加到笔记本中",
@@ -127,6 +119,15 @@ if __name__ == "__main__":
         "abcabc",
     ]
     for query in queries:
+        memory = WholeMemory()
+        agent = FunctionalAgentWithRetrievalScoreTool(
+            llm=llm,
+            knowledge_base=baizhong_db,
+            top_k=3,
+            threshold=0.1,
+            tools=[NotesTool(), retrieval_tool],
+            memory=memory,
+        )
         response = asyncio.run(agent.async_run(query))
         print(f"query: {query}")
         print(f"agent response: {response}")

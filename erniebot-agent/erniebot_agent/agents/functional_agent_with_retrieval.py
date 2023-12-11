@@ -248,7 +248,6 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         step_input,
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
-        print(documents)
         documents = [item for item in documents if item["score"] > self.threshold]
         results = {}
         results["documents"] = documents
