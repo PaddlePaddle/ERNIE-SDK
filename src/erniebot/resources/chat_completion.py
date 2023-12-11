@@ -108,7 +108,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
@@ -134,7 +134,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
@@ -160,7 +160,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: bool,
         validate_functions: bool = ...,
@@ -185,7 +185,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = NOT_GIVEN,
         enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
-        function_choice: Union[str, NotGiven] = NOT_GIVEN,
+        tool_choice: Union[str, NotGiven] = NOT_GIVEN,
         extra_data: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
@@ -211,7 +211,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search: Whether to disable the search engine.
             enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
-            function_choice: Forces the model to generate JSON inputs for the
+            tool_choice: Forces the model to generate JSON inputs for the
                 function.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
@@ -237,7 +237,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search=disable_search,
             enable_citation=enable_citation,
             user_id=user_id,
-            function_choice=function_choice,
+            tool_choice=tool_choice,
             extra_data=extra_data,
             stream=stream,
         )
@@ -265,7 +265,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
@@ -291,7 +291,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
@@ -317,7 +317,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = ...,
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
-        function_choice: Union[str, NotGiven] = ...,
+        tool_choice: Union[str, NotGiven] = ...,
         extra_data: Union[str, NotGiven] = ...,
         stream: bool,
         validate_functions: bool = ...,
@@ -342,7 +342,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         disable_search: Union[bool, NotGiven] = NOT_GIVEN,
         enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
-        function_choice: Union[str, NotGiven] = NOT_GIVEN,
+        tool_choice: Union[str, NotGiven] = NOT_GIVEN,
         extra_data: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
@@ -368,7 +368,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search: Whether to disable the search engine.
             enable_citation: Whether to enable citation generation.
             user_id: ID for the end user.
-            function_choice: Forces the model to generate JSON inputs for the
+            tool_choice: Forces the model to generate JSON inputs for the
                 function.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
@@ -394,7 +394,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             disable_search=disable_search,
             enable_citation=enable_citation,
             user_id=user_id,
-            function_choice=function_choice,
+            tool_choice=tool_choice,
             extra_data=extra_data,
             stream=stream,
         )
@@ -423,7 +423,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             "disable_search",
             "enable_citation",
             "user_id",
-            "function_choice",
+            "tool_choice",
             "extra_data",
             "stream",
             "validate_functions",
