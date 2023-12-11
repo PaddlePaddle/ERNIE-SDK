@@ -2,7 +2,12 @@ import json
 from typing import List, Optional
 
 from erniebot_agent.agents import FunctionalAgent
-from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
+from erniebot_agent.agents.schema import (
+    AgentAction,
+    AgentFile,
+    AgentResponse,
+    ToolResponse,
+)
 from erniebot_agent.file_io.base import File
 from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
@@ -132,6 +137,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             next_step_input = FunctionMessage(
                 name=action.tool_name, content=json.dumps({"documents": outputs}, ensure_ascii=False)
             )
+
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
@@ -192,6 +198,9 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
 
+            tool_args = '{"query": "%s"}' % prompt
+            tool = self._tool_manager.get_tool("BaizhongSearchTool")
+            await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
             chat_history.append(HumanMessage(content=prompt))
             outputs = []
             for item in results["documents"]:
@@ -209,18 +218,19 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     function_call={
                         "name": "BaizhongSearchTool",
                         "thoughts": "这是一个检索的需求，我需要在BaizhongSearchTool知识库中检索出与输入的query相关的段落，并返回给用户。",
-                        "arguments": '{"query": "%s"}' % prompt,
+                        "arguments": tool_args,
                     },
                 )
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="BaizhongSearchTool", tool_args='{"query": "%s"}' % prompt)
+            action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
             actions_taken.append(action)
             # return response
-            next_step_input = FunctionMessage(
-                name=action.tool_name, content=json.dumps({"documents": outputs}, ensure_ascii=False)
-            )
+            tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
+            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
