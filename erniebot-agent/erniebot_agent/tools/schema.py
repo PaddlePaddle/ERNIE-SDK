@@ -238,7 +238,9 @@ class ToolParameterView(BaseModel):
             if format is not None:
                 json_schema_extra["format"] = format
 
-            json_schema_extra["x-ebagent-file-mimetype"] = field_dict.get("x-ebagent-file-mimetype", "auto")
+            json_schema_extra["x-ebagent-file-mime-type"] = field_dict.get(
+                "x-ebagent-file-mime-type", "auto"
+            )
 
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
