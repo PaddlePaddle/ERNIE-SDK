@@ -24,6 +24,7 @@ from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file_io import get_global_file_manager
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
@@ -99,7 +100,7 @@ class GameAgent(Agent):
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
 
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise RuntimeError(("Only support for stream mode, please use _async_run_stream instead."))
 
     async def _async_run_stream(self, prompt: str) -> AsyncGenerator:

@@ -1,8 +1,9 @@
 import json
-from typing import List
+from typing import List, Optional
 
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
+from erniebot_agent.file_io.base import File
 from erniebot_agent.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
@@ -32,7 +33,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
 
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
