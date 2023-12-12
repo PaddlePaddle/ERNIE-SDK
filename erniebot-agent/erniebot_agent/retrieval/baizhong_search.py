@@ -1,4 +1,3 @@
-import base64
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
@@ -152,11 +151,14 @@ class BaizhongSearch:
             result = res.json()
             if result["errCode"] != 0:
                 raise BaizhongError(message=result["errMsg"], error_code=result["errCode"])
+
             list_data = []
             for item in result["hits"]:
                 content = item["_source"]["doc"]
-                content = base64.b64decode(content).decode("utf-8")
+                score = item["_score"]
                 json_data = json.loads(content)
+
+                json_data["score"] = score
                 list_data.append(json_data)
             return list_data
         else:
