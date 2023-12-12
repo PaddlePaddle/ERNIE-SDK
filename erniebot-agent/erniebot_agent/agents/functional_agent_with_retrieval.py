@@ -146,6 +146,20 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
 
             chat_history.append(HumanMessage(content=prompt))
 
+            step_input = HumanMessage(
+                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
+            )
+            fake_chat_history: List[Message] = []
+            fake_chat_history.append(step_input)
+            llm_resp = await self._async_run_llm(
+                messages=fake_chat_history,
+                functions=None,
+                system=self.system_message.content if self.system_message is not None else None,
+            )
+
+            # Get RAG results
+            output_message = llm_resp.message
+
             outputs = []
             for item in results["documents"]:
                 outputs.append(
@@ -172,7 +186,8 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             actions_taken.append(action)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            # next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            next_step_input = FunctionMessage(name=action.tool_name, content=output_message.content)
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
@@ -241,6 +256,20 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
             chat_history.append(HumanMessage(content=prompt))
+
+            step_input = HumanMessage(
+                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
+            )
+            fake_chat_history: List[Message] = []
+            fake_chat_history.append(step_input)
+            llm_resp = await self._async_run_llm(
+                messages=fake_chat_history,
+                functions=None,
+                system=self.system_message.content if self.system_message is not None else None,
+            )
+
+            # Get RAG results
+            output_message = llm_resp.message
             outputs = []
             for item in results["documents"]:
                 outputs.append(
@@ -251,23 +280,16 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     }
                 )
 
-            chat_history.append(
-                AIMessage(
-                    content="",
-                    function_call={
-                        "name": "KnowledgeBaseTool",
-                        "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
-                        "arguments": tool_args,
-                    },
-                )
-            )
+            chat_history.append(AIMessage(content=output_message.content, function_call=None))
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
-            actions_taken.append(action)
+            # action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
+
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+
+            next_step_input = HumanMessage(content=prompt)
+
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             num_steps_taken = 0

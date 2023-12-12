@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from typing import Dict, List, Type
 
 from erniebot_agent.agents import (
     FunctionalAgentWithRetrieval,
@@ -8,12 +9,15 @@ from erniebot_agent.agents import (
 )
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
+from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
 from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
-from erniebot_agent.tools.base import RemoteToolkit
+from erniebot_agent.tools.base import RemoteToolkit, Tool
+from erniebot_agent.tools.schema import ToolParameterView
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
+from pydantic import Field
 from tqdm import tqdm
 
 import erniebot
@@ -36,6 +40,38 @@ parser.add_argument(
     help="Retrieval type, default to rag.",
 )
 args = parser.parse_args()
+
+
+class NotesToolInputView(ToolParameterView):
+    draft: str = Field(description="草稿文本")
+
+
+class NotesToolOutputView(ToolParameterView):
+    draft_results: str = Field(description="草稿文本结果")
+
+
+class NotesTool(Tool):
+    description: str = "笔记本，用于记录和保存信息的笔记本工具"
+    input_type: Type[ToolParameterView] = NotesToolInputView
+    ouptut_type: Type[ToolParameterView] = NotesToolOutputView
+
+    async def __call__(self, draft: str) -> Dict[str, str]:
+        # TODO: save draft to database
+        return {"draft_results": "保存成功"}
+
+    @property
+    def examples(self) -> List[Message]:
+        return [
+            HumanMessage("OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中"),
+            AIMessage(
+                "",
+                function_call={
+                    "name": self.tool_name,
+                    "thoughts": f"用户想保存笔记，我可以使用{self.tool_name}工具来保存，其中`draft`字段的内容为：'搜索的草稿'。",
+                    "arguments": '{"draft": "搜索的草稿"}',
+                },
+            ),
+        ]
 
 
 def offline_ann(data_path, baizhong_db):
@@ -70,28 +106,28 @@ if __name__ == "__main__":
 
     llm = ERNIEBot(model="ernie-bot", api_type="custom")
 
-    retrieval_tool = BaizhongSearchTool(
-        description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1
-    )
+    retrieval_tool = BaizhongSearchTool(description="在知识库中检索相关的段落", db=baizhong_db, threshold=0.1)
 
     # agent = FunctionalAgentWithRetrievalTool(
     #     llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     # )
 
     # queries = [
-    #     "请把飞桨这两个字添加到笔记本中",
-    #     "OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中",
-    #     "OpenAI管理层变更会带来哪些影响?",
-    #     "量化交易",
-    #     "今天天气怎么样？",
-    #     "abcabc",
+    # "请把飞桨这两个字添加到笔记本中",
+    # "OpenAI管理层变更会带来哪些影响？并请把搜索的内容添加到笔记本中",
+    # "OpenAI管理层变更会带来哪些影响?",
+    # "量化交易",
+    # "今天天气怎么样？",
+    # "abcabc",
     # ]
+
     queries = [
-        "量化交易",
-        "城市景观照明中有过度照明的规定是什么？",
-        "这几篇文档主要内容是什么？",
-        "今天天气怎么样？",
-        "abcabc",
+        # "量化交易",
+        # "城市景观照明中有过度照明的规定是什么？",
+        "城市景观照明中有过度照明的规定是什么？并把搜索的内容添加到笔记本中",
+        # "这几篇文档主要内容是什么？",
+        # "今天天气怎么样？",
+        # "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
@@ -101,7 +137,7 @@ if __name__ == "__main__":
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
-                tools=toolkit.get_tools() + [retrieval_tool],
+                tools=toolkit.get_tools() + [NotesTool(), retrieval_tool],
                 memory=memory,
             )
         elif args.retrieval_type == "rag_tool":
@@ -118,7 +154,7 @@ if __name__ == "__main__":
                 knowledge_base=baizhong_db,
                 top_k=3,
                 threshold=0.1,
-                tools=toolkit.get_tools() + [retrieval_tool],
+                tools=[NotesTool(), retrieval_tool],
                 memory=memory,
             )
         try:
