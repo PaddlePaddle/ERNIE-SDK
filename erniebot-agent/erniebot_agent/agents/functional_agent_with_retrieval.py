@@ -1,5 +1,5 @@
 import json
-from typing import Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import (
@@ -58,7 +58,7 @@ class FakeSearchTool(Tool):
     ) -> None:
         super().__init__()
 
-    async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
+    async def __call__(self, query: str, top_k: int = 3, filters: Optional[Dict[str, Any]] = None):
         return {"documents": "This is the fake search tool."}
 
 
