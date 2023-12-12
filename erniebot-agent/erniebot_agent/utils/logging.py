@@ -12,20 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+from __future__ import annotations
+
 import logging
 import os
 import re
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
-from erniebot_agent.utils.output_style import ColorText
+from erniebot_agent import messages
+from erniebot_agent.utils.json import to_pretty_json
+from erniebot_agent.utils.output_style import ColoredText
+
+if TYPE_CHECKING:
+    from erniebot_agent.messages import Message
 
 __all__ = ["logger", "setup_logging"]
 
 logger = logging.getLogger("erniebot_agent")
 
 
-def _handle_color_pattern(s):
+def _handle_color_pattern(s: str):
     """Set ASCII color code into right sequence to avoid color conflict."""
     color_pattern = r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])"
     color_lis = re.findall(color_pattern, s)
@@ -45,7 +51,7 @@ def _handle_color_pattern(s):
 
     # Process the wrong sequence
     # Set the color after reset code to previous color
-    stack = []
+    stack: List[str] = []
     for i in range(len(origin_text)):
         if origin_text[i] in color_lis:
             color = origin_text[i]
@@ -101,14 +107,14 @@ class FileFormatter(logging.Formatter):
             log_message += json.dumps(output, indent=2, ensure_ascii=False) + ","
         return log_message
 
-    def extract_content(self, text, output: list):
+    def extract_content(self, text: Union[List[Message], Message, str], output: list):
         """Extract the content from message and convert to json format."""
         if isinstance(text, list):
             # List of messages
             chat_lis = []
             func_lis = []
             for i in range(len(text)):
-                if hasattr(text[i], "role"):
+                if isinstance(text[i], messages.Message):
                     chat_res, func_res = self.handle_message(text[i])
                     chat_lis.append(chat_res)
                     if func_res:
@@ -122,11 +128,10 @@ class FileFormatter(logging.Formatter):
             pass
         else:
             # Message type
-            if hasattr(text, "role"):
-                chat_res, func_res = self.handle_message(text)
-                output.append({"conversation": [chat_res]})
-                if func_res:
-                    output.append({"function_call": [func_res]})
+            chat_res, func_res = self.handle_message(text)
+            output.append({"conversation": [chat_res]})
+            if func_res:
+                output.append({"function_call": [func_res]})
 
     def handle_message(self, message):
         if message.role == "function":
@@ -139,8 +144,26 @@ class FileFormatter(logging.Formatter):
             return message.to_dict(), None
 
 
+def open_role_color(open: bool = True):
+    """
+    Open or close color role in log, if open, different role will have different color.
+
+    Args:
+        open (bool, optional): whether or not to open. Defaults to True.
+    """
+    if open:
+        role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
+    else:
+        role_color = {}
+
+    ColoredText.set_global_role_color(role_color)
+
+
 def setup_logging(
-    verbosity: Optional[str] = None, use_standard_format: bool = True, use_file_handler: bool = False
+    verbosity: Optional[str] = None,
+    use_standard_format: bool = True,
+    use_file_handler: bool = False,
+    log_max_length: int = 100,
 ) -> None:
     """Configures logging for the ERNIE Bot Agent library.
 
@@ -169,10 +192,10 @@ def setup_logging(
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
             logger.addHandler(console_handler)
+            open_role_color()
 
         if use_file_handler:
             log_file_path = os.getenv("EB_LOGGING_FILE")
-
             if log_file_path is not None:
                 file_name = os.path.join(log_file_path, "erniebot-agent.log")
                 file_handler = logging.FileHandler(file_name)
@@ -180,3 +203,5 @@ def setup_logging(
                 file_handler = logging.FileHandler("erniebot-agent.log")
             file_handler.setFormatter(FileFormatter("%(message)s"))
             logger.addHandler(file_handler)
+
+        ColoredText.set_global_max_length(log_max_length)

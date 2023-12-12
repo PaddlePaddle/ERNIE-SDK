@@ -35,13 +35,9 @@ class LoggingHandler(CallbackHandler):
 
     def __init__(
         self,
-        log_max_length: int = 100,
-        enable_role_color: bool = True,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         super().__init__()
-        ColorText.set_global_max_length(log_max_length)
-        self.open_role_color(enable_role_color)
 
         if logger is None:
             self.logger = default_logger
@@ -50,7 +46,7 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
-            "%s is about to start running with input:\n %s\n",
+            "%s is about to start running with input:\n %s",
             agent.__class__.__name__,
             ColorText(prompt, "user"),
             subject="Run",
@@ -60,7 +56,7 @@ class LoggingHandler(CallbackHandler):
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         # TODO: Prettier messages
         self.agent_info(
-            "%s is about to start running with input:\n%s\n",
+            "%s is about to start running with input:\n%s",
             llm.__class__.__name__,
             ColorText(messages),
             subject="LLM",
@@ -69,7 +65,7 @@ class LoggingHandler(CallbackHandler):
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         self.agent_info(
-            "%s finished running with output: \n%s\n",
+            "%s finished running with output: \n%s",
             llm.__class__.__name__,
             ColorText(response.message),
             subject="LLM",
@@ -84,9 +80,9 @@ class LoggingHandler(CallbackHandler):
     async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
         js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
-            "%s is about to start running with input:\n%s\n",
-            ColorText(tool.__class__.__name__, "function"),
-            ColorText(js_inputs, "function"),
+            "%s is about to start running with input:\n%s",
+            ColoredText(tool.__class__.__name__, "function"),
+            ColoredText(js_inputs, "function"),
             subject="Tool",
             state="Start",
         )
@@ -94,9 +90,9 @@ class LoggingHandler(CallbackHandler):
     async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
         js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
-            "%s finished running with output:\n%s\n",
-            ColorText(tool.__class__.__name__, "function"),
-            ColorText(js_inputs, "function"),
+            "%s finished running with output:\n%s",
+            ColoredText(tool.__class__.__name__, "function"),
+            ColoredText(js_inputs, "function"),
             subject="Tool",
             state="End",
         )
@@ -107,7 +103,7 @@ class LoggingHandler(CallbackHandler):
         pass
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
-        self.agent_info("%s finished running.\n", agent.__class__.__name__, subject="Run", state="End")
+        self.agent_info("%s finished running.", agent.__class__.__name__, subject="Run", state="End")
 
     def agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
         msg = f"[{subject}][{state}] {msg}"
@@ -116,17 +112,3 @@ class LoggingHandler(CallbackHandler):
     def agent_error(self, error: Union[Exception, KeyboardInterrupt], *args, subject, **kwargs) -> None:
         error_msg = f"[{subject}][ERROR] {error}"
         self.logger.error(error_msg, *args, **kwargs)
-
-    def open_role_color(self, open: bool = True):
-        """
-        Open or close color role in log, if open, different role will have different color.
-
-        Args:
-            open (bool, optional): whether or not to open. Defaults to True.
-        """
-        if open:
-            self.role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
-        else:
-            self.role_color = {}
-
-        ColorText.set_global_role_color(self.role_color)
