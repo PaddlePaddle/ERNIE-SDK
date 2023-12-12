@@ -1,7 +1,11 @@
 import argparse
 import asyncio
 
-from erniebot_agent.agents import FunctionalAgentWithRetrievalScoreTool
+from erniebot_agent.agents import (
+    FunctionalAgentWithRetrieval,
+    FunctionalAgentWithRetrievalScoreTool,
+    FunctionalAgentWithRetrievalTool,
+)
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.retrieval import BaizhongSearch
@@ -25,7 +29,12 @@ parser.add_argument("--api_key", default="", type=str, help="The API Key.")
 parser.add_argument("--secret_key", default="", type=str, help="The secret key.")
 parser.add_argument("--indexing", action="store_true", help="The indexing step.")
 parser.add_argument("--project_id", default=-1, type=int, help="The API Key.")
-
+parser.add_argument(
+    "--retrieval_type",
+    choices=["rag", "rag_tool", "rag_threshold"],
+    default="rag",
+    help="Retrieval type, default to rag.",
+)
 args = parser.parse_args()
 
 
@@ -80,20 +89,41 @@ if __name__ == "__main__":
     queries = [
         "量化交易",
         "城市景观照明中有过度照明的规定是什么？",
-        "这几篇文档主要内容是什么？" "今天天气怎么样？",
+        "这几篇文档主要内容是什么？",
+        "今天天气怎么样？",
         "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
         memory = WholeMemory()
-        agent = FunctionalAgentWithRetrievalScoreTool(
-            llm=llm,
-            knowledge_base=baizhong_db,
-            top_k=3,
-            threshold=0.1,
-            tools=toolkit.get_tools() + [retrieval_tool],
-            memory=memory,
-        )
-        response = asyncio.run(agent.async_run(query))
-        print(f"query: {query}")
-        print(f"agent response: {response}")
+        if args.retrieval_type == "rag":
+            agent = FunctionalAgentWithRetrieval(
+                llm=llm,
+                knowledge_base=baizhong_db,
+                top_k=3,
+                tools=toolkit.get_tools() + [retrieval_tool],
+                memory=memory,
+            )
+        elif args.retrieval_type == "rag_tool":
+            agent = FunctionalAgentWithRetrievalTool(
+                llm=llm,
+                knowledge_base=baizhong_db,
+                top_k=3,
+                tools=toolkit.get_tools() + [retrieval_tool],
+                memory=memory,
+            )
+        elif args.retrieval_type == "rag_threshold":
+            agent = FunctionalAgentWithRetrievalScoreTool(
+                llm=llm,
+                knowledge_base=baizhong_db,
+                top_k=3,
+                threshold=0.1,
+                tools=toolkit.get_tools() + [retrieval_tool],
+                memory=memory,
+            )
+        try:
+            response = asyncio.run(agent.async_run(query))
+            print(f"query: {query}")
+            print(f"agent response: {response}")
+        except Exception as e:
+            print(e)
