@@ -126,7 +126,6 @@ class Agent(BaseAgent):
             else:
                 response = await self.async_run(prompt)
 
-            # TODO:添加判断为图片的逻辑，添加如果结果中不含fileid 拼接在最后的逻辑
             if (
                 response.files
                 and response.files[-1].type == "output"
@@ -142,8 +141,7 @@ class Agent(BaseAgent):
                         output_file_id, IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                     )
                 else:
-                    output_result = response.text
-                    history[-1][1] = output_result
+                    output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
 
             else:
                 output_result = response.text
