@@ -21,7 +21,7 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
 from erniebot_agent.utils.output_style import ColoredContent
@@ -77,7 +77,7 @@ class LoggingHandler(CallbackHandler):
     ) -> None:
         pass
 
-    async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
+    async def on_tool_start(self, agent: Agent, tool: BaseTool, input_args: str) -> None:
         js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
             "%s is about to start running with input:\n%s",
@@ -87,7 +87,7 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: Agent, tool: BaseTool, response: ToolResponse) -> None:
         js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
             "%s finished running with output:\n%s",
@@ -98,7 +98,7 @@ class LoggingHandler(CallbackHandler):
         )
 
     async def on_tool_error(
-        self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
+        self, agent: Agent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
         pass
 

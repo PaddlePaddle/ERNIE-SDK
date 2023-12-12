@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 from erniebot_agent.messages import Message
 from erniebot_agent.utils.json import to_pretty_json
 
-__all__ = ["ColoredText"]
+__all__ = ["ColoredContent"]
 
 _COLORS = {
     "Purple": "\033[95m",
@@ -30,7 +30,7 @@ _COLORS = {
 }
 
 
-class ColoredText:
+class ColoredContent:
     role_color: dict
     max_length: int
 
@@ -83,13 +83,13 @@ class ColoredText:
         res = ""
         if isinstance(message, list):
             for msg in message:
-                res += self._colorized_by_role(msg, role_color, max_length)
+                res += self._colorized_msg_by_role(msg, role_color, max_length)
                 res += "\n"
         else:
-            res = self._colorized_by_role(message, role_color, max_length)
+            res = self._colorized_msg_by_role(message, role_color, max_length)
         return res
 
-    def _colorized_by_role(self, msg: Message, role_color: dict, max_length: int):
+    def _colorized_msg_by_role(self, msg: Message, role_color: dict, max_length: int):
         res = ""
         for k, v in msg.to_dict().items():
             if isinstance(v, dict):
