@@ -107,7 +107,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
 
-            tool_args = '{"query": "%s"}' % prompt
+            tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             tool = self._tool_manager.get_tool("BaizhongSearchTool")
             await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
 
@@ -203,7 +203,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
 
-            tool_args = '{"query": "%s"}' % prompt
+            tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             tool = self._tool_manager.get_tool("BaizhongSearchTool")
             await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
             chat_history.append(HumanMessage(content=prompt))
