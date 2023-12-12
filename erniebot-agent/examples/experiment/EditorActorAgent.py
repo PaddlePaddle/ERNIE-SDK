@@ -2,7 +2,7 @@ import json
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from tools.prompt_utils import EB_EDIT_TEMPLATE, gpt_functions
+from tools.prompt_utils import EB_EDIT_TEMPLATE, eb_functions
 from tools.utils import erniebot_chat, json_correct
 
 
@@ -22,7 +22,7 @@ class EditorActorAgent(Agent):
             }
         ]
         suggestions = erniebot_chat(
-            messages=messages, functions=gpt_functions, model=self.model, system=self.system_message
+            messages=messages, functions=eb_functions, model=self.model, system=self.system_message
         )
         start_idx = suggestions.index("{")
         end_idx = suggestions.rindex("}")
