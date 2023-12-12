@@ -11,8 +11,8 @@ erniebot.Image.create(
     width: int,
     height: int,
     *,
-    version: Optional[str] = ...,
-    image_num: Optional[int] = ...,
+    version: Union[str, NotGiven] = ...,
+    image_num: Union[int, NotGiven] = ...,
     headers: Optional[HeadersType] = ...,
     request_timeout: Optional[float] = ...,
     _config_: Optional[ConfigDictType] = ...,
@@ -32,10 +32,10 @@ ernie.api_type = "yinian"
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :--- | :--- |
 | model | str | 是 | 模型名称。当前支持`"ernie-vilg-v2"`。 |
-| version | str | 否 | 模型版本。支持`"v1"`、`"v2"`，分别对应模型的v1和v2版本，默认为`"v2"`。v2为最新模型，比v1在准确度、精细度上有比较明显的提升，且v2支持更多尺寸。 |
 | prompt | str | 是 | 描述图像内容、风格的文本。仅支持中文、日常标点符号，不支持英文、特殊符号，限制200字。 |
 | width | int | 是 | 图片宽度。v1模型支持的图像尺寸有：1024x1024、1280x720、720x1280、2048x2048、2560x1440、1440x2560，v2模型支持的图像尺寸有：512x512、640x360、360x640、1024x1024、1280x720、720x1280、2048x2048、2560x1440、1440x2560。 |
 | height | int | 是 | 图片高度。v1模型支持的图像尺寸有：1024x1024、1280x720、720x1280、2048x2048、2560x1440、1440x2560，v2模型支持的图像尺寸有：512x512、640x360、360x640、1024x1024、1280x720、720x1280、2048x2048、2560x1440、1440x2560。 |
+| version | str | 否 | 模型版本。支持`"v1"`、`"v2"`，分别对应模型的v1和v2版本，默认为`"v2"`。v2为最新模型，比v1在准确度、精细度上有比较明显的提升，且v2支持更多尺寸。 |
 | image_num | int | 否 | 生成图片数量。默认一张，支持生成1-8张。 |
 | headers | dict | 否 | 附加的HTTP请求头。 |
 | request_timeout | float | 否 | 单个HTTP请求的超时时间，单位为秒。 |
