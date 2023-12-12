@@ -109,9 +109,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -135,9 +135,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -161,9 +161,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: bool,
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -186,9 +186,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         tool_choice: Union[dict, NotGiven] = NOT_GIVEN,
-        extra_data: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
+        extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -236,10 +236,11 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             enable_citation=enable_citation,
             user_id=user_id,
             tool_choice=tool_choice,
-            extra_data=extra_data,
             stream=stream,
         )
         kwargs["validate_functions"] = validate_functions
+        if extra_params is not None:
+            kwargs["extra_params"] = extra_params
         if headers is not None:
             kwargs["headers"] = headers
         if request_timeout is not None:
@@ -264,9 +265,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -290,9 +291,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: Literal[True],
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -316,9 +317,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         tool_choice: Union[dict, NotGiven] = ...,
-        extra_data: Union[str, NotGiven] = ...,
         stream: bool,
         validate_functions: bool = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -341,9 +342,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         enable_citation: Union[bool, NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         tool_choice: Union[dict, NotGiven] = NOT_GIVEN,
-        extra_data: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
         validate_functions: bool = False,
+        extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -391,10 +392,11 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             enable_citation=enable_citation,
             user_id=user_id,
             tool_choice=tool_choice,
-            extra_data=extra_data,
             stream=stream,
         )
         kwargs["validate_functions"] = validate_functions
+        if extra_params is not None:
+            kwargs["extra_params"] = extra_params
         if headers is not None:
             kwargs["headers"] = headers
         if request_timeout is not None:
@@ -420,9 +422,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             "enable_citation",
             "user_id",
             "tool_choice",
-            "extra_data",
             "stream",
             "validate_functions",
+            "extra_params",
             "headers",
             "request_timeout",
         }
@@ -458,6 +460,10 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # params
         params = {}
+        if model == "ernie-bot-turbo":
+            for arg in ("functions", "stop", "disable_search", "enable_citation"):
+                if arg in kwargs:
+                    raise ValueError(f"`{arg}` is not supported by the {model} model.")
         params["messages"] = messages
         if "functions" in kwargs:
             functions = kwargs["functions"]
@@ -475,8 +481,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             # The AI Studio backend automatically injects `user_id`.
             _set_val_if_key_exists(kwargs, params, "user_id")
         _set_val_if_key_exists(kwargs, params, "tool_choice")
-        _set_val_if_key_exists(kwargs, params, "extra_data")
         _set_val_if_key_exists(kwargs, params, "stream")
+        if "extra_params" in kwargs:
+            params.update(kwargs["extra_params"])
 
         # headers
         headers = kwargs.get("headers", None)

@@ -69,10 +69,8 @@ class FunctionalAgent(Agent):
         num_steps_taken = 0
         next_step_input: Message = ask
         while num_steps_taken < self.max_steps:
-            curr_step_output = (
-                await self._async_step(  # run a step based on the input and record files and actions taken
-                    next_step_input, chat_history, actions_taken, files_involved
-                )
+            curr_step_output = await self._async_step(
+                next_step_input, chat_history, actions_taken, files_involved
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
@@ -110,11 +108,11 @@ class FunctionalAgent(Agent):
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
-            plugins=["ChatFile", "eChart"],  # pass in a list of possible plugins here
+            plugins=["ChatFile", "eChart"],
         )
-        output_message = llm_resp.message  # 润色了？是的，第一轮是调用工具content=None，第二轮是根据工具结果润色。
+        output_message = llm_resp.message
         chat_history.append(output_message)
-        if output_message.function_call is not None:  # build tool based on LLM output
+        if output_message.function_call is not None:
             return AgentAction(
                 tool_name=output_message.function_call["name"],  # type: ignore
                 tool_args=output_message.function_call["arguments"],

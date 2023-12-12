@@ -19,7 +19,7 @@ from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.remote_file import AIStudioFileClient
 
 
-@functools.lru_cache(maxsize=None)  # 缓存函数的结果，如果之前创造过这个对象，则不重复计算。
+@functools.lru_cache(maxsize=None)
 def get_file_manager(access_token: Optional[str] = None) -> FileManager:
     if access_token is None:
         # TODO: Use a default global access token.

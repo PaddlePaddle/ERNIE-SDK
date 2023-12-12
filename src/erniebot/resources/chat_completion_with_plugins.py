@@ -62,6 +62,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -78,6 +79,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Literal[True],
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -109,6 +111,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
+        extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -122,6 +125,8 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             user_id=user_id,
             stream=stream,
         )
+        if extra_params is not None:
+            kwargs["extra_params"] = extra_params
         if headers is not None:
             kwargs["headers"] = headers
         if request_timeout is not None:
@@ -139,6 +144,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: Union[Literal[False], NotGiven] = ...,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -171,6 +177,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = ...,
         user_id: Union[str, NotGiven] = ...,
         stream: bool,
+        extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
         _config_: Optional[ConfigDictType] = ...,
@@ -186,6 +193,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         functions: Union[List[dict], NotGiven] = NOT_GIVEN,
         user_id: Union[str, NotGiven] = NOT_GIVEN,
         stream: Union[bool, NotGiven] = NOT_GIVEN,
+        extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -199,6 +207,8 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             user_id=user_id,
             stream=stream,
         )
+        if extra_params is not None:
+            kwargs["extra_params"] = extra_params
         if headers is not None:
             kwargs["headers"] = headers
         if request_timeout is not None:
@@ -217,6 +227,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             "functions",
             "user_id",
             "stream",
+            "extra_params",
             "headers",
             "request_timeout",
         }
@@ -252,6 +263,8 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         _set_val_if_key_exists(kwargs, params, "functions")
         _set_val_if_key_exists(kwargs, params, "user_id")
         _set_val_if_key_exists(kwargs, params, "stream")
+        if "extra_params" in kwargs:
+            params.update(kwargs["extra_params"])
 
         # headers
         headers = kwargs.get("headers", None)

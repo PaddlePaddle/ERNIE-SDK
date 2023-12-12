@@ -27,9 +27,11 @@ from typing import (
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
+from erniebot_agent.utils.logging import logger
 
 import erniebot
 from erniebot.response import EBResponse
+from erniebot.utils.misc import NOT_GIVEN
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -115,43 +117,36 @@ class ERNIEBot(ChatModel):
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
-        # import pdb;pdb.set_trace()
-
         # TODO: Improve this when erniebot typing issue is fixed.
-        if cfg_dict.get("plugins", None):  # TODO(shiyutang）: replace this when plugin is compact
-            cfg_dict["_config_"]["api_base_url"] = "http://None/ernie-foundry/v1"  # '/erniebot/plugins_v3'
+        if cfg_dict.get("plugins", None):
+            cfg_dict["_config_"]["api_base_url"] = "<your-custom-URL>"
             cfg_dict["_config_"]["api_type"] = "custom"
 
             response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],
                 stream=stream,
-                **{
-                    "_config_": cfg_dict["_config_"],
-                    "plugins": cfg_dict["plugins"],
-                    "functions": cfg_dict["functions"],
-                    "messages": cfg_dict["messages"],
-                },
+                _config_=cfg_dict["_config_"],
+                functions=functions if functions else NOT_GIVEN,
+                extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
             )
         else:
-            cfg_dict["_config_"]["api_base_url"] = "http://None/ernie-foundry/v1"
-            response = await erniebot.ChatCompletion.acreate(
-                stream=stream, **cfg_dict
-            )  # '/chat/completions'
+            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
 
-        import pdb
-
-        pdb.set_trace()
-
-        if response.get("plugin_info", None):
-            print("#### Plugin Info #### \n", response["plugin_info"])
-            print("\n" + "#" * 20 + "\n")
+        if response.get("plugin_info", None):  # type: ignore
+            logger.info("#### Plugin Info #### \n", response["plugin_info"])  # type: ignore
+            logger.info("\n" + "#" * 20 + "\n")
         else:
-            print("#### Plugin Info #### \n", "None")
-            print("\n" + "#" * 20 + "\n")
+            logger.info("#### Plugin Info #### \n", "None")
+            logger.info("\n" + "#" * 20 + "\n")
 
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
-            return (self.convert_response_to_output(resp, AIMessageChunk) async for resp in response)
+            return (
+                self.convert_response_to_output(resp, AIMessageChunk)
+                async for resp in response  # type: ignore
+            )
 
     @staticmethod
     def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:

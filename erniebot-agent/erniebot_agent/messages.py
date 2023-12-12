@@ -14,6 +14,8 @@
 from typing import Dict, List, Optional, TypedDict
 
 from erniebot_agent.file_io.base import File
+from erniebot_agent.file_io.protocol import extract_file_ids
+from erniebot_agent.utils.logging import logger
 
 import erniebot.utils.token_helper as token_helper
 
@@ -77,12 +79,15 @@ class HumanMessage(Message):
     def __init__(self, content: str, files: Optional[List[File]] = None):
         self.files = files
         if self.files is not None:
-            # TODO: 测试；fileuuidname
-            prompt_parts = ["。这句话中包含的文件如下："] + [
-                f"<file>{file.filename}</file><url>{file.URL}</url>" for file in self.files
-            ]
-            prompt = "\n".join(prompt_parts)
-            content = content + prompt
+            if len(extract_file_ids(content)) > 0:
+                logger.warning(
+                    "Files already exist in the content of a HumanMessage, which will be ignored."
+                )
+            else:
+                prompt_parts = ["。这句话中包含的文件如下："] + [file.file_repr() for file in self.files]
+                prompt = "\n".join(prompt_parts)
+                content = content + prompt
+
         super().__init__(role="user", content=content)
 
 
