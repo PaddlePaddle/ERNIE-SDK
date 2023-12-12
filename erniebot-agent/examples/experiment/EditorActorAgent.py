@@ -2,8 +2,8 @@ import json
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.tools.prompt_utils import EB_EDIT_TEMPLATE, gpt_functions
-from erniebot_agent.tools.utils import erniebot_chat, json_correct
+from tools.prompt_utils import EB_EDIT_TEMPLATE, gpt_functions
+from tools.utils import erniebot_chat, json_correct
 
 
 class EditorActorAgent(Agent):

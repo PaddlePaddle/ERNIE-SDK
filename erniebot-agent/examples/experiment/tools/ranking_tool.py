@@ -36,4 +36,4 @@ class TextRankingTool(Tool):
             if int(report_num) <= len(reports):
                 break
         final_report = reports[int(report_num) - 1]
-        return final_report
+        return final_report, int(report_num)

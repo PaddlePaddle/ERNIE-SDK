@@ -2,7 +2,7 @@ from typing import Optional
 
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
-from erniebot_agent.tools.utils import erniebot_chat
+from tools.utils import erniebot_chat
 
 
 class ReviserActorAgent(Agent):
