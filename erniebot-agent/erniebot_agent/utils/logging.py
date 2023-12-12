@@ -95,13 +95,13 @@ class FileFormatter(logging.Formatter):
         if record.args:
             for arg in record.args:
                 if isinstance(arg, ColoredContent):
-                    self.extract_content(arg.text, output)
+                    output = self.extract_content(arg.text, output)
         log_message = ""
         if output:
             log_message += to_pretty_json(output)
         return log_message
 
-    def extract_content(self, text: Union[List[Message], Message, str], output: list):
+    def extract_content(self, text: Union[List[Message], Message, str], output: list) -> List[dict]:
         """Extract the content from message and convert to json format."""
         if isinstance(text, list):
             # List of messages
@@ -113,19 +113,21 @@ class FileFormatter(logging.Formatter):
                     chat_lis.append(chat_res)
                     if func_res:
                         func_lis.append(func_res)
-            output.append({"conversation": chat_lis.copy()})
+            output += [{"conversation": chat_lis.copy()}]
             if func_lis:
-                output.append({"function_call": func_lis.copy()})
+                output += [{"function_call": func_lis.copy()}]
+            return output
 
         elif isinstance(text, str):
             # Only handle Message Type
-            pass
+            return []
         else:
             # Message type
             chat_res, func_res = self.handle_message(text)
-            output.append({"conversation": [chat_res]})
+            output += [{"conversation": [chat_res]}]
             if func_res:
-                output.append({"function_call": [func_res]})
+                output += [{"function_call": [func_res]}]
+            return output
 
     def handle_message(self, message):
         if isinstance(message, FunctionMessage):
