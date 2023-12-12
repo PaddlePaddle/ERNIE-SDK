@@ -24,7 +24,7 @@ from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
-from erniebot_agent.utils.output_style import ColoredText
+from erniebot_agent.utils.output_style import ColoredContent
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
@@ -48,7 +48,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s is about to start running with input:\n %s",
             agent.__class__.__name__,
-            ColoredText(prompt, "user"),
+            ColoredContent(prompt, role="user"),
             subject="Run",
             state="Start",
         )
@@ -58,7 +58,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s is about to start running with input:\n%s",
             llm.__class__.__name__,
-            ColoredText(messages),
+            ColoredContent(messages),
             subject="LLM",
             state="Start",
         )
@@ -67,7 +67,7 @@ class LoggingHandler(CallbackHandler):
         self.agent_info(
             "%s finished running with output: \n%s",
             llm.__class__.__name__,
-            ColoredText(response.message),
+            ColoredContent(response.message),
             subject="LLM",
             state="End",
         )
@@ -81,8 +81,8 @@ class LoggingHandler(CallbackHandler):
         js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
             "%s is about to start running with input:\n%s",
-            ColoredText(tool.__class__.__name__, "function"),
-            ColoredText(js_inputs, "function"),
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="Start",
         )
@@ -91,8 +91,8 @@ class LoggingHandler(CallbackHandler):
         js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
             "%s finished running with output:\n%s",
-            ColoredText(tool.__class__.__name__, "function"),
-            ColoredText(js_inputs, "function"),
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="End",
         )
