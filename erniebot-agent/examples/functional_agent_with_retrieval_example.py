@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "rag_tool":
-            agent = FunctionalAgentWithRetrievalTool(
+            agent = FunctionalAgentWithRetrievalTool(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "rag_threshold":
-            agent = FunctionalAgentWithRetrievalScoreTool(
+            agent = FunctionalAgentWithRetrievalScoreTool(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
