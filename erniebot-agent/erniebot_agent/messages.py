@@ -11,7 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from typing import Dict, List, Optional, TypedDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
+
+if TYPE_CHECKING:
+    from erniebot_agent.file_io.base import File
 
 import erniebot.utils.token_helper as token_helper
 
@@ -72,7 +77,12 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str):
+    def __init__(self, content: str, files: Optional[List[File]] = None):
+        self.files = files
+        if self.files is not None:
+            prompt_parts = ["这句话中包含的文件如下："] + [f"file_id: {file.id}" for file in self.files]
+            prompt = "\n".join(prompt_parts)
+            content = content + prompt
         super().__init__(role="user", content=content)
 
 

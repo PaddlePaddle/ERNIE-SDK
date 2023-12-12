@@ -17,14 +17,12 @@ from __future__ import annotations
 import logging
 import os
 import re
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import List, Optional, Union
 
 from erniebot_agent import messages
+from erniebot_agent.messages import FunctionMessage, Message
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredText
-
-if TYPE_CHECKING:
-    from erniebot_agent.messages import Message
 
 __all__ = ["logger", "setup_logging"]
 
@@ -61,7 +59,6 @@ def _handle_color_pattern(s: str):
                     origin_text[i] = stack[-1]
             else:
                 stack.append(color)
-
     return "".join(origin_text)
 
 
@@ -81,7 +78,7 @@ class ColorFormatter(logging.Formatter):
         if record.args:
             record_lis = list(record.args)
             for i in range(len(record_lis)):
-                if isinstance(record_lis[i], ColorText):
+                if isinstance(record_lis[i], ColoredText):
                     record_lis[i] = record_lis[i].get_colored_text()
             record.args = tuple(record_lis)
 
@@ -99,12 +96,11 @@ class FileFormatter(logging.Formatter):
         output = []
         if record.args:
             for arg in record.args:
-                if isinstance(arg, ColorText):
+                if isinstance(arg, ColoredText):
                     self.extract_content(arg.text, output)
-                    # breakpoint()
         log_message = ""
         if output:
-            log_message += json.dumps(output, indent=2, ensure_ascii=False) + ","
+            log_message += to_pretty_json(output)
         return log_message
 
     def extract_content(self, text: Union[List[Message], Message, str], output: list):
@@ -134,7 +130,7 @@ class FileFormatter(logging.Formatter):
                 output.append({"function_call": [func_res]})
 
     def handle_message(self, message):
-        if message.role == "function":
+        if isinstance(message, FunctionMessage):
             func_dict = {
                 "name": message.name,
                 "arguments": message.content,
@@ -194,11 +190,12 @@ def setup_logging(
             logger.addHandler(console_handler)
             open_role_color()
 
-        if use_file_handler:
+        if use_file_handler or os.getenv("EB_LOGGING_FILE"):
             log_file_path = os.getenv("EB_LOGGING_FILE")
             if log_file_path is not None:
                 file_name = os.path.join(log_file_path, "erniebot-agent.log")
                 file_handler = logging.FileHandler(file_name)
+                print(log_file_path)
             else:
                 file_handler = logging.FileHandler("erniebot-agent.log")
             file_handler.setFormatter(FileFormatter("%(message)s"))
