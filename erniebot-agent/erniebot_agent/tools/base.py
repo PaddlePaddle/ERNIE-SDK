@@ -34,6 +34,8 @@ from erniebot_agent.tools.schema import (
     EndpointInfo,
     RemoteToolView,
     ToolParameterView,
+    get_args,
+    get_typing_list_type,
     scrub_dict,
 )
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
@@ -90,14 +92,73 @@ def get_file_info_from_param_view(
     if param_view is None:
         return {}
 
-    file_infos = {}
+    file_infos: Dict[str, Any] = {}
     for key in param_view.model_fields.keys():
-        json_schema_extra = param_view.model_fields[key].json_schema_extra
+        model_field = param_view.model_fields[key]
+
+        list_base_annotation = get_typing_list_type(model_field.annotation)
+        if list_base_annotation == "object":
+            # get base type
+            arg_type = get_args(model_field.annotation)[0]
+            file_infos[key] = get_file_info_from_param_view(arg_type)
+            continue
+        elif issubclass(model_field.annotation, ToolParameterView):
+            file_infos[key] = get_file_info_from_param_view(model_field.annotation)
+            continue
+
+        json_schema_extra = model_field.json_schema_extra
         if json_schema_extra and json_schema_extra.get("format", None) in [
             "byte",
             "binary",
         ]:
             file_infos[key] = deepcopy(json_schema_extra)
+    return file_infos
+
+
+async def parse_file_from_json_response(
+    json_data: dict, file_manager: FileManager, param_view: Type[ToolParameterView], tool_name: str
+):
+    if param_view is None:
+        return {}
+
+    file_infos: Dict[str, Any] = {}
+    for key in param_view.model_fields.keys():
+        model_field = param_view.model_fields[key]
+
+        list_base_annotation = get_typing_list_type(model_field.annotation)
+        if list_base_annotation == "object":
+            # get base type
+            arg_type = get_args(model_field.annotation)[0]
+            file_infos[key] = []
+            for json_item in json_data[key]:
+                file_infos[key].append(
+                    await parse_file_from_json_response(
+                        json_item, file_manager=file_manager, param_view=arg_type, tool_name=tool_name
+                    )
+                )
+        elif issubclass(model_field.annotation, ToolParameterView):
+            file_infos[key] = await parse_file_from_json_response(
+                json_data[key],
+                file_manager=file_manager,
+                param_view=model_field.annotation,
+                tool_name=tool_name,
+            )
+        else:
+            json_schema_extra = model_field.json_schema_extra
+            format = json_schema_extra.get("format", None)
+            if format in ["byte", "binary"]:
+                content = json_data[key]
+                if format == "byte":
+                    content = base64.b64decode(content)
+
+                suffix = get_file_suffix(json_schema_extra["x-ebagent-file-mime-type"])
+                file = await file_manager.create_file_from_bytes(
+                    content,
+                    filename=f"test{suffix}",
+                    file_purpose="assistants_output",
+                    file_metadata={"tool_name": tool_name},
+                )
+                file_infos[key] = file.id
     return file_infos
 
 
@@ -337,6 +398,13 @@ class RemoteTool(BaseTool):
         # parse the file from response
         returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
         file_metadata = {"tool_name": self.tool_name}
+        if is_json_response(response) and len(returns_file_infos) > 0:
+            return await parse_file_from_json_response(
+                response.json(),
+                file_manager=self.file_manager,
+                param_view=self.tool_view.returns,  # type: ignore
+                tool_name=self.tool_name,
+            )
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
