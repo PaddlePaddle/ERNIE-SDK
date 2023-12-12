@@ -105,7 +105,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
-        response = await self._async_run_llm(messages)
+        response = await self._async_run_llm_without_hooks(messages)
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results
