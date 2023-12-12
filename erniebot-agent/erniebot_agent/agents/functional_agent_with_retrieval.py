@@ -163,13 +163,13 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
                     function_call={
                         "name": "BaizhongSearchTool",
                         "thoughts": "这是一个检索的需求，我需要在BaizhongSearchTool知识库中检索出与输入的query相关的段落，并返回给用户。",
-                        "arguments": '{"query": "%s"}' % prompt,
+                        "arguments": tool_args,
                     },
                 )
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="BaizhongSearchTool", tool_args='{"query": "%s"}' % prompt)
+            action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
             actions_taken.append(action)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
