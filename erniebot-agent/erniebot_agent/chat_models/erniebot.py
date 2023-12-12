@@ -119,24 +119,34 @@ class ERNIEBot(ChatModel):
 
         # TODO: Improve this when erniebot typing issue is fixed.
         if cfg_dict.get("plugins", None):  # TODO(shiyutang）: replace this when plugin is compact
-            cfg_dict["_config_"]["api_base_url"] = "http://10.154.81.14:8868/ernie-foundry/v1"
-            # cfg_dict["_config_"]["api_base_url"] = "http://10.12.107.243:8871/ernie-foundry/v1"
+            cfg_dict["_config_"]["api_base_url"] = "http://None/ernie-foundry/v1"  # '/erniebot/plugins_v3'
             cfg_dict["_config_"]["api_type"] = "custom"
-            cfg_dict.pop("model", None)
-            cfg_dict.pop("top_p", None)
-            cfg_dict.pop("temperature", None)
-            cfg_dict.pop("penalty_score", None)
-            cfg_dict.pop("system", None)
 
-            response = await erniebot.ChatCompletionWithPlugins.acreate(stream=stream, **cfg_dict)
-            # response = await erniebot.ChatCompletionWithPlugins.acreate(
-            # stream=stream, **{"_config_": cfg_dict["_config_"], "plugins": cfg_dict["plugins"],
-            # "functions": cfg_dict["functions"], "messages": cfg_dict["messages"]})
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                stream=stream,
+                **{
+                    "_config_": cfg_dict["_config_"],
+                    "plugins": cfg_dict["plugins"],
+                    "functions": cfg_dict["functions"],
+                    "messages": cfg_dict["messages"],
+                },
+            )
         else:
-            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+            cfg_dict["_config_"]["api_base_url"] = "http://None/ernie-foundry/v1"
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream, **cfg_dict
+            )  # '/chat/completions'
+
+        import pdb
+
+        pdb.set_trace()
 
         if response.get("plugin_info", None):
             print("#### Plugin Info #### \n", response["plugin_info"])
+            print("\n" + "#" * 20 + "\n")
+        else:
+            print("#### Plugin Info #### \n", "None")
+            print("\n" + "#" * 20 + "\n")
 
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)

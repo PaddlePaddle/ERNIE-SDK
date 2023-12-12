@@ -79,8 +79,7 @@ class HumanMessage(Message):
         if self.files is not None:
             # TODO: 测试；fileuuidname
             prompt_parts = ["。这句话中包含的文件如下："] + [
-                f"<file_id>{file.id}</file_id><file>{file.filename}</file><url>{file.URL}</url>"
-                for file in self.files
+                f"<file>{file.filename}</file><url>{file.URL}</url>" for file in self.files
             ]
             prompt = "\n".join(prompt_parts)
             content = content + prompt
