@@ -255,7 +255,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
-            chat_history.append(HumanMessage(content=prompt))
+            # chat_history.append(HumanMessage(content=prompt))
 
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
@@ -280,7 +280,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     }
                 )
 
-            chat_history.append(AIMessage(content=output_message.content, function_call=None))
+            # chat_history.append(AIMessage(content=output_message.content, function_call=None))
 
             # Knowledge Retrieval Tool
             # action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
@@ -288,7 +288,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
 
-            next_step_input = HumanMessage(content=prompt)
+            next_step_input = HumanMessage(content=f"背景：{output_message.content}, 问题：{prompt}")
 
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
