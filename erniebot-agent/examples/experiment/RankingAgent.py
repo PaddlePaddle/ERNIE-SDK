@@ -2,7 +2,7 @@ import json
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.tools.utils import erniebot_chat
+from tools.utils import erniebot_chat
 
 
 class RankingAgent(Agent):
@@ -36,9 +36,10 @@ class RankingAgent(Agent):
             for item in new_list_reports:
                 summarize_text = await self.summarize(item, query)
                 summarize_list.append(summarize_text)
-            best_report = await self.ranking(summarize_list, query)
+            _, index = await self.ranking(summarize_list, query)
+            best_report = new_list_reports[index - 1]
         else:
-            best_report = await self.ranking(new_list_reports, query)
+            best_report, _ = await self.ranking(new_list_reports, query)
         # Select the best one (first)
         return best_report
 

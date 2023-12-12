@@ -19,7 +19,6 @@ class ResearchAgent(Agent):
     def __init__(
         self,
         name: str,
-        query,
         agent_name,
         dir_path,
         report_type,
@@ -46,7 +45,6 @@ class ResearchAgent(Agent):
         """
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
-        self.query = query
         self.dir_path = dir_path
         self.report_type = report_type
         self.cfg = config
@@ -85,27 +83,25 @@ class ResearchAgent(Agent):
         write_to_json(f"{self.dir_path}/research-{query}.jsonl", responses)
         return responses, url_dict
 
-    async def _async_run(self):
+    async def _async_run(self, query):
         """
         Runs the ResearchAgent
         Returns:
             Report
         """
-        print(f"🔎 Running research for '{self.query}'...")
+        print(f"🔎 Running research for '{query}'...")
         # Generate Agent
-        result = await self.intent_detection(self.query)
+        result = await self.intent_detection(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
         use_context_planning = True
         if use_context_planning:
-            res = await self.retriever_abstract(self.query, top_k=3)
+            res = await self.retriever_abstract(query, top_k=3)
             context = [item["content_se"] for item in res]
             context = "\n".join(context)
         else:
             context = ""
         # Generate Sub-Queries including original query
-        sub_queries = await self.task_planning(
-            question=self.query, agent_role_prompt=self.role, context=context
-        )
+        sub_queries = await self.task_planning(question=query, agent_role_prompt=self.role, context=context)
         # Run Sub-Queries
         meta_data = OrderedDict()
         research_summary = ""
@@ -118,12 +114,12 @@ class ResearchAgent(Agent):
         outline = None
         # Generate Outline
         if self.use_outline:
-            outline = await self.outline(sub_queries, self.query)
+            outline = await self.outline(sub_queries, query)
         else:
             outline = None
         # Conduct Research
         report, url_index = await self.report_writing(
-            question=self.query,
+            question=query,
             research_summary=research_summary,
             report_type=self.report_type,
             agent_role_prompt=self.role,
