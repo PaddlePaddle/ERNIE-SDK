@@ -13,14 +13,14 @@
 # limitations under the License.
 
 from .chat_completion import ChatCompletion, ChatCompletionResponse
-from .chat_file import ChatFile
+from .chat_completion_with_plugins import ChatCompletionWithPlugins
 from .embedding import Embedding, EmbeddingResponse
 from .fine_tuning import FineTuningJob, FineTuningTask
 from .image import Image, ImageResponse, ImageV1, ImageV2
 
 __all__ = [
     "ChatCompletion",
-    "ChatFile",
+    "ChatCompletionWithPlugins",
     "Embedding",
     "Image",
     "ImageV1",
