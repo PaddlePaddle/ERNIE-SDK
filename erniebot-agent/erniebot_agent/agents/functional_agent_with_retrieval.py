@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import Any, List, Optional, Type
 
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import (
@@ -12,7 +12,10 @@ from erniebot_agent.file_io.base import File
 from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
+from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.schema import ToolParameterView
 from erniebot_agent.utils.logging import logger
+from pydantic import Field
 
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
@@ -28,6 +31,35 @@ RAG_PROMPT = """检索结果:
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
+
+
+class FakeSearchToolInputView(ToolParameterView):
+    query: str = Field(description="查询语句")
+    top_k: int = Field(description="返回结果数量")
+
+
+class SearchResponseDocument(ToolParameterView):
+    id: str = Field(description="检索结果的文本的id")
+    title: str = Field(description="检索结果的标题")
+    document: str = Field(description="检索结果的内容")
+
+
+class FakeSearchToolOutputView(ToolParameterView):
+    documents: List[SearchResponseDocument] = Field(description="检索结果，内容和用户输入query相关的段落")
+
+
+class FakeSearchTool(Tool):
+    description: str = "在知识库中检索与用户输入query相关的段落"
+    input_type: Type[ToolParameterView] = FakeSearchToolInputView
+    ouptut_type: Type[ToolParameterView] = FakeSearchToolOutputView
+
+    def __init__(
+        self,
+    ) -> None:
+        super().__init__()
+
+    async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
+        return {"documents": "This is the fake search tool."}
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
@@ -98,6 +130,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         self.top_k = top_k
         self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
+        self.search_tool = FakeSearchTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
@@ -108,8 +141,9 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             files_involved: List[AgentFile] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
-            tool = self._tool_manager.get_tool("BaizhongSearchTool")
-            await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.search_tool, input_args=tool_args
+            )
 
             chat_history.append(HumanMessage(content=prompt))
 
@@ -141,7 +175,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
-            await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
+            await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
@@ -194,6 +228,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         self.threshold = threshold
         self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
+        self.search_tool = FakeSearchTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
@@ -204,8 +239,9 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             files_involved: List[AgentFile] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
-            tool = self._tool_manager.get_tool("BaizhongSearchTool")
-            await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.search_tool, input_args=tool_args
+            )
             chat_history.append(HumanMessage(content=prompt))
             outputs = []
             for item in results["documents"]:
@@ -235,7 +271,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
-            await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
+            await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
