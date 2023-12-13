@@ -39,7 +39,9 @@ from erniebot_agent.utils.logging import logger
 
 class BaseAgent(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def async_run(
+        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
+    ) -> AgentResponse:
         raise NotImplementedError
 
 
@@ -81,9 +83,11 @@ class Agent(BaseAgent):
     def tools(self) -> List[BaseTool]:
         return self._tool_manager.get_tools()
 
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def async_run(
+        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
+    ) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
-        agent_resp = await self._async_run(prompt, files)
+        agent_resp = await self._async_run(prompt, files, plugins)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
@@ -202,7 +206,9 @@ class Agent(BaseAgent):
         demo.launch(**launch_kwargs)
 
     @abc.abstractmethod
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _async_run(
+        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
+    ) -> AgentResponse:
         raise NotImplementedError
 
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:

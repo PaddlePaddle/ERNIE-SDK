@@ -60,17 +60,24 @@ class FunctionalAgent(Agent):
         else:
             self.max_steps = _MAX_STEPS
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _async_run(
+        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
+    ) -> AgentResponse:
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
-        ask = HumanMessage(content=prompt, files=files)
+        ask = HumanMessage(content=prompt, files=files, has_plugins=(plugins is not None))
+        print("Asking: ", ask)
 
         num_steps_taken = 0
         next_step_input: Message = ask
         while num_steps_taken < self.max_steps:
             curr_step_output = await self._async_step(
-                next_step_input, chat_history, actions_taken, files_involved
+                next_step_input,
+                chat_history,
+                actions_taken,
+                files_involved,
+                plugins,
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
@@ -88,8 +95,9 @@ class FunctionalAgent(Agent):
         chat_history: List[Message],
         actions: List[AgentAction],
         files: List[AgentFile],
+        plugins: Optional[List[str]] = None,
     ) -> Optional[Message]:
-        maybe_action = await self._async_plan(step_input, chat_history)
+        maybe_action = await self._async_plan(step_input, chat_history, plugins)
         if isinstance(maybe_action, AgentAction):
             action: AgentAction = maybe_action
             tool_resp = await self._async_run_tool(tool_name=action.tool_name, tool_args=action.tool_args)
@@ -100,7 +108,7 @@ class FunctionalAgent(Agent):
             return None
 
     async def _async_plan(
-        self, input_message: Message, chat_history: List[Message]
+        self, input_message: Message, chat_history: List[Message], plugins: Optional[List[str]] = None
     ) -> Optional[AgentAction]:
         chat_history.append(input_message)
         messages = self.memory.get_messages() + chat_history
@@ -108,7 +116,7 @@ class FunctionalAgent(Agent):
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
-            plugins=["ChatFile", "eChart"],
+            plugins=plugins,
         )
         output_message = llm_resp.message
         chat_history.append(output_message)

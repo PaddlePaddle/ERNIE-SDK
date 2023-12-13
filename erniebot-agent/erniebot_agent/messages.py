@@ -76,7 +76,7 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None):
+    def __init__(self, content: str, files: Optional[List[File]] = None, has_plugins: bool = False):
         self.files = files
         if self.files is not None:
             if len(extract_file_ids(content)) > 0:
@@ -84,7 +84,10 @@ class HumanMessage(Message):
                     "Files already exist in the content of a HumanMessage, which will be ignored."
                 )
             else:
-                prompt_parts = ["。这句话中包含的文件如下："] + [file.file_repr() for file in self.files]
+                prompt_parts = ["。这句话中包含的文件如下："] + [
+                    file.file_repr_with_URL() if has_plugins else file.file_repr_wo_URL()
+                    for file in self.files
+                ]
                 prompt = "\n".join(prompt_parts)
                 content = content + prompt
 
