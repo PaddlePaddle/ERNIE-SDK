@@ -33,7 +33,7 @@ RAG_PROMPT = """检索结果:
 请根据以上检索结果回答检索语句的问题"""
 
 
-class FakeSearchToolInputView(ToolParameterView):
+class KnowledgeBaseToolInputView(ToolParameterView):
     query: str = Field(description="查询语句")
     top_k: int = Field(description="返回结果数量")
 
@@ -44,14 +44,15 @@ class SearchResponseDocument(ToolParameterView):
     document: str = Field(description="检索结果的内容")
 
 
-class FakeSearchToolOutputView(ToolParameterView):
+class KnowledgeBaseToolOutputView(ToolParameterView):
     documents: List[SearchResponseDocument] = Field(description="检索结果，内容和用户输入query相关的段落")
 
 
-class FakeSearchTool(Tool):
+class KnowledgeBaseTool(Tool):
+    tool_name: str = "KnowledgeBaseTool"
     description: str = "在知识库中检索与用户输入query相关的段落"
-    input_type: Type[ToolParameterView] = FakeSearchToolInputView
-    ouptut_type: Type[ToolParameterView] = FakeSearchToolOutputView
+    input_type: Type[ToolParameterView] = KnowledgeBaseToolInputView
+    ouptut_type: Type[ToolParameterView] = KnowledgeBaseToolOutputView
 
     def __init__(
         self,
@@ -63,25 +64,36 @@ class FakeSearchTool(Tool):
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
-    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, **kwargs):
+    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.0, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
         self.top_k = top_k
-        self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
+        self.threshold = threshold
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
+        self.search_tool = KnowledgeBaseTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
-        if results["is_relevant"] is True:
-            # RAG
+        if len(results["documents"]) > 0:
+            # RAG branch
+            tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
+            # on_tool_start callback
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.search_tool, input_args=tool_args
+            )
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
             )
-            chat_history: List[Message] = []
+            chat_history: List[Message] = [step_input]
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
+            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
+            actions_taken.append(action)
 
-            chat_history.append(step_input)
+            # on_tool_end callback
+            tool_ret_json = json.dumps(results, ensure_ascii=False)
+            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             llm_resp = await self._async_run_llm_without_hooks(
                 messages=chat_history,
                 functions=None,
@@ -104,23 +116,10 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         step_input,
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
-        messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
-        response = await self._async_run_llm_without_hooks(messages)
-        results = self._parse_results(response.message.content)
+        documents = [item for item in documents if item["score"] > self.threshold]
+        results = {}
         results["documents"] = documents
         return results
-
-    def _parse_results(self, results):
-        left_index = results.find("{")
-        right_index = results.rfind("}")
-        if left_index == -1 or right_index == -1:
-            # if invalid json, use Functional Agent
-            return {"is_relevant": False}
-        try:
-            return json.loads(results[left_index : right_index + 1])
-        except Exception:
-            # if invalid json, use Functional Agent
-            return {"is_relevant": False}
 
 
 class FunctionalAgentWithRetrievalTool(FunctionalAgent):
@@ -130,7 +129,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         self.top_k = top_k
         self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
-        self.search_tool = FakeSearchTool()
+        self.search_tool = KnowledgeBaseTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
@@ -161,15 +160,15 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
                 AIMessage(
                     content="",
                     function_call={
-                        "name": "BaizhongSearchTool",
-                        "thoughts": "这是一个检索的需求，我需要在BaizhongSearchTool知识库中检索出与输入的query相关的段落，并返回给用户。",
+                        "name": "KnowledgeBaseTool",
+                        "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
                         "arguments": tool_args,
                     },
                 )
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
+            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
             actions_taken.append(action)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
@@ -226,9 +225,8 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
-        self.intent_prompt = PromptTemplate(INTENT_PROMPT, input_variables=["documents", "query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
-        self.search_tool = FakeSearchTool()
+        self.search_tool = KnowledgeBaseTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
@@ -257,15 +255,15 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                 AIMessage(
                     content="",
                     function_call={
-                        "name": "BaizhongSearchTool",
-                        "thoughts": "这是一个检索的需求，我需要在BaizhongSearchTool知识库中检索出与输入的query相关的段落，并返回给用户。",
+                        "name": "KnowledgeBaseTool",
+                        "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
                         "arguments": tool_args,
                     },
                 )
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
+            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
             actions_taken.append(action)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
