@@ -123,11 +123,11 @@ if __name__ == "__main__":
 
     queries = [
         "量化交易",
-        # "城市景观照明中有过度照明的规定是什么？",
+        "城市景观照明中有过度照明的规定是什么？",
         "城市景观照明中有过度照明的规定是什么？并把搜索的内容添加到笔记本中",
         "这几篇文档主要内容是什么？",
-        # "今天天气怎么样？",
-        # "abcabc",
+        "今天天气怎么样？",
+        "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:

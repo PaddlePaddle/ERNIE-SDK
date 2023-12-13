@@ -273,7 +273,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
 
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作")
+            next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作,并且检索只允许调用一次")
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
