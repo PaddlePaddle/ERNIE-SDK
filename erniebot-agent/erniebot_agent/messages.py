@@ -89,7 +89,9 @@ class HumanMessage(Message):
                 self._check_remote_file_with_plugins(include_file_url)
 
                 prompt_parts = ["。这句话中包含的文件如下："] + [
-                    file.file_repr_wo_URL() if include_file_url else file.file_repr_wo_URL()
+                    file.file_repr_with_URL()  # type: ignore
+                    if include_file_url
+                    else file.file_repr_wo_URL()
                     for file in self.files
                 ]
                 prompt = "\n".join(prompt_parts)
