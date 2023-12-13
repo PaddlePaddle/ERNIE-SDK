@@ -151,7 +151,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
-            llm_resp = await self._async_run_llm(
+            llm_resp = await self._async_run_llm_without_hooks(
                 messages=fake_chat_history,
                 functions=None,
                 system=self.system_message.content if self.system_message is not None else None,
@@ -262,7 +262,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
-            llm_resp = await self._async_run_llm(
+            llm_resp = await self._async_run_llm_without_hooks(
                 messages=fake_chat_history,
                 functions=None,
                 system=self.system_message.content if self.system_message is not None else None,
@@ -283,11 +283,11 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             # chat_history.append(AIMessage(content=output_message.content, function_call=None))
 
             # Knowledge Retrieval Tool
-            # action = AgentAction(tool_name="BaizhongSearchTool", tool_args=tool_args)
+            # action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
 
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-
+            # 这种做法会导致functional agent的retrieval tool持续触发
             next_step_input = HumanMessage(content=f"背景：{output_message.content}, 问题：{prompt}")
 
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
