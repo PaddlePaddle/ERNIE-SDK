@@ -21,7 +21,6 @@ import tempfile
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
-from functools import wraps
 from typing import Any, Dict, List, Optional, Type
 
 import requests
@@ -178,25 +177,6 @@ async def parse_file_from_response(
     file_infos: Dict[str, Dict[str, str]],
     file_metadata: Dict[str, str],
 ) -> Optional[File]:
-    if is_json_response(response):
-        if len(file_infos) == 0:
-            return None
-
-        file_name = list(file_infos.keys())[0]
-        # parse from body
-        content = response.json()[file_name]
-        format, mime_type = (
-            file_infos[file_name]["format"],
-            file_infos[file_name]["x-ebagent-file-mime-type"],
-        )
-        if format == "byte":
-            content = base64.b64decode(content)
-
-        file_suffix = get_file_suffix(mime_type)
-        return await file_manager.create_file_from_bytes(
-            content, f"tool-{file_suffix}", file_purpose="assistants_output", file_metadata=file_metadata
-        )
-
     # 1. parse file by `Content-Disposition`
     content_disposition = response.headers.get("Content-Disposition", None)
     if content_disposition is not None:
@@ -294,40 +274,6 @@ class Tool(BaseTool, ABC):
         return []
 
 
-def wrap_tool_with_files(func):
-    @wraps(func)
-    async def wrapper_func(object: RemoteTool, **tool_arguments):
-        async def fileid_to_byte(file_id, file_manager):
-            file = file_manager.look_up_file_by_id(file_id)
-            byte_str = await file.read_contents()
-            return byte_str
-
-        file_manager = object.file_manager
-        # 1. replace fileid with byte string
-        parameter_file_info = get_file_info_from_param_view(object.tool_view.parameters)
-        for key in tool_arguments.keys():
-            if object.tool_view.parameters:
-                if key not in object.tool_view.parameters.model_fields:
-                    keys = list(object.tool_view.parameters.model_fields.keys())
-                    raise RemoteToolError(
-                        f"`{object.tool_name}` received unexpected arguments `{key}`. "
-                        f"The avaiable arguments are {keys}",
-                        stage="Input parsing",
-                    )
-            if key not in parameter_file_info:
-                continue
-            if object.tool_view.parameters is None:
-                break
-            byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-            tool_arguments[key] = base64.b64encode(byte_str).decode()
-
-        # 2. call tool get response
-        json_response = await func(object, **tool_arguments)
-        return json_response
-
-    return wrapper_func
-
-
 class RemoteTool(BaseTool):
     def __init__(
         self,
@@ -347,7 +293,7 @@ class RemoteTool(BaseTool):
         self._examples = examples
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
-        if tool_name_prefix is not None:
+        if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
 
     @property
@@ -366,8 +312,47 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
-    @wrap_tool_with_files
+    async def __pre_process__(self, tool_arguments: Dict[str, Any]) -> dict:
+        async def fileid_to_byte(file_id, file_manager):
+            file = file_manager.look_up_file_by_id(file_id)
+            byte_str = await file.read_contents()
+            return byte_str
+
+        # 1. replace fileid with byte string
+        parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
+        for key in tool_arguments.keys():
+            if self.tool_view.parameters:
+                if key not in self.tool_view.parameters.model_fields:
+                    keys = list(self.tool_view.parameters.model_fields.keys())
+                    raise RemoteToolError(
+                        f"`{self.tool_name}` received unexpected arguments `{key}`. "
+                        f"The avaiable arguments are {keys}",
+                        stage="Input parsing",
+                    )
+            if key not in parameter_file_info:
+                continue
+            if self.tool_view.parameters is None:
+                break
+            byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
+            tool_arguments[key] = base64.b64encode(byte_str).decode()
+
+        # 2. call tool get response
+        if self.tool_view.parameters is not None:
+            tool_arguments = dict(self.tool_view.parameters(**tool_arguments))
+
+        return tool_arguments
+
+    async def __post_process__(self, tool_response: dict) -> dict:
+        # if self.tool_view.returns is not None:
+        #     tool_response = dict(self.tool_view.returns(**tool_response))
+        return tool_response
+
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
+        tool_arguments = await self.__pre_process__(tool_arguments)
+        tool_response = await self.send_request(tool_arguments)
+        return await self.__post_process__(tool_response)
+
+    async def send_request(self, tool_arguments: Dict[str, Any]) -> dict:
         url = self.server_url + self.tool_view.uri + "?version=" + self.version
 
         headers = deepcopy(self.headers)
@@ -447,6 +432,40 @@ class RemoteTool(BaseTool):
         return schema or {}
 
 
+class RemoteToolRegistor:
+    def __init__(self) -> None:
+        self.tool_map: Dict[str, Type[RemoteTool]] = {}
+
+    _instance: Optional[RemoteToolRegistor] = None
+
+    def __call__(self, name: str):
+        def inner_decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            RemoteToolRegistor.instance().add_tool_map(name, func)
+            return wrapper
+
+        return inner_decorator
+
+    def add_tool_map(self, name: str, tool_class: Type[RemoteTool]):
+        self.tool_map[name] = tool_class
+
+    def get_tool_class(self, name: str) -> Type[RemoteTool]:
+        if name in self.tool_map:
+            return self.tool_map[name]
+        return RemoteTool
+
+    @staticmethod
+    def instance() -> RemoteToolRegistor:
+        if RemoteToolRegistor._instance is None:
+            RemoteToolRegistor._instance = RemoteToolRegistor()
+        return RemoteToolRegistor._instance
+
+
+tool_registor = RemoteToolRegistor.instance()
+
+
 @dataclass
 class RemoteToolkit:
     """RemoteToolkit can be converted by openapi.yaml and endpoint"""
@@ -469,8 +488,9 @@ class RemoteToolkit:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
+        TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return [
-            RemoteTool(
+            TOOL_CLASS(
                 path,
                 self.servers[0].url,
                 self.headers,
@@ -539,7 +559,8 @@ class RemoteToolkit:
                 stage="Loading",
             )
 
-        return RemoteTool(
+        TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
+        return TOOL_CLASS(
             paths[0],
             self.servers[0].url,
             self.headers,

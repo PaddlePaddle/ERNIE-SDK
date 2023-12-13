@@ -45,7 +45,7 @@ def create_enum_class(class_name: str, member_names: List[Union[int, str]]):
 
 
 def get_file_suffix(mime_type: str):
-    mapping = {"audio/mp3": "audio/mpeg"}
+    mapping = {"audio/mp3": "audio/mpeg", "audio/wav": "audio/x-wav"}
     mime_type = mapping.get(mime_type, mime_type)
     mime_type_to_suffix = {value: key for key, value in mimetypes.types_map.items()}
     return mime_type_to_suffix.get(mime_type, None)
