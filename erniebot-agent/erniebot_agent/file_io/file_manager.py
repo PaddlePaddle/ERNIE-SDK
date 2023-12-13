@@ -94,9 +94,14 @@ class FileManager(object):
         *,
         file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
-        file_type: Literal["local", "remote"] = "local",
+        file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
+        if file_type is None:
+            if self._remote_file_client is not None:
+                file_type = "remote"
+            else:
+                file_type = "local"
         if file_type == "local":
             file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
@@ -153,7 +158,7 @@ class FileManager(object):
         *,
         file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
-        file_type: Literal["local", "remote"] = "local",
+        file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
         # Can we do this with in-memory files?
         file_path = await self._fs_create_file(
@@ -162,6 +167,11 @@ class FileManager(object):
         try:
             async with await file_path.open("wb") as f:
                 await f.write(file_contents)
+            if file_type is None:
+                if self._remote_file_client is not None:
+                    file_type = "remote"
+                else:
+                    file_type = "local"
             file = await self.create_file_from_path(
                 file_path,
                 file_purpose=file_purpose,
