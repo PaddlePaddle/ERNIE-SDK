@@ -14,6 +14,8 @@
 from __future__ import annotations
 
 import unittest
+from enum import Enum
+from inspect import isclass
 from typing import List, Optional
 
 from erniebot_agent.tools.base import RemoteToolkit
@@ -23,6 +25,7 @@ from erniebot_agent.tools.schema import (
     is_optional_type,
     json_type,
 )
+from erniebot_agent.utils.common import create_enum_class
 from openapi_spec_validator.readers import read_from_filename
 from pydantic import Field
 
@@ -203,3 +206,37 @@ class TestToolSchema(unittest.TestCase):
         # function_call name in examples should have `tool_name_prefix` prepended
         self.assertEqual(examples[1].function_call["name"], "单词本/v1/getWordbook")
         self.assertEqual(examples[1].function_call["thoughts"], "这是一个展示单词本的需求")
+
+    def test_dynamic_enum_class(self):
+        # 使用函数创建枚举类
+        member_names = ["MEMBER1", "MEMBER2", "MEMBER3"]
+        MyEnum = create_enum_class("MyEnum", member_names)
+
+        self.assertTrue(issubclass(MyEnum, Enum))
+        self.assertTrue(isclass(MyEnum))
+        self.assertEqual(MyEnum.MEMBER1.value, "MEMBER1")
+        self.assertListEqual(list(MyEnum.__members__.keys()), member_names)
+
+
+class TestDataTypeSchema(unittest.IsolatedAsyncioTestCase):
+    def test_enum_file(self):
+        file = "./tests/fixtures/tools/enum_openapi.yaml"
+        toolkit = RemoteToolkit.from_openapi_file(file)
+
+        # get_tool
+        tool = toolkit.get_tool("OCR")
+        self.assertIsNotNone(tool)
+
+        # test function_call schema
+        function_call_schema = tool.function_call_schema()
+
+        self.assertIn("language_type", function_call_schema["parameters"]["properties"])
+        self.assertIn("enum", function_call_schema["parameters"]["properties"]["language_type"])
+        self.assertEqual(len(function_call_schema["parameters"]["properties"]["language_type"]["enum"]), 25)
+
+    def test_empty_object(self):
+        file = "./tests/fixtures/tools/empty_object_openapi.yaml"
+        toolkit = RemoteToolkit.from_openapi_file(file)
+        tool = toolkit.get_tool("OCR")
+        function_call_schema = tool.function_call_schema()
+        self.assertEqual(function_call_schema["parameters"]["properties"]["language_type"]["type"], "object")

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, List, Optional, Tuple
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import ConfigDictType, HeadersType, Request
-from erniebot.utils.misc import filter_args
+from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args
 
 from .abc import Creatable
 from .resource import EBResource
@@ -56,7 +56,7 @@ class Embedding(EBResource, Creatable):
         model: str,
         input: List[str],
         *,
-        user_id: Optional[str] = None,
+        user_id: Union[str, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -76,15 +76,16 @@ class Embedding(EBResource, Creatable):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = resource.create_resource(
-            **filter_args(
-                model=model,
-                input=input,
-                user_id=user_id,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            input=input,
+            user_id=user_id,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = resource.create_resource(**kwargs)
         return EmbeddingResponse.from_mapping(resp)
 
     @classmethod
@@ -93,7 +94,7 @@ class Embedding(EBResource, Creatable):
         model: str,
         input: List[str],
         *,
-        user_id: Optional[str] = None,
+        user_id: Union[str, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -113,15 +114,16 @@ class Embedding(EBResource, Creatable):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = await resource.acreate_resource(
-            **filter_args(
-                model=model,
-                input=input,
-                user_id=user_id,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            input=input,
+            user_id=user_id,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = await resource.acreate_resource(**kwargs)
         return EmbeddingResponse.from_mapping(resp)
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
