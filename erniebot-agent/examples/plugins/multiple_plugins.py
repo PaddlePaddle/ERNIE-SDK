@@ -126,10 +126,10 @@ async def run_agent():
 E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx""",
     )
 
-    # print("=" * 10 + "echart返回结果" + "=" * 10 + "\n")  # ok
-    # agent_resp = await agent.async_run("帮我画一个饼状图：8月的用户反馈中，BUG有100条，需求有100条，使用咨询100条，总共300条反馈")  # ok
-    # print(agent_resp.text)
-    # print("\n" + "=" * 20 + "\n")
+    print("=" * 10 + "echart返回结果" + "=" * 10 + "\n")  # ok
+    agent_resp = await agent.async_run("帮我画一个饼状图：8月的用户反馈中，BUG有100条，需求有100条，使用咨询100条，总共300条反馈")  # ok
+    print(agent_resp.text)
+    print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "喝牛奶的好处" + "=" * 10 + "\n")
     agent_resp = await agent.async_run("喝牛奶有什么好处", files=[docx_file])  # ok
@@ -137,7 +137,9 @@ E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx""",
     print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "docx不使用chatFile、使用Tools的返回结果" + "=" * 10 + "\n")  # ok
-    agent_resp = await agent.async_run("请把文件中的前10个字复制三遍返回", files=[docx_file])  # 没有调用tool，依旧是摘要
+    agent_resp = await agent.async_run(
+        "请把文件中的前10个字复制三遍返回", files=[docx_file]
+    )  # 没有调用tool，依旧是摘要  file  Tool(example)
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 

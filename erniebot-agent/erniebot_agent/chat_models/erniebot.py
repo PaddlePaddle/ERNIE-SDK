@@ -27,7 +27,6 @@ from typing import (
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
-from erniebot_agent.utils.logging import logger
 
 import erniebot
 from erniebot.response import EBResponse
@@ -132,13 +131,6 @@ class ERNIEBot(ChatModel):
             )
         else:
             response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
-
-        if response.get("plugin_info", None):  # type: ignore
-            logger.info("#### Plugin Info #### \n", response["plugin_info"])  # type: ignore
-            logger.info("\n" + "#" * 20 + "\n")
-        else:
-            logger.info("#### Plugin Info #### \n", "None")
-            logger.info("\n" + "#" * 20 + "\n")
 
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
