@@ -217,6 +217,8 @@ class ToolParameterView(BaseModel):
                     field_dict["items"]
                 )
                 field_type = List[SubParameterView]  # type: ignore
+            elif field_type is ToolParameterView:
+                field_type = ToolParameterView.from_openapi_dict(field_dict)
             elif "enum" in field_dict:
                 field_type = create_enum_class(field_name, field_dict["enum"])
 
