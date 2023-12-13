@@ -19,8 +19,8 @@ import pathlib
 from typing import Any, ClassVar, Dict, List, Optional
 
 import aiohttp
+from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import FilePurpose, is_remote_file_id
 
 
 class RemoteFile(File):
@@ -30,13 +30,15 @@ class RemoteFile(File):
         id: str,
         filename: str,
         byte_size: int,
-        created_at: int,
-        purpose: FilePurpose,
+        created_at: str,
+        purpose: protocol.FilePurpose,
         metadata: Dict[str, Any],
         client: "RemoteFileClient",
+        validate_file_id: bool = True,
     ) -> None:
-        if not is_remote_file_id(id):
-            raise ValueError(f"Invalid file ID: {id}")
+        if validate_file_id:
+            if not protocol.is_remote_file_id(id):
+                raise ValueError(f"Invalid file ID: {id}")
         super().__init__(
             id=id,
             filename=filename,
@@ -62,7 +64,7 @@ class RemoteFile(File):
 class RemoteFileClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def upload_file(
-        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+        self, file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
     ) -> RemoteFile:
         raise NotImplementedError
 
@@ -98,7 +100,7 @@ class AIStudioFileClient(RemoteFileClient):
         self._session = aiohttp_session
 
     async def upload_file(
-        self, file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+        self, file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
     ) -> RemoteFile:
         url = self._get_url(self._UPLOAD_ENDPOINT)
         headers: Dict[str, str] = {}

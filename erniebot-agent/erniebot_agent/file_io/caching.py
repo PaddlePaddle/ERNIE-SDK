@@ -15,7 +15,7 @@
 import asyncio
 import pathlib
 import weakref
-from typing import Any, Awaitable, Callable, NoReturn, Optional, final
+from typing import Any, Awaitable, Callable, NoReturn, Optional, Tuple, final
 
 import anyio
 from erniebot_agent.file_io.remote_file import RemoteFile
@@ -37,7 +37,6 @@ def create_file_cache(cache_path: pathlib.Path, discard_callback: Optional[Disca
     return FileCache(
         cache_path=cache_path,
         active=False,
-        lock=asyncio.Lock(),
         discard_callback=discard_callback,
         expire_after=_DEFAULT_CACHE_TIMEOUT,
     )
@@ -54,18 +53,17 @@ class FileCache(object):
         *,
         cache_path: pathlib.Path,
         active: bool,
-        lock: asyncio.Lock,
         discard_callback: Optional[DiscardCallback],
-        expire_after: float,
+        expire_after: Optional[float],
     ) -> None:
         super().__init__()
 
         self._cache_path = cache_path
         self._active = active
-        self._lock = lock
         self._discard_callback = discard_callback
         self._expire_after = expire_after
 
+        self._lock = asyncio.Lock()
         self._discarded = False
         self._finalizer: Optional[weakref.finalize]
         if self._discard_callback is not None:
@@ -103,10 +101,10 @@ class FileCache(object):
 
     async def fetch_or_update_contents(self, contents_reader: ContentsReader) -> bytes:
         if self._discarded:
-            raise _CacheDiscardedError
+            raise CacheDiscardedError
         async with self._lock:
             if self._discarded:
-                raise _CacheDiscardedError
+                raise CacheDiscardedError
             if not self._active:
                 contents = await self._update_contents(await contents_reader())
                 self.activate()
@@ -116,11 +114,11 @@ class FileCache(object):
 
     async def update_contents(self, contents_reader: ContentsReader) -> bytes:
         if self._discarded:
-            raise _CacheDiscardedError
+            raise CacheDiscardedError
         new_contents = await contents_reader()
         async with self._lock:
             if self._discarded:
-                raise _CacheDiscardedError
+                raise CacheDiscardedError
             self.deactivate()
             contents = await self._update_contents(new_contents)
             self.activate()
@@ -133,11 +131,12 @@ class FileCache(object):
                 cache._deactivate()
 
         if self._discarded:
-            raise _CacheDiscardedError
+            raise CacheDiscardedError
         self._cancel_expire_callback()
         # Should we inject the event loop from outside?
         loop = asyncio.get_running_loop()
-        self._expire_handle = loop.call_later(self._expire_after, _expire_callback, weakref.ref(self))
+        if self._expire_after is not None:
+            self._expire_handle = loop.call_later(self._expire_after, _expire_callback, weakref.ref(self))
         self._active = True
 
     def deactivate(self) -> None:
@@ -159,11 +158,10 @@ class FileCache(object):
         return new_contents
 
     def _deactivate(self) -> None:
-        self._expire_handle = None
         self._active = False
 
     def _on_discard(self) -> None:
-        self._deactivate()
+        self.deactivate()
         if self._discard_callback is not None:
             if self._finalizer is not None:
                 self._finalizer.detach()
@@ -181,13 +179,11 @@ class FileCacheManager(object):
         super().__init__()
         self._cache_factory = cache_factory
         self._file_id_to_cache: weakref.WeakValueDictionary[str, FileCache] = weakref.WeakValueDictionary()
-        self._lock = asyncio.Lock()
+        self._closed = False
 
-    def __copy__(self) -> NoReturn:
-        raise RuntimeError(f"{self.__class__.__name__} is not copyable.")
-
-    def __deepcopy__(self, memo: Any) -> NoReturn:
-        raise RuntimeError(f"{self.__class__.__name__} is not deepcopyable.")
+    @property
+    def closed(self) -> bool:
+        return self._closed
 
     async def get_or_create_cache(
         self,
@@ -196,35 +192,50 @@ class FileCacheManager(object):
         *,
         discard_callback: Optional[DiscardCallback] = None,
         init_cache_in_sync: Optional[bool] = None,
+    ) -> Tuple[FileCache, bool]:
+        if self._closed:
+            raise RuntimeError("File cache manager is closed.")
+        cache = None
+        if self._has_cache(file_id):
+            cache = self._get_cache(file_id)
+        if cache is not None and cache.alive:
+            return cache, False
+        else:
+            cache = self._create_cache(
+                file_id,
+                cache_path,
+                discard_callback=discard_callback,
+                init_cache_in_sync=init_cache_in_sync,
+            )
+            return cache, True
+
+    async def get_cache(
+        self,
+        file_id: str,
     ) -> FileCache:
+        if self._closed:
+            raise RuntimeError("File cache manager is closed.")
         try:
             return self._get_cache(file_id)
-        except KeyError:
-            async with self._lock:
-                if self._has_cache(file_id):
-                    return self._get_cache(file_id)
-                cache = await self._create_cache(
-                    file_id,
-                    cache_path,
-                    discard_callback=discard_callback,
-                    init_cache_in_sync=init_cache_in_sync,
-                )
-                return cache
+        except KeyError as e:
+            raise CacheNotFoundError from e
 
     async def remove_cache_if_exists(self, file_id: str) -> None:
-        async with self._lock:
-            if self._has_cache(file_id):
-                cache = self._get_cache(file_id)
-                await cache.discard()
-                self._delete_cache(file_id)
+        if self._closed:
+            raise RuntimeError("File cache manager is closed.")
+        if self._has_cache(file_id):
+            cache = self._get_cache(file_id)
+            await cache.discard()
+            self._delete_cache(file_id)
 
     async def close(self) -> None:
-        async with self._lock:
+        if not self._closed:
             for cache in self._file_id_to_cache.values():
                 await cache.discard()
             self._clear_caches()
+            self._closed = True
 
-    async def _create_cache(
+    def _create_cache(
         self,
         file_id: str,
         cache_path: pathlib.Path,
@@ -291,7 +302,7 @@ class RemoteFileWithCache(RemoteFile):
     async def read_contents(self) -> bytes:
         try:
             return await self._cache.fetch_or_update_contents(super().read_contents)
-        except _CacheDiscardedError:
+        except CacheDiscardedError:
             return await super().read_contents()
 
     async def delete(self) -> None:
@@ -301,9 +312,13 @@ class RemoteFileWithCache(RemoteFile):
     async def update_cache(self) -> None:
         try:
             await self._cache.update_contents(super().read_contents)
-        except _CacheDiscardedError:
+        except CacheDiscardedError:
             logger.warning("Cache is no longer available.")
 
 
-class _CacheDiscardedError(Exception):
+class CacheDiscardedError(Exception):
+    pass
+
+
+class CacheNotFoundError(Exception):
     pass

@@ -22,6 +22,7 @@ from types import TracebackType
 from typing import Any, Dict, List, Literal, Optional, Type, Union, final, overload
 
 import anyio
+from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.caching import (
     FileCacheManager,
@@ -31,7 +32,6 @@ from erniebot_agent.file_io.caching import (
 )
 from erniebot_agent.file_io.file_registry import BaseFileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
-from erniebot_agent.file_io.protocol import FilePurpose
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.logging import logger
 from typing_extensions import Self, TypeAlias
@@ -70,6 +70,7 @@ class FileManager(object):
         else:
             self._file_cache_manager = None
 
+        self._closed = False
         self._clean_up_cache_files_on_discard = True
 
     @property
@@ -82,6 +83,10 @@ class FileManager(object):
             raise AttributeError("No remote file client is set.")
         else:
             return self._remote_file_client
+
+    @property
+    def closed(self):
+        return self._closed
 
     async def __aenter__(self) -> Self:
         return self
@@ -99,7 +104,7 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"],
     ) -> LocalFile:
@@ -110,7 +115,7 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
@@ -121,7 +126,7 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
     ) -> Union[LocalFile, RemoteFile]:
@@ -131,10 +136,12 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose = "assistants",
+        file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         file: Union[LocalFile, RemoteFile]
         if file_type is None:
             file_type = self._get_default_file_type()
@@ -147,14 +154,20 @@ class FileManager(object):
         return file
 
     async def create_local_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
+        self,
+        file_path: FilePath,
+        file_purpose: protocol.FilePurpose,
+        file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
         file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata or {})
         self.register_file(file)
         return file
 
     async def create_remote_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
+        self,
+        file_path: FilePath,
+        file_purpose: protocol.FilePurpose,
+        file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
         return await self._create_remote_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata)
 
@@ -164,7 +177,7 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["local"],
     ) -> LocalFile:
@@ -176,7 +189,7 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
@@ -188,7 +201,7 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose = ...,
+        file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
     ) -> Union[LocalFile, RemoteFile]:
@@ -199,10 +212,12 @@ class FileManager(object):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: FilePurpose = "assistants",
+        file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         if file_type is None:
             file_type = self._get_default_file_type()
         file_path = self._get_unique_file_path(
@@ -240,6 +255,8 @@ class FileManager(object):
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         file = await self.remote_file_client.retrieve_file(file_id)
         if self._cache_remote_files:
             file = await self._cache_remote_file(
@@ -248,32 +265,42 @@ class FileManager(object):
                 init_cache_in_sync=None,
             )
         if self._auto_register:
-            self.register_file(file, overwrite=True)
+            self.register_file(file, allow_overwrite=True)
         return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         files = await self.remote_file_client.list_files()
         return files
 
     def register_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         self._file_registry.register_file(file, *args, **kwargs)
 
     def unregister_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         self._file_registry.unregister_file(file, *args, **kwargs)
 
     def look_up_file_by_id(self, file_id: str, *args: Any, **kwargs: Any) -> Optional[File]:
+        if self._closed:
+            raise RuntimeError("File manager is closed.")
         return self._file_registry.look_up_file(file_id, *args, **kwargs)
 
     async def close(self) -> None:
-        if self._file_cache_manager is not None:
-            await self._file_cache_manager.close()
-        if self._temp_dir is not None:
-            self._clean_up_temp_dir(self._temp_dir)
+        if not self._closed:
+            if self._file_cache_manager is not None:
+                await self._file_cache_manager.close()
+            if self._temp_dir is not None:
+                self._clean_up_temp_dir(self._temp_dir)
+            self._closed = True
 
     async def _create_remote_file_from_path(
         self,
         file_path: pathlib.Path,
-        file_purpose: FilePurpose,
+        file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
         *,
         cache_path: Optional[pathlib.Path] = None,
@@ -306,7 +333,7 @@ class FileManager(object):
         if cache_path is None:
             cache_path = self._get_unique_file_path()
             init_cache_in_sync = None
-        cache = await self._file_cache_manager.get_or_create_cache(
+        cache, _ = await self._file_cache_manager.get_or_create_cache(
             file.id,
             cache_path,
             discard_callback=functools.partial(_remove_cache_file, pathlib.Path(cache_path), logger)

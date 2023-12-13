@@ -13,28 +13,23 @@
 # limitations under the License.
 
 import pathlib
-import time
 import uuid
 from typing import Any, Dict
 
 import anyio
+from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import (
-    FilePurpose,
-    build_local_file_id_from_uuid,
-    is_local_file_id,
-)
 
 
 def create_local_file_from_path(
-    file_path: pathlib.Path, file_purpose: FilePurpose, file_metadata: Dict[str, Any]
+    file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
 ) -> "LocalFile":
     if not file_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist.")
     file_id = _generate_local_file_id()
     filename = file_path.name
     byte_size = file_path.stat().st_size
-    created_at = int(time.time())
+    created_at = protocol.get_timestamp()
     file = LocalFile(
         id=file_id,
         filename=filename,
@@ -54,13 +49,15 @@ class LocalFile(File):
         id: str,
         filename: str,
         byte_size: int,
-        created_at: int,
-        purpose: FilePurpose,
+        created_at: str,
+        purpose: protocol.FilePurpose,
         metadata: Dict[str, Any],
         path: pathlib.Path,
+        validate_file_id: bool = True,
     ) -> None:
-        if not is_local_file_id(id):
-            raise ValueError(f"Invalid file ID: {id}")
+        if validate_file_id:
+            if not protocol.is_local_file_id(id):
+                raise ValueError(f"Invalid file ID: {id}")
         super().__init__(
             id=id,
             filename=filename,
@@ -81,4 +78,4 @@ class LocalFile(File):
 
 
 def _generate_local_file_id():
-    return build_local_file_id_from_uuid(str(uuid.uuid1()))
+    return protocol.build_local_file_id_from_uuid(str(uuid.uuid1()))

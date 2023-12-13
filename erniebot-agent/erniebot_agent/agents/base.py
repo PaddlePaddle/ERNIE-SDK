@@ -27,9 +27,9 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import Tool
@@ -261,7 +261,7 @@ class Agent(BaseAgent):
         agent_files: List[AgentFile] = []
         for val in args.values():
             if isinstance(val, str):
-                if is_local_file_id(val):
+                if protocol.is_local_file_id(val):
                     if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
@@ -270,7 +270,7 @@ class Agent(BaseAgent):
                     file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
                         raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
-                elif is_remote_file_id(val):
+                elif protocol.is_remote_file_id(val):
                     if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."

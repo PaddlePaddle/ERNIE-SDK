@@ -23,7 +23,7 @@ class File(metaclass=abc.ABCMeta):
         id: str,
         filename: str,
         byte_size: int,
-        created_at: int,
+        created_at: str,
         purpose: str,
         metadata: Dict[str, Any],
     ) -> None:
