@@ -25,7 +25,7 @@ if __name__ == "__main__":
     erniebot.api_type = "qianfan-sft"
 
     response = erniebot.FineTuningTask.create(name="sft_test", description="test")
-    task_info = response.get_result()
+    task_info = response.result
     print(task_info)
 
     train_config = {
@@ -44,13 +44,13 @@ if __name__ == "__main__":
         train_set=train_set,
         train_set_rate=20,
     )
-    job_info = response.get_result()
+    job_info = response.result
     print(job_info)
 
     vdl_url = None
     while True:
         response = erniebot.FineTuningJob.query(task_id=task_info["id"], job_id=job_info["id"])
-        running_info = response.get_result()
+        running_info = response.result
         if vdl_url is None:
             vdl_url = running_info["vdlLink"]
             print(f"Check VisualDL logs at {vdl_url}")

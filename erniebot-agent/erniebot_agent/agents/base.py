@@ -32,15 +32,12 @@ from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.logging import logger
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
-    llm: ChatModel
-    memory: Memory
-
     @abc.abstractmethod
     async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
@@ -50,7 +47,7 @@ class Agent(BaseAgent):
     def __init__(
         self,
         llm: ChatModel,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
         system_message: Optional[SystemMessage] = None,
@@ -80,6 +77,10 @@ class Agent(BaseAgent):
             file_manager = file_io.get_global_file_manager()
         self._file_manager = file_manager
 
+    @property
+    def tools(self) -> List[BaseTool]:
+        return self._tool_manager.get_tools()
+
     @final
     async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
@@ -87,10 +88,10 @@ class Agent(BaseAgent):
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    def load_tool(self, tool: Tool) -> None:
+    def load_tool(self, tool: BaseTool) -> None:
         self._tool_manager.add_tool(tool)
 
-    def unload_tool(self, tool: Tool) -> None:
+    def unload_tool(self, tool: BaseTool) -> None:
         self._tool_manager.remove_tool(tool)
 
     def reset_memory(self) -> None:
@@ -228,14 +229,17 @@ class Agent(BaseAgent):
         await self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
-    async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
+    async def _async_run_tool_without_hooks(self, tool: BaseTool, tool_args: str) -> ToolResponse:
         parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
         input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
         tool_ret = await tool(**parsed_tool_args)
-        output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        if isinstance(tool_ret, dict):
+            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        else:
+            output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
@@ -256,7 +260,7 @@ class Agent(BaseAgent):
         return args_dict
 
     async def _sniff_and_extract_files_from_args(
-        self, args: Dict[str, Any], tool: Tool, file_type: Literal["input", "output"]
+        self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
     ) -> List[AgentFile]:
         agent_files: List[AgentFile] = []
         for val in args.values():
