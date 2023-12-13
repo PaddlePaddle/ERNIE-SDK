@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, TypedDict
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import extract_file_ids
+from erniebot_agent.file_io.remote_file import RemoteFile
 from erniebot_agent.utils.logging import logger
 
 import erniebot.utils.token_helper as token_helper
@@ -76,22 +77,31 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None, has_plugins: bool = False):
+    def __init__(self, content: str, files: Optional[List[File]] = None, include_file_url: bool = False):
         self.files = files
         if self.files is not None:
             if len(extract_file_ids(content)) > 0:
                 logger.warning(
-                    "Files already exist in the content of a HumanMessage, which will be ignored."
+                    "Files are already represented in the content of a HumanMessage, \
+                        which will be ignored now."
                 )
             else:
+                self._check_remote_file_with_plugins(include_file_url)
+
                 prompt_parts = ["。这句话中包含的文件如下："] + [
-                    file.file_repr_with_URL() if has_plugins else file.file_repr_wo_URL()
+                    file.file_repr_wo_URL() if include_file_url else file.file_repr_wo_URL()
                     for file in self.files
                 ]
                 prompt = "\n".join(prompt_parts)
                 content = content + prompt
 
         super().__init__(role="user", content=content)
+
+    def _check_remote_file_with_plugins(self, include_file_url):
+        if include_file_url:
+            for file in self.files:
+                if not isinstance(file, RemoteFile):
+                    raise RuntimeError("LocalFile is not supported with plugins with file input.")
 
 
 class FunctionCall(TypedDict):

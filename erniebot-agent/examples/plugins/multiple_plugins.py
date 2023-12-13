@@ -31,7 +31,7 @@ class TextRepeaterTool(Tool):
         if "<split>" in input_file_id:
             input_file_id = input_file_id.split("<split>")[0]
 
-        file_manager = get_file_manager()
+        file_manager = get_file_manager()  # Access_token needs to be set here.
         input_file = file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")
@@ -77,7 +77,7 @@ class TextRepeaterNoFileToolOutputView(ToolParameterView):
 
 
 class TextRepeaterNoFileTool(Tool):
-    description: str = "TextRepeaterTool用于将输入文本进行指定次数的重复并输出。"
+    description: str = "TextRepeaterNoFileTool用于将输入文本进行指定次数的重复并输出。"
     input_type: Type[ToolParameterView] = TextRepeaterNoFileToolInputView
     ouptut_type: Type[ToolParameterView] = TextRepeaterNoFileToolOutputView
 
@@ -105,25 +105,26 @@ class TextRepeaterNoFileTool(Tool):
         ]
 
 
+# TODO(shiyutang): replace this when model is online
 llm = ERNIEBot(model="ernie-bot", api_type="custom")
 memory = SlidingWindowMemory(max_round=1)
-file_manager = get_file_manager()
+file_manager = get_file_manager()  # Access_token needs to be set here.
+# plugins = ["ChatFile", "eChart"]
+plugins: List[str] = []
 agent = FunctionalAgent(
     llm=llm,
     tools=[TextRepeaterTool(), TextRepeaterNoFileTool(), CalculatorTool()],
     memory=memory,
     file_manager=file_manager,
     callbacks=get_no_ellipsis_callback(),
+    plugins=plugins,
 )
 
 
 async def run_agent():
     docx_file = await file_manager.create_file_from_path(
         file_path="浅谈牛奶的营养与消费趋势.docx",
-        file_type="local",
-        URL="""https://qianfan-doc.bj.bcebos.com/chatfile/\
-%E6%B5%85%E8%B0%88%E7%89%9B%E5%A5%B6%E7%9A%84%\
-E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx""",
+        file_type="remote",
     )
 
     print("=" * 10 + "echart返回结果" + "=" * 10 + "\n")  # ok
@@ -136,10 +137,8 @@ E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx""",
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 
-    print("=" * 10 + "docx不使用chatFile、使用Tools的返回结果" + "=" * 10 + "\n")  # ok
-    agent_resp = await agent.async_run(
-        "请把文件中的前10个字复制三遍返回", files=[docx_file]
-    )  # 没有调用tool，依旧是摘要  file  Tool(example)
+    print("=" * 10 + "传入plugins，docx不使用chatFile、使用Tools的返回结果" + "=" * 10 + "\n")  # ok
+    agent_resp = await agent.async_run("请把文件中的前10个字复制三遍返回", files=[docx_file])
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 

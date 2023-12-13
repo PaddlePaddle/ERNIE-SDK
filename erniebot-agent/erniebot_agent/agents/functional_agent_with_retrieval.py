@@ -72,9 +72,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -133,9 +131,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
@@ -232,9 +228,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG

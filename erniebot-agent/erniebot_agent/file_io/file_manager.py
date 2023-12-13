@@ -95,7 +95,6 @@ class FileManager(object):
         file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
-        URL: Optional[str] = None,
     ) -> Union[LocalFile, RemoteFile]:
         file: Union[LocalFile, RemoteFile]
         if file_type is None:
@@ -104,7 +103,7 @@ class FileManager(object):
             else:
                 file_type = "local"
         if file_type == "local":
-            file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata, URL=URL)
+            file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
             file = await self.create_remote_file_from_path(file_path, file_purpose, file_metadata)
         else:
@@ -116,13 +115,11 @@ class FileManager(object):
         file_path: FilePath,
         file_purpose: FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
-        URL: Optional[str],
     ) -> LocalFile:
         file = create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
             file_metadata or {},
-            URL,
         )
         self._file_registry.register_file(file)
         return file

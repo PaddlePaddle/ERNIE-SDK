@@ -114,15 +114,11 @@ class ERNIEBot(ChatModel):
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
-        if cfg_dict["plugins"] is None:
+        if cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0:
             cfg_dict.pop("plugins")
 
         # TODO: Improve this when erniebot typing issue is fixed.
         if cfg_dict.get("plugins", None):
-            # TODO(shiyutang): replace this when model is online
-            cfg_dict["_config_"]["api_base_url"] = "<your-Custom-URL>"
-            cfg_dict["_config_"]["api_type"] = "custom"
-
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore

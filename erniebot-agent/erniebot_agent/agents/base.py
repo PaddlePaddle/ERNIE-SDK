@@ -39,9 +39,7 @@ from erniebot_agent.utils.logging import logger
 
 class BaseAgent(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    async def async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
 
@@ -55,6 +53,7 @@ class Agent(BaseAgent):
         system_message: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
+        plugins: Optional[List[str]] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
@@ -77,17 +76,24 @@ class Agent(BaseAgent):
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
             file_manager = file_io.get_file_manager()
+        self.plugins = plugins
         self._file_manager = file_manager
+        self._add_default_plugins()
+
+    def _add_default_plugins(self):
+        if self.plugins is None:
+            self.plugins = ["eChart"]
+            self.file_needs_url = False
+        else:
+            self.file_needs_url = True
 
     @property
     def tools(self) -> List[BaseTool]:
         return self._tool_manager.get_tools()
 
-    async def async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
-        agent_resp = await self._async_run(prompt, files, plugins)
+        agent_resp = await self._async_run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
@@ -206,9 +212,7 @@ class Agent(BaseAgent):
         demo.launch(**launch_kwargs)
 
     @abc.abstractmethod
-    async def _async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:

@@ -100,9 +100,7 @@ class GameAgent(Agent):
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
 
-    async def _async_run(
-        self, prompt: str, files: Optional[List[File]] = None, plugins: Optional[List[str]] = None
-    ) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise RuntimeError(("Only support for stream mode, please use _async_run_stream instead."))
 
     async def _async_run_stream(self, prompt: str) -> AsyncGenerator:

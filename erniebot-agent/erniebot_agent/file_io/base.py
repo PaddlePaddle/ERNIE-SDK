@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import abc
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class File(metaclass=abc.ABCMeta):
@@ -26,7 +26,6 @@ class File(metaclass=abc.ABCMeta):
         created_at: int,
         purpose: str,
         metadata: Dict[str, Any],
-        URL: Optional[str] = None,
     ) -> None:
         super().__init__()
         self.id = id
@@ -35,8 +34,7 @@ class File(metaclass=abc.ABCMeta):
         self.created_at = created_at
         self.purpose = purpose
         self.metadata = metadata
-        self.URL = URL
-        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata", "URL"]
+        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -50,20 +48,6 @@ class File(metaclass=abc.ABCMeta):
 
     def file_repr_wo_URL(self) -> str:
         return f"<file>{self.id}</file>"
-
-    def file_repr_with_URL(self) -> str:
-        if self.URL is None:
-            self.URL = self._get_url()
-        return f"<file>{self.id}</file><url>{self.URL}</url>"
-
-        # Other Options including, test result is not good enough:
-        # f"<file>{self.id+'<split>'+self.filename}</file><url>{self.URL}</url>"
-        # f"<fileid>{self.id}</fileid><file>{self.filename}</file><url>{self.URL}</url>"
-
-    def _get_url(self) -> str:
-        """Get URL from AiStudio."""
-        # TODO(shiyutang): Get URL from AiStudio.
-        return ""
 
     def to_dict(self) -> dict:
         return {k: getattr(self, k) for k in self._param_names}
@@ -81,6 +65,5 @@ class File(metaclass=abc.ABCMeta):
                 f"created_at: {repr(self.created_at)}",
                 f"purpose: {repr(self.purpose)}",
                 f"metadata: {repr(self.metadata)}",
-                f"URL: {repr(self.URL)}",
             ]
         )
