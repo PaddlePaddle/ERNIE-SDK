@@ -35,6 +35,7 @@ class TestAgentResponseAnnotations(unittest.TestCase):
                         "created_at": self.file1.created_at,
                         "purpose": self.file1.purpose,
                         "metadata": self.file1.metadata,
+                        "URL": self.file1.URL,
                     },
                     {"text": "，您可以保存该文件进行查看。如果您还有其他问题或需要进一步的操作，请随时告诉我。"},
                 ]
@@ -64,6 +65,7 @@ class TestAgentResponseAnnotations(unittest.TestCase):
                         "created_at": self.file1.created_at,
                         "purpose": self.file1.purpose,
                         "metadata": self.file1.metadata,
+                        "URL": self.file1.URL,
                     },
                     {"text": "，您可以保存该文件进行查看。如果您还有其他问题或需要进一步的操作，请随时告诉我。"},
                 ]
