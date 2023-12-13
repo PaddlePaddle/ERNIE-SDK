@@ -22,7 +22,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from functools import wraps
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, ClassVar, Dict, List, Optional, Type
 
 import requests
 from erniebot_agent.file_io import get_file_manager
@@ -392,6 +392,7 @@ class RemoteToolkit:
     component_schemas: dict[str, Type[ToolParameterView]]
     headers: dict
     examples: List[Message] = field(default_factory=list)
+    _AISTUDIO_BASE_URL: ClassVar[str] = "https://aistudio-hub.baidu.com"
 
     @property
     def tool_name_prefix(self) -> str:
@@ -578,6 +579,21 @@ class RemoteToolkit:
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers
+
+    @classmethod
+    def from_aistudio(
+        cls,
+        tool_id,
+        version: Optional[str] = None,
+        access_token: Optional[str] = None,
+        file_manager: Optional[FileManager] = None,
+    ) -> RemoteToolkit:
+        from urllib.parse import urlparse
+
+        aistudio_base_url = os.getenv("AISTUDIO_BASE_URL", cls._AISTUDIO_BASE_URL)
+        parsed_url = urlparse(aistudio_base_url)
+        tool_url = parsed_url._replace(netloc=f"tool-{tool_id}.{parsed_url.netloc}").geturl()
+        return cls.from_url(tool_url, version=version, access_token=access_token, file_manager=file_manager)
 
     @classmethod
     def from_url(
