@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+import base64
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -34,6 +35,7 @@ from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 from erniebot_agent.utils.logging import logger
 
 
@@ -107,6 +109,7 @@ class Agent(BaseAgent):
             ) from None
 
         raw_messages = []
+        self.use_file: List[File] = []
 
         def _pre_chat(text, history):
             history.append([text, None])
@@ -116,8 +119,34 @@ class Agent(BaseAgent):
             prompt = history[-1][0]
             if len(prompt) == 0:
                 raise gr.Error("Prompt should not be empty.")
-            response = await self.async_run(prompt)
-            history[-1][1] = response.text
+
+            if self.use_file:
+                response = await self.async_run(prompt, files=self.use_file)
+                self.use_file = []
+            else:
+                response = await self.async_run(prompt)
+
+            if (
+                response.files
+                and response.files[-1].type == "output"
+                and response.files[-1].used_by == response.actions[-1].tool_name
+            ):
+                output_file_id = response.files[-1].file.id
+                output_file = self._file_manager.look_up_file_by_id(output_file_id)
+                img_content = await output_file.read_contents()
+                base64_encoded = base64.b64encode(img_content).decode("utf-8")
+                if output_file_id in response.text:
+                    output_result = response.text
+                    output_result = output_result.replace(
+                        output_file_id, IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
+                    )
+                else:
+                    output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
+
+            else:
+                output_result = response.text
+
+            history[-1][1] = output_result
             raw_messages.extend(response.chat_history)
             return (
                 history,
@@ -132,6 +161,26 @@ class Agent(BaseAgent):
             raw_messages.clear()
             self.reset_memory()
             return None, None, None, None
+
+        async def _upload(file: List[gr.utils.NamedString], history: list):
+            for single_file in file:
+                upload_file = await self._file_manager.create_file_from_path(single_file.name)
+                self.use_file.append(upload_file)
+                history = history + [((single_file.name,), None)]
+            size = len(file)
+
+            output_lis = self._file_manager._file_registry.list_files()
+            item = ""
+            for i in range(len(output_lis) - size):
+                item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
+
+            # The file uploaded this time will be gathered and colored
+            item += "<li>"
+            for i in range(size, 0, -1):
+                item += f'{str(output_lis[len(output_lis)-i]).strip("<>")}<br>'
+            item += "</li>"
+
+            return ITEM_LIST_HTML.format(ITEM=item), history
 
         def _messages_to_dicts(messages):
             return [message.to_dict() for message in messages]
@@ -150,8 +199,22 @@ class Agent(BaseAgent):
                 )
                 prompt_textbox = gr.Textbox(label="Prompt", placeholder="Write a prompt here...")
                 with gr.Row():
-                    submit_button = gr.Button("Submit")
-                    clear_button = gr.Button("Clear")
+                    prompt_textbox = gr.Textbox(
+                        label="Prompt", placeholder="Write a prompt here...", scale=15
+                    )
+                    submit_button = gr.Button("Submit", min_width=150)
+                    with gr.Column(min_width=100):
+                        clear_button = gr.Button("Clear", min_width=100)
+                        file_button = gr.UploadButton(
+                            "Upload",
+                            min_width=100,
+                            file_count="multiple",
+                            file_types=["image", "video", "audio"],
+                        )
+
+                with gr.Accordion("Files", open=False):
+                    file_lis = self._file_manager._file_registry.list_files()
+                    all_files = gr.HTML(value=file_lis, label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
                     tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
@@ -197,6 +260,11 @@ class Agent(BaseAgent):
                     all_messages_json,
                     agent_memory_json,
                 ],
+            )
+            file_button.upload(
+                _upload,
+                inputs=[file_button, chatbot],
+                outputs=[all_files, chatbot],
             )
 
         demo.launch(**launch_kwargs)
