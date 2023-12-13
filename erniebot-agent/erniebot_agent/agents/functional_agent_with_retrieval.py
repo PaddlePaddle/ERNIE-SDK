@@ -255,21 +255,12 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
-            # chat_history.append(HumanMessage(content=prompt))
-
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
-            llm_resp = await self._async_run_llm_without_hooks(
-                messages=fake_chat_history,
-                functions=None,
-                system=self.system_message.content if self.system_message is not None else None,
-            )
 
-            # Get RAG results
-            output_message = llm_resp.message
             outputs = []
             for item in results["documents"]:
                 outputs.append(
@@ -280,18 +271,12 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     }
                 )
 
-            # chat_history.append(AIMessage(content=output_message.content, function_call=None))
-
-            # Knowledge Retrieval Tool
-            # action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
-
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            # 这种做法会导致functional agent的retrieval tool持续触发
-            next_step_input = HumanMessage(content=f"背景：{output_message.content}, 问题：{prompt}")
-
+            next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作")
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
+
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step_output = await self._async_step(
