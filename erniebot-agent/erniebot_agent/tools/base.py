@@ -392,7 +392,7 @@ class RemoteToolkit:
     component_schemas: dict[str, Type[ToolParameterView]]
     headers: dict
     examples: List[Message] = field(default_factory=list)
-    _AISTUDIO_BASE_URL: ClassVar[str] = "https://aistudio-hub.baidu.com"
+    _AISTUDIO_HUB_BASE_URL: ClassVar[str] = "https://aistudio-hub.baidu.com"
 
     @property
     def tool_name_prefix(self) -> str:
@@ -590,7 +590,7 @@ class RemoteToolkit:
     ) -> RemoteToolkit:
         from urllib.parse import urlparse
 
-        aistudio_base_url = os.getenv("AISTUDIO_BASE_URL", cls._AISTUDIO_BASE_URL)
+        aistudio_base_url = os.getenv("AISTUDIO_HUB_BASE_URL", cls._AISTUDIO_HUB_BASE_URL)
         parsed_url = urlparse(aistudio_base_url)
         tool_url = parsed_url._replace(netloc=f"tool-{tool_id}.{parsed_url.netloc}").geturl()
         return cls.from_url(tool_url, version=version, access_token=access_token, file_manager=file_manager)
