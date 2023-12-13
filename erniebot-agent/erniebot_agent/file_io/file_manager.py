@@ -333,6 +333,8 @@ class FileManager(object):
         if cache_path is None:
             cache_path = self._get_unique_file_path()
             init_cache_in_sync = None
+        if not cache_path.exists():
+            await anyio.Path(cache_path).touch()
         cache, _ = await self._file_cache_manager.get_or_create_cache(
             file.id,
             cache_path,
