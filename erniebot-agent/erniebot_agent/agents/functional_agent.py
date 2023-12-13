@@ -108,6 +108,7 @@ class FunctionalAgent(Agent):
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
+            plugins=["ChatFile", "eChart"],
         )
         output_message = llm_resp.message
         chat_history.append(output_message)

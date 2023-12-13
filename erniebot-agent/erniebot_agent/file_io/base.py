@@ -13,7 +13,25 @@
 # limitations under the License.
 
 import abc
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+IMAGE_EXTENSIONS = [
+    "jpg",
+    "jpeg",
+    "png",
+    "bmp",
+    "gif",
+    "tiff",
+    "webp",
+    "svg",
+    "eps",
+    "psd",
+    "heic",
+    "raw",
+    "nef",
+    "orf",
+    "cr2",
+]
 
 
 class File(metaclass=abc.ABCMeta):
@@ -26,6 +44,7 @@ class File(metaclass=abc.ABCMeta):
         created_at: int,
         purpose: str,
         metadata: Dict[str, Any],
+        URL: Optional[str] = None,
     ) -> None:
         super().__init__()
         self.id = id
@@ -34,7 +53,8 @@ class File(metaclass=abc.ABCMeta):
         self.created_at = created_at
         self.purpose = purpose
         self.metadata = metadata
-        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
+        self.URL = URL
+        self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata", "URL"]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, File):
@@ -45,6 +65,16 @@ class File(metaclass=abc.ABCMeta):
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
+
+    def file_repr(self) -> str:
+        if self.filename.split(".")[-1] in IMAGE_EXTENSIONS:
+            return f"<image>{self.id}</image><url>{self.URL}</url>"
+        else:
+            return f"<file>{self.id}</file><url>{self.URL}</url>"
+
+        # Other Options including, test result is not good enough:
+        # f"<file>{self.id+'<split>'+self.filename}</file><url>{self.URL}</url>"
+        # f"<fileid>{self.id}</fileid><file>{self.filename}</file><url>{self.URL}</url>"
 
     def to_dict(self) -> dict:
         return {k: getattr(self, k) for k in self._param_names}
@@ -62,5 +92,6 @@ class File(metaclass=abc.ABCMeta):
                 f"created_at: {repr(self.created_at)}",
                 f"purpose: {repr(self.purpose)}",
                 f"metadata: {repr(self.metadata)}",
+                f"URL: {repr(self.URL)}",
             ]
         )

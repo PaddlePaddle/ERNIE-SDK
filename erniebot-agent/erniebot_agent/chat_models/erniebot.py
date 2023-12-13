@@ -27,9 +27,11 @@ from typing import (
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
+from erniebot_agent.utils.logging import logger
 
 import erniebot
 from erniebot.response import EBResponse
+from erniebot.utils.misc import NOT_GIVEN
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -110,17 +112,41 @@ class ERNIEBot(ChatModel):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system"]
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
 
         # TODO: Improve this when erniebot typing issue is fixed.
-        response: Any = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+        if cfg_dict.get("plugins", None):
+            cfg_dict["_config_"]["api_base_url"] = "<your-custom-URL>"
+            cfg_dict["_config_"]["api_type"] = "custom"
+
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],
+                stream=stream,
+                _config_=cfg_dict["_config_"],
+                functions=functions if functions else NOT_GIVEN,
+                extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+
+        if response.get("plugin_info", None):  # type: ignore
+            logger.info("#### Plugin Info #### \n", response["plugin_info"])  # type: ignore
+            logger.info("\n" + "#" * 20 + "\n")
+        else:
+            logger.info("#### Plugin Info #### \n", "None")
+            logger.info("\n" + "#" * 20 + "\n")
+
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
-            return (self.convert_response_to_output(resp, AIMessageChunk) async for resp in response)
+            return (
+                self.convert_response_to_output(resp, AIMessageChunk)
+                async for resp in response  # type: ignore
+            )
 
     @staticmethod
     def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
