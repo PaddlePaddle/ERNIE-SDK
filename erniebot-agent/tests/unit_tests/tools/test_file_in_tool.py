@@ -13,7 +13,6 @@
 # limitations under the License.
 from __future__ import annotations
 
-import asyncio
 import os
 import socket
 import tempfile
@@ -21,8 +20,10 @@ import time
 import unittest
 import uuid
 
+import pytest
 import uvicorn
-from erniebot_agent.file_io import get_global_file_manager
+from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.tools.base import RemoteToolkit
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -136,7 +137,8 @@ class TestToolWithFile(unittest.TestCase):
             print("waiting for server ...")
             time.sleep(1)
 
-    def test_plugin_schema(self):
+    @pytest.mark.asyncio
+    async def test_plugin_schema(self):
         self.wait_until_server_is_ready()
         with tempfile.TemporaryDirectory() as tempdir:
             openapi_file = os.path.join(tempdir, "openapi.yaml")
@@ -144,16 +146,18 @@ class TestToolWithFile(unittest.TestCase):
             with open(openapi_file, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            toolkit = RemoteToolkit.from_openapi_file(openapi_file)
+            file_registry = FileRegistry()
+            file_manager = FileManager(file_registry)
+
+            toolkit = RemoteToolkit.from_openapi_file(openapi_file, file_manager=file_manager)
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            file_manager = get_global_file_manager()
-            input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
-            result = asyncio.run(tool(file=input_file.id))
+            input_file = await file_manager.create_file_from_path(self.file_path)
+            result = await tool(file=input_file.id)
             self.assertIn("response_file", result)
             file_id = result["response_file"]
 
             file = file_manager.look_up_file_by_id(file_id=file_id)
-            content = asyncio.run(file.read_contents())
+            content = await file.read_contents()
             self.assertEqual(content.decode("utf-8"), self.content)
