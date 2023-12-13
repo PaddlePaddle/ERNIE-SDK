@@ -125,7 +125,7 @@ class FileCache(object):
             return contents
 
     def activate(self) -> None:
-        def _expire_callback(cache_ref: weakref.ref[Self]) -> None:
+        def _expire_callback(cache_ref: weakref.ReferenceType[Self]) -> None:
             cache = cache_ref()
             if cache is not None:
                 cache._deactivate()
