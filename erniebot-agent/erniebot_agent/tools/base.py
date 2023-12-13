@@ -260,8 +260,11 @@ class Tool(BaseTool, ABC):
         inputs = {
             "name": self.tool_name,
             "description": self.description,
-            "examples": [example.to_dict() for example in self.examples],
         }
+
+        if len(self.examples) > 0:
+            inputs["examples"] = [example.to_dict() for example in self.examples]
+
         if self.input_type is not None:
             inputs["parameters"] = self.input_type.function_call_schema()
         if self.ouptut_type is not None:
@@ -431,7 +434,9 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
-        schema["examples"] = [example.to_dict() for example in self.examples]
+
+        if len(self.examples) > 0:
+            schema["examples"] = [example.to_dict() for example in self.examples]
 
         return schema or {}
 
