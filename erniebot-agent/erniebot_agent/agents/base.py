@@ -44,7 +44,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class Agent(BaseAgent, GradioMixin):
+class Agent(GradioMixin, BaseAgent):
     def __init__(
         self,
         llm: ChatModel,
