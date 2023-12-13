@@ -80,6 +80,8 @@ class AgentResponse(object):
         return [agent_file.file for agent_file in self.files if agent_file.type == "output"]
 
     def get_tool_input_output_files(self, tool_name: str) -> Tuple[List[File], List[File]]:
+        # XXX: If a tool is used mutliple times, all related files will be
+        # returned in flattened lists.
         input_files: List[File] = []
         output_files: List[File] = []
         for agent_file in self.files:
