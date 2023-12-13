@@ -396,6 +396,10 @@ class RemoteTool(BaseTool):
 
         # parse the file from response
         returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
+
+        if len(returns_file_infos) == 0 and is_json_response(response):
+            return response.json()
+
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
             return await parse_file_from_json_response(
