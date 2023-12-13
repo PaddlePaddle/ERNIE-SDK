@@ -21,7 +21,6 @@ import tempfile
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
-from functools import wraps
 from typing import Any, ClassVar, Dict, List, Optional, Type
 
 import requests
@@ -34,6 +33,8 @@ from erniebot_agent.tools.schema import (
     EndpointInfo,
     RemoteToolView,
     ToolParameterView,
+    get_args,
+    get_typing_list_type,
     scrub_dict,
 )
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
@@ -100,14 +101,73 @@ def get_file_info_from_param_view(
     if param_view is None:
         return {}
 
-    file_infos = {}
+    file_infos: Dict[str, Any] = {}
     for key in param_view.model_fields.keys():
-        json_schema_extra = param_view.model_fields[key].json_schema_extra
+        model_field = param_view.model_fields[key]
+
+        list_base_annotation = get_typing_list_type(model_field.annotation)
+        if list_base_annotation == "object":
+            # get base type
+            arg_type = get_args(model_field.annotation)[0]
+            file_infos[key] = get_file_info_from_param_view(arg_type)
+            continue
+        elif issubclass(model_field.annotation, ToolParameterView):
+            file_infos[key] = get_file_info_from_param_view(model_field.annotation)
+            continue
+
+        json_schema_extra = model_field.json_schema_extra
         if json_schema_extra and json_schema_extra.get("format", None) in [
             "byte",
             "binary",
         ]:
             file_infos[key] = deepcopy(json_schema_extra)
+    return file_infos
+
+
+async def parse_file_from_json_response(
+    json_data: dict, file_manager: FileManager, param_view: Type[ToolParameterView], tool_name: str
+):
+    if param_view is None:
+        return {}
+
+    file_infos: Dict[str, Any] = {}
+    for key in param_view.model_fields.keys():
+        model_field = param_view.model_fields[key]
+
+        list_base_annotation = get_typing_list_type(model_field.annotation)
+        if list_base_annotation == "object":
+            # get base type
+            arg_type = get_args(model_field.annotation)[0]
+            file_infos[key] = []
+            for json_item in json_data[key]:
+                file_infos[key].append(
+                    await parse_file_from_json_response(
+                        json_item, file_manager=file_manager, param_view=arg_type, tool_name=tool_name
+                    )
+                )
+        elif issubclass(model_field.annotation, ToolParameterView):
+            file_infos[key] = await parse_file_from_json_response(
+                json_data[key],
+                file_manager=file_manager,
+                param_view=model_field.annotation,
+                tool_name=tool_name,
+            )
+        else:
+            json_schema_extra = model_field.json_schema_extra
+            format = json_schema_extra.get("format", None)
+            if format in ["byte", "binary"]:
+                content = json_data[key]
+                if format == "byte":
+                    content = base64.b64decode(content)
+
+                suffix = get_file_suffix(json_schema_extra["x-ebagent-file-mime-type"])
+                file = await file_manager.create_file_from_bytes(
+                    content,
+                    filename=f"test{suffix}",
+                    file_purpose="assistants_output",
+                    file_metadata={"tool_name": tool_name},
+                )
+                file_infos[key] = file.id
     return file_infos
 
 
@@ -117,25 +177,6 @@ async def parse_file_from_response(
     file_infos: Dict[str, Dict[str, str]],
     file_metadata: Dict[str, str],
 ) -> Optional[File]:
-    if is_json_response(response):
-        if len(file_infos) == 0:
-            return None
-
-        file_name = list(file_infos.keys())[0]
-        # parse from body
-        content = response.json()[file_name]
-        format, mime_type = (
-            file_infos[file_name]["format"],
-            file_infos[file_name]["x-ebagent-file-mime-type"],
-        )
-        if format == "byte":
-            content = base64.b64decode(content)
-
-        file_suffix = get_file_suffix(mime_type)
-        return await file_manager.create_file_from_bytes(
-            content, f"tool-{file_suffix}", file_purpose="assistants_output", file_metadata=file_metadata
-        )
-
     # 1. parse file by `Content-Disposition`
     content_disposition = response.headers.get("Content-Disposition", None)
     if content_disposition is not None:
@@ -219,8 +260,11 @@ class Tool(BaseTool, ABC):
         inputs = {
             "name": self.tool_name,
             "description": self.description,
-            "examples": [example.to_dict() for example in self.examples],
         }
+
+        if len(self.examples) > 0:
+            inputs["examples"] = [example.to_dict() for example in self.examples]
+
         if self.input_type is not None:
             inputs["parameters"] = self.input_type.function_call_schema()
         if self.ouptut_type is not None:
@@ -231,40 +275,6 @@ class Tool(BaseTool, ABC):
     @property
     def examples(self) -> List[Message]:
         return []
-
-
-def wrap_tool_with_files(func):
-    @wraps(func)
-    async def wrapper_func(object: RemoteTool, **tool_arguments):
-        async def fileid_to_byte(file_id, file_manager):
-            file = file_manager.look_up_file_by_id(file_id)
-            byte_str = await file.read_contents()
-            return byte_str
-
-        file_manager = object.file_manager
-        # 1. replace fileid with byte string
-        parameter_file_info = get_file_info_from_param_view(object.tool_view.parameters)
-        for key in tool_arguments.keys():
-            if object.tool_view.parameters:
-                if key not in object.tool_view.parameters.model_fields:
-                    keys = list(object.tool_view.parameters.model_fields.keys())
-                    raise RemoteToolError(
-                        f"`{object.tool_name}` received unexpected arguments `{key}`. "
-                        f"The avaiable arguments are {keys}",
-                        stage="Input parsing",
-                    )
-            if key not in parameter_file_info:
-                continue
-            if object.tool_view.parameters is None:
-                break
-            byte_str = await fileid_to_byte(tool_arguments[key], file_manager)
-            tool_arguments[key] = base64.b64encode(byte_str).decode()
-
-        # 2. call tool get response
-        json_response = await func(object, **tool_arguments)
-        return json_response
-
-    return wrapper_func
 
 
 class RemoteTool(BaseTool):
@@ -286,7 +296,7 @@ class RemoteTool(BaseTool):
         self._examples = examples
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
-        if tool_name_prefix is not None:
+        if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
 
     @property
@@ -305,8 +315,47 @@ class RemoteTool(BaseTool):
     def tool_name(self):
         return self.tool_view.name
 
-    @wrap_tool_with_files
+    async def __pre_process__(self, tool_arguments: Dict[str, Any]) -> dict:
+        async def fileid_to_byte(file_id, file_manager):
+            file = file_manager.look_up_file_by_id(file_id)
+            byte_str = await file.read_contents()
+            return byte_str
+
+        # 1. replace fileid with byte string
+        parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
+        for key in tool_arguments.keys():
+            if self.tool_view.parameters:
+                if key not in self.tool_view.parameters.model_fields:
+                    keys = list(self.tool_view.parameters.model_fields.keys())
+                    raise RemoteToolError(
+                        f"`{self.tool_name}` received unexpected arguments `{key}`. "
+                        f"The avaiable arguments are {keys}",
+                        stage="Input parsing",
+                    )
+            if key not in parameter_file_info:
+                continue
+            if self.tool_view.parameters is None:
+                break
+            byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
+            tool_arguments[key] = base64.b64encode(byte_str).decode()
+
+        # 2. call tool get response
+        if self.tool_view.parameters is not None:
+            tool_arguments = dict(self.tool_view.parameters(**tool_arguments))
+
+        return tool_arguments
+
+    async def __post_process__(self, tool_response: dict) -> dict:
+        # if self.tool_view.returns is not None:
+        #     tool_response = dict(self.tool_view.returns(**tool_response))
+        return tool_response
+
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
+        tool_arguments = await self.__pre_process__(tool_arguments)
+        tool_response = await self.send_request(tool_arguments)
+        return await self.__post_process__(tool_response)
+
+    async def send_request(self, tool_arguments: Dict[str, Any]) -> dict:
         url = self.server_url + self.tool_view.uri + "?version=" + self.version
 
         headers = deepcopy(self.headers)
@@ -350,7 +399,18 @@ class RemoteTool(BaseTool):
 
         # parse the file from response
         returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
+
+        if len(returns_file_infos) == 0 and is_json_response(response):
+            return response.json()
+
         file_metadata = {"tool_name": self.tool_name}
+        if is_json_response(response) and len(returns_file_infos) > 0:
+            return await parse_file_from_json_response(
+                response.json(),
+                file_manager=self.file_manager,
+                param_view=self.tool_view.returns,  # type: ignore
+                tool_name=self.tool_name,
+            )
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
@@ -374,9 +434,45 @@ class RemoteTool(BaseTool):
 
     def function_call_schema(self) -> dict:
         schema = self.tool_view.function_call_schema()
-        schema["examples"] = [example.to_dict() for example in self.examples]
+
+        if len(self.examples) > 0:
+            schema["examples"] = [example.to_dict() for example in self.examples]
 
         return schema or {}
+
+
+class RemoteToolRegistor:
+    def __init__(self) -> None:
+        self.tool_map: Dict[str, Type[RemoteTool]] = {}
+
+    _instance: Optional[RemoteToolRegistor] = None
+
+    def __call__(self, name: str):
+        def inner_decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            RemoteToolRegistor.instance().add_tool_map(name, func)
+            return wrapper
+
+        return inner_decorator
+
+    def add_tool_map(self, name: str, tool_class: Type[RemoteTool]):
+        self.tool_map[name] = tool_class
+
+    def get_tool_class(self, name: str) -> Type[RemoteTool]:
+        if name in self.tool_map:
+            return self.tool_map[name]
+        return RemoteTool
+
+    @staticmethod
+    def instance() -> RemoteToolRegistor:
+        if RemoteToolRegistor._instance is None:
+            RemoteToolRegistor._instance = RemoteToolRegistor()
+        return RemoteToolRegistor._instance
+
+
+tool_registor = RemoteToolRegistor.instance()
 
 
 @dataclass
@@ -402,8 +498,9 @@ class RemoteToolkit:
         return self.get_tool(tool_name)
 
     def get_tools(self) -> List[RemoteTool]:
+        TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return [
-            RemoteTool(
+            TOOL_CLASS(
                 path,
                 self.servers[0].url,
                 self.headers,
@@ -472,7 +569,8 @@ class RemoteToolkit:
                 stage="Loading",
             )
 
-        return RemoteTool(
+        TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
+        return TOOL_CLASS(
             paths[0],
             self.servers[0].url,
             self.headers,

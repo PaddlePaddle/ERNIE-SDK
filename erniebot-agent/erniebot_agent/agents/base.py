@@ -351,4 +351,9 @@ class Agent(BaseAgent):
                 else:
                     continue
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
+            elif isinstance(val, dict):
+                agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
+            elif isinstance(val, list) and isinstance(val[0], dict):
+                for item in val:
+                    agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
         return agent_files

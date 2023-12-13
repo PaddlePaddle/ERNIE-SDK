@@ -103,6 +103,7 @@ class FunctionalAgent(Agent):
         self, input_message: Message, chat_history: List[Message]
     ) -> Optional[AgentAction]:
         chat_history.append(input_message)
+
         messages = self.memory.get_messages() + chat_history
         llm_resp = await self._async_run_llm(
             messages=messages,
