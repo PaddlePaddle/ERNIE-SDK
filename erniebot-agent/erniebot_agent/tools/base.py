@@ -583,7 +583,7 @@ class RemoteToolkit:
     @classmethod
     def from_aistudio(
         cls,
-        tool_id,
+        tool_id: str,
         version: Optional[str] = None,
         access_token: Optional[str] = None,
         file_manager: Optional[FileManager] = None,
