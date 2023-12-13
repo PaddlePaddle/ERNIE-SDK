@@ -45,7 +45,7 @@ def create_enum_class(class_name: str, member_names: List[Union[int, str]]):
 
 
 def get_file_suffix(mime_type: str):
-    mapping = {"audio/mp3": "audio/mpeg"}
+    mapping = {"audio/mp3": "audio/mpeg", "audio/wav": "audio/x-wav"}
     mime_type = mapping.get(mime_type, mime_type)
     mime_type_to_suffix = {value: key for key, value in mimetypes.types_map.items()}
     return mime_type_to_suffix.get(mime_type, None)
@@ -64,3 +64,21 @@ def is_base64_string(string: str) -> bool:
         return base64.b64encode(base64.b64decode(string)) == string
     except Exception:
         return False
+
+
+def get_file_type(file_name: str) -> str:
+    if "." not in file_name:
+        raise ValueError("file_name should contain suffix")
+
+    picture_pattern = set(["jpg", "png", "jpeg"])
+    audio_pattern = set(["mp3", "wav"])
+    video_pattern = set(["mp4", "avi"])
+    file_suffix = file_name.split(".")[-1].lower()
+    if file_suffix in picture_pattern:
+        return "picture"
+    elif file_suffix in audio_pattern:
+        return "audio"
+    elif file_suffix in video_pattern:
+        return "video"
+    else:
+        return ""
