@@ -30,7 +30,6 @@ from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Mes
 
 import erniebot
 from erniebot.response import EBResponse
-from erniebot.utils.misc import NOT_GIVEN
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -126,7 +125,7 @@ class ERNIEBot(ChatModel):
                 plugins=cfg_dict["plugins"],
                 stream=stream,
                 _config_=cfg_dict["_config_"],
-                functions=functions if functions else NOT_GIVEN,
+                functions=functions,  # type: ignore
                 extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
             )
         else:
