@@ -11,9 +11,12 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document, StrOutputParser
 from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
+from langchain.text_splitter import SpacyTextSplitter
 from pydantic import Field
 
 from .utils import access_token
+
+TOKEN_MAX_LENGTH = 4800
 
 
 class TextSummarizationToolInputView(ToolParameterView):
@@ -90,13 +93,22 @@ class TextSummarizationTool(Tool):
     ):
         if not text:
             return "Error: No text to summarize"
-        docs = [
-            Document(
-                page_content=split,
-                metadata={},
-            )
-            for split in text.replace("\n \n", "\n\n").split("\n\n")
-        ]
+        if len(text) > TOKEN_MAX_LENGTH - 500:
+            docs = [
+                Document(
+                    page_content=text,
+                    metadata={},
+                )
+            ]
+            text_splitter = SpacyTextSplitter(pipeline="zh_core_web_sm", chunk_size=1500, chunk_overlap=0)
+            docs = text_splitter.split_documents(docs)
+        else:
+            docs = [
+                Document(
+                    page_content=text,
+                    metadata={},
+                )
+            ]
         map_reduce = self.map_reduce(question)
         summary = map_reduce.invoke(docs, config={"max_concurrency": 1})
         return summary

@@ -33,5 +33,5 @@ class UserProxyAgent(Agent):
         Returns:
             str: human input.
         """
-        reply = input(prompt)
+        reply = input(prompt + "\n")
         return reply

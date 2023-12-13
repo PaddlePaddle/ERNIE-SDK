@@ -1,8 +1,8 @@
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.prompt.prompt_template import PromptTemplate
+from tools.utils import erniebot_chat
 
 
 class ReviserActorAgent(Agent):
@@ -10,7 +10,9 @@ class ReviserActorAgent(Agent):
             使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。
             """
 
-    def __init__(self, name: str, llm: ERNIEBot, system_message: Optional[str] = None):  # type: ignore
+    def __init__(
+        self, name: str, llm: str = "erine-bot-4", system_message: Optional[str] = None
+    ):  # type: ignore
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
         self.model = llm
@@ -18,4 +20,10 @@ class ReviserActorAgent(Agent):
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
 
     async def _async_run(self, draft, notes):
-        return self.model(self.prompt_template.format(draft, notes), system=self.system_message)
+        messages = [
+            {
+                "role": "user",
+                "content": "草稿:\n\n" + draft + "\n编辑的备注:\n\n" + notes,
+            }
+        ]
+        return erniebot_chat(messages=messages, system=self.system_message)

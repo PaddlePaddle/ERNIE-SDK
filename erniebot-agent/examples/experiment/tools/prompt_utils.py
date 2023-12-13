@@ -253,7 +253,7 @@ def generate_reference(meta_dict):
     )
 
 
-gpt_functions = [
+eb_functions = [
     {
         "name": "revise",
         "description": "发送草稿以进行修订",

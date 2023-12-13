@@ -3,7 +3,7 @@ from collections import OrderedDict
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.tools.utils import write_to_json
+from tools.utils import add_citation, write_to_json
 
 SUMMARIZE_MAX_LENGTH = 1800
 
@@ -19,7 +19,6 @@ class ResearchAgent(Agent):
     def __init__(
         self,
         name: str,
-        query,
         agent_name,
         dir_path,
         report_type,
@@ -31,6 +30,7 @@ class ResearchAgent(Agent):
         outline_tool,
         citation_tool,
         summarize_tool,
+        aurora_db_citation,
         config=None,
         system_message: Optional[str] = None,
         use_outline=True,
@@ -45,7 +45,6 @@ class ResearchAgent(Agent):
         """
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
-        self.query = query
         self.dir_path = dir_path
         self.report_type = report_type
         self.cfg = config
@@ -60,6 +59,7 @@ class ResearchAgent(Agent):
         self.use_context_planning = use_context_planning
         self.use_outline = use_outline
         self.agent_name = agent_name
+        self.aurora_db_citation = aurora_db_citation
 
     async def run_search_summary(self, query):
         responses = []
@@ -67,14 +67,14 @@ class ResearchAgent(Agent):
         results = await self.retriever(query, top_k=3)
         length_limit = 0
         for doc in results:
-            res = await self.summarize(doc.page_content, query)
+            res = await self.summarize(doc["content_se"], query)
             # Add reference to avoid hallucination
-            data = {"summary": res, "url": doc.metadata["url"], "name": doc.metadata["name"]}
+            data = {"summary": res, "url": doc["meta"]["url"], "name": doc["title"]}
             length_limit += len(res)
             if length_limit < SUMMARIZE_MAX_LENGTH:
                 responses.append(data)
-                key = doc.metadata["name"]
-                value = doc.metadata["url"]
+                key = doc["title"]
+                value = doc["meta"]["url"]
                 url_dict[key] = value
             else:
                 print(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
@@ -83,28 +83,25 @@ class ResearchAgent(Agent):
         write_to_json(f"{self.dir_path}/research-{query}.jsonl", responses)
         return responses, url_dict
 
-    async def _async_run(self):
+    async def _async_run(self, query):
         """
         Runs the ResearchAgent
         Returns:
             Report
         """
-        print(f"🔎 Running research for '{self.query}'...")
+        print(f"🔎 Running research for '{query}'...")
         # Generate Agent
-        result = await self.intent_detection(self.query)
+        result = await self.intent_detection(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
         use_context_planning = True
         if use_context_planning:
-            res = await self.retriever_abstract(self.query)
-            context = [item.page_content for item in res]
+            res = await self.retriever_abstract(query, top_k=3)
+            context = [item["content_se"] for item in res]
             context = "\n".join(context)
         else:
-            context = []
-
+            context = ""
         # Generate Sub-Queries including original query
-        sub_queries = await self.task_planning(
-            question=self.query, agent_role_prompt=self.role, context=context
-        )
+        sub_queries = await self.task_planning(question=query, agent_role_prompt=self.role, context=context)
         # Run Sub-Queries
         meta_data = OrderedDict()
         research_summary = ""
@@ -115,15 +112,14 @@ class ResearchAgent(Agent):
             meta_data.update(url_dict)
             paragraphs.extend(research_result)
         outline = None
-
         # Generate Outline
         if self.use_outline:
-            outline = await self.outline(sub_queries, self.query)
+            outline = await self.outline(sub_queries, query)
         else:
             outline = None
         # Conduct Research
         report, url_index = await self.report_writing(
-            question=self.query,
+            question=query,
             research_summary=research_summary,
             report_type=self.report_type,
             agent_role_prompt=self.role,
@@ -131,7 +127,8 @@ class ResearchAgent(Agent):
             outline=outline,
         )
         # Generate Citations
+        add_citation(paragraphs, self.aurora_db_citation)
         final_report, path = await self.citation(
-            report, paragraphs, url_index, self.agent_name, self.report_type, self.dir_path
+            report, url_index, self.agent_name, self.report_type, self.dir_path, self.aurora_db_citation
         )
         return final_report, path

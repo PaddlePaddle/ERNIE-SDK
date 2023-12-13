@@ -28,13 +28,12 @@ class TextRankingTool(Tool):
         reports: List,
         query: str,
     ):
-        # map reduce
         messages = [{"role": "user", "content": rank_report_prompt(reports=reports, query=query)}]
-        rank_result = erniebot_chat(messages)
+        rank_result = erniebot_chat(messages, model="ernie-bot-8k")
         rank_list = rank_result.split(">")
         for item in rank_list:
             report_num = item.strip()[1:-1]
             if int(report_num) <= len(reports):
                 break
         final_report = reports[int(report_num) - 1]
-        return final_report
+        return final_report, int(report_num)

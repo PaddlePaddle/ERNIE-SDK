@@ -157,7 +157,6 @@ class BaizhongSearch:
                 content = item["_source"]["doc"]
                 score = item["_score"]
                 json_data = json.loads(content)
-
                 json_data["score"] = score
                 list_data.append(json_data)
             return list_data
