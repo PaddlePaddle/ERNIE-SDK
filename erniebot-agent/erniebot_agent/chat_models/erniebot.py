@@ -29,6 +29,7 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
 
 import erniebot
+from erniebot.resources.chat_completion import ChatCompletionResponse
 from erniebot.response import EBResponse
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
@@ -114,7 +115,7 @@ class ERNIEBot(ChatModel):
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
-        if cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0:
+        if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
         # TODO: Improve this when erniebot typing issue is fixed.
@@ -129,7 +130,6 @@ class ERNIEBot(ChatModel):
             )
         else:
             response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)  # type: ignore
-
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
@@ -147,5 +147,7 @@ class ERNIEBot(ChatModel):
                 arguments=response.function_call["arguments"],
             )
             return output_type(content="", function_call=function_call, token_usage=response.usage)
+        elif isinstance(response, ChatCompletionResponse):
+            return output_type(content=response.rbody, function_call=None, token_usage=None)
         else:
             return output_type(content=response.result, function_call=None, token_usage=response.usage)

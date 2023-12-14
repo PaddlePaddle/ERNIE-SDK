@@ -79,6 +79,16 @@ class BaizhongSearch:
             result = res.json()
             if result["errorCode"] != 0:
                 raise BaizhongError(message=result["errorMsg"], error_code=result["errorCode"])
-            return result["result"]
+            list_data = []
+            for item in result["result"]:
+                list_data.append(
+                    {
+                        "id": item["fileId"],
+                        "content": item["source"]["doc"],
+                        "title": item["source"]["title"],
+                        "score": item["score"],
+                    }
+                )
+            return list_data
         else:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)

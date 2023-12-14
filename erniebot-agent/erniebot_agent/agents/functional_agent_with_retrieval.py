@@ -19,7 +19,7 @@ from pydantic import Field
 
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['content_se']}}
+    第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索语句: {{query}}
 请判断以上的检索结果和检索语句是否相关，并且有助于回答检索语句的问题。
@@ -27,7 +27,7 @@ INTENT_PROMPT = """检索结果:
 
 RAG_PROMPT = """检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['content_se']}}
+    第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
@@ -84,6 +84,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
             )
+
             chat_history: List[Message] = [step_input]
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
@@ -117,6 +118,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         documents = [item for item in documents if item["score"] > self.threshold]
+
         results = {}
         results["documents"] = documents
         return results
