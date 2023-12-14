@@ -160,7 +160,7 @@ def setup_logging(
     verbosity: Optional[str] = None,
     use_standard_format: bool = True,
     use_file_handler: bool = False,
-    log_max_length: int = 100,
+    max_log_length: int = 100,
 ) -> None:
     """Configures logging for the ERNIE Bot Agent library.
 
@@ -168,6 +168,7 @@ def setup_logging(
         verbosity: A value indicating the logging level.
         use_standard_format: If True, use the library's standard logging format.
         use_file_handler: If True, use the library's file handler.
+        max_log_length: The max length of log message each round.
 
     Raises:
         ValueError: If the provided verbosity is not a valid logging level.
@@ -202,4 +203,4 @@ def setup_logging(
             file_handler.setFormatter(FileFormatter("%(message)s"))
             logger.addHandler(file_handler)
 
-        ColoredContent.set_global_max_length(log_max_length)
+        ColoredContent.set_global_max_length(max_log_length)
