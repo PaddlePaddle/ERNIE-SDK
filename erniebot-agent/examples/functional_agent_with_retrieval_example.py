@@ -35,6 +35,10 @@ parser.add_argument(
     default="rag",
     help="Retrieval type, default to rag.",
 )
+parser.add_argument("--knowledge_base_id", default="", type=str, help="The knowledge base id.")
+parser.add_argument(
+    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The knowledge base name."
+)
 args = parser.parse_args()
 
 
@@ -58,12 +62,11 @@ if __name__ == "__main__":
     erniebot.api_type = args.api_type
     erniebot.access_token = args.access_token
     baizhong_db = BaizhongSearch(
-        base_url=args.base_url,
-        project_name="construct_assistant2",
-        remark="construction assistant test dataset",
-        project_id=args.project_id if args.project_id != -1 else None,
+        knowledge_base_name=args.knowledge_base_name,
+        access_token=args.access_token,
+        knowledge_base_id=args.knowledge_base_id if args.knowledge_base_id != "" else None,
     )
-    print(baizhong_db.project_id)
+    print(baizhong_db.knowledge_base_id)
     if args.indexing:
         res = offline_ann(args.data_path, baizhong_db)
         print(res)
@@ -101,6 +104,7 @@ if __name__ == "__main__":
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
+                threshold=0.1,
                 tools=toolkit.get_tools() + [retrieval_tool],
                 memory=memory,
             )

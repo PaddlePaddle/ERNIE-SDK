@@ -15,12 +15,14 @@
 import abc
 import inspect
 import json
+import os
 import pathlib
 from typing import Any, ClassVar, Dict, List, Optional
 
 import aiohttp
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import FilePurpose, is_remote_file_id
+from erniebot_agent.utils.exception import FileError
 
 
 class RemoteFile(File):
@@ -36,7 +38,7 @@ class RemoteFile(File):
         client: "RemoteFileClient",
     ) -> None:
         if not is_remote_file_id(id):
-            raise ValueError(f"Invalid file ID: {id}")
+            raise FileError(f"Invalid file ID: {id}")
         super().__init__(
             id=id,
             filename=filename,
@@ -168,7 +170,7 @@ class AIStudioFileClient(RemoteFileClient):
         return files
 
     async def delete_file(self, file_id: str) -> None:
-        raise RuntimeError(f"`{self.__class__.__name__}.{inspect.stack()[0][3]}` is not supported.")
+        raise FileError(f"`{self.__class__.__name__}.{inspect.stack()[0][3]}` is not supported.")
 
     async def _request(self, *args: Any, **kwargs: Any) -> bytes:
         if self._session is not None:
@@ -192,7 +194,7 @@ class AIStudioFileClient(RemoteFileClient):
         if "meta" in dict_:
             metadata = json.loads(dict_["meta"])
             if not isinstance(metadata, dict):
-                raise ValueError(f"Invalid metadata: {dict_['meta']}")
+                raise FileError(f"Invalid metadata: {dict_['meta']}")
         else:
             metadata = {}
         return RemoteFile(
@@ -210,15 +212,16 @@ class AIStudioFileClient(RemoteFileClient):
         try:
             resp_dict = json.loads(decoded_resp_body)
         except json.JSONDecodeError:
-            raise RuntimeError(f"The response body is not valid JSON: {decoded_resp_body}")
+            raise FileError(f"The response body is not valid JSON: {decoded_resp_body}")
         if not isinstance(resp_dict, dict):
-            raise RuntimeError(f"The response body can not be parsed as a dict: {decoded_resp_body}")
+            raise FileError(f"The response body can not be parsed as a dict: {decoded_resp_body}")
         if resp_dict.get("errorCode", -1) != 0:
-            raise RuntimeError(f"An error was encountered. Response body: {resp_dict}")
+            raise FileError(f"An error was encountered. Response body: {resp_dict}")
         if "result" not in resp_dict:
-            raise RuntimeError(f"The response body does not contain the 'result' key: {resp_dict}")
+            raise FileError(f"The response body does not contain the 'result' key: {resp_dict}")
         return resp_dict["result"]
 
     @classmethod
     def _get_url(cls, path: str) -> str:
-        return f"{cls._BASE_URL}{path}"
+        base_url = os.getenv("AISTUDIO_BASE_URL", cls._BASE_URL)
+        return f"{base_url}{path}"
