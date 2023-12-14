@@ -14,6 +14,9 @@
 from typing import Dict, List, Optional, TypedDict
 
 from erniebot_agent.file_io.base import File
+from erniebot_agent.file_io.protocol import extract_file_ids
+from erniebot_agent.file_io.remote_file import RemoteFile
+from erniebot_agent.utils.logging import logger
 
 import erniebot.utils.token_helper as token_helper
 
@@ -74,13 +77,36 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None):
+    def __init__(self, content: str, files: Optional[List[File]] = None, include_file_url: bool = False):
         self.files = files
-        if self.files is not None:
-            prompt_parts = ["这句话中包含的文件如下："] + [f"file_id: {file.id}" for file in self.files]
-            prompt = "\n".join(prompt_parts)
-            content = content + prompt
+        if self.files and len(self.files) > 0:
+            if len(extract_file_ids(content)) > 0:
+                logger.warning(
+                    "Files are already represented in the content of a HumanMessage, \
+                        which will be ignored now."
+                )
+            else:
+                # prompt_parts = ["。这句话中包含的文件如下："]
+                prompt_parts = self._fillin_file_repr(include_file_url)
+                prompt = "\n".join(prompt_parts)
+                content = content + "\n" + prompt
+
         super().__init__(role="user", content=content)
+
+    def _fillin_file_repr(self, include_file_url):
+        file_repr = []
+        for file in self.files:
+            if not include_file_url:
+                file_repr.append(file.file_repr())
+            else:
+                if not isinstance(file, RemoteFile):
+                    raise RuntimeError(
+                        "LocalFile is not supported with current plugins. \
+                         Please pass access token into file manager."
+                    )
+                file_repr.append(file.file_repr_with_URL())
+
+        return file_repr
 
 
 class FunctionCall(TypedDict):

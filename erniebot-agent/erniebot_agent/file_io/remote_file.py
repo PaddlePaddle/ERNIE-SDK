@@ -61,6 +61,17 @@ class RemoteFile(File):
     async def delete(self) -> None:
         await self._client.delete_file(self.id)
 
+    def file_repr_with_URL(self) -> str:
+        self.URL = self._get_url()
+        return f"<file>{self.id}</file><url>{self.URL}</url>"
+
+    def _get_url(self) -> str:
+        """Get URL from AiStudio."""
+        # TODO(shiyutang): Get URL from AiStudio.
+        return """https://qianfan-doc.bj.bcebos.com/chatfile/\
+%E6%B5%85%E8%B0%88%E7%89%9B%E5%A5%B6%E7%9A%84%\
+E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx"""
+
 
 class RemoteFileClient(Closeable, metaclass=abc.ABCMeta):
     @abc.abstractmethod

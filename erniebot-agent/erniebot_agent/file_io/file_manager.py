@@ -159,7 +159,11 @@ class FileManager(Closeable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
-        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata or {})
+        file = create_local_file_from_path(
+            pathlib.Path(file_path),
+            file_purpose,
+            file_metadata or {},
+        )
         self.register_file(file)
         return file
 
@@ -169,7 +173,11 @@ class FileManager(Closeable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
-        return await self._create_remote_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata)
+        return await self._create_remote_file_from_path(
+            pathlib.Path(file_path),
+            file_purpose,
+            file_metadata,
+        )
 
     @overload
     async def create_file_from_bytes(

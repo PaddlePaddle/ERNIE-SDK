@@ -22,7 +22,9 @@ from erniebot_agent.file_io.base import File
 
 
 def create_local_file_from_path(
-    file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
+    file_path: pathlib.Path,
+    file_purpose: protocol.FilePurpose,
+    file_metadata: Dict[str, Any],
 ) -> "LocalFile":
     if not file_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist.")
