@@ -67,10 +67,12 @@ class FunctionalAgent(Agent):
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
 
-        ask = HumanMessage(content=prompt, files=files, include_file_url=self.file_needs_url)
+        run_input = await HumanMessage.create_with_files(
+            prompt, files or [], include_file_urls=self.file_needs_url
+        )
 
         num_steps_taken = 0
-        next_step_input: Message = ask
+        next_step_input: Message = run_input
         while num_steps_taken < self.max_steps:
             curr_step_output = await self._async_step(
                 next_step_input,

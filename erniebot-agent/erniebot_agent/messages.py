@@ -13,10 +13,11 @@
 
 from typing import Dict, List, Optional, TypedDict
 
+from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import extract_file_ids
 from erniebot_agent.file_io.remote_file import RemoteFile
 from erniebot_agent.utils.logging import logger
+from typing_extensions import Self
 
 import erniebot.utils.token_helper as token_helper
 
@@ -25,10 +26,18 @@ class Message:
     """The base class of a message."""
 
     def __init__(self, role: str, content: str, token_count: Optional[int] = None):
-        self.role = role
-        self.content = content
+        self._role = role
+        self._content = content
         self._token_count = token_count
         self._param_names = ["role", "content"]
+
+    @property
+    def role(self) -> str:
+        return self._role
+
+    @property
+    def content(self) -> str:
+        return self._content
 
     @property
     def token_count(self):
@@ -77,36 +86,45 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None, include_file_url: bool = False):
-        self.files = files
-        if self.files and len(self.files) > 0:
-            if len(extract_file_ids(content)) > 0:
-                logger.warning(
-                    "Files are already represented in the content of a HumanMessage, \
-                        which will be ignored now."
-                )
-            else:
-                # prompt_parts = ["。这句话中包含的文件如下："]
-                prompt_parts = self._fillin_file_repr(include_file_url)
-                prompt = "\n".join(prompt_parts)
-                content = content + "\n" + prompt
-
+    def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
-    def _fillin_file_repr(self, include_file_url):
-        file_repr = []
-        for file in self.files:
-            if not include_file_url:
-                file_repr.append(file.file_repr())
-            else:
-                if not isinstance(file, RemoteFile):
-                    raise RuntimeError(
-                        "LocalFile is not supported with current plugins. \
-                         Please pass access token into file manager."
-                    )
-                file_repr.append(file.file_repr_with_URL())
+    @classmethod
+    async def create_with_files(
+        cls, text: str, files: List[File], *, include_file_urls: bool = False
+    ) -> Self:
+        def _get_file_reprs(files: List[File]) -> List[str]:
+            file_reprs = []
+            for file in files:
+                file_reprs.append(file.get_file_repr())
+            return file_reprs
 
-        return file_repr
+        async def _create_file_reprs_with_urls(files: List[File]) -> List[str]:
+            file_reprs = []
+            for file in files:
+                if not isinstance(file, RemoteFile):
+                    raise RuntimeError("Only `RemoteFile` objects can have URLs in their representations.")
+                url = await file.create_temporary_url()
+                file_reprs.append(file.get_file_repr_with_url(url))
+
+            return file_reprs
+
+        def _append_files_repr_to_text(text: str, files_repr: str) -> str:
+            return f"{text}\n{files_repr}"
+
+        if len(files) > 0:
+            if len(protocol.extract_file_ids(text)) > 0:
+                logger.warning("File IDs were found in the text. The provided files will be ignored.")
+            else:
+                if include_file_urls:
+                    file_reprs = await _create_file_reprs_with_urls(files)
+                else:
+                    file_reprs = _get_file_reprs(files)
+                files_repr = "\n".join(file_reprs)
+                content = _append_files_repr_to_text(text, files_repr)
+        else:
+            content = text
+        return cls(content)
 
 
 class FunctionCall(TypedDict):
