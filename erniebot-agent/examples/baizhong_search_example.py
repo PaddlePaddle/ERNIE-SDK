@@ -28,9 +28,9 @@ parser.add_argument("--api_type", default="qianfan", type=str, help="The aistudi
 parser.add_argument("--api_key", default="", type=str, help="The API Key.")
 parser.add_argument("--secret_key", default="", type=str, help="The secret key.")
 parser.add_argument("--indexing", action="store_true", help="The indexing step.")
-parser.add_argument("--knowledge_base_id", default="", type=str, help="The API Key.")
+parser.add_argument("--knowledge_base_id", default="", type=str, help="The knowledge base id.")
 parser.add_argument(
-    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The aistudio access token."
+    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The knowledge base name."
 )
 
 args = parser.parse_args()

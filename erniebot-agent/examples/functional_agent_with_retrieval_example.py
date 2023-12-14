@@ -35,9 +35,9 @@ parser.add_argument(
     default="rag",
     help="Retrieval type, default to rag.",
 )
-parser.add_argument("--knowledge_base_id", default="", type=str, help="The API Key.")
+parser.add_argument("--knowledge_base_id", default="", type=str, help="The knowledge base id.")
 parser.add_argument(
-    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The aistudio access token."
+    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The knowledge base name."
 )
 args = parser.parse_args()
 
