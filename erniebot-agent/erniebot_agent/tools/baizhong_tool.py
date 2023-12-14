@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.messages import AIMessage, HumanMessage
 from erniebot_agent.tools.schema import ToolParameterView
@@ -44,7 +44,7 @@ class BaizhongSearchTool(Tool):
             self.few_shot_examples = examples
         self.threshold = threshold
 
-    async def __call__(self, query: str, top_k: int = 3, filters: Optional[dict[str, Any]] = None):
+    async def __call__(self, query: str, top_k: int = 3, filters: Optional[Dict[str, Any]] = None):
         documents = self.db.search(query, top_k, filters)
         documents = [item for item in documents if item["score"] > self.threshold]
         return {"documents": documents}

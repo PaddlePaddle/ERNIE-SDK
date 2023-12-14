@@ -23,13 +23,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--base_url", type=str, help="The Aurora serving path.")
 parser.add_argument("--data_path", default="construction_regulations", type=str, help="The data path.")
 parser.add_argument(
+    "--baizhong_access_token", default="ai_studio_access_token", type=str, help="The aistudio access token."
+)
+parser.add_argument(
     "--access_token", default="ai_studio_access_token", type=str, help="The aistudio access token."
 )
 parser.add_argument("--api_type", default="qianfan", type=str, help="The aistudio access token.")
 parser.add_argument("--api_key", default="", type=str, help="The API Key.")
 parser.add_argument("--secret_key", default="", type=str, help="The secret key.")
 parser.add_argument("--indexing", action="store_true", help="The indexing step.")
-parser.add_argument("--project_id", default=-1, type=int, help="The API Key.")
+parser.add_argument("--knowledge_base_id", default="", type=str, help="The API Key.")
+parser.add_argument(
+    "--knowledge_base_name", default="knowledge_base_name", type=str, help="The aistudio access token."
+)
 
 args = parser.parse_args()
 
@@ -54,24 +60,14 @@ def offline_ann(data_path, aurora_db):
 if __name__ == "__main__":
     aurora_db = BaizhongSearch(
         base_url=args.base_url,
-        project_name="construction_data",
-        remark="construction test dataset",
-        project_id=args.project_id,
+        knowledge_base_name=args.knowledge_base_name,
+        access_token=args.baizhong_access_token,
+        knowledge_base_id=args.knowledge_base_id if args.knowledge_base_id != "" else None,
     )
-    # look up the document by id
-    # doc_ids = ["be1a9ef5-0375-4999-8b65-04c569bcaa63"]
-    # msg = aurora_db.delete_documents(ids=doc_ids)
-    # delete the document by id
-    # msg = aurora_db.delete_documents(ids=doc_ids)
     if args.indexing:
         offline_ann(args.data_path, aurora_db)
 
     query = "城乡建设部规章中描述的城市管理执法的执法主体是谁？"
-    # One example
-    # list_data = [{'id': '1', 'title': '城市管理执法办法',
-    #               'content_se': '第一条 为了规范城市管理执法工作，提高执法和服务水平，\
-    #                 维护城市管理秩序，保护公民、法人和其他组织的合法权益，\
-    #               根据行政处罚法、行政强制法等法律法规的规定，制定本办法。'}]
     # Doc store test
     result = aurora_db.search(query=query, top_k=3, filters=None)
     print(result)
@@ -100,12 +96,12 @@ if __name__ == "__main__":
     print(output_view.function_call_schema())
 
     if args.api_type == "aistudio":
-        erniebot.api_type = "aistudio"
-        erniebot.access_token = args.access_token
+        erniebot.api_type = "aistudio"  # type: ignore
+        erniebot.access_token = args.access_token  # type: ignore
     elif args.api_type == "qianfan":
-        erniebot.api_type = "qianfan"
-        erniebot.ak = args.api_key
-        erniebot.sk = args.secret_key
+        erniebot.api_type = "qianfan"  # type: ignore
+        erniebot.ak = args.api_key  # type: ignore
+        erniebot.sk = args.secret_key  # type: ignore
 
     # Few shot examples
     few_shot_examples = [
@@ -126,7 +122,7 @@ if __name__ == "__main__":
     print(aurora_search.function_call_schema())
     # Tool Test
     result = asyncio.run(aurora_search(query=query))
-    llm = ERNIEBot(model="ernie-bot-8k")
+    llm = ERNIEBot(model="ernie-bot")
     memory = WholeMemory()
     # Agent test
     agent = FunctionalAgent(llm=llm, tools=[aurora_search], memory=memory)
