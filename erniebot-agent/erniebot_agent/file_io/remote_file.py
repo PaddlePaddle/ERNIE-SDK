@@ -54,7 +54,7 @@ class RemoteFile(File):
     async def delete(self) -> None:
         await self._client.delete_file(self.id)
 
-    async def create_temporary_url(self, expire_after: float = 1800) -> str:
+    async def create_temporary_url(self, expire_after: float = 600) -> str:
         return await self._client.create_temporary_url(self.id, expire_after)
 
     def get_file_repr_with_url(self, url: str) -> str:
