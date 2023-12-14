@@ -91,12 +91,12 @@ if __name__ == "__main__":
     print(output_view.function_call_schema())
 
     if args.api_type == "aistudio":
-        erniebot.api_type = "aistudio"  # type: ignore
-        erniebot.access_token = args.access_token  # type: ignore
+        erniebot.api_type = "aistudio"
+        erniebot.access_token = args.access_token
     elif args.api_type == "qianfan":
-        erniebot.api_type = "qianfan"  # type: ignore
-        erniebot.ak = args.api_key  # type: ignore
-        erniebot.sk = args.secret_key  # type: ignore
+        erniebot.api_type = "qianfan"
+        erniebot.ak = args.api_key
+        erniebot.sk = args.secret_key
 
     # Few shot examples
     few_shot_examples = [
