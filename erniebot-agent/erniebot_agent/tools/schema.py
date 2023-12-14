@@ -197,6 +197,9 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 
 class ToolParameterView(BaseModel):
+    class Config:
+        use_enum_values = True
+
     @classmethod
     def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
         """parse openapi component schemas to ParameterView
