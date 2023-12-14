@@ -154,27 +154,22 @@ class TestToolWithFile(unittest.TestCase):
                 f.write(content)
 
             file_registry = FileRegistry()
-            file_manager = FileManager(file_registry)
+            async with FileManager(file_registry) as file_manager:
+                toolkit = RemoteToolkit.from_openapi_file(openapi_file, file_manager=file_manager)
+                tool = toolkit.get_tool("getFile")
+                # tool.tool_name should have `tool_name_prefix`` prepended
+                self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
+                input_file = await file_manager.create_file_from_path(self.file_path)
+                result = await tool(file=input_file.id)
+                self.assertIn("response_file", result)
+                file_id = result["response_file"]
 
-            toolkit = RemoteToolkit.from_openapi_file(openapi_file, file_manager=file_manager)
-            tool = toolkit.get_tool("getFile")
-            # tool.tool_name should have `tool_name_prefix`` prepended
-            self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            input_file = await file_manager.create_file_from_path(self.file_path)
-            result = await tool(file=input_file.id)
-            self.assertIn("response_file", result)
-            file_id = result["response_file"]
-
-            file = file_manager.look_up_file_by_id(file_id=file_id)
-            content = await file.read_contents()
-            self.assertEqual(content.decode("utf-8"), self.content)
+                file = file_manager.look_up_file_by_id(file_id=file_id)
+                content = await file.read_contents()
+                self.assertEqual(content.decode("utf-8"), self.content)
 
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        file_registry = FileRegistry()
-        self.file_manager = FileManager(file_registry)
-
     def create_fake_response(self, body: dict):
         the_response = Response()
         the_response.code = "expired"
@@ -224,30 +219,27 @@ components:
             x-ebagent-file-mime-type: image/png
 """
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "openapi.yaml")
-            with open(file_path, "w+", encoding="utf-8") as f:
-                f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
-            response = self.create_fake_response(body)
-            tool = toolkit.get_tools()[-1]
+            async with FileManager(FileRegistry()) as file_manager:
+                file_path = os.path.join(temp_dir, "openapi.yaml")
+                with open(file_path, "w+", encoding="utf-8") as f:
+                    f.write(yaml_content)
+                toolkit = RemoteToolkit.from_openapi_file(file_path)
+                response = self.create_fake_response(body)
+                tool = toolkit.get_tools()[-1]
 
-            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
-            assert len(file_infos) == 1
+                file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+                assert len(file_infos) == 1
 
-            json_response = await parse_file_from_json_response(
-                response.json(),
-                file_manager=self.file_manager,
-                param_view=tool.tool_view.returns,
-                tool_name=tool.tool_name,
-            )
-            assert json_response["b64_img"].startswith("file-local-")
+                json_response = await parse_file_from_json_response(
+                    response.json(),
+                    file_manager=file_manager,
+                    param_view=tool.tool_view.returns,
+                    tool_name=tool.tool_name,
+                )
+                assert json_response["b64_img"].startswith("file-local-")
 
 
 class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        file_registry = FileRegistry()
-        self.file_manager = FileManager(file_registry)
-
     def create_fake_response(self, body: dict):
         the_response = Response()
         the_response.code = "expired"
@@ -301,32 +293,29 @@ components:
               x-ebagent-file-mime-type: image/png
 """
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "openapi.yaml")
-            with open(file_path, "w+", encoding="utf-8") as f:
-                f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
-            response = self.create_fake_response(body)
-            tool = toolkit.get_tools()[-1]
+            async with FileManager(FileRegistry()) as file_manager:
+                file_path = os.path.join(temp_dir, "openapi.yaml")
+                with open(file_path, "w+", encoding="utf-8") as f:
+                    f.write(yaml_content)
+                toolkit = RemoteToolkit.from_openapi_file(file_path)
+                response = self.create_fake_response(body)
+                tool = toolkit.get_tools()[-1]
 
-            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
-            assert len(file_infos) == 1
+                file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+                assert len(file_infos) == 1
 
-            assert file_infos["image"]["b64_img"]["format"] == "byte"
+                assert file_infos["image"]["b64_img"]["format"] == "byte"
 
-            json_response = await parse_file_from_json_response(
-                response.json(),
-                file_manager=self.file_manager,
-                param_view=tool.tool_view.returns,
-                tool_name=tool.tool_name,
-            )
-            assert json_response["image"]["b64_img"].startswith("file-local-")
+                json_response = await parse_file_from_json_response(
+                    response.json(),
+                    file_manager=file_manager,
+                    param_view=tool.tool_view.returns,
+                    tool_name=tool.tool_name,
+                )
+                assert json_response["image"]["b64_img"].startswith("file-local-")
 
 
 class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        file_registry = FileRegistry()
-        self.file_manager = FileManager(file_registry)
-
     def create_fake_response(self, body: dict):
         the_response = Response()
         the_response.code = "expired"
@@ -383,21 +372,22 @@ components:
                     x-ebagent-file-mime-type: image/png
 """
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "openapi.yaml")
-            with open(file_path, "w+", encoding="utf-8") as f:
-                f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
-            response = self.create_fake_response(body)
-            tool = toolkit.get_tools()[-1]
+            async with FileManager(FileRegistry()) as file_manager:
+                file_path = os.path.join(temp_dir, "openapi.yaml")
+                with open(file_path, "w+", encoding="utf-8") as f:
+                    f.write(yaml_content)
+                toolkit = RemoteToolkit.from_openapi_file(file_path)
+                response = self.create_fake_response(body)
+                tool = toolkit.get_tools()[-1]
 
-            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
-            assert len(file_infos) == 1
-            assert file_infos["data"]["b64_img"]["format"] == "byte"
+                file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+                assert len(file_infos) == 1
+                assert file_infos["data"]["b64_img"]["format"] == "byte"
 
-            json_response = await parse_file_from_json_response(
-                response.json(),
-                file_manager=self.file_manager,
-                param_view=tool.tool_view.returns,
-                tool_name=tool.tool_name,
-            )
-            assert json_response["data"][0]["b64_img"].startswith("file-local-")
+                json_response = await parse_file_from_json_response(
+                    response.json(),
+                    file_manager=file_manager,
+                    param_view=tool.tool_view.returns,
+                    tool_name=tool.tool_name,
+                )
+                assert json_response["data"][0]["b64_img"].startswith("file-local-")
