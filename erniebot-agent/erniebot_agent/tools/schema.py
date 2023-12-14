@@ -58,6 +58,7 @@ def json_type(type: Optional[Type[object]] = None):
         str: "string",
         list: "array",
         List: "array",
+        bytes: "string",
         float: "number",
         ToolParameterView: "object",
     }
@@ -89,6 +90,11 @@ def json_type(type: Optional[Type[object]] = None):
 
 def python_type_from_json_type(json_type_dict: dict) -> Type[object]:
     simple_types = {"integer": int, "string": str, "number": float, "object": ToolParameterView}
+    format = json_type_dict.get("format", None)
+
+    if json_type_dict["type"] == "string" and format == "binary":
+        return bytes
+
     if json_type_dict["type"] in simple_types:
         return simple_types[json_type_dict["type"]]
 
