@@ -54,16 +54,11 @@ class RemoteFile(File):
     async def delete(self) -> None:
         await self._client.delete_file(self.id)
 
-    def file_repr_with_URL(self) -> str:
-        self.URL = self._get_url()
-        return f"<file>{self.id}</file><url>{self.URL}</url>"
+    async def create_temporary_url(self, expire_after: float = 1800) -> str:
+        return await self._client.create_temporary_url(self.id, expire_after)
 
-    def _get_url(self) -> str:
-        """Get URL from AiStudio."""
-        # TODO(shiyutang): Get URL from AiStudio.
-        return """https://qianfan-doc.bj.bcebos.com/chatfile/\
-%E6%B5%85%E8%B0%88%E7%89%9B%E5%A5%B6%E7%9A%84%\
-E8%90%A5%E5%85%BB%E4%B8%8E%E6%B6%88%E8%B4%B9%E8%B6%8B%E5%8A%BF.docx"""
+    def get_file_repr_with_url(self, url: str) -> str:
+        return f"{self.get_file_repr()}<url>{url}</url>"
 
 
 class RemoteFileClient(metaclass=abc.ABCMeta):
@@ -87,6 +82,10 @@ class RemoteFileClient(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def delete_file(self, file_id: str) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def create_temporary_url(self, file_id: str, expire_after: float) -> str:
         raise NotImplementedError
 
 
@@ -169,6 +168,20 @@ class AIStudioFileClient(RemoteFileClient):
 
     async def delete_file(self, file_id: str) -> None:
         raise RuntimeError(f"`{self.__class__.__name__}.{inspect.stack()[0][3]}` is not supported.")
+
+    async def create_temporary_url(self, file_id: str, expire_after: float) -> str:
+        url = self._get_url(self._RETRIEVE_ENDPOINT).format(file_id=file_id)
+        headers: Dict[str, str] = {}
+        headers.update(self._get_default_headers())
+        resp_bytes = await self._request(
+            "GET",
+            url,
+            params={"expirationInSeconds": expire_after},
+            headers=headers,
+            raise_for_status=True,
+        )
+        result = self._get_result_from_response_body(resp_bytes)
+        return result["fileUrl"]
 
     async def _request(self, *args: Any, **kwargs: Any) -> bytes:
         if self._session is not None:
