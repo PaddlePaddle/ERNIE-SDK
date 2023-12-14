@@ -33,6 +33,7 @@ from erniebot_agent.file_io.caching import (
 from erniebot_agent.file_io.file_registry import BaseFileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
+from erniebot_agent.utils.exception import FileError
 from erniebot_agent.utils.logging import logger
 from erniebot_agent.utils.mixins import Closeable
 from typing_extensions import Self, TypeAlias
@@ -288,8 +289,13 @@ class FileManager(Closeable):
         self._file_registry.unregister_file(file, *args, **kwargs)
 
     def look_up_file_by_id(self, file_id: str, *args: Any, **kwargs: Any) -> Optional[File]:
-        self.ensure_not_closed()
-        return self._file_registry.look_up_file(file_id, *args, **kwargs)
+        file = self._file_registry.look_up_file(file_id, *args, **kwargs)
+        if file is None:
+            raise FileError(
+                f"File with ID '{file_id}' not found. "
+                "Please check if `file_id` is correct and the file is registered."
+            )
+        return file
 
     async def close(self) -> None:
         if not self._closed:
