@@ -119,7 +119,7 @@ class ERNIEBot(ChatModel):
 
         # TODO: Improve this when erniebot typing issue is fixed.
         if cfg_dict.get("plugins", None):
-            response = await erniebot.ChatCompletionWithPlugins.acreate(  # type: ignore
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore
                 stream=stream,
@@ -128,14 +128,11 @@ class ERNIEBot(ChatModel):
                 extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
             )
         else:
-            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)  # type: ignore
+            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
-            return (
-                self.convert_response_to_output(resp, AIMessageChunk)
-                async for resp in response  # type: ignore
-            )
+            return (self.convert_response_to_output(resp, AIMessageChunk) async for resp in response)
 
     @staticmethod
     def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
