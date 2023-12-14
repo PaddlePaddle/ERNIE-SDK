@@ -50,10 +50,12 @@ class GradioMixin:
                 and response.files[-1].type == "output"
                 and response.files[-1].used_by == response.actions[-1].tool_name
             ):
+                # If there is a file output in the last round, then we need to show it
                 output_file_id = response.files[-1].file.id
                 output_file = self._file_manager.look_up_file_by_id(output_file_id)
                 file_content = await output_file.read_contents()
                 if get_file_type(response.files[-1].file.filename) == "image":
+                    # If it is a image, we can display it in the same chat page
                     base64_encoded = base64.b64encode(file_content).decode("utf-8")
                     if output_file_id in response.text:
                         output_result = response.text
@@ -63,7 +65,7 @@ class GradioMixin:
                     else:
                         output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                 else:
-                    # TODO: Support multiple files
+                    # TODO: Support multiple files, support audio now
                     temp_save_file_name = os.path.join(td, response.files[-1].file.filename)
                     with open(temp_save_file_name, "wb") as f:
                         f.write(file_content)
@@ -74,7 +76,7 @@ class GradioMixin:
 
             history[-1][1] = output_result
             if temp_save_file_name:
-                # If it is not
+                # If it is not image, we should have another chat page
                 history = history + [(None, (temp_save_file_name,))]
             raw_messages.extend(response.chat_history)
             return (
