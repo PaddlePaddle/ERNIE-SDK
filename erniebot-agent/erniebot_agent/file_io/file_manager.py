@@ -25,6 +25,7 @@ from erniebot_agent.file_io.file_registry import FileRegistry, get_file_registry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.protocol import FilePurpose
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
+from erniebot_agent.utils.exception import FileError
 from erniebot_agent.utils.logging import logger
 from typing_extensions import TypeAlias
 
@@ -197,7 +198,13 @@ class FileManager(object):
         return file
 
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
-        return self._file_registry.look_up_file(file_id)
+        file = self._file_registry.look_up_file(file_id)
+        if file is None:
+            raise FileError(
+                f"File with ID '{file_id}' not found. "
+                "Please check if the file exists and the `file_id` is correct."
+            )
+        return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
         files = await self.remote_file_client.list_files()
