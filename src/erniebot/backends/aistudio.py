@@ -38,7 +38,7 @@ class AIStudioBackend(EBBackend):
         self._access_token = access_token
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
-        if "errorCode" in resp and resp["errorCode"] != 0:
+        if resp["errorCode"] != 0:
             ecode = resp["errorCode"]
             emsg = resp["errorMsg"]
             if ecode in (4, 17):
