@@ -132,7 +132,10 @@ class ERNIEBot(ChatModel):
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
-            return (self.convert_response_to_output(resp, AIMessageChunk) async for resp in response)
+            return (
+                self.convert_response_to_output(resp, AIMessageChunk)
+                async for resp in response  # type: ignore
+            )
 
     @staticmethod
     def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
