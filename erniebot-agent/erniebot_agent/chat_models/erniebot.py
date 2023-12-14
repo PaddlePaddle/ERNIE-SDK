@@ -114,7 +114,7 @@ class ERNIEBot(ChatModel):
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
-        if cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0:
+        if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
         # TODO: Improve this when erniebot typing issue is fixed.
@@ -129,7 +129,6 @@ class ERNIEBot(ChatModel):
             )
         else:
             response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
-
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:

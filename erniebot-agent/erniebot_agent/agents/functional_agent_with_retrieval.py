@@ -19,7 +19,7 @@ from pydantic import Field
 
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['content_se']}}
+    第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索语句: {{query}}
 请判断以上的检索结果和检索语句是否相关，并且有助于回答检索语句的问题。
@@ -27,7 +27,7 @@ INTENT_PROMPT = """检索结果:
 
 RAG_PROMPT = """检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['content_se']}}
+    第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
