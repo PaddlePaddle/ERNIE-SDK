@@ -20,6 +20,7 @@ from typing import Any, Awaitable, Callable, NoReturn, Optional, Tuple, final
 import anyio
 from erniebot_agent.file_io.remote_file import RemoteFile
 from erniebot_agent.utils.logging import logger
+from erniebot_agent.utils.mixins import Closeable
 from typing_extensions import Self, TypeAlias
 
 _DEFAULT_CACHE_TIMEOUT = 3600
@@ -174,7 +175,7 @@ class FileCache(object):
 
 
 @final
-class FileCacheManager(object):
+class FileCacheManager(Closeable):
     def __init__(self, cache_factory: CacheFactory):
         super().__init__()
         self._cache_factory = cache_factory
@@ -193,8 +194,7 @@ class FileCacheManager(object):
         discard_callback: Optional[DiscardCallback] = None,
         init_cache_in_sync: Optional[bool] = None,
     ) -> Tuple[FileCache, bool]:
-        if self._closed:
-            raise RuntimeError("File cache manager is closed.")
+        self.ensure_not_closed()
         cache = None
         if self._has_cache(file_id):
             cache = self._get_cache(file_id)
@@ -207,22 +207,21 @@ class FileCacheManager(object):
                 discard_callback=discard_callback,
                 init_cache_in_sync=init_cache_in_sync,
             )
+            self._set_cache(file_id, cache)
             return cache, True
 
     async def get_cache(
         self,
         file_id: str,
     ) -> FileCache:
-        if self._closed:
-            raise RuntimeError("File cache manager is closed.")
+        self.ensure_not_closed()
         try:
             return self._get_cache(file_id)
         except KeyError as e:
             raise CacheNotFoundError from e
 
     async def remove_cache_if_exists(self, file_id: str) -> None:
-        if self._closed:
-            raise RuntimeError("File cache manager is closed.")
+        self.ensure_not_closed()
         if self._has_cache(file_id):
             cache = self._get_cache(file_id)
             await cache.discard()
@@ -249,7 +248,6 @@ class FileCacheManager(object):
                 cache.activate()
             else:
                 cache.deactivate()
-        self._set_cache(file_id, cache)
         return cache
 
     def _has_cache(self, file_id: str) -> bool:

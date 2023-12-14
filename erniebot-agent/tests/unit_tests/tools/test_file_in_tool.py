@@ -172,7 +172,8 @@ class TestToolWithFile(unittest.TestCase):
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.file_manager = FileManager()
+        file_registry = FileRegistry()
+        self.file_manager = FileManager(file_registry)
 
     def create_fake_response(self, body: dict):
         the_response = Response()
@@ -244,7 +245,8 @@ components:
 
 class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.file_manager = FileManager()
+        file_registry = FileRegistry()
+        self.file_manager = FileManager(file_registry)
 
     def create_fake_response(self, body: dict):
         the_response = Response()
@@ -322,7 +324,8 @@ components:
 
 class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.file_manager = FileManager()
+        file_registry = FileRegistry()
+        self.file_manager = FileManager(file_registry)
 
     def create_fake_response(self, body: dict):
         the_response = Response()

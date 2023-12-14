@@ -20,6 +20,7 @@ from typing import Optional
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.file_registry import get_global_file_registry
 from erniebot_agent.file_io.remote_file import AIStudioFileClient
+from erniebot_agent.utils.mixins import Closeable
 from erniebot_agent.utils.temp_file import create_tracked_temp_dir
 
 
@@ -31,17 +32,18 @@ def get_global_file_manager(access_token: Optional[str] = None) -> FileManager:
         file_manager = FileManager(global_file_registry, save_dir=create_tracked_temp_dir())
     else:
         remote_file_client = AIStudioFileClient(access_token=access_token)
+        atexit.register(_close_object, remote_file_client)
         file_manager = FileManager(
             global_file_registry, remote_file_client, save_dir=create_tracked_temp_dir()
         )
-    atexit.register(_close_file_manager, file_manager)
+    atexit.register(_close_object, file_manager)
     return file_manager
 
 
-def _close_file_manager(file_manager: FileManager):
+def _close_object(closeable: Closeable):
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        asyncio.run(file_manager.close())
+        asyncio.run(closeable.close())
     else:
-        loop.create_task(file_manager.close())
+        loop.create_task(closeable.close())

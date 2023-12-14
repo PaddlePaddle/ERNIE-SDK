@@ -34,13 +34,14 @@ from erniebot_agent.file_io.file_registry import BaseFileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.logging import logger
+from erniebot_agent.utils.mixins import Closeable
 from typing_extensions import Self, TypeAlias
 
 FilePath: TypeAlias = Union[str, os.PathLike]
 
 
 @final
-class FileManager(object):
+class FileManager(Closeable):
     _file_cache_manager: Optional[FileCacheManager]
     _temp_dir: Optional[tempfile.TemporaryDirectory] = None
 
@@ -140,8 +141,7 @@ class FileManager(object):
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         file: Union[LocalFile, RemoteFile]
         if file_type is None:
             file_type = self._get_default_file_type()
@@ -216,8 +216,7 @@ class FileManager(object):
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         if file_type is None:
             file_type = self._get_default_file_type()
         file_path = self._get_unique_file_path(
@@ -255,8 +254,7 @@ class FileManager(object):
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         file = await self.remote_file_client.retrieve_file(file_id)
         if self._cache_remote_files:
             file = await self._cache_remote_file(
@@ -269,24 +267,20 @@ class FileManager(object):
         return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         files = await self.remote_file_client.list_files()
         return files
 
     def register_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         self._file_registry.register_file(file, *args, **kwargs)
 
     def unregister_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         self._file_registry.unregister_file(file, *args, **kwargs)
 
     def look_up_file_by_id(self, file_id: str, *args: Any, **kwargs: Any) -> Optional[File]:
-        if self._closed:
-            raise RuntimeError("File manager is closed.")
+        self.ensure_not_closed()
         return self._file_registry.look_up_file(file_id, *args, **kwargs)
 
     async def close(self) -> None:
@@ -354,8 +348,6 @@ class FileManager(object):
     def _get_unique_file_path(
         self, prefix: Optional[str] = None, suffix: Optional[str] = None
     ) -> pathlib.Path:
-        if self._save_dir is None:
-            raise RuntimeError("No directory was specified to save files.")
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"
         file_path = self._save_dir / filename
         return file_path

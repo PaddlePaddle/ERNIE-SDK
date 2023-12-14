@@ -29,7 +29,7 @@ _compiled_local_file_id_pattern = re.compile(_LOCAL_FILE_ID_PATTERN)
 _compiled_remote_file_id_pattern = re.compile(_REMOTE_FILE_ID_PATTERN)
 
 
-def build_local_file_id_from_uuid(uuid: str) -> str:
+def create_local_file_id_from_uuid(uuid: str) -> str:
     return _LOCAL_FILE_ID_PREFIX + uuid
 
 

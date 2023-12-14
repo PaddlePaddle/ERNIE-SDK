@@ -83,11 +83,11 @@ class FakeRemoteFileClient(RemoteFileClient):
 
     async def upload_file(self, file_path, file_purpose, file_metadata):
         result = await self.server.upload_file(file_path, file_purpose, file_metadata)
-        return self._build_file_obj_from_dict(result)
+        return self._create_file_obj_from_dict(result)
 
     async def retrieve_file(self, file_id):
         result = await self.server.retrieve_file(file_id)
-        return self._build_file_obj_from_dict(result)
+        return self._create_file_obj_from_dict(result)
 
     async def retrieve_file_contents(self, file_id):
         return await self.server.retrieve_file_contents(file_id)
@@ -96,14 +96,14 @@ class FakeRemoteFileClient(RemoteFileClient):
         result = await self.server.list_files()
         files = []
         for item in result:
-            file = self._build_file_obj_from_dict(item)
+            file = self._create_file_obj_from_dict(item)
             files.append(file)
         return files
 
     async def delete_file(self, file_id) -> None:
         await self.server.delete_file(file_id)
 
-    def _build_file_obj_from_dict(self, dict_):
+    def _create_file_obj_from_dict(self, dict_):
         with self._protocol.follow():
             return RemoteFile(
                 id=dict_["id"],

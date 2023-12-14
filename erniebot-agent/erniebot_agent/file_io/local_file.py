@@ -78,4 +78,4 @@ class LocalFile(File):
 
 
 def _generate_local_file_id():
-    return protocol.build_local_file_id_from_uuid(str(uuid.uuid1()))
+    return protocol.create_local_file_id_from_uuid(str(uuid.uuid1()))

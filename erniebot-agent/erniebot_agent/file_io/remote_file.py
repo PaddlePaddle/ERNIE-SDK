@@ -21,6 +21,7 @@ from typing import Any, ClassVar, Dict, List, Optional
 import aiohttp
 from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
+from erniebot_agent.utils.mixins import Closeable
 
 
 class RemoteFile(File):
@@ -61,7 +62,7 @@ class RemoteFile(File):
         await self._client.delete_file(self.id)
 
 
-class RemoteFileClient(metaclass=abc.ABCMeta):
+class RemoteFileClient(Closeable, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def upload_file(
         self, file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
@@ -97,11 +98,19 @@ class AIStudioFileClient(RemoteFileClient):
     ) -> None:
         super().__init__()
         self._access_token = access_token
+        if aiohttp_session is None:
+            aiohttp_session = self._create_aiohttp_session()
         self._session = aiohttp_session
+        self._closed = False
+
+    @property
+    def closed(self) -> bool:
+        return self._closed
 
     async def upload_file(
         self, file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
     ) -> RemoteFile:
+        self.ensure_not_closed()
         url = self._get_url(self._UPLOAD_ENDPOINT)
         headers: Dict[str, str] = {}
         headers.update(self._get_default_headers())
@@ -118,9 +127,10 @@ class AIStudioFileClient(RemoteFileClient):
                 raise_for_status=True,
             )
         result = self._get_result_from_response_body(resp_bytes)
-        return self._build_file_obj_from_dict(result)
+        return self._create_file_obj_from_dict(result)
 
     async def retrieve_file(self, file_id: str) -> RemoteFile:
+        self.ensure_not_closed()
         url = self._get_url(self._RETRIEVE_ENDPOINT).format(file_id=file_id)
         headers: Dict[str, str] = {}
         headers.update(self._get_default_headers())
@@ -131,9 +141,10 @@ class AIStudioFileClient(RemoteFileClient):
             raise_for_status=True,
         )
         result = self._get_result_from_response_body(resp_bytes)
-        return self._build_file_obj_from_dict(result)
+        return self._create_file_obj_from_dict(result)
 
     async def retrieve_file_contents(self, file_id: str) -> bytes:
+        self.ensure_not_closed()
         url = self._get_url(self._RETRIEVE_CONTENTS_ENDPOINT).format(file_id=file_id)
         headers: Dict[str, str] = {}
         headers.update(self._get_default_headers())
@@ -146,6 +157,7 @@ class AIStudioFileClient(RemoteFileClient):
         return resp_bytes
 
     async def list_files(self) -> List[RemoteFile]:
+        self.ensure_not_closed()
         url = self._get_url(self._LIST_ENDPOINT)
         headers: Dict[str, str] = {}
         headers.update(self._get_default_headers())
@@ -158,21 +170,19 @@ class AIStudioFileClient(RemoteFileClient):
         result = self._get_result_from_response_body(resp_bytes)
         files: List[RemoteFile] = []
         for item in result:
-            file = self._build_file_obj_from_dict(item)
+            file = self._create_file_obj_from_dict(item)
             files.append(file)
         return files
 
     async def delete_file(self, file_id: str) -> None:
         raise RuntimeError(f"`{self.__class__.__name__}.{inspect.stack()[0][3]}` is not supported.")
 
-    async def _request(self, *args: Any, **kwargs: Any) -> bytes:
-        if self._session is not None:
-            async with self._session.request(*args, **kwargs) as response:
-                return await response.read()
-        else:
-            async with aiohttp.ClientSession(**self._get_session_config()) as session:
-                async with session.request(*args, **kwargs) as response:
-                    return await response.read()
+    async def close(self) -> None:
+        if not self._closed:
+            await self._session.close()
+
+    def _create_aiohttp_session(self) -> aiohttp.ClientSession:
+        return aiohttp.ClientSession(**self._get_session_config())
 
     def _get_session_config(self) -> Dict[str, Any]:
         return {}
@@ -182,7 +192,11 @@ class AIStudioFileClient(RemoteFileClient):
             "Authorization": f"token {self._access_token}",
         }
 
-    def _build_file_obj_from_dict(self, dict_: Dict[str, Any]) -> RemoteFile:
+    async def _request(self, *args: Any, **kwargs: Any) -> bytes:
+        async with self._session.request(*args, **kwargs) as response:
+            return await response.read()
+
+    def _create_file_obj_from_dict(self, dict_: Dict[str, Any]) -> RemoteFile:
         metadata: Dict[str, Any]
         if dict_.get("meta"):
             metadata = json.loads(dict_["meta"])
