@@ -43,6 +43,7 @@ class FunctionalAgent(Agent):
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
+        plugins: Optional[List[str]] = None,  # None is not assigned, [] is no plugins.
         max_steps: Optional[int] = None,
     ) -> None:
         super().__init__(
@@ -52,6 +53,7 @@ class FunctionalAgent(Agent):
             system_message=system_message,
             callbacks=callbacks,
             file_manager=file_manager,
+            plugins=plugins,
         )
         if max_steps is not None:
             if max_steps <= 0:
@@ -64,13 +66,17 @@ class FunctionalAgent(Agent):
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
-        ask = HumanMessage(content=prompt, files=files)
+
+        ask = HumanMessage(content=prompt, files=files, include_file_url=self.file_needs_url)
 
         num_steps_taken = 0
         next_step_input: Message = ask
         while num_steps_taken < self.max_steps:
             curr_step_output = await self._async_step(
-                next_step_input, chat_history, actions_taken, files_involved
+                next_step_input,
+                chat_history,
+                actions_taken,
+                files_involved,
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
@@ -109,6 +115,7 @@ class FunctionalAgent(Agent):
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
+            plugins=self.plugins,
         )
         output_message = llm_resp.message
         chat_history.append(output_message)

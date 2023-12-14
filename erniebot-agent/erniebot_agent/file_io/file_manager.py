@@ -111,9 +111,16 @@ class FileManager(object):
         return file
 
     async def create_local_file_from_path(
-        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
+        self,
+        file_path: FilePath,
+        file_purpose: FilePurpose,
+        file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
-        file = create_local_file_from_path(pathlib.Path(file_path), file_purpose, file_metadata or {})
+        file = create_local_file_from_path(
+            pathlib.Path(file_path),
+            file_purpose,
+            file_metadata or {},
+        )
         self._file_registry.register_file(file)
         return file
 
