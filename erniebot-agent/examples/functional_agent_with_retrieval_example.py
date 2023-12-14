@@ -59,8 +59,8 @@ def offline_ann(data_path, baizhong_db):
 
 
 if __name__ == "__main__":
-    erniebot.api_type = args.api_type  # type: ignore
-    erniebot.access_token = args.access_token  # type: ignore
+    erniebot.api_type = args.api_type
+    erniebot.access_token = args.access_token
     baizhong_db = BaizhongSearch(
         knowledge_base_name=args.knowledge_base_name,
         access_token=args.access_token,
