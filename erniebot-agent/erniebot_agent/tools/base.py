@@ -200,8 +200,12 @@ async def parse_file_from_response(
         file_mimetype = file_infos[file_name].get("x-ebagent-file-mime-type", None)
         if file_mimetype is not None:
             file_suffix = get_file_suffix(file_mimetype)
+            content = response.content
+            if file_infos[file_name].get("format", None) == "byte":
+                content = base64.b64decode(content)
+
             return await file_manager.create_file_from_bytes(
-                response.content,
+                content,
                 f"tool-{file_suffix}",
                 file_purpose="assistants_output",
                 file_metadata=file_metadata,
@@ -340,7 +344,9 @@ class RemoteTool(BaseTool):
             if self.tool_view.parameters is None:
                 break
             byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
-            tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if parameter_file_info[key]["format"] == "byte":
+                byte_str = base64.b64encode(byte_str).decode()
+            tool_arguments[key] = byte_str
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
@@ -373,8 +379,15 @@ class RemoteTool(BaseTool):
             requests_inputs["json"] = tool_arguments
         elif self.tool_view.parameters_content_type in [
             "application/x-www-form-urlencoded",
-            "multipart/form-data",
         ]:
+            requests_inputs["data"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "multipart/form-data":
+            parameter_file_infos = get_file_info_from_param_view(self.tool_view.parameters)
+            requests_inputs["files"] = {}
+            for file_key in parameter_file_infos.keys():
+                if file_key in tool_arguments:
+                    requests_inputs["files"][file_key] = tool_arguments.pop(file_key)
+                    headers.pop("Content-Type", None)
             requests_inputs["data"] = tool_arguments
         else:
             raise RemoteToolError(
