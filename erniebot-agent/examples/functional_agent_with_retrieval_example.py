@@ -71,7 +71,8 @@ if __name__ == "__main__":
         res = offline_ann(args.data_path, baizhong_db)
         print(res)
 
-    llm = ERNIEBot(model="ernie-bot")
+    llm = ERNIEBot(model="ernie-bot", api_type="custom")
+    # llm = ERNIEBot(model="ernie-bot")
 
     retrieval_tool = BaizhongSearchTool(
         description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1
@@ -104,6 +105,7 @@ if __name__ == "__main__":
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
+                threshold=0.1,
                 tools=toolkit.get_tools() + [retrieval_tool],
                 memory=memory,
             )
