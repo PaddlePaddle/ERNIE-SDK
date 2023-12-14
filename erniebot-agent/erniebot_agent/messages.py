@@ -79,31 +79,34 @@ class HumanMessage(Message):
 
     def __init__(self, content: str, files: Optional[List[File]] = None, include_file_url: bool = False):
         self.files = files
-        if self.files is not None:
+        if self.files and len(self.files) > 0:
             if len(extract_file_ids(content)) > 0:
                 logger.warning(
                     "Files are already represented in the content of a HumanMessage, \
                         which will be ignored now."
                 )
             else:
-                self._check_remote_file_with_plugins(include_file_url)
-
-                prompt_parts = ["。这句话中包含的文件如下："] + [
-                    file.file_repr_with_URL()  # type: ignore
-                    if include_file_url
-                    else file.file_repr_wo_URL()
-                    for file in self.files
-                ]
+                # prompt_parts = ["。这句话中包含的文件如下："]
+                prompt_parts = self._fillin_file_repr(include_file_url)
                 prompt = "\n".join(prompt_parts)
-                content = content + prompt
+                content = content + "\n" + prompt
 
         super().__init__(role="user", content=content)
 
-    def _check_remote_file_with_plugins(self, include_file_url):
-        if include_file_url:
-            for file in self.files:
+    def _fillin_file_repr(self, include_file_url):
+        file_repr = []
+        for file in self.files:
+            if not include_file_url:
+                file_repr.append(file.file_repr())
+            else:
                 if not isinstance(file, RemoteFile):
-                    raise RuntimeError("LocalFile is not supported with plugins with file input.")
+                    raise RuntimeError(
+                        "LocalFile is not supported with current plugins. \
+                         Please pass access token into file manager."
+                    )
+                file_repr.append(file.file_repr_with_URL())
+
+        return file_repr
 
 
 class FunctionCall(TypedDict):

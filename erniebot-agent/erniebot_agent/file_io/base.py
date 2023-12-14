@@ -46,7 +46,7 @@ class File(metaclass=abc.ABCMeta):
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
 
-    def file_repr_wo_URL(self) -> str:
+    def file_repr(self) -> str:
         return f"<file>{self.id}</file>"
 
     def to_dict(self) -> dict:

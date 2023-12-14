@@ -78,14 +78,16 @@ class Agent(BaseAgent):
             file_manager = file_io.get_file_manager()
         self.plugins = plugins
         self._file_manager = file_manager
-        self._add_default_plugins()
+        self._init_file_repr()
 
-    def _add_default_plugins(self):
-        if self.plugins is None:
-            self.plugins = ["eChart"]
-            self.file_needs_url = False
-        else:
-            self.file_needs_url = True
+    def _init_file_repr(self):
+        self.file_needs_url = False
+
+        if self.plugins:
+            PLUGIN_WO_FILE = ["eChart"]
+            for plugin in self.plugins:
+                if plugin not in PLUGIN_WO_FILE:
+                    self.file_needs_url = True
 
     @property
     def tools(self) -> List[BaseTool]:
