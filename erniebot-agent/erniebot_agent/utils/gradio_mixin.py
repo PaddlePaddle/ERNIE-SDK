@@ -1,4 +1,6 @@
 import base64
+import os
+import tempfile
 from typing import Any, List
 
 from erniebot_agent.file_io.base import File
@@ -30,7 +32,9 @@ class GradioMixin:
             return history, gr.update(value="", interactive=False), gr.update(interactive=False)
 
         async def _chat(history):
-            nonlocal _uploaded_file_cache
+            nonlocal _uploaded_file_cache, td
+            temp_save_file_name = None
+
             prompt = history[-1][0]
             if len(prompt) == 0:
                 raise gr.Error("Prompt should not be empty.")
@@ -46,11 +50,11 @@ class GradioMixin:
                 and response.files[-1].type == "output"
                 and response.files[-1].used_by == response.actions[-1].tool_name
             ):
+                output_file_id = response.files[-1].file.id
+                output_file = self._file_manager.look_up_file_by_id(output_file_id)
+                file_content = await output_file.read_contents()
                 if get_file_type(response.files[-1].file.filename) == "image":
-                    output_file_id = response.files[-1].file.id
-                    output_file = self._file_manager.look_up_file_by_id(output_file_id)
-                    img_content = await output_file.read_contents()
-                    base64_encoded = base64.b64encode(img_content).decode("utf-8")
+                    base64_encoded = base64.b64encode(file_content).decode("utf-8")
                     if output_file_id in response.text:
                         output_result = response.text
                         output_result = output_result.replace(
@@ -60,12 +64,18 @@ class GradioMixin:
                         output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                 else:
                     # TODO: Support multiple files
-                    pass
+                    temp_save_file_name = os.path.join(td, response.files[-1].file.filename)
+                    with open(temp_save_file_name, "wb") as f:
+                        f.write(file_content)
+                    output_result = response.text
 
             else:
                 output_result = response.text
 
             history[-1][1] = output_result
+            if temp_save_file_name:
+                # If it is not
+                history = history + [(None, (temp_save_file_name,))]
             raw_messages.extend(response.chat_history)
             return (
                 history,
@@ -188,4 +198,10 @@ class GradioMixin:
                 outputs=[all_files, chatbot],
             )
 
-        demo.launch(**launch_kwargs)
+        with tempfile.TemporaryDirectory() as td:
+            if "allowed_paths" in launch_kwargs:
+                allowed_paths = [launch_kwargs["allowed_paths"] + [td]]
+                launch_kwargs.pop("allowed_paths")
+            else:
+                allowed_paths = [td]
+            demo.launch(allowed_paths=allowed_paths, **launch_kwargs)
