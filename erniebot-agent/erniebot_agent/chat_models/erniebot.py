@@ -29,7 +29,6 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
 
 import erniebot
-from erniebot.resources.chat_completion import ChatCompletionResponse
 from erniebot.response import EBResponse
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
@@ -147,7 +146,5 @@ class ERNIEBot(ChatModel):
                 arguments=response.function_call["arguments"],
             )
             return output_type(content="", function_call=function_call, token_usage=response.usage)
-        elif isinstance(response, ChatCompletionResponse):
-            return output_type(content=response.rbody, function_call=None, token_usage=None)
         else:
             return output_type(content=response.result, function_call=None, token_usage=response.usage)

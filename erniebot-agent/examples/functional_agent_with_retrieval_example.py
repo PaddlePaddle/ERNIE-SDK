@@ -72,7 +72,6 @@ if __name__ == "__main__":
         print(res)
 
     llm = ERNIEBot(model="ernie-bot", api_type="custom")
-    # llm = ERNIEBot(model="ernie-bot")
 
     retrieval_tool = BaizhongSearchTool(
         description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1

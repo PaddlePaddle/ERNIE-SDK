@@ -97,7 +97,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             llm_resp = await self._async_run_llm_without_hooks(
                 messages=chat_history,
-                functions=None,
+                # functions=None,
                 system=self.system_message.content if self.system_message is not None else None,
             )
             output_message = llm_resp.message
