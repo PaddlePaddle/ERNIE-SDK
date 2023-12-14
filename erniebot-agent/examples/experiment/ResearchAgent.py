@@ -1,4 +1,4 @@
-import os
+import random
 from collections import OrderedDict
 from typing import Optional
 
@@ -31,10 +31,11 @@ class ResearchAgent(Agent):
         citation_tool,
         summarize_tool,
         aurora_db_citation,
-        config=None,
+        config=[],
         system_message: Optional[str] = None,
         use_outline=True,
         use_context_planning=True,
+        save_log_path=None,
     ):
         """
         Initialize the ResearchAgent class.
@@ -60,6 +61,8 @@ class ResearchAgent(Agent):
         self.use_outline = use_outline
         self.agent_name = agent_name
         self.aurora_db_citation = aurora_db_citation
+        self.config = config
+        self.save_log_path = save_log_path
 
     async def run_search_summary(self, query):
         responses = []
@@ -79,8 +82,8 @@ class ResearchAgent(Agent):
             else:
                 print(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
-        os.makedirs(os.path.dirname(f"{self.dir_path}/research-{query}.jsonl"), exist_ok=True)
-        write_to_json(f"{self.dir_path}/research-{query}.jsonl", responses)
+        # os.makedirs(os.path.dirname(f"{self.dir_path}/research-{query}.jsonl"), exist_ok=True)
+        # write_to_json(f"{self.dir_path}/research-{query}.jsonl", responses)
         return responses, url_dict
 
     async def _async_run(self, query):
@@ -90,18 +93,27 @@ class ResearchAgent(Agent):
             Report
         """
         print(f"🔎 Running research for '{query}'...")
+        self.config.append(("开始", f"🔎 Running research for '{query}'..."))
+        self.save_log()
         # Generate Agent
         result = await self.intent_detection(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
+        self.config.append((None, self.agent + self.role))
+        self.save_log()
         use_context_planning = True
         if use_context_planning:
             res = await self.retriever_abstract(query, top_k=3)
             context = [item["content_se"] for item in res]
             context = "\n".join(context)
+            self.config.append((query, context))
+            self.save_log()
         else:
             context = ""
         # Generate Sub-Queries including original query
         sub_queries = await self.task_planning(question=query, agent_role_prompt=self.role, context=context)
+        random.shuffle(sub_queries)
+        self.config.append(("任务分解", "\n".join(sub_queries)))
+        self.save_log()
         # Run Sub-Queries
         meta_data = OrderedDict()
         research_summary = ""
@@ -111,10 +123,14 @@ class ResearchAgent(Agent):
             research_summary += f"{research_result}\n\n"
             meta_data.update(url_dict)
             paragraphs.extend(research_result)
+            self.config.append((sub_query, f"{research_result}\n\n"))
+            self.save_log()
         outline = None
         # Generate Outline
         if self.use_outline:
             outline = await self.outline(sub_queries, query)
+            self.config.append(("报告大纲", outline))
+            self.save_log()
         else:
             outline = None
         # Conduct Research
@@ -126,9 +142,16 @@ class ResearchAgent(Agent):
             meta_data=meta_data,
             outline=outline,
         )
+        self.config.append(("草稿", report))
+        self.save_log()
         # Generate Citations
         add_citation(paragraphs, self.aurora_db_citation)
         final_report, path = await self.citation(
             report, url_index, self.agent_name, self.report_type, self.dir_path, self.aurora_db_citation
         )
+        self.config.append(("草稿加引用", report))
+        self.save_log()
         return final_report, path
+
+    def save_log(self):
+        write_to_json(self.save_log_path, self.config)
