@@ -27,3 +27,12 @@ class RemoteToolError(Exception):
             return self.message
 
         return f"An error occured in stage <{self.stage}>. The error message is {self.message}"
+
+
+class FileError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+    def __str__(self):
+        return self.message
