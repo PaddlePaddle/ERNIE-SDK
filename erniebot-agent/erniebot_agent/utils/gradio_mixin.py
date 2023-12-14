@@ -23,21 +23,21 @@ class GradioMixin:
             ) from None
 
         raw_messages = []
-        _upload_file_cache: List[File] = []
+        _uploaded_file_cache: List[File] = []
 
         def _pre_chat(text, history):
             history.append([text, None])
             return history, gr.update(value="", interactive=False), gr.update(interactive=False)
 
         async def _chat(history):
-            nonlocal _upload_file_cache
+            nonlocal _uploaded_file_cache
             prompt = history[-1][0]
             if len(prompt) == 0:
                 raise gr.Error("Prompt should not be empty.")
 
-            if _upload_file_cache:
-                response = await self.async_run(prompt, files=_upload_file_cache)
-                _upload_file_cache = []
+            if _uploaded_file_cache:
+                response = await self.async_run(prompt, files=_uploaded_file_cache)
+                _uploaded_file_cache = []
             else:
                 response = await self.async_run(prompt)
 
@@ -46,7 +46,7 @@ class GradioMixin:
                 and response.files[-1].type == "output"
                 and response.files[-1].used_by == response.actions[-1].tool_name
             ):
-                if get_file_type(response.files[-1].file.filename) == "picture":
+                if get_file_type(response.files[-1].file.filename) == "image":
                     output_file_id = response.files[-1].file.id
                     output_file = self._file_manager.look_up_file_by_id(output_file_id)
                     img_content = await output_file.read_contents()
@@ -82,10 +82,10 @@ class GradioMixin:
             return None, None, None, None
 
         async def _upload(file: List[gr.utils.NamedString], history: list):
-            nonlocal _upload_file_cache
+            nonlocal _uploaded_file_cache
             for single_file in file:
                 upload_file = await self._file_manager.create_file_from_path(single_file.name)
-                _upload_file_cache.append(upload_file)
+                _uploaded_file_cache.append(upload_file)
                 history = history + [((single_file.name,), None)]
             size = len(file)
 

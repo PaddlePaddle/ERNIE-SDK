@@ -67,18 +67,9 @@ def is_base64_string(string: str) -> bool:
 
 
 def get_file_type(file_name: str) -> str:
-    if not os.path.isfile(file_name):
-        raise ValueError("It is not a valid file name.")
-
-    file_extension = os.path.splitext(file_name)[1]
-    picture_pattern = set(["jpg", "png", "jpeg"])
-    audio_pattern = set(["mp3", "wav"])
-    video_pattern = set(["mp4", "avi"])
-    if file_extension in picture_pattern:
-        return "picture"
-    elif file_extension in audio_pattern:
-        return "audio"
-    elif file_extension in video_pattern:
-        return "video"
+    # Expected output record: image/video/audio
+    guess_type = mimetypes.guess_type(file_name)[0]
+    if guess_type is not None:
+        return guess_type.split("/")[0]
     else:
-        return ""
+        raise ValueError(f"Invalid file name: {file_name}")
