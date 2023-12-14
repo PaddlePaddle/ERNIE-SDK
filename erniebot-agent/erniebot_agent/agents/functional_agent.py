@@ -95,6 +95,7 @@ class FunctionalAgent(Agent):
         actions: List[AgentAction],
         files: List[AgentFile],
     ) -> Optional[Message]:
+        # TODO（shiyutang）: 传出插件调用信息，+callback
         maybe_action = await self._async_plan(step_input, chat_history)
         if isinstance(maybe_action, AgentAction):
             action: AgentAction = maybe_action

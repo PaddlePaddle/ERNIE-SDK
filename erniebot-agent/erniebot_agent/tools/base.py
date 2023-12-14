@@ -182,7 +182,11 @@ async def parse_file_from_response(
     if content_disposition is not None:
         file_name = response.headers["Content-Disposition"].split("filename=")[1]
         local_file = await file_manager.create_file_from_bytes(
-            response.content, file_name, file_purpose="assistants_output", file_metadata=file_metadata
+            response.content,
+            file_name,
+            file_purpose="assistants_output",
+            file_metadata=file_metadata,
+            file_type="local",
         )
         return local_file
 
@@ -638,7 +642,7 @@ class RemoteToolkit:
                 )
 
         if file_manager is None:
-            file_manager = get_file_manager(access_token)
+            file_manager = get_file_manager(access_token)  # TODO: access_token is not correct;
 
         return RemoteToolkit(
             openapi=openapi_dict["openapi"],
