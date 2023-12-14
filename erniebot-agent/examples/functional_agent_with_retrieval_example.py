@@ -62,9 +62,8 @@ if __name__ == "__main__":
     erniebot.api_type = args.api_type  # type: ignore
     erniebot.access_token = args.access_token  # type: ignore
     baizhong_db = BaizhongSearch(
-        base_url=args.base_url,
         knowledge_base_name=args.knowledge_base_name,
-        access_token=args.baizhong_access_token,
+        access_token=args.access_token,
         knowledge_base_id=args.knowledge_base_id if args.knowledge_base_id != "" else None,
     )
     print(baizhong_db.knowledge_base_id)

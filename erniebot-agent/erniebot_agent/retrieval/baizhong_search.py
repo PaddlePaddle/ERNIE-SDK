@@ -1,4 +1,5 @@
-from typing import Any, Dict, Optional
+import os
+from typing import Any, ClassVar, Dict, Optional
 
 import requests
 from erniebot_agent.utils.exception import BaizhongError
@@ -6,14 +7,15 @@ from erniebot_agent.utils.logging import logger
 
 
 class BaizhongSearch:
+    _AISTUDIO_BASE_URL: ClassVar[str] = "https://aistudio.baidu.com"
+
     def __init__(
         self,
-        base_url: str,
         access_token: str,
         knowledge_base_name: Optional[str] = None,
         knowledge_base_id: Optional[int] = None,
     ) -> None:
-        self.base_url = base_url
+        self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
         self.access_token = access_token
         if knowledge_base_id is not None:
             logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")

@@ -20,11 +20,7 @@ from tqdm import tqdm
 import erniebot
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--base_url", type=str, help="The Aurora serving path.")
 parser.add_argument("--data_path", default="construction_regulations", type=str, help="The data path.")
-parser.add_argument(
-    "--baizhong_access_token", default="ai_studio_access_token", type=str, help="The aistudio access token."
-)
 parser.add_argument(
     "--access_token", default="ai_studio_access_token", type=str, help="The aistudio access token."
 )
@@ -59,9 +55,8 @@ def offline_ann(data_path, aurora_db):
 
 if __name__ == "__main__":
     aurora_db = BaizhongSearch(
-        base_url=args.base_url,
         knowledge_base_name=args.knowledge_base_name,
-        access_token=args.baizhong_access_token,
+        access_token=args.access_token,
         knowledge_base_id=args.knowledge_base_id if args.knowledge_base_id != "" else None,
     )
     if args.indexing:
