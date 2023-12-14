@@ -118,7 +118,6 @@ class Agent(GradioMixin, BaseAgent):
         await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
         try:
             tool_resp = await self._async_run_tool_without_hooks(tool, tool_args)
-
         except (Exception, KeyboardInterrupt) as e:
             await self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
             raise
@@ -146,7 +145,6 @@ class Agent(GradioMixin, BaseAgent):
             output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
         else:
             output_files = []
-
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 

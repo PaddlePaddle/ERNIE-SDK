@@ -84,7 +84,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
             )
-
             chat_history: List[Message] = [step_input]
             actions_taken: List[AgentAction] = []
             files_involved: List[AgentFile] = []
@@ -118,7 +117,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         documents = [item for item in documents if item["score"] > self.threshold]
-
         results = {}
         results["documents"] = documents
         return results
