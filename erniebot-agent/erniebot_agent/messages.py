@@ -1,4 +1,3 @@
-#
 # Licensed under the Apache License, Version 2.0 (the "License"
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,21 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from __future__ import annotations
-
-import logging
-from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
-
-if TYPE_CHECKING:
-    from erniebot_agent.file_io.base import File
+from typing import Dict, List, Optional, TypedDict
 
 from erniebot_agent.file_io import protocol
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.remote_file import RemoteFile
+from erniebot_agent.utils.logging import logger
 from typing_extensions import Self
 
 import erniebot.utils.token_helper as token_helper
-
-logger = logging.getLogger(__name__)
 
 
 class Message:
@@ -92,12 +85,7 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None):
-        self.files = files
-        if self.files is not None:
-            prompt_parts = ["这句话中包含的文件如下："] + [f"file_id: {file.id}" for file in self.files]
-            prompt = "\n".join(prompt_parts)
-            content = content + prompt
+    def __init__(self, content: str):
         super().__init__(role="user", content=content)
 
     @classmethod
