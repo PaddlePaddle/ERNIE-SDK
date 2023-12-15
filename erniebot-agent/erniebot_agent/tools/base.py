@@ -215,8 +215,12 @@ async def parse_file_from_response(
         file_mimetype = file_infos[file_name].get("x-ebagent-file-mime-type", None)
         if file_mimetype is not None:
             file_suffix = get_file_suffix(file_mimetype)
+            content = response.content
+            if file_infos[file_name].get("format", None) == "byte":
+                content = base64.b64decode(content)
+
             return await file_manager.create_file_from_bytes(
-                response.content,
+                content,
                 f"tool-{file_suffix}",
                 file_purpose="assistants_output",
                 file_metadata=file_metadata,
@@ -352,7 +356,9 @@ class RemoteTool(BaseTool):
             if self.tool_view.parameters is None:
                 break
             byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
-            tool_arguments[key] = base64.b64encode(byte_str).decode()
+            if parameter_file_info[key]["format"] == "byte":
+                byte_str = base64.b64encode(byte_str).decode()
+            tool_arguments[key] = byte_str
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
@@ -385,8 +391,15 @@ class RemoteTool(BaseTool):
             requests_inputs["json"] = tool_arguments
         elif self.tool_view.parameters_content_type in [
             "application/x-www-form-urlencoded",
-            "multipart/form-data",
         ]:
+            requests_inputs["data"] = tool_arguments
+        elif self.tool_view.parameters_content_type == "multipart/form-data":
+            parameter_file_infos = get_file_info_from_param_view(self.tool_view.parameters)
+            requests_inputs["files"] = {}
+            for file_key in parameter_file_infos.keys():
+                if file_key in tool_arguments:
+                    requests_inputs["files"][file_key] = tool_arguments.pop(file_key)
+                    headers.pop("Content-Type", None)
             requests_inputs["data"] = tool_arguments
         else:
             raise RemoteToolError(
@@ -420,12 +433,15 @@ class RemoteTool(BaseTool):
 
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
-            return await parse_file_from_json_response(
-                response.json(),
+            response_json = response.json()
+            file_info = await parse_file_from_json_response(
+                response_json,
                 file_manager=self.file_manager,
                 param_view=self.tool_view.returns,  # type: ignore
                 tool_name=self.tool_name,
             )
+            response_json.update(file_info)
+            return response_json
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
@@ -684,7 +700,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token
+            access_token = erniebot.access_token  # type: ignore
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
