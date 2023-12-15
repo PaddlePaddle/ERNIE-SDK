@@ -18,4 +18,4 @@
 
 检索增强和函数调用演示应用展示如何借助检索增强和函数调用的力量拓展大型模型的专有领域知识。
 
-详见[检索增强和函数调用演示应用使用文档](./function_calling/README.md)。
+详见[检索增强和函数调用演示应用使用文档](./retrieval_function_call/README.md)。

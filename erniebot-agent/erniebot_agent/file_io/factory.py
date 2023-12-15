@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+import functools
+from typing import Optional
 
-from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.callback.handlers.logging_handler import LoggingHandler
-
-
-def get_default_callbacks() -> List[CallbackHandler]:
-    return [LoggingHandler()]
+from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.remote_file import AIStudioFileClient
 
 
-def get_no_ellipsis_callback() -> List[CallbackHandler]:
-    return [LoggingHandler()]
+@functools.lru_cache(maxsize=None)
+def get_file_manager(access_token: Optional[str] = None) -> FileManager:
+    if access_token is None:
+        # TODO: Use a default global access token.
+        return FileManager()
+    else:
+        remote_file_client = AIStudioFileClient(access_token=access_token)
+        return FileManager(remote_file_client)

@@ -9,13 +9,16 @@ erniebot.ChatCompletion.create(
     model: str,
     messages: List[dict],
     *,
-    functions: Optional[List[dict]] = ...,
-    temperature: Optional[float] = ...,
-    top_p: Optional[float] = ...,
-    penalty_score: Optional[float] = ...,
-    system: Optional[str] = ...,
-    user_id: Optional[str] = ...,
-    stream: Optional[bool] = ...,
+    functions: Union[List[dict], NotGiven] = ...,
+    temperature: Union[float, NotGiven] = ...,
+    top_p: Union[float, NotGiven] = ...,
+    penalty_score: Union[float, NotGiven] = ...,
+    system: Union[str, NotGiven] = ...,
+    stop: Union[List[str], NotGiven] = ...,
+    disable_search: Union[bool, NotGiven] = ...,
+    enable_citation: Union[bool, NotGiven] = ...,
+    user_id: Union[str, NotGiven] = ...,
+    stream: Union[bool, NotGiven] = ...,
     validate_functions: bool = ...,
     headers: Optional[HeadersType] = ...,
     request_timeout: Optional[float] = ...,
@@ -34,8 +37,12 @@ erniebot.ChatCompletion.create(
 | top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。<ul><li>影响生成文本的多样性，值越大，生成文本的多样性越强；</li><li>默认<code>0.8</code>，取值范围为<code>[0, 1.0]</code>；</li><li>建议只设置此参数和<code>temperature</code>中的一个。</li></ul> |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象。<ul><li>值越大表示惩罚越大；</li><li>默认<code>1.0</code>，取值范围：<code>[1.0, 2.0]</code>。</li></ul> |
 | system | str | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
+| stop | list[str] | 否 | 停止标识。在生成文本中第一次出现此参数包含的任一个字符串时，生成过程停止。ernie-bot-turbo模型暂不支持此参数。 |
+| disable_search | bool | 否 | 如果设置此参数为`True`，则禁用搜索引擎。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
+| enable_citation | bool | 否 | 如果设置此参数为`True`，则开启上角标返回。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
+| system | bool | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
-| stream | bool | 否 | 如果设置此参数为`True`，则流式返回数据。 |
+| stream | bool | 否 | 如果设置此参数为`True`，则流式返回数据。默认为`False`。 |
 | validate_functions | bool | 否 | 是否对`functions`进行格式校验。 |
 | headers | dict | 否 | 附加的HTTP请求头。 |
 | request_timeout | float | 否 | 单个HTTP请求的超时时间，单位为秒。 |
@@ -71,7 +78,7 @@ erniebot.ChatCompletion.create(
 | role | str | 是 | `"user"`表示用户，`"assistant"`表示对话助手，`"function"`表示函数。 |
 | content | str or None | 是 | 当`role`不为`"function"`时，表示消息内容，必须设置此参数为非`None`值；当`role`为`"function"`时，表示函数响应参数，可以设置此参数为`None`。 |
 | name | str | 否 | 消息的作者。当`role`为`"function"`时，此参数必填，且是`function_call`中的`name`。 |
-| function_call | dict | 否 | 由模型生成的函数调用，包含函数名称和请求参数等。 |
+| function_call | dict | 否 | 由模型生成的函数调用信息，包含函数名称和请求参数等。 |
 
 `function_call`为一个Python dict，其中包含如下键值对：
 
@@ -177,12 +184,14 @@ erniebot.ChatCompletion.create(
 | 字段名 | 类型 | 描述 |
 | :--- | :--- | :--- |
 | rcode | int | HTTP响应状态码。 |
-| result | str | 模型生成的回复文本。 |
-| is_truncated | bool | 生成文本是否被长度限制截断。 |
 | sentence_id | int | 当前片段的序号，从`0`开始计数。仅流式模式下包含该字段。 |
+| is_end | bool | 当前片段是否为生成结果的最后一段文本。仅流式模式下包含该字段。 |
+| is_truncated | bool | 生成文本是否被长度限制截断。 |
+| finish_reason | str | 生成过程结束的原因。 |
+| search_info | str | 搜索引擎返回的结果。 |
+| result | str | 模型生成的回复文本。 |
 | need_clear_history | bool | 用户输入是否存在安全风险，是否应该关闭当前会话、清理历史会话信息。<ul><li><code>True</code>：是，表示用户输入存在安全风险，建议关闭当前会话，清理历史会话信息；</li><li><code>False</code>：否，表示用户输入无安全风险。</li></ul> |
 | ban_round | int | 当`need_clear_history`为`True`时，此字段表示第几轮对话有敏感信息。如果是当前轮次存在问题，则`ban_round=-1`。 |
-| is_end | bool | 当前片段是否为生成结果的最后一段文本。仅流式模式下包含该字段。 |
 | usage | dict | 输入、输出token统计信息。<ul><li><code>prompt_tokens</code>：输入token数量（包括输入中的历史消息）；</li><li><code>completion_tokens</code>：当前生成结果包含的token数量；</li><li><code>total_tokens</code>：输入与输出的token总数；</li><li><code>plugins</code>：插件消耗的token数量。</li></ul> |
 | function_call | dict | 由模型生成的函数调用信息，包含函数名称和请求参数等。详见[`messages`](#messages)中的`function_call`。 |
 

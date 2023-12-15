@@ -19,6 +19,7 @@ from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import (
@@ -27,7 +28,7 @@ from erniebot_agent.messages import (
     Message,
     SystemMessage,
 )
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 
 _MAX_STEPS = 5
 
@@ -36,12 +37,13 @@ class FunctionalAgent(Agent):
     def __init__(
         self,
         llm: ChatModel,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         system_message: Optional[SystemMessage] = None,
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
+        plugins: Optional[List[str]] = None,  # None is not assigned, [] is no plugins.
         max_steps: Optional[int] = None,
     ) -> None:
         super().__init__(
@@ -51,6 +53,7 @@ class FunctionalAgent(Agent):
             system_message=system_message,
             callbacks=callbacks,
             file_manager=file_manager,
+            plugins=plugins,
         )
         if max_steps is not None:
             if max_steps <= 0:
@@ -59,17 +62,23 @@ class FunctionalAgent(Agent):
         else:
             self.max_steps = _MAX_STEPS
 
-    async def _async_run(self, prompt: str) -> AgentResponse:
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
-        ask = HumanMessage(content=prompt)
+
+        run_input = await HumanMessage.create_with_files(
+            prompt, files or [], include_file_urls=self.file_needs_url
+        )
 
         num_steps_taken = 0
-        next_step_input: Message = ask
+        next_step_input: Message = run_input
         while num_steps_taken < self.max_steps:
             curr_step_output = await self._async_step(
-                next_step_input, chat_history, actions_taken, files_involved
+                next_step_input,
+                chat_history,
+                actions_taken,
+                files_involved,
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
@@ -102,17 +111,19 @@ class FunctionalAgent(Agent):
         self, input_message: Message, chat_history: List[Message]
     ) -> Optional[AgentAction]:
         chat_history.append(input_message)
+
         messages = self.memory.get_messages() + chat_history
         llm_resp = await self._async_run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
+            plugins=self.plugins,
         )
         output_message = llm_resp.message
         chat_history.append(output_message)
         if output_message.function_call is not None:
             return AgentAction(
-                tool_name=output_message.function_call["name"],  # type: ignore
+                tool_name=output_message.function_call["name"],
                 tool_args=output_message.function_call["arguments"],
             )
         else:

@@ -110,17 +110,32 @@ class ERNIEBot(ChatModel):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system"]
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
+        if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
+            cfg_dict.pop("plugins")
 
         # TODO: Improve this when erniebot typing issue is fixed.
-        response: Any = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+        if cfg_dict.get("plugins", None):
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],  # type: ignore
+                stream=stream,
+                _config_=cfg_dict["_config_"],
+                functions=functions,  # type: ignore
+                extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
-            return (self.convert_response_to_output(resp, AIMessageChunk) async for resp in response)
+            return (
+                self.convert_response_to_output(resp, AIMessageChunk)
+                async for resp in response  # type: ignore
+            )
 
     @staticmethod
     def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:

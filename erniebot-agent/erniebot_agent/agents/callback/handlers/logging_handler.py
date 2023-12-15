@@ -46,7 +46,7 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
-            "%s is about to start running with input:\n %s",
+            "%s is about to start running with input:\n%s",
             agent.__class__.__name__,
             ColoredContent(prompt, role="user"),
             subject="Run",
@@ -65,7 +65,7 @@ class LoggingHandler(CallbackHandler):
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         self.agent_info(
-            "%s finished running with output: \n%s",
+            "%s finished running with output:\n%s",
             llm.__class__.__name__,
             ColoredContent(response.message),
             subject="LLM",
@@ -112,3 +112,15 @@ class LoggingHandler(CallbackHandler):
     def agent_error(self, error: Union[Exception, KeyboardInterrupt], *args, subject, **kwargs) -> None:
         error_msg = f"[{subject}][ERROR] {error}"
         self.logger.error(error_msg, *args, **kwargs)
+
+    def open_role_color(self, open: bool = True):
+        """
+        Open or close color role in log, if open, different role will have different color.
+
+        Args:
+            open (bool, optional): whether or not to open. Defaults to True.
+        """
+        if open:
+            self.role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
+        else:
+            self.role_color = {}
