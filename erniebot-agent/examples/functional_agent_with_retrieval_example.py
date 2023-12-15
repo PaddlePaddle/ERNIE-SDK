@@ -3,6 +3,7 @@ import asyncio
 from typing import Dict, List, Type
 
 from erniebot_agent.agents import (
+    ContextAugmentedFunctionalAgent,
     FunctionalAgentWithRetrieval,
     FunctionalAgentWithRetrievalScoreTool,
     FunctionalAgentWithRetrievalTool,
@@ -35,7 +36,7 @@ parser.add_argument("--indexing", action="store_true", help="The indexing step."
 parser.add_argument("--project_id", default=-1, type=int, help="The API Key.")
 parser.add_argument(
     "--retrieval_type",
-    choices=["rag", "rag_tool", "rag_threshold"],
+    choices=["rag", "rag_tool", "rag_threshold", "context_aug"],
     default="rag",
     help="Retrieval type, default to rag.",
 )
@@ -57,7 +58,7 @@ class NotesTool(Tool):
 
     async def __call__(self, draft: str) -> Dict[str, str]:
         # TODO: save draft to database
-        return {"draft_results": "保存成功"}
+        return {"draft_results": "草稿在笔记本中保存成功"}
 
     @property
     def examples(self) -> List[Message]:
@@ -122,12 +123,12 @@ if __name__ == "__main__":
     # ]
 
     queries = [
-        "量化交易",
-        "城市景观照明中有过度照明的规定是什么？",
+        # "量化交易",
+        # "城市景观照明中有过度照明的规定是什么？",
         "城市景观照明中有过度照明的规定是什么？并把搜索的内容添加到笔记本中",
-        "这几篇文档主要内容是什么？",
-        "今天天气怎么样？",
-        "abcabc",
+        # "这几篇文档主要内容是什么？",
+        # "今天天气怎么样？",
+        # "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
@@ -150,6 +151,15 @@ if __name__ == "__main__":
             )
         elif args.retrieval_type == "rag_threshold":
             agent = FunctionalAgentWithRetrievalScoreTool(  # type: ignore
+                llm=llm,
+                knowledge_base=baizhong_db,
+                top_k=3,
+                threshold=0.1,
+                tools=[NotesTool(), retrieval_tool],
+                memory=memory,
+            )
+        elif args.retrieval_type == "context_aug":
+            agent = ContextAugmentedFunctionalAgent(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
