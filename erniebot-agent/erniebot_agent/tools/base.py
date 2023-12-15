@@ -27,6 +27,7 @@ import requests
 from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -47,6 +48,20 @@ from requests import Response
 from yaml import safe_dump
 
 import erniebot
+
+
+def tool_response_contains_file(element: Any):
+    if isinstance(element, str):
+        if is_local_file_id(element) or is_remote_file_id(element):
+            return True
+    elif isinstance(element, dict):
+        for val in element.values():
+            if tool_response_contains_file(val):
+                return True
+    elif isinstance(element, list):
+        for val in element:
+            if tool_response_contains_file(val):
+                return True
 
 
 def validate_openapi_yaml(yaml_file: str) -> bool:
