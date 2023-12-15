@@ -61,6 +61,9 @@ if __name__ == "__main__":
     vector_tool = BaizhongSearchTool(
         name="fulltext_search", description="使用这个工具检索特定的上下文，以回答有关作者生活的特定问题", db=baizhong_db, threshold=0.1
     )
+    tool_retriever = BaizhongSearchTool(
+        name="tool_retriever", description="用于检索与query相关的tools列表", db=baizhong_db, threshold=0.1
+    )
     queries = [
         "量化交易",
         "OpenAI管理层变更会带来哪些影响?" "城市景观照明中有过度照明的规定是什么？",
@@ -81,6 +84,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "knowledge_tools":
+            # TODO(wugaosheng) Add knowledge base tool retriever for tool selection
             agent = FunctionalAgentWithQueryPlanning(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
