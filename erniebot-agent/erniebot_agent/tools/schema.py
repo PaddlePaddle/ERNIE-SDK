@@ -15,16 +15,18 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
 from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.utils.logging import logger
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
+
+logger = logging.getLogger(__name__)
 
 
 def is_optional_type(type: Type):

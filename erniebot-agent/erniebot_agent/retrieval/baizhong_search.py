@@ -1,9 +1,11 @@
+import logging
 import os
 from typing import Any, ClassVar, Dict, Optional
 
 import requests
 from erniebot_agent.utils.exception import BaizhongError
-from erniebot_agent.utils.logging import logger
+
+logger = logging.getLogger(__name__)
 
 
 class BaizhongSearch:

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
 
 if TYPE_CHECKING:
@@ -20,10 +21,11 @@ if TYPE_CHECKING:
 
 from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.remote_file import RemoteFile
-from erniebot_agent.utils.logging import logger
 from typing_extensions import Self
 
 import erniebot.utils.token_helper as token_helper
+
+logger = logging.getLogger(__name__)
 
 
 class Message:
