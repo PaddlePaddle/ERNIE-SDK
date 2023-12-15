@@ -255,11 +255,6 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
-            step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
-            )
-            fake_chat_history: List[Message] = []
-            fake_chat_history.append(step_input)
 
             outputs = []
             for item in results["documents"]:
@@ -273,6 +268,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
 
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
+            # Direct Prompt
             next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作,并且检索只允许调用一次")
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
