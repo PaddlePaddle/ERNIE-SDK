@@ -53,5 +53,5 @@ class TaskPlanningTool(Tool):
                 result = result[start_idx : end_idx + 1]
             except Exception as e:
                 print(e)
-
-        return json.loads(result)
+        plan = json.loads(result)
+        return plan

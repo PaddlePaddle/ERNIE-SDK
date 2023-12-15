@@ -2,7 +2,7 @@ from typing import Optional
 
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
-from tools.utils import erniebot_chat
+from tools.utils import erniebot_chat, write_to_json
 
 
 class ReviserActorAgent(Agent):
@@ -11,13 +11,20 @@ class ReviserActorAgent(Agent):
             """
 
     def __init__(
-        self, name: str, llm: str = "erine-bot-4", system_message: Optional[str] = None
+        self,
+        name: str,
+        llm: str = "erine-bot-4",
+        system_message: Optional[str] = None,
+        config: list = [],
+        save_log_path=None,
     ):  # type: ignore
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
         self.model = llm
         self.template = "草稿:\n\n{draft}" + "编辑的备注:\n\n{notes}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
+        self.config = config
+        self.save_log_path = save_log_path
 
     async def _async_run(self, draft, notes):
         messages = [
@@ -26,4 +33,10 @@ class ReviserActorAgent(Agent):
                 "content": "草稿:\n\n" + draft + "\n编辑的备注:\n\n" + notes,
             }
         ]
-        return erniebot_chat(messages=messages, system=self.system_message)
+        report = erniebot_chat(messages=messages, system=self.system_message)
+        self.config.append(("修订后的报告", report))
+        self.save_log()
+        return report
+
+    def save_log(self):
+        write_to_json(self.save_log_path, self.config, mode="a")

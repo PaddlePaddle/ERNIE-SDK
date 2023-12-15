@@ -23,6 +23,7 @@ class IntentDetectionTool(Tool):
     description: str = "query intent detection tool"
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
+    config: dict = {}
 
     async def __call__(self, content: str, functions: Optional[str] = None, **kwargs):
         prompt = auto_agent_instructions()
@@ -33,4 +34,7 @@ class IntentDetectionTool(Tool):
         end_idx = result.rindex("}")
         result = result[start_idx : end_idx + 1]
         result = json.loads(result)
+        if self.description not in self.config:
+            self.config["message"] = messages[0]["content"]
+            self.config["result"] = result
         return result

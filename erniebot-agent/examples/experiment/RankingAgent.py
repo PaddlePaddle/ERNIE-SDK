@@ -2,7 +2,7 @@ import json
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
-from tools.utils import erniebot_chat
+from tools.utils import erniebot_chat, write_to_json
 
 
 class RankingAgent(Agent):
@@ -15,6 +15,8 @@ class RankingAgent(Agent):
         ranking_tool,
         system_message: Optional[str] = None,
         use_summarize: bool = False,
+        config: list = [],
+        save_log_path=None,
     ) -> None:
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
@@ -22,6 +24,8 @@ class RankingAgent(Agent):
         self.summarize = summarize_tool
         self.ranking = ranking_tool
         self.use_summarize = use_summarize
+        self.config = config
+        self.save_log_path = save_log_path
 
     async def _async_run(self, list_reports, query):
         # filter one
@@ -39,9 +43,14 @@ class RankingAgent(Agent):
             _, index = await self.ranking(summarize_list, query)
             best_report = new_list_reports[index - 1]
         else:
-            best_report, _ = await self.ranking(new_list_reports, query)
+            best_report, index = await self.ranking(new_list_reports, query)
+        self.config.append(("None", "最优的report的序号是" + str(index)))
+        self.save_log()
         # Select the best one (first)
         return best_report
+
+    def save_log(self):
+        write_to_json(self.save_log_path, self.config, mode="a")
 
     def check_format(self, report):
         prompt = """你是一名校对员。

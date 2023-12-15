@@ -65,14 +65,14 @@ def write_md_to_pdf(task: str, path: str, text: str) -> str:
     return encoded_file_path
 
 
-def write_to_json(filename: str, list_data: list) -> None:
+def write_to_json(filename: str, list_data: list, mode="w") -> None:
     """Write text to a file
 
     Args:
         text (str): The text to write
         filename (str): The filename to write to
     """
-    with jsonlines.open(filename, "w") as file:
+    with jsonlines.open(filename, mode) as file:
         for item in list_data:
             file.write(item)
 
