@@ -354,6 +354,7 @@ class ContextAugmentedFunctionalAgent(FunctionalAgent):
 
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
+            # 会有无限循环调用工具的问题
             next_step_input = HumanMessage(
                 content=f"背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
             )

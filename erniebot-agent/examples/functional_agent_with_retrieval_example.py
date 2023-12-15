@@ -134,7 +134,7 @@ if __name__ == "__main__":
     for query in queries:
         memory = WholeMemory()
         if args.retrieval_type == "rag":
-            agent = FunctionalAgentWithRetrieval(
+            agent = FunctionalAgentWithRetrieval(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
