@@ -16,6 +16,7 @@ from .base import Agent
 from .functional_agent import FunctionalAgent
 from .functional_agent_with_retrieval import (
     ContextAugmentedFunctionalAgent,
+    FunctionalAgentWithQueryPlanning,
     FunctionalAgentWithRetrieval,
     FunctionalAgentWithRetrievalScoreTool,
     FunctionalAgentWithRetrievalTool,

@@ -385,3 +385,37 @@ class ContextAugmentedFunctionalAgent(FunctionalAgent):
         results = {}
         results["documents"] = documents
         return results
+
+
+class FunctionalAgentWithQueryPlanning(FunctionalAgent):
+    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.knowledge_base = knowledge_base
+        self.top_k = top_k
+        self.threshold = threshold
+        self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
+        self.search_tool = KnowledgeBaseTool()
+
+    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+        # RAG
+        chat_history: List[Message] = []
+        actions_taken: List[AgentAction] = []
+        files_involved: List[AgentFile] = []
+        # 会有无限循环调用工具的问题
+        # next_step_input = HumanMessage(
+        #     content=f"请选择合适的工具来回答：{prompt}，如果需要的话，可以对把问题分解成子问题，然后每个子问题选择合适的工具回答。"
+        # )
+        next_step_input = HumanMessage(content=prompt)
+        num_steps_taken = 0
+        while num_steps_taken < self.max_steps:
+            curr_step_output = await self._async_step(
+                next_step_input, chat_history, actions_taken, files_involved
+            )
+            if curr_step_output is None:
+                response = self._create_finished_response(chat_history, actions_taken, files_involved)
+                self.memory.add_message(chat_history[0])
+                self.memory.add_message(chat_history[-1])
+                return response
+            num_steps_taken += 1
+        response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+        return response
