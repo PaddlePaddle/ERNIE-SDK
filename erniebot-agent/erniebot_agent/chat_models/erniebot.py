@@ -15,7 +15,6 @@
 from typing import (
     Any,
     AsyncIterator,
-    Dict,
     List,
     Literal,
     Optional,
@@ -36,7 +35,11 @@ _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 class ERNIEBot(ChatModel):
     def __init__(
-        self, model: str, api_type: Optional[str] = None, access_token: Optional[str] = None
+        self,
+        model: str,
+        api_type: Optional[str] = None,
+        access_token: Optional[str] = None,
+        **default_chat_kwargs: Any,
     ) -> None:
         """Initializes an instance of the `ERNIEBot` class.
 
@@ -46,7 +49,8 @@ class ERNIEBot(ChatModel):
             api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): The access token for erniebot.
         """
-        super().__init__(model=model)
+        super().__init__(model=model, **default_chat_kwargs)
+
         self.api_type = api_type
         self.access_token = access_token
 
@@ -99,7 +103,10 @@ class ERNIEBot(ChatModel):
             If `stream` is False, returns a single message.
             If `stream` is True, returns an asynchronous iterator of message chunks.
         """
-        cfg_dict: Dict[str, Any] = {"model": self.model, "_config_": {}}
+        cfg_dict = self.default_chat_kwargs.copy()
+        cfg_dict["model"] = self.model
+        cfg_dict.setdefault("_config_", {})
+
         if self.api_type is not None:
             cfg_dict["_config_"]["api_type"] = self.api_type
         if self.access_token is not None:
