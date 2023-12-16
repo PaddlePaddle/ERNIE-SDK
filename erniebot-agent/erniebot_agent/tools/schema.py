@@ -222,7 +222,7 @@ class ToolParameterView(BaseModel):
         fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
             # skip loading invalid field to improve compatibility
-            if "type" not in field_dict or "description" in field_dict:
+            if "type" not in field_dict or "description" not in field_dict:
                 continue
 
             print("field_name", field_name)

@@ -124,10 +124,14 @@ def get_file_info_from_param_view(
         if list_base_annotation == "object":
             # get base type
             arg_type = get_args(model_field.annotation)[0]
-            file_infos[key] = get_file_info_from_param_view(arg_type)
+            sub_file_infos = get_file_info_from_param_view(arg_type)
+            if len(sub_file_infos):
+                file_infos[key] = sub_file_infos
             continue
         elif issubclass(model_field.annotation, ToolParameterView):
-            file_infos[key] = get_file_info_from_param_view(model_field.annotation)
+            sub_file_infos = get_file_info_from_param_view(model_field.annotation)
+            if len(sub_file_infos):
+                file_infos[key] = sub_file_infos
             continue
 
         json_schema_extra = model_field.json_schema_extra
@@ -148,6 +152,9 @@ async def parse_file_from_json_response(
     file_infos: Dict[str, Any] = {}
     for key in param_view.model_fields.keys():
         model_field = param_view.model_fields[key]
+
+        if key not in json_data:
+            continue
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
         if list_base_annotation == "object":
