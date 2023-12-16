@@ -27,6 +27,7 @@ import requests
 from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -47,6 +48,20 @@ from requests import Response
 from yaml import safe_dump
 
 import erniebot
+
+
+def tool_response_contains_file(element: Any):
+    if isinstance(element, str):
+        if is_local_file_id(element) or is_remote_file_id(element):
+            return True
+    elif isinstance(element, dict):
+        for val in element.values():
+            if tool_response_contains_file(val):
+                return True
+    elif isinstance(element, list):
+        for val in element:
+            if tool_response_contains_file(val):
+                return True
 
 
 def validate_openapi_yaml(yaml_file: str) -> bool:
@@ -426,12 +441,15 @@ class RemoteTool(BaseTool):
 
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
-            return await parse_file_from_json_response(
-                response.json(),
+            response_json = response.json()
+            file_info = await parse_file_from_json_response(
+                response_json,
                 file_manager=self.file_manager,
                 param_view=self.tool_view.returns,  # type: ignore
                 tool_name=self.tool_name,
             )
+            response_json.update(file_info)
+            return response_json
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
@@ -690,7 +708,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token
+            access_token = erniebot.access_token  # type: ignore
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
