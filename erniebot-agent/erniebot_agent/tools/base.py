@@ -367,11 +367,9 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
-        contains_file_in_response = len(get_file_info_from_param_view(self.tool_view.returns)) > 0
-
         if self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
             tool_response["prompt"] = self.tool_view.returns.__prompt__
-        elif contains_file_in_response:
+        elif tool_response_contains_file(tool_response):
             tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
 
         # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
@@ -441,15 +439,12 @@ class RemoteTool(BaseTool):
 
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
-            response_json = response.json()
-            file_info = await parse_file_from_json_response(
-                response_json,
+            return await parse_file_from_json_response(
+                response.json(),
                 file_manager=self.file_manager,
                 param_view=self.tool_view.returns,  # type: ignore
                 tool_name=self.tool_name,
             )
-            response_json.update(file_info)
-            return response_json
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
@@ -708,7 +703,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token  # type: ignore
+            access_token = erniebot.access_token
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
@@ -749,6 +744,7 @@ class RemoteToolkit:
             openapi_yaml_url = openapi_yaml_url + "?version=" + version
 
         with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir = "./"
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
                 logger.debug(f"The resource requested returned the following headers: {response.headers}")
