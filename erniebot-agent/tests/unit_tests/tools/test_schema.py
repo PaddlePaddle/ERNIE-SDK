@@ -217,6 +217,21 @@ class TestToolSchema(unittest.TestCase):
         self.assertEqual(MyEnum.MEMBER1.value, "MEMBER1")
         self.assertListEqual(list(MyEnum.__members__.keys()), member_names)
 
+    def test_prompt_parsing(self):
+        expected_openapi_dict = {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "测试名称",
+                },
+            },
+            "required": ["name"],
+            "x-ebagent-prompt": "abc",
+        }
+        tool = ToolParameterView.from_openapi_dict(expected_openapi_dict)
+        self.assertEqual(tool.__prompt__, "abc")
+
 
 class TestDataTypeSchema(unittest.IsolatedAsyncioTestCase):
     def test_enum_file(self):

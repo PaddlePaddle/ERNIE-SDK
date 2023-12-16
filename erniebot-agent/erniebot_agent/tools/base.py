@@ -124,10 +124,14 @@ def get_file_info_from_param_view(
         if list_base_annotation == "object":
             # get base type
             arg_type = get_args(model_field.annotation)[0]
-            file_infos[key] = get_file_info_from_param_view(arg_type)
+            sub_file_infos = get_file_info_from_param_view(arg_type)
+            if len(sub_file_infos) > 0:
+                file_infos[key] = sub_file_infos
             continue
         elif issubclass(model_field.annotation, ToolParameterView):
-            file_infos[key] = get_file_info_from_param_view(model_field.annotation)
+            sub_file_infos = get_file_info_from_param_view(model_field.annotation)
+            if len(sub_file_infos) > 0:
+                file_infos[key] = sub_file_infos
             continue
 
         json_schema_extra = model_field.json_schema_extra
@@ -148,6 +152,10 @@ async def parse_file_from_json_response(
     file_infos: Dict[str, Any] = {}
     for key in param_view.model_fields.keys():
         model_field = param_view.model_fields[key]
+
+        # to avoid: yaml schema is not matched with json response schema
+        if key not in json_data:
+            continue
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
         if list_base_annotation == "object":
@@ -175,7 +183,7 @@ async def parse_file_from_json_response(
                 if format == "byte":
                     content = base64.b64decode(content)
 
-                suffix = get_file_suffix(json_schema_extra["x-ebagent-file-mime-type"])
+                suffix = get_file_suffix(json_schema_extra.get("x-ebagent-file-mime-type", None))
                 file = await file_manager.create_file_from_bytes(
                     content,
                     filename=f"test{suffix}",
@@ -318,6 +326,8 @@ class RemoteTool(BaseTool):
         if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
 
+        self.response_prompt: Optional[str] = None
+
     @property
     def examples(self) -> List[Message]:
         return self._examples or []
@@ -367,6 +377,14 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
+        if self.response_prompt is not None:
+            tool_response["prompt"] = self.response_prompt
+        elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
+            tool_response["prompt"] = self.tool_view.returns.__prompt__
+        elif tool_response_contains_file(tool_response):
+            tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
+
+        # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
         # if self.tool_view.returns is not None:
         #     tool_response = dict(self.tool_view.returns(**tool_response))
         return tool_response
@@ -700,7 +718,7 @@ class RemoteToolkit:
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         if access_token is None:
-            access_token = erniebot.access_token  # type: ignore
+            access_token = erniebot.access_token
 
         headers = {"Content-Type": "application/json"}
         if access_token is None:
