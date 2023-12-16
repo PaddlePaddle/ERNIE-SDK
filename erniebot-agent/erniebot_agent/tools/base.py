@@ -160,7 +160,7 @@ async def parse_file_from_json_response(
                 if format == "byte":
                     content = base64.b64decode(content)
 
-                suffix = get_file_suffix(json_schema_extra["x-ebagent-file-mime-type"])
+                suffix = get_file_suffix(json_schema_extra.get("x-ebagent-file-mime-type", None))
                 file = await file_manager.create_file_from_bytes(
                     content,
                     filename=f"test{suffix}",
@@ -352,6 +352,14 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
+        contains_file_in_response = len(get_file_info_from_param_view(self.tool_view.returns)) > 0
+
+        if self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
+            tool_response["prompt"] = self.tool_view.returns.__prompt__
+        elif contains_file_in_response:
+            tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
+
+        # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
         # if self.tool_view.returns is not None:
         #     tool_response = dict(self.tool_view.returns(**tool_response))
         return tool_response

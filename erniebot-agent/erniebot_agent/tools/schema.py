@@ -203,6 +203,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 
 class ToolParameterView(BaseModel):
+    __prompt__: Optional[str] = None
+
     class Config:
         use_enum_values = True
 
@@ -249,7 +251,9 @@ class ToolParameterView(BaseModel):
             if format is not None:
                 json_schema_extra["format"] = format
 
-            json_schema_extra["x-ebagent-file-mime-type"] = field_dict.get("x-ebagent-file-mime-type", None)
+            json_schema_extra.update(
+                {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
+            )
 
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
@@ -265,6 +269,9 @@ class ToolParameterView(BaseModel):
             fields[field_name] = (field_type, field)
 
         model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+
+        # get the prompt for schema
+        model.__prompt__ = schema.get("x-ebagent-prompt", None)
         return model
 
     @classmethod
