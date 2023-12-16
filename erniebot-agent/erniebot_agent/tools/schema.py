@@ -225,7 +225,6 @@ class ToolParameterView(BaseModel):
             if "type" not in field_dict or "description" not in field_dict:
                 continue
 
-            print("field_name", field_name)
             field_type = python_type_from_json_type(field_dict)
 
             if field_type is List[ToolParameterView]:
