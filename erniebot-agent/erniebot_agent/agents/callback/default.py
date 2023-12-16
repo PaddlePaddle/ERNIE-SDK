@@ -23,4 +23,4 @@ def get_default_callbacks() -> List[CallbackHandler]:
 
 
 def get_no_ellipsis_callback() -> List[CallbackHandler]:
-    return [LoggingHandler(log_max_length=int(1e8))]
+    return [LoggingHandler()]

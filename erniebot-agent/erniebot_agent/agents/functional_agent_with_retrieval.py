@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any, Dict, List, Optional, Type
 
 from erniebot_agent.agents import FunctionalAgent
@@ -14,8 +15,9 @@ from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.utils.logging import logger
 from pydantic import Field
+
+logger = logging.getLogger(__name__)
 
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}

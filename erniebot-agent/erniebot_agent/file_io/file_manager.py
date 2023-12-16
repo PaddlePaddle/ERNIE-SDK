@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import pathlib
 import tempfile
@@ -26,8 +27,9 @@ from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_
 from erniebot_agent.file_io.protocol import FilePurpose
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exception import FileError
-from erniebot_agent.utils.logging import logger
 from typing_extensions import TypeAlias
+
+logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
 
