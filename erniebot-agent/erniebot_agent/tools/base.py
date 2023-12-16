@@ -744,7 +744,6 @@ class RemoteToolkit:
             openapi_yaml_url = openapi_yaml_url + "?version=" + version
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            temp_dir = "./"
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
                 logger.debug(f"The resource requested returned the following headers: {response.headers}")

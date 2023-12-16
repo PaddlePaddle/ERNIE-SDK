@@ -221,6 +221,10 @@ class ToolParameterView(BaseModel):
         # TODO(wj-Mcat): to load Optional field
         fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
+            # skip loading invalid field to improve compatibility
+            if "type" not in field_dict or "description" in field_dict:
+                continue
+
             print("field_name", field_name)
             field_type = python_type_from_json_type(field_dict)
 
