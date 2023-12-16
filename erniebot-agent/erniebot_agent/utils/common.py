@@ -17,7 +17,7 @@ import base64
 import mimetypes
 import os
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Union
 
 import requests
 
@@ -44,7 +44,9 @@ def create_enum_class(class_name: str, member_names: List[Union[int, str]]):
     return Enum(class_name, {name: name for name in member_names})
 
 
-def get_file_suffix(mime_type: str):
+def get_file_suffix(mime_type: Optional[str] = None):
+    if mime_type is None:
+        return None
     mapping = {"audio/mp3": "audio/mpeg", "audio/wav": "audio/x-wav"}
     mime_type = mapping.get(mime_type, mime_type)
     mime_type_to_suffix = {value: key for key, value in mimetypes.types_map.items()}

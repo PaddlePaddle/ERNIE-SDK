@@ -125,12 +125,12 @@ def get_file_info_from_param_view(
             # get base type
             arg_type = get_args(model_field.annotation)[0]
             sub_file_infos = get_file_info_from_param_view(arg_type)
-            if len(sub_file_infos):
+            if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
         elif issubclass(model_field.annotation, ToolParameterView):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
-            if len(sub_file_infos):
+            if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
 
@@ -153,6 +153,7 @@ async def parse_file_from_json_response(
     for key in param_view.model_fields.keys():
         model_field = param_view.model_fields[key]
 
+        # to avoid: yaml schema is not matched with json response schema
         if key not in json_data:
             continue
 
@@ -325,6 +326,8 @@ class RemoteTool(BaseTool):
         if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
             self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
 
+        self.response_prompt: Optional[str] = None
+
     @property
     def examples(self) -> List[Message]:
         return self._examples or []
@@ -374,7 +377,9 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
-        if self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
+        if self.response_prompt is not None:
+            tool_response["prompt"] = self.response_prompt
+        elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
             tool_response["prompt"] = self.tool_view.returns.__prompt__
         elif tool_response_contains_file(tool_response):
             tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
