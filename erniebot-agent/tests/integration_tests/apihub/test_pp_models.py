@@ -29,12 +29,10 @@ class TestPPRemoteTool(RemoteToolTesting):
         file_manager = FileManager()
 
         file = await file_manager.create_file_from_path(
-            self.download_file(
-                "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/human_attr.jpg"
-            )
+            self.download_file("https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/trans.png")
         )
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请识别图中的几个行人", files=[file])
+        result = await agent.async_run("请分割图中的人", files=[file])
         self.assertEqual(len(result.files), 2)
         Image.open(result.files[-1].file.path).show()

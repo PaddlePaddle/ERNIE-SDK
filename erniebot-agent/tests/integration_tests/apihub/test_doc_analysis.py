@@ -17,7 +17,7 @@ class TestRemoteTool(RemoteToolTesting):
         self.file = asyncio.run(
             self.file_manager.create_file_from_path(
                 self.download_file(
-                    "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/开源与商业.pdf"
+                    "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/城市管理执法办法.pdf"
                 )
             )
         )
