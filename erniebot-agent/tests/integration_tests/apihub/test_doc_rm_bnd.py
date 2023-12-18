@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools.base import RemoteToolkit
+from erniebot_agent.tools.remote_toolkit import RemoteToolkit
 
 from .base import RemoteToolTesting
 
