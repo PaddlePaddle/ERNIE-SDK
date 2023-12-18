@@ -13,17 +13,19 @@
 # limitations under the License.
 
 import asyncio
+import logging
 import pathlib
 import weakref
 from typing import Any, Awaitable, Callable, NoReturn, Optional, Tuple, final
 
 import anyio
 from erniebot_agent.file_io.remote_file import RemoteFile
-from erniebot_agent.utils.logging import logger
 from erniebot_agent.utils.mixins import Closeable
 from typing_extensions import Self, TypeAlias
 
 _DEFAULT_CACHE_TIMEOUT = 3600
+
+logger = logging.getLogger(__name__)
 
 DiscardCallback: TypeAlias = Callable[[], None]
 ContentsReader: TypeAlias = Callable[[], Awaitable[bytes]]
