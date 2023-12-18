@@ -18,7 +18,7 @@ jobs:
           python -m pip install -e erniebot-agent/
           python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Run the command
-        run: cd erniebot-agent && python -m pytest tests/unit_tests/
+        run: cd erniebot-agent && python -m pytest tests/unit_tests/ --cov erniebot-agent --cov-report xml:coverage.xml
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         env:
