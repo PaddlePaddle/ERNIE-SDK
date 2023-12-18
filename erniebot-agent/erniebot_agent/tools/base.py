@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import base64
+import inspect
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
@@ -117,7 +118,9 @@ def get_file_info_from_param_view(
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
-        elif issubclass(model_field.annotation, ToolParameterView):
+        elif inspect.isclass(model_field.annotation) and issubclass(
+            model_field.annotation, ToolParameterView
+        ):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
@@ -150,20 +153,26 @@ async def parse_file_from_json_response(
         if list_base_annotation == "object":
             # get base type
             arg_type = get_args(model_field.annotation)[0]
-            file_infos[key] = []
+            sub_file_infos_list = []
             for json_item in json_data[key]:
-                file_infos[key].append(
-                    await parse_file_from_json_response(
-                        json_item, file_manager=file_manager, param_view=arg_type, tool_name=tool_name
-                    )
+                sub_file_infos = await parse_file_from_json_response(
+                    json_item, file_manager=file_manager, param_view=arg_type, tool_name=tool_name
                 )
-        elif issubclass(model_field.annotation, ToolParameterView):
-            file_infos[key] = await parse_file_from_json_response(
+                if sub_file_infos:
+                    sub_file_infos_list.append(sub_file_infos)
+            if sub_file_infos_list:
+                file_infos[key] = sub_file_infos_list
+        elif inspect.isclass(model_field.annotation) and issubclass(
+            model_field.annotation, ToolParameterView
+        ):
+            sub_file_infos = await parse_file_from_json_response(
                 json_data[key],
                 file_manager=file_manager,
                 param_view=model_field.annotation,
                 tool_name=tool_name,
             )
+            if sub_file_infos:
+                file_infos[key] = sub_file_infos
         else:
             json_schema_extra = model_field.json_schema_extra
             format = json_schema_extra.get("format", None)

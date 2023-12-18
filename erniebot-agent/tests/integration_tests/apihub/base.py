@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 import unittest
 from typing import Optional
@@ -16,6 +17,9 @@ from erniebot_agent.tools.tool_manager import ToolManager
 class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.temp_dir)
 
     def download_file(self, url, file_name: Optional[str] = None):
         image_response = requests.get(url)
