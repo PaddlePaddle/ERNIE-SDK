@@ -354,6 +354,7 @@ class RemoteTool(BaseTool):
                 continue
             if self.tool_view.parameters is None:
                 break
+            tool_arguments[key] = tool_arguments[key].replace("<file>", "").replace("</file>", "")
             byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
             if parameter_file_info[key]["format"] == "byte":
                 byte_str = base64.b64encode(byte_str).decode()
