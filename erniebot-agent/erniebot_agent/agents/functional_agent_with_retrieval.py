@@ -388,13 +388,12 @@ class ContextAugmentedFunctionalAgent(FunctionalAgent):
 
 
 class FunctionalAgentWithQueryPlanning(FunctionalAgent):
-    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
+    def __init__(self, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
-        self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
-        self.search_tool = KnowledgeBaseTool()
+        # self.search_tool = KnowledgeBaseTool()
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         # RAG
