@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import base64
+import inspect
 import json
 import os
 import tempfile
@@ -128,7 +129,7 @@ def get_file_info_from_param_view(
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
-        elif isinstance(model_field.annotation, type) and issubclass(
+        elif inspect.isclass(model_field.annotation) and issubclass(
             model_field.annotation, ToolParameterView
         ):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
@@ -163,16 +164,16 @@ async def parse_file_from_json_response(
         if list_base_annotation == "object":
             # get base type
             arg_type = get_args(model_field.annotation)[0]
-            temp_list = []
+            file_info_list = []
             for json_item in json_data[key]:
                 sub_file_infos = await parse_file_from_json_response(
                     json_item, file_manager=file_manager, param_view=arg_type, tool_name=tool_name
                 )
                 if sub_file_infos:
-                    temp_list.append(sub_file_infos)
-            if temp_list:
-                file_infos[key] = temp_list
-        elif isinstance(model_field.annotation, type) and issubclass(
+                    file_info_list.append(sub_file_infos)
+            if file_info_list:
+                file_infos[key] = file_info_list
+        elif inspect.isclass(model_field.annotation) and issubclass(
             model_field.annotation, ToolParameterView
         ):
             sub_file_infos = await parse_file_from_json_response(
