@@ -171,14 +171,8 @@ if __name__ == "__main__":
             )
         elif args.retrieval_type == "knowledge_tools":
             # TODO(wugaosheng) Add knowledge base tool retriever for tool selection
-            # tool_results: Dict = tool_retriever(query)["documents"]
             tool_results = asyncio.run(tool_retriever(query))["documents"]
-            selected_tools = []
-            for item in tool_results:
-                tool_name = tool_map[item["meta"]["tool_name"]]
-                selected_tools.append(tool_name)
-
-            # selected_tools = [tool_map[item['meta']["tool_name"]] for item in tool_results]
+            selected_tools = [tool_map[item["meta"]["tool_name"]] for item in tool_results]
             agent = FunctionalAgentWithQueryPlanning(  # type: ignore
                 llm=llm,
                 top_k=3,
