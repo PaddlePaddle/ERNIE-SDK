@@ -103,6 +103,9 @@ class FakeRemoteFileClient(RemoteFileClient):
     async def delete_file(self, file_id) -> None:
         await self.server.delete_file(file_id)
 
+    async def create_temporary_url(self, file_id, expire_after):
+        raise RuntimeError("Method not supported")
+
     def _create_file_obj_from_dict(self, dict_):
         with self._protocol.follow():
             return RemoteFile(
