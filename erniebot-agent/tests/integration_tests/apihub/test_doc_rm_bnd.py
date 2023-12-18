@@ -14,7 +14,9 @@ class TestRemoteTool(RemoteToolTesting):
 
         file_manager = FileManager()
 
-        file = await file_manager.create_file_from_path(self.get_image())
+        file = await file_manager.create_file_from_path(
+            self.download_file("https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/biyadi.png")
+        )
         agent = self.get_agent(toolkit)
 
         result = await agent.async_run("请帮我把这张图片的底纹给删掉", files=[file])

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from typing import Optional
 
 import requests
 from erniebot_agent.agents.functional_agent import FunctionalAgent
@@ -16,12 +17,12 @@ class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
 
-    def get_image(self):
-        image_response = requests.get(
-            "https://ai-studio-static-online.cdn.bcebos.com/"
-            "dcdfa7f8c35f4d5f9e0eeab7e590f5f4b576bb1728e94bb4a889b34d833397d2"
-        )
-        path = os.path.join(self.temp_dir, "test.png")
+    def download_file(self, url, file_name: Optional[str] = None):
+        image_response = requests.get(url)
+        if file_name is None:
+            file_name = os.path.basename(url)
+
+        path = os.path.join(self.temp_dir, file_name)
         with open(path, "wb") as f:
             f.write(image_response.content)
 
