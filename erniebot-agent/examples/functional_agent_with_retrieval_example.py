@@ -10,8 +10,8 @@ from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
+from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
-from erniebot_agent.tools.base import RemoteToolkit
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
 from tqdm import tqdm

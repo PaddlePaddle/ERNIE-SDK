@@ -4,7 +4,7 @@ from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.memory.whole_memory import WholeMemory
-from erniebot_agent.tools.base import RemoteToolkit
+from erniebot_agent.tools import RemoteToolkit
 
 
 class CVToolkit:
