@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import atexit
+import logging
 import pathlib
 import tempfile
 from tempfile import TemporaryDirectory
 from typing import Any, List
 
-from erniebot_agent.utils.logging import logger
+logger = logging.getLogger(__name__)
 
 _tracked_temp_dirs: List[TemporaryDirectory] = []
 

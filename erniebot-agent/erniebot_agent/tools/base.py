@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
 import tempfile
 from abc import ABC, abstractmethod
@@ -41,13 +42,14 @@ from erniebot_agent.tools.schema import (
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
-from erniebot_agent.utils.logging import logger
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
 from yaml import safe_dump
 
 import erniebot
+
+logger = logging.getLogger(__name__)
 
 
 def tool_response_contains_file(element: Any):

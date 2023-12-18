@@ -14,6 +14,7 @@
 
 import abc
 import json
+import logging
 from typing import Any, Dict, List, Literal, Optional, Union, final
 
 from erniebot_agent import file_io
@@ -34,8 +35,9 @@ from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.logging import logger
 from erniebot_agent.utils.mixins import GradioMixin
+
+logger = logging.getLogger(__name__)
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
