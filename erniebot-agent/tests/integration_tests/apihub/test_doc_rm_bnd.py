@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools.base import RemoteToolkit
+from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.tools import RemoteToolkit
 
 from .base import RemoteToolTesting
 
@@ -12,7 +12,7 @@ class TestRemoteTool(RemoteToolTesting):
     async def test_doc_rm_bnd(self):
         toolkit = RemoteToolkit.from_aistudio("rm-doc-img-bnd")
 
-        file_manager = FileManager()
+        file_manager = get_file_manager()
 
         file = await file_manager.create_file_from_path(
             self.download_file("https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/biyadi.png")
