@@ -27,6 +27,7 @@ import requests
 from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -47,6 +48,20 @@ from requests import Response
 from yaml import safe_dump
 
 import erniebot
+
+
+def tool_response_contains_file(element: Any):
+    if isinstance(element, str):
+        if is_local_file_id(element) or is_remote_file_id(element):
+            return True
+    elif isinstance(element, dict):
+        for val in element.values():
+            if tool_response_contains_file(val):
+                return True
+    elif isinstance(element, list):
+        for val in element:
+            if tool_response_contains_file(val):
+                return True
 
 
 def validate_openapi_yaml(yaml_file: str) -> bool:
@@ -109,10 +124,14 @@ def get_file_info_from_param_view(
         if list_base_annotation == "object":
             # get base type
             arg_type = get_args(model_field.annotation)[0]
-            file_infos[key] = get_file_info_from_param_view(arg_type)
+            sub_file_infos = get_file_info_from_param_view(arg_type)
+            if len(sub_file_infos) > 0:
+                file_infos[key] = sub_file_infos
             continue
         elif issubclass(model_field.annotation, ToolParameterView):
-            file_infos[key] = get_file_info_from_param_view(model_field.annotation)
+            sub_file_infos = get_file_info_from_param_view(model_field.annotation)
+            if len(sub_file_infos) > 0:
+                file_infos[key] = sub_file_infos
             continue
 
         json_schema_extra = model_field.json_schema_extra
@@ -133,6 +152,10 @@ async def parse_file_from_json_response(
     file_infos: Dict[str, Any] = {}
     for key in param_view.model_fields.keys():
         model_field = param_view.model_fields[key]
+
+        # to avoid: yaml schema is not matched with json response schema
+        if key not in json_data:
+            continue
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
         if list_base_annotation == "object":
@@ -160,7 +183,7 @@ async def parse_file_from_json_response(
                 if format == "byte":
                     content = base64.b64decode(content)
 
-                suffix = get_file_suffix(json_schema_extra["x-ebagent-file-mime-type"])
+                suffix = get_file_suffix(json_schema_extra.get("x-ebagent-file-mime-type", None))
                 file = await file_manager.create_file_from_bytes(
                     content,
                     filename=f"test{suffix}",
@@ -306,6 +329,8 @@ class RemoteTool(BaseTool):
             file_manager = get_global_file_manager()
         self.file_manager = file_manager
 
+        self.response_prompt: Optional[str] = None
+
     @property
     def examples(self) -> List[Message]:
         return self._examples or []
@@ -355,6 +380,14 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
+        if self.response_prompt is not None:
+            tool_response["prompt"] = self.response_prompt
+        elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
+            tool_response["prompt"] = self.tool_view.returns.__prompt__
+        elif tool_response_contains_file(tool_response):
+            tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
+
+        # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
         # if self.tool_view.returns is not None:
         #     tool_response = dict(self.tool_view.returns(**tool_response))
         return tool_response
@@ -421,12 +454,15 @@ class RemoteTool(BaseTool):
 
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
-            return await parse_file_from_json_response(
-                response.json(),
+            response_json = response.json()
+            file_info = await parse_file_from_json_response(
+                response_json,
                 file_manager=self.file_manager,
                 param_view=self.tool_view.returns,  # type: ignore
                 tool_name=self.tool_name,
             )
+            response_json.update(file_info)
+            return response_json
         file = await parse_file_from_response(
             response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )

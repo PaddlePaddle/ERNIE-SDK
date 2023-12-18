@@ -21,8 +21,9 @@ from erniebot_agent.messages import AIMessage, AIMessageChunk, Message
 class ChatModel(metaclass=ABCMeta):
     """The base class of chat-optimized LLM."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str, **default_chat_kwargs: Any):
         self.model = model
+        self.default_chat_kwargs = default_chat_kwargs
 
     @overload
     async def async_chat(

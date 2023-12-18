@@ -18,7 +18,7 @@ from enum import Enum
 from inspect import isclass
 from typing import List, Optional
 
-from erniebot_agent.tools.base import RemoteToolkit
+from erniebot_agent.tools.base import RemoteToolkit, tool_response_contains_file
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_typing_list_type,
@@ -217,6 +217,21 @@ class TestToolSchema(unittest.TestCase):
         self.assertEqual(MyEnum.MEMBER1.value, "MEMBER1")
         self.assertListEqual(list(MyEnum.__members__.keys()), member_names)
 
+    def test_prompt_parsing(self):
+        expected_openapi_dict = {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "测试名称",
+                },
+            },
+            "required": ["name"],
+            "x-ebagent-prompt": "abc",
+        }
+        tool = ToolParameterView.from_openapi_dict(expected_openapi_dict)
+        self.assertEqual(tool.__prompt__, "abc")
+
 
 class TestDataTypeSchema(unittest.IsolatedAsyncioTestCase):
     def test_enum_file(self):
@@ -240,3 +255,26 @@ class TestDataTypeSchema(unittest.IsolatedAsyncioTestCase):
         tool = toolkit.get_tool("OCR")
         function_call_schema = tool.function_call_schema()
         self.assertEqual(function_call_schema["parameters"]["properties"]["language_type"]["type"], "object")
+
+
+class TestResponseContainsFile(unittest.TestCase):
+    def _test_file(self, filename):
+        self.assertTrue(tool_response_contains_file({"response": filename}))
+        self.assertFalse(tool_response_contains_file({"response": "12345"}))
+
+    def _test_nested_file(self, filename):
+        self.assertTrue(tool_response_contains_file({"response": {"file_id": [filename]}}))
+        self.assertTrue(tool_response_contains_file({"response": {"file_id": filename}}))
+        self.assertTrue(tool_response_contains_file({"response": [filename]}))
+        self.assertTrue(tool_response_contains_file({"response": {"file_id": filename, "test": 1}}))
+        self.assertFalse(tool_response_contains_file({"response": {"test": 1}}))
+        self.assertFalse(tool_response_contains_file({"response": {"test": 1, "test_list": ["123"]}}))
+        self.assertFalse(tool_response_contains_file({"response": ["123"]}))
+
+    def test_local_file(self):
+        self._test_file(filename="file-local-609f02c0-98c3-11ee-a72b-fa2020087eb4")
+        self._test_nested_file(filename="file-local-609f02c0-98c3-11ee-a72b-fa2020087eb4")
+
+    def test_remote_file(self):
+        self._test_file(filename="file-123456789012345")
+        self._test_nested_file(filename="file-123456789012345")

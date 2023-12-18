@@ -15,16 +15,18 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
 from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.utils.logging import logger
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
+
+logger = logging.getLogger(__name__)
 
 
 def is_optional_type(type: Type):
@@ -203,6 +205,8 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 
 class ToolParameterView(BaseModel):
+    __prompt__: Optional[str] = None
+
     class Config:
         use_enum_values = True
 
@@ -219,6 +223,10 @@ class ToolParameterView(BaseModel):
         # TODO(wj-Mcat): to load Optional field
         fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
+            # skip loading invalid field to improve compatibility
+            if "type" not in field_dict or "description" not in field_dict:
+                continue
+
             field_type = python_type_from_json_type(field_dict)
 
             if field_type is List[ToolParameterView]:
@@ -249,7 +257,9 @@ class ToolParameterView(BaseModel):
             if format is not None:
                 json_schema_extra["format"] = format
 
-            json_schema_extra["x-ebagent-file-mime-type"] = field_dict.get("x-ebagent-file-mime-type", None)
+            json_schema_extra.update(
+                {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
+            )
 
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
@@ -265,6 +275,9 @@ class ToolParameterView(BaseModel):
             fields[field_name] = (field_type, field)
 
         model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+
+        # get the prompt for schema
+        model.__prompt__ = schema.get("x-ebagent-prompt", None)
         return model
 
     @classmethod

@@ -34,9 +34,10 @@ from erniebot_agent.file_io.file_registry import BaseFileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exception import FileError
-from erniebot_agent.utils.logging import logger
 from erniebot_agent.utils.mixins import Closeable
 from typing_extensions import Self, TypeAlias
+
+logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
 
