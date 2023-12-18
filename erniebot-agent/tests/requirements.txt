@@ -1,6 +1,7 @@
+fastapi
+jinja2
 pre-commit
 pytest
-jinja2
 pytest-asyncio
-fastapi
+pytest-cov
 uvicorn
