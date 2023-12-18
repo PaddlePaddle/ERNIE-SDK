@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import base64
+import inspect
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
@@ -117,7 +118,9 @@ def get_file_info_from_param_view(
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
-        elif issubclass(model_field.annotation, ToolParameterView):
+        elif inspect.isclass(model_field.annotation) and issubclass(
+            model_field.annotation, ToolParameterView
+        ):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
