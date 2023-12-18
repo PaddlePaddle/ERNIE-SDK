@@ -69,18 +69,9 @@ def is_base64_string(string: str) -> bool:
 
 
 def get_file_type(file_name: str) -> str:
-    if "." not in file_name:
-        raise ValueError("file_name should contain suffix")
-
-    picture_pattern = set(["jpg", "png", "jpeg"])
-    audio_pattern = set(["mp3", "wav"])
-    video_pattern = set(["mp4", "avi"])
-    file_suffix = file_name.split(".")[-1].lower()
-    if file_suffix in picture_pattern:
-        return "picture"
-    elif file_suffix in audio_pattern:
-        return "audio"
-    elif file_suffix in video_pattern:
-        return "video"
+    # Expected output record: image/video/audio
+    guess_type = mimetypes.guess_type(file_name)[0]
+    if guess_type is not None:
+        return guess_type.split("/")[0]
     else:
-        return ""
+        raise ValueError(f"Invalid file name: {file_name}")

@@ -18,7 +18,8 @@ from enum import Enum
 from inspect import isclass
 from typing import List, Optional
 
-from erniebot_agent.tools.base import RemoteToolkit, tool_response_contains_file
+from erniebot_agent.tools import RemoteToolkit
+from erniebot_agent.tools.base import tool_response_contains_file
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_typing_list_type,

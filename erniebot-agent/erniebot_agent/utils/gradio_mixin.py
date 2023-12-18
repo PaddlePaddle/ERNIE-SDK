@@ -1,9 +1,12 @@
 import base64
+import os
+import tempfile
 from typing import Any, List
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 
 
@@ -22,20 +25,23 @@ class GradioMixin:
             ) from None
 
         raw_messages = []
-        self.use_file: List[File] = []
+        _uploaded_file_cache: List[File] = []
 
         def _pre_chat(text, history):
             history.append([text, None])
             return history, gr.update(value="", interactive=False), gr.update(interactive=False)
 
         async def _chat(history):
+            nonlocal _uploaded_file_cache, td
+            temp_save_file_name = None
+
             prompt = history[-1][0]
             if len(prompt) == 0:
                 raise gr.Error("Prompt should not be empty.")
 
-            if self.use_file:
-                response = await self.async_run(prompt, files=self.use_file)
-                self.use_file = []
+            if _uploaded_file_cache:
+                response = await self.async_run(prompt, files=_uploaded_file_cache)
+                _uploaded_file_cache = []
             else:
                 response = await self.async_run(prompt)
 
@@ -44,22 +50,34 @@ class GradioMixin:
                 and response.files[-1].type == "output"
                 and response.files[-1].used_by == response.actions[-1].tool_name
             ):
+                # If there is a file output in the last round, then we need to show it
                 output_file_id = response.files[-1].file.id
                 output_file = self._file_manager.look_up_file_by_id(output_file_id)
-                img_content = await output_file.read_contents()
-                base64_encoded = base64.b64encode(img_content).decode("utf-8")
-                if output_file_id in response.text:
-                    output_result = response.text
-                    output_result = output_result.replace(
-                        output_file_id, IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
-                    )
+                file_content = await output_file.read_contents()
+                if get_file_type(response.files[-1].file.filename) == "image":
+                    # If it is a image, we can display it in the same chat page
+                    base64_encoded = base64.b64encode(file_content).decode("utf-8")
+                    if output_file_id in response.text:
+                        output_result = response.text
+                        output_result = output_result.replace(
+                            output_file_id, IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
+                        )
+                    else:
+                        output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                 else:
-                    output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
+                    # TODO: Support multiple files, support audio now
+                    temp_save_file_name = os.path.join(td, response.files[-1].file.filename)
+                    with open(temp_save_file_name, "wb") as f:
+                        f.write(file_content)
+                    output_result = response.text
 
             else:
                 output_result = response.text
 
             history[-1][1] = output_result
+            if temp_save_file_name:
+                # If it is not image, we should have another chat page
+                history = history + [(None, (temp_save_file_name,))]
             raw_messages.extend(response.chat_history)
             return (
                 history,
@@ -76,13 +94,14 @@ class GradioMixin:
             return None, None, None, None
 
         async def _upload(file: List[gr.utils.NamedString], history: list):
+            nonlocal _uploaded_file_cache
             for single_file in file:
                 upload_file = await self._file_manager.create_file_from_path(single_file.name)
-                self.use_file.append(upload_file)
+                _uploaded_file_cache.append(upload_file)
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = self._file_manager._file_registry.list_files()
+            output_lis = self._file_manager.registry.list_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
@@ -109,7 +128,9 @@ class GradioMixin:
                         {"left": "$", "right": "$", "display": False},
                     ],
                     bubble_full_width=False,
+                    height=750,
                 )
+
                 with gr.Row():
                     prompt_textbox = gr.Textbox(
                         label="Prompt", placeholder="Write a prompt here...", scale=15
@@ -125,7 +146,7 @@ class GradioMixin:
                         )
 
                 with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager._file_registry.list_files()
+                    file_lis = self._file_manager.registry.list_files()
                     all_files = gr.HTML(value=file_lis, label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
@@ -179,4 +200,12 @@ class GradioMixin:
                 outputs=[all_files, chatbot],
             )
 
-        demo.launch(**launch_kwargs)
+        with tempfile.TemporaryDirectory() as td:
+            if "allowed_paths" in launch_kwargs:
+                if not isinstance(launch_kwargs["allowed_paths"], list):
+                    raise ValueError("`allowed_paths` must be a list")
+                allowed_paths = launch_kwargs["allowed_paths"] + [td]
+                launch_kwargs.pop("allowed_paths")
+            else:
+                allowed_paths = [td]
+            demo.launch(allowed_paths=allowed_paths, **launch_kwargs)
