@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit
 
 from .base import RemoteToolTesting
@@ -12,13 +11,8 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     def setUp(self) -> None:
         super().setUp()
-        self.file_manager = get_file_manager()
         self.file = asyncio.run(
-            self.file_manager.create_file_from_path(
-                self.download_file(
-                    "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/shouxiezi.png"
-                )
-            )
+            self.file_manager.create_file_from_path(self.download_fixture_file("shouxiezi.png"))
         )
 
     @pytest.mark.asyncio
