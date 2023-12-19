@@ -2,10 +2,7 @@ import hashlib
 import json
 from typing import Any, Dict, Optional, Union
 
-from pydantic import BaseConfig
 from pydantic.dataclasses import dataclass
-
-BaseConfig.arbitrary_types_allowed = True
 
 
 @dataclass

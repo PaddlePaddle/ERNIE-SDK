@@ -30,7 +30,7 @@ INVALID_FIELD_NAME = "__invalid_field_name__"
 logger = logging.getLogger(__name__)
 
 
-def is_optional_type(type: Type):
+def is_optional_type(type: Optional[Type]):
     args = get_args(type)
     if len(args) == 0:
         return False

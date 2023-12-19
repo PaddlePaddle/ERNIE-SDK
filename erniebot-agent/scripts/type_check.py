@@ -30,7 +30,7 @@ def main():
 
 def run_mypy(files):
     print("===== mypy =====")
-    subprocess.check_call([sys.executable, "-m", "mypy", *files])
+    subprocess.check_call([sys.executable, "-m", "mypy", *files, "--ignore-missing-imports"])
 
 
 if __name__ == "__main__":

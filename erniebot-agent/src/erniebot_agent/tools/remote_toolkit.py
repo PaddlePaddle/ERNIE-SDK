@@ -9,14 +9,13 @@ from typing import Any, ClassVar, Dict, List, Optional, Type
 
 import erniebot
 import requests
-from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
 from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
-from erniebot_agent.tools.base import RemoteTool, tool_registor
+from erniebot_agent.tools.remote_tool import RemoteTool, tool_registor
 from erniebot_agent.tools.schema import (
     Endpoint,
     EndpointInfo,
@@ -24,27 +23,10 @@ from erniebot_agent.tools.schema import (
     ToolParameterView,
     scrub_dict,
 )
+from erniebot_agent.tools.utils import validate_openapi_yaml
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
 from erniebot_agent.utils.logging import logger
-
-
-def validate_openapi_yaml(yaml_file: str) -> bool:
-    """do validation on the yaml file
-
-    Args:
-        yaml_file (str): the path of yaml file
-
-    Returns:
-        bool: whether yaml file is valid
-    """
-    yaml_dict = read_from_filename(yaml_file)[0]
-    try:
-        validate(yaml_dict)
-        return True
-    except Exception as e:  # type: ignore
-        logger.error(e)
-        return False
 
 
 @dataclass
