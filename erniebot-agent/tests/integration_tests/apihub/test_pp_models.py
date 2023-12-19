@@ -27,7 +27,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请帮我分割图中的人", files=[file])
+        result = await agent.async_run("请帮我对图中的行人进行分析", files=[file])
         self.assertEqual(result.files[-1].type, "output")
 
     @pytest.mark.asyncio
