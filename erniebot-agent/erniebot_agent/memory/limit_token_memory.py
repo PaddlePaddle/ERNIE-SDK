@@ -22,7 +22,7 @@ class LimitTokensMemory(Memory):
     If tokens >= max_token_limit, pop message from memory.
     """
 
-    def __init__(self, max_token_limit=6000):
+    def __init__(self, max_token_limit=4000):
         super().__init__()
         self.max_token_limit = max_token_limit
         self.mem_token_count = 0
@@ -53,7 +53,7 @@ class LimitTokensMemory(Memory):
                 if len(self.get_messages()) == 0:
                     raise RuntimeError(
                         "The messsage is now empty. \
-                            It indicates {} which takes up {} tokens and exeeded {} tokens.".format(
-                            deleted_message, len(deleted_message.content), self.max_token_limit
+It indicates {} which takes up {} tokens and exeeded tokens limits of {} tokens.".format(
+                            deleted_message, deleted_message.token_count, self.max_token_limit
                         )
                     )
