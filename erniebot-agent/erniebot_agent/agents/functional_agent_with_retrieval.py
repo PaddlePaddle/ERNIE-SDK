@@ -155,8 +155,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             step_input = HumanMessage(
                 content=self.rag_prompt.format(query=prompt, documents=results["documents"])
             )
-            fake_chat_history: List[Message] = []
-            fake_chat_history.append(step_input)
+            fake_chat_history: List[Message] = [step_input]
             llm_resp = await self._async_run_llm_without_hooks(
                 messages=fake_chat_history,
                 functions=None,
