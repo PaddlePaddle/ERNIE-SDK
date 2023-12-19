@@ -72,3 +72,28 @@ class TestPPRemoteTool(RemoteToolTesting):
         self.assertIn("vehicle_attrs", decoded_tool_ret)
         self.assertEqual(decoded_tool_ret["vehicle_attrs"], [{"color": "blue", "kind": "Unknown"}])
         self.assertEqual(len(response.files), 2)
+
+    @pytest.mark.asyncio
+    async def test_pp_structure(self):
+        toolkit = RemoteToolkit.from_aistudio("pp-structure-v2")
+
+        agent = self.get_agent(toolkit)
+
+        result = await agent.async_run("请帮我提取一下这个表格的内容", files=[self.file])
+        self.assertEqual(len(result.files), 1)
+        self.assertIn("设备", result.text)
+
+    @pytest.mark.asyncio
+    async def test_pp_ocr_v4(self):
+        toolkit = RemoteToolkit.from_aistudio("pp-ocrv4")
+
+        file = await self.file_manager.create_file_from_path(
+            self.download_fixture_file("ocr_example_input.png")
+        )
+        agent = self.get_agent(toolkit)
+
+        response = await agent.async_run("请帮我识别出这幅图片中的文字", files=[file])
+
+        self.assertEqual(len(response.actions), 1)
+        decoded_tool_ret = json.loads(response.chat_history[2].content)
+        self.assertEqual(decoded_tool_ret, {"result": "中国\n汉字"})
