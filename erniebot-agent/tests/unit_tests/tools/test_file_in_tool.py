@@ -25,15 +25,16 @@ import unittest
 import uuid
 
 import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from requests.models import Response
+
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.base import (
     get_file_info_from_param_view,
     parse_file_from_json_response,
 )
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from requests.models import Response
 
 PYYAML_CONTENT = """openapi: 3.0.1
 info:

@@ -20,9 +20,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
-from erniebot_agent.utils.common import create_enum_class
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
+
+from erniebot_agent.utils.common import create_enum_class
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -171,14 +172,14 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     typing_list_type = get_typing_list_type(field_info.annotation)
     if typing_list_type is not None:
         field_type = "array"
-    elif is_optional_type(field_info.annotation):
+    elif field_info.annotation is not None and is_optional_type(field_info.annotation):
         field_type = json_type(get_args(field_info.annotation)[0])
-    elif issubclass(field_info.annotation, Enum):
+    elif field_info.annotation is not None and issubclass(field_info.annotation, Enum):
         field_type = json_type(type(list(field_info.annotation.__members__.keys())[0]))
     else:
         field_type = json_type(field_info.annotation)
 
-    property = {
+    property: Dict[str, Any] = {
         "type": field_type,
         "description": field_info.description,
     }

@@ -21,6 +21,10 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+from openapi_spec_validator import validate
+from openapi_spec_validator.readers import read_from_filename
+from requests import Response
+
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
@@ -35,9 +39,6 @@ from erniebot_agent.tools.schema import (
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
-from openapi_spec_validator import validate
-from openapi_spec_validator.readers import read_from_filename
-from requests import Response
 
 
 def tool_response_contains_file(element: Any):

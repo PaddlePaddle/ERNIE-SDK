@@ -7,6 +7,7 @@ import unittest
 from typing import Optional
 
 import requests
+
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory

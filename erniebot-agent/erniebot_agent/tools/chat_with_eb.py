@@ -1,10 +1,11 @@
 from typing import Dict, Type
 
+from pydantic import Field
+
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.messages import HumanMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 
 class ChatWithEBInputView(ToolParameterView):

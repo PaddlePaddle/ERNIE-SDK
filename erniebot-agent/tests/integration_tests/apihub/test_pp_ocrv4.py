@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import FunctionMessage
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit

@@ -21,13 +21,14 @@ import weakref
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 import anyio
+from typing_extensions import TypeAlias
+
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_registry import FileRegistry, get_file_registry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.protocol import FilePurpose
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exception import FileError
-from typing_extensions import TypeAlias
 
 logger = logging.getLogger(__name__)
 
