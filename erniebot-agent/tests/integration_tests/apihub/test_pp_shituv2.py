@@ -18,7 +18,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         file_manager = get_file_manager()
         file_path = self.download_file(
-            "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/pp_tinypose_input_img.jpg"
+            "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/pp_shituv2_input_img.png"
         )
         file = await file_manager.create_file_from_path(file_path)
 
