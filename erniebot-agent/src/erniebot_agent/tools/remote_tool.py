@@ -116,7 +116,10 @@ class RemoteTool(BaseTool):
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
             tool_response["prompt"] = self.tool_view.returns.__prompt__
         elif tool_response_contains_file(tool_response):
-            tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
+            tool_response["prompt"] = (
+                "参考工具说明中对各个结果字段的描述，提取工具调用结果中的信息，生成一段通顺的文本满足用户的需求。",
+                "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。"
+            )
 
         # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
         # if self.tool_view.returns is not None:
