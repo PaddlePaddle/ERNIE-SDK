@@ -28,11 +28,9 @@ repos:
         entry: python scripts/run_erniebot_checks.py
         files: ^erniebot/
         pass_filenames: false
-        stages: [pre-commit]
       - id: run-erniebot-agent-checks
         name: Run erniebot-agent checks
         language: system
         entry: python scripts/run_erniebot_agent_checks.py
         files: ^erniebot-agent/
         pass_filenames: false
-        stages: [pre-commit]
