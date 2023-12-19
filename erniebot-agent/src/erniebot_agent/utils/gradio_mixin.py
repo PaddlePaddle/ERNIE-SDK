@@ -203,7 +203,7 @@ class GradioMixin:
         with tempfile.TemporaryDirectory() as td:
             if "allowed_paths" in launch_kwargs:
                 if not isinstance(launch_kwargs["allowed_paths"], list):
-                    raise ValueError("`allowed_paths` must be a list")
+                    raise TypeError("`allowed_paths` must be a list")
                 allowed_paths = launch_kwargs["allowed_paths"] + [td]
                 launch_kwargs.pop("allowed_paths")
             else:
