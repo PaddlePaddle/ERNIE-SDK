@@ -1,5 +1,15 @@
 name: AgentUnitTest
-on: [push, pull_request]
+
+on:
+  push:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
+  pull_request:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
+
 jobs:
   AgentUnitTest:
     name: Agent Unit Test
