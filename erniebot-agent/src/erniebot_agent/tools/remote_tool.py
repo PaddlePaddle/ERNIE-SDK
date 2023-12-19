@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
 import requests
+
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import Message
 from erniebot_agent.tools.base import BaseTool
