@@ -29,4 +29,4 @@ jobs:
           python -m pip install -e erniebot
           python -m pip install -r erniebot/tests/requirements.txt
       - name: Run the script
-        run: python -m scripts/run_erniebot_checks.py
+        run: python scripts/run_erniebot_checks.py
