@@ -11,12 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import annotations
 
 import unittest
 from enum import Enum
 from inspect import isclass
 from typing import List, Optional
+
+from openapi_spec_validator.readers import read_from_filename
+from pydantic import Field
 
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.base import tool_response_contains_file
@@ -27,8 +31,6 @@ from erniebot_agent.tools.schema import (
     json_type,
 )
 from erniebot_agent.utils.common import create_enum_class
-from openapi_spec_validator.readers import read_from_filename
-from pydantic import Field
 
 
 class TestToolSchema(unittest.TestCase):

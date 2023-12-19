@@ -1,10 +1,10 @@
 import unittest
 
 import pytest
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
+
 from erniebot_agent.memory import SlidingWindowMemory
 from erniebot_agent.messages import HumanMessage
-
-from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
 
 class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):

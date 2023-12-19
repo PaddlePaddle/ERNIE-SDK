@@ -16,6 +16,7 @@ import os
 import unittest
 
 import pytest
+
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
