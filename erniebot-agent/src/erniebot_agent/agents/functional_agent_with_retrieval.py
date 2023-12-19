@@ -84,26 +84,28 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
-            step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
-            )
-            chat_history: List[Message] = [step_input]
-            actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
-            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
-            actions_taken.append(action)
-
-            # on_tool_end callback
-            tool_ret_json = json.dumps(results, ensure_ascii=False)
-            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            try:
+                step_input = HumanMessage(
+                    content=self.rag_prompt.format(query=prompt, documents=results["documents"])
+                )
+                chat_history: List[Message] = [step_input]
+                actions_taken: List[AgentAction] = []
+                files_involved: List[AgentFile] = []
+                actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
+                tool_ret_json = json.dumps(results, ensure_ascii=False)
+                tool_resp = ToolResponse(json=tool_ret_json, files=[])
+                llm_resp = await self._async_run_llm_without_hooks(
+                    messages=chat_history,
+                    functions=None,
+                    system=self.system_message.content if self.system_message is not None else None,
+                )
+                output_message = llm_resp.message
+                chat_history.append(output_message)
+            # Using on_tool_error here since retrieval is formatted as a tool
+            except (Exception, KeyboardInterrupt) as e:
+                await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
+                raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            llm_resp = await self._async_run_llm_without_hooks(
-                messages=chat_history,
-                functions=None,
-                system=self.system_message.content if self.system_message is not None else None,
-            )
-            output_message = llm_resp.message
-            chat_history.append(output_message)
             response = self._create_finished_response(chat_history, actions_taken, files_involved)
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
