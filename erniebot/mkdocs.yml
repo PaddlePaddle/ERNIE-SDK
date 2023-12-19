@@ -1,7 +1,7 @@
 site_name: 文心一言 ERNIE Bot SDK
 theme:
   name: material
-  custom_dir: ./.overrides
+  custom_dir: .overrides
   features:
     - content.code.copy
   logo: assets/images/favicon.png
