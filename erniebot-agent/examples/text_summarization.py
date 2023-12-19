@@ -17,13 +17,9 @@ args = parser.parse_args()
 
 
 def summarize_text(text: str):
-    if not text:
-        return "Error: No text to summarize"
     summaries = []
 
     chunks = list(split_text(text, max_length=4096))
-    scroll_ratio = 1 / len(chunks)
-    print(scroll_ratio)
     print(f"Summarizing text with total chunks: {len(chunks)}")
     for i, chunk in enumerate(chunks):
         messages = [create_abstract(chunk)]
@@ -33,12 +29,13 @@ def summarize_text(text: str):
         print(summary)
         summaries.append(summary)
 
-    # breakpoint()
     combined_summary = "\n".join(summaries)
     combined_summary = combined_summary[:7000]
     messages = [create_abstract(combined_summary)]
 
-    final_summary = erniebot_chat(messages, api_type=args.api_type, access_token=args.access_token)
+    final_summary = erniebot_chat(messages, api_type=args.api_type, access_token=args.access_token).rbody[
+        "result"
+    ]
     print("Final summary length: ", len(final_summary))
     print(final_summary)
     return final_summary

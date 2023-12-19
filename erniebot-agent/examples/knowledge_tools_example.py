@@ -103,19 +103,10 @@ if __name__ == "__main__":
             name="city_lighting", description="提供关于城市照明管理规定的信息", db=baizhong_db, threshold=0.1
         )
 
-        summary_tool = BaizhongSearchTool(
-            name="text_summary_search", description="使用这个工具总结与作者生活相关的问题", db=baizhong_db, threshold=0.1
-        )
-        vector_tool = BaizhongSearchTool(
-            name="fulltext_search",
-            description="使用这个工具检索特定的上下文，以回答有关作者生活的特定问题",
-            db=baizhong_db,
-            threshold=0.1,
-        )
         tool_retriever = BaizhongSearchTool(
             name="tool_retriever", description="用于检索与query相关的tools列表", db=baizhong_db, threshold=0.1
         )
-    elif args.search_engine == "openai":
+    elif args.search_engine == "openai" and args.retrieval_type == "knowledge_tools":
         embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
         faiss = FAISS.load_local("城市管理执法办法", embeddings)
         openai_city_management = OpenAISearchTool(
@@ -152,6 +143,19 @@ if __name__ == "__main__":
             threshold=0.1,
             return_meta_data=True,
         )
+    elif args.search_engine == "openai" and args.retrieval_type == "summary_fulltext_tools":
+        embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
+        summary_faiss = FAISS.load_local("summary", embeddings)
+        summary_tool = OpenAISearchTool(
+            name="text_summary_search", description="使用这个工具总结与建筑规范相关的问题", db=summary_faiss, threshold=0.1
+        )
+        fulltext_faiss = FAISS.load_local("fulltext", embeddings)
+        vector_tool = OpenAISearchTool(
+            name="fulltext_search",
+            description="使用这个工具检索特定的上下文，以回答有关建筑规范具体的问题",
+            db=fulltext_faiss,
+            threshold=0.1,
+        )
 
     queries = [
         "量化交易",
@@ -166,7 +170,7 @@ if __name__ == "__main__":
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
         memory = WholeMemory()
-        if args.retrieval_type == "summary_fulltext":
+        if args.retrieval_type == "summary_fulltext_tools":
             agent = FunctionalAgentWithQueryPlanning(  # type: ignore
                 llm=llm,
                 top_k=3,
