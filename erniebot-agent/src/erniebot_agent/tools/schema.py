@@ -271,7 +271,7 @@ class ToolParameterView(BaseModel):
                 {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
             )
 
-            if field_type is List[str]:
+            if get_typing_list_type(field_type) is not None and field_type is not List[ToolParameterView]:
                 json_schema_extra["array_items_schema"] = field_dict["items"]
 
             field_info_param = dict(

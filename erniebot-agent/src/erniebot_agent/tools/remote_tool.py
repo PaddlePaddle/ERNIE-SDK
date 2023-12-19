@@ -103,11 +103,6 @@ class RemoteTool(BaseTool):
 
             tool_arguments[key] = argument_value
 
-            byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
-            if parameter_file_info[key]["format"] == "byte":
-                byte_str = base64.b64encode(byte_str).decode()
-            tool_arguments[key] = byte_str
-
         # 2. call tool get response
         if self.tool_view.parameters is not None:
             tool_arguments = dict(self.tool_view.parameters(**tool_arguments))
