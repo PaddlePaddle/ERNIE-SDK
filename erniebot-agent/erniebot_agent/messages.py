@@ -1,4 +1,3 @@
-#
 # Licensed under the Apache License, Version 2.0 (the "License"
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,21 +10,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+import logging
 from typing import Dict, List, Optional, TypedDict
+
+from erniebot_agent.file_io import protocol
+from erniebot_agent.file_io.base import File
+from erniebot_agent.file_io.remote_file import RemoteFile
+from typing_extensions import Self
 
 import erniebot.utils.token_helper as token_helper
 
-from erniebot_agent.file_io.base import File
+logger = logging.getLogger(__name__)
 
 
 class Message:
     """The base class of a message."""
 
     def __init__(self, role: str, content: str, token_count: Optional[int] = None):
-        self.role = role
-        self.content = content
+        self._role = role
+        self._content = content
         self._token_count = token_count
         self._param_names = ["role", "content"]
+
+    @property
+    def role(self) -> str:
+        return self._role
+
+    @property
+    def content(self) -> str:
+        return self._content
 
     @property
     def token_count(self):
@@ -74,13 +87,45 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """A message from a human."""
 
-    def __init__(self, content: str, files: Optional[List[File]] = None):
-        self.files = files
-        if self.files is not None:
-            prompt_parts = ["这句话中包含的文件如下："] + [f"file_id: {file.id}" for file in self.files]
-            prompt = "\n".join(prompt_parts)
-            content = content + prompt
+    def __init__(self, content: str):
         super().__init__(role="user", content=content)
+
+    @classmethod
+    async def create_with_files(
+        cls, text: str, files: List[File], *, include_file_urls: bool = False
+    ) -> Self:
+        def _get_file_reprs(files: List[File]) -> List[str]:
+            file_reprs = []
+            for file in files:
+                file_reprs.append(file.get_file_repr())
+            return file_reprs
+
+        async def _create_file_reprs_with_urls(files: List[File]) -> List[str]:
+            file_reprs = []
+            for file in files:
+                if not isinstance(file, RemoteFile):
+                    raise RuntimeError("Only `RemoteFile` objects can have URLs in their representations.")
+                url = await file.create_temporary_url()
+                file_reprs.append(file.get_file_repr_with_url(url))
+
+            return file_reprs
+
+        def _append_files_repr_to_text(text: str, files_repr: str) -> str:
+            return f"{text}\n{files_repr}"
+
+        if len(files) > 0:
+            if len(protocol.extract_file_ids(text)) > 0:
+                logger.warning("File IDs were found in the text. The provided files will be ignored.")
+            else:
+                if include_file_urls:
+                    file_reprs = await _create_file_reprs_with_urls(files)
+                else:
+                    file_reprs = _get_file_reprs(files)
+                files_repr = "\n".join(file_reprs)
+                content = _append_files_repr_to_text(text, files_repr)
+        else:
+            content = text
+        return cls(content)
 
 
 class FunctionCall(TypedDict):

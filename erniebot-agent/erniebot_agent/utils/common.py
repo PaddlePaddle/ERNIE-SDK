@@ -17,7 +17,7 @@ import base64
 import mimetypes
 import os
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Union
 
 import requests
 
@@ -44,8 +44,10 @@ def create_enum_class(class_name: str, member_names: List[Union[int, str]]):
     return Enum(class_name, {name: name for name in member_names})
 
 
-def get_file_suffix(mime_type: str):
-    mapping = {"audio/mp3": "audio/mpeg"}
+def get_file_suffix(mime_type: Optional[str] = None):
+    if mime_type is None:
+        return None
+    mapping = {"audio/mp3": "audio/mpeg", "audio/wav": "audio/x-wav"}
     mime_type = mapping.get(mime_type, mime_type)
     mime_type_to_suffix = {value: key for key, value in mimetypes.types_map.items()}
     return mime_type_to_suffix.get(mime_type, None)
@@ -64,3 +66,12 @@ def is_base64_string(string: str) -> bool:
         return base64.b64encode(base64.b64decode(string)) == string
     except Exception:
         return False
+
+
+def get_file_type(file_name: str) -> str:
+    # Expected output record: image/video/audio
+    guess_type = mimetypes.guess_type(file_name)[0]
+    if guess_type is not None:
+        return guess_type.split("/")[0]
+    else:
+        raise ValueError(f"Invalid file name: {file_name}")

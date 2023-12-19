@@ -32,30 +32,29 @@ from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.gradio_mixin import GradioMixin
 from erniebot_agent.utils.logging import logger
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
-    llm: ChatModel
-    memory: Memory
-
     @abc.abstractmethod
     async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
 
-class Agent(BaseAgent):
+class Agent(GradioMixin, BaseAgent):
     def __init__(
         self,
         llm: ChatModel,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
         system_message: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
+        plugins: Optional[List[str]] = None,
     ) -> None:
         super().__init__()
         self.llm = llm
@@ -78,7 +77,22 @@ class Agent(BaseAgent):
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
             file_manager = file_io.get_file_manager()
+        self.plugins = plugins
         self._file_manager = file_manager
+        self._init_file_repr()
+
+    def _init_file_repr(self):
+        self.file_needs_url = False
+
+        if self.plugins:
+            PLUGIN_WO_FILE = ["eChart"]
+            for plugin in self.plugins:
+                if plugin not in PLUGIN_WO_FILE:
+                    self.file_needs_url = True
+
+    @property
+    def tools(self) -> List[BaseTool]:
+        return self._tool_manager.get_tools()
 
     async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
@@ -86,119 +100,14 @@ class Agent(BaseAgent):
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    def load_tool(self, tool: Tool) -> None:
+    def load_tool(self, tool: BaseTool) -> None:
         self._tool_manager.add_tool(tool)
 
-    def unload_tool(self, tool: Tool) -> None:
+    def unload_tool(self, tool: BaseTool) -> None:
         self._tool_manager.remove_tool(tool)
 
     def reset_memory(self) -> None:
         self.memory.clear_chat_history()
-
-    def launch_gradio_demo(self, **launch_kwargs: Any):
-        # TODO: Unified optional dependencies management
-        try:
-            import gradio as gr  # type: ignore
-        except ImportError:
-            raise ImportError(
-                "Could not import gradio, which is required for `launch_gradio_demo()`."
-                " Please run `pip install erniebot-agent[gradio]` to install the optional dependencies."
-            ) from None
-
-        raw_messages = []
-
-        def _pre_chat(text, history):
-            history.append([text, None])
-            return history, gr.update(value="", interactive=False), gr.update(interactive=False)
-
-        async def _chat(history):
-            prompt = history[-1][0]
-            if len(prompt) == 0:
-                raise gr.Error("Prompt should not be empty.")
-            response = await self.async_run(prompt)
-            history[-1][1] = response.text
-            raw_messages.extend(response.chat_history)
-            return (
-                history,
-                _messages_to_dicts(raw_messages),
-                _messages_to_dicts(self.memory.get_messages()),
-            )
-
-        def _post_chat():
-            return gr.update(interactive=True), gr.update(interactive=True)
-
-        def _clear():
-            raw_messages.clear()
-            self.reset_memory()
-            return None, None, None, None
-
-        def _messages_to_dicts(messages):
-            return [message.to_dict() for message in messages]
-
-        with gr.Blocks(
-            title="ERNIE Bot Agent Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
-        ) as demo:
-            with gr.Column():
-                chatbot = gr.Chatbot(
-                    label="Chat history",
-                    latex_delimiters=[
-                        {"left": "$$", "right": "$$", "display": True},
-                        {"left": "$", "right": "$", "display": False},
-                    ],
-                    bubble_full_width=False,
-                )
-                prompt_textbox = gr.Textbox(label="Prompt", placeholder="Write a prompt here...")
-                with gr.Row():
-                    submit_button = gr.Button("Submit")
-                    clear_button = gr.Button("Clear")
-                with gr.Accordion("Tools", open=False):
-                    attached_tools = self._tool_manager.get_tools()
-                    tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
-                    gr.JSON(value=tool_descriptions)
-                with gr.Accordion("Raw messages", open=False):
-                    all_messages_json = gr.JSON(label="All messages")
-                    agent_memory_json = gr.JSON(label="Messges in memory")
-            prompt_textbox.submit(
-                _pre_chat,
-                inputs=[prompt_textbox, chatbot],
-                outputs=[chatbot, prompt_textbox, submit_button],
-            ).then(
-                _chat,
-                inputs=[chatbot],
-                outputs=[
-                    chatbot,
-                    all_messages_json,
-                    agent_memory_json,
-                ],
-            ).then(
-                _post_chat, outputs=[prompt_textbox, submit_button]
-            )
-            submit_button.click(
-                _pre_chat,
-                inputs=[prompt_textbox, chatbot],
-                outputs=[chatbot, prompt_textbox, submit_button],
-            ).then(
-                _chat,
-                inputs=[chatbot],
-                outputs=[
-                    chatbot,
-                    all_messages_json,
-                    agent_memory_json,
-                ],
-            ).then(
-                _post_chat, outputs=[prompt_textbox, submit_button]
-            )
-            clear_button.click(
-                _clear,
-                outputs=[
-                    chatbot,
-                    prompt_textbox,
-                    all_messages_json,
-                    agent_memory_json,
-                ],
-            )
-
-        demo.launch(**launch_kwargs)
 
     @abc.abstractmethod
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
@@ -225,14 +134,17 @@ class Agent(BaseAgent):
         await self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
-    async def _async_run_tool_without_hooks(self, tool: Tool, tool_args: str) -> ToolResponse:
+    async def _async_run_tool_without_hooks(self, tool: BaseTool, tool_args: str) -> ToolResponse:
         parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
         input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
         tool_ret = await tool(**parsed_tool_args)
-        output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        if isinstance(tool_ret, dict):
+            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+        else:
+            output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
@@ -253,7 +165,7 @@ class Agent(BaseAgent):
         return args_dict
 
     async def _sniff_and_extract_files_from_args(
-        self, args: Dict[str, Any], tool: Tool, file_type: Literal["input", "output"]
+        self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
     ) -> List[AgentFile]:
         agent_files: List[AgentFile] = []
         for val in args.values():
@@ -279,4 +191,9 @@ class Agent(BaseAgent):
                 else:
                     continue
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
+            elif isinstance(val, dict):
+                agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
+            elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
+                for item in val:
+                    agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
         return agent_files

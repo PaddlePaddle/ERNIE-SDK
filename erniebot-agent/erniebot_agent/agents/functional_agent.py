@@ -28,7 +28,7 @@ from erniebot_agent.messages import (
     Message,
     SystemMessage,
 )
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 
 _MAX_STEPS = 5
 
@@ -37,12 +37,13 @@ class FunctionalAgent(Agent):
     def __init__(
         self,
         llm: ChatModel,
-        tools: Union[ToolManager, List[Tool]],
+        tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         system_message: Optional[SystemMessage] = None,
         *,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
+        plugins: Optional[List[str]] = None,  # None is not assigned, [] is no plugins.
         max_steps: Optional[int] = None,
     ) -> None:
         super().__init__(
@@ -52,6 +53,7 @@ class FunctionalAgent(Agent):
             system_message=system_message,
             callbacks=callbacks,
             file_manager=file_manager,
+            plugins=plugins,
         )
         if max_steps is not None:
             if max_steps <= 0:
@@ -64,13 +66,19 @@ class FunctionalAgent(Agent):
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
-        ask = HumanMessage(content=prompt, files=files)
+
+        run_input = await HumanMessage.create_with_files(
+            prompt, files or [], include_file_urls=self.file_needs_url
+        )
 
         num_steps_taken = 0
-        next_step_input: Message = ask
+        next_step_input: Message = run_input
         while num_steps_taken < self.max_steps:
             curr_step_output = await self._async_step(
-                next_step_input, chat_history, actions_taken, files_involved
+                next_step_input,
+                chat_history,
+                actions_taken,
+                files_involved,
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
@@ -89,6 +97,7 @@ class FunctionalAgent(Agent):
         actions: List[AgentAction],
         files: List[AgentFile],
     ) -> Optional[Message]:
+        # TODO（shiyutang）: 传出插件调用信息，+callback
         maybe_action = await self._async_plan(step_input, chat_history)
         if isinstance(maybe_action, AgentAction):
             action: AgentAction = maybe_action
@@ -103,17 +112,19 @@ class FunctionalAgent(Agent):
         self, input_message: Message, chat_history: List[Message]
     ) -> Optional[AgentAction]:
         chat_history.append(input_message)
+
         messages = self.memory.get_messages() + chat_history
         llm_resp = await self._async_run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
+            plugins=self.plugins,
         )
         output_message = llm_resp.message
         chat_history.append(output_message)
         if output_message.function_call is not None:
             return AgentAction(
-                tool_name=output_message.function_call["name"],  # type: ignore
+                tool_name=output_message.function_call["name"],
                 tool_args=output_message.function_call["arguments"],
             )
         else:

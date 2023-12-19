@@ -46,12 +46,15 @@ class File(metaclass=abc.ABCMeta):
         attrs_str = self._get_attrs_str()
         return f"<{self.__class__.__name__} {attrs_str}>"
 
-    def to_dict(self) -> dict:
-        return {k: getattr(self, k) for k in self._param_names}
-
     @abc.abstractmethod
     async def read_contents(self) -> bytes:
         raise NotImplementedError
+
+    def get_file_repr(self) -> str:
+        return f"<file>{self.id}</file>"
+
+    def to_dict(self) -> dict:
+        return {k: getattr(self, k) for k in self._param_names}
 
     def _get_attrs_str(self) -> str:
         return ", ".join(

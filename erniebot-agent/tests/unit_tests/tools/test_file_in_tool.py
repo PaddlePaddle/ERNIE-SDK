@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import annotations
 
 import asyncio
+import base64
+import json
 import os
 import socket
 import tempfile
@@ -22,11 +25,15 @@ import unittest
 import uuid
 
 import uvicorn
+from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.tools import RemoteToolkit
+from erniebot_agent.tools.base import (
+    get_file_info_from_param_view,
+    parse_file_from_json_response,
+)
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools.base import RemoteToolkit
+from requests.models import Response
 
 PYYAML_CONTENT = """openapi: 3.0.1
 info:
@@ -158,3 +165,233 @@ class TestToolWithFile(unittest.TestCase):
             file = file_manager.look_up_file_by_id(file_id=file_id)
             content = asyncio.run(file.read_contents())
             self.assertEqual(content.decode("utf-8"), self.content)
+
+
+class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.file_manager = FileManager()
+
+    def create_fake_response(self, body: dict):
+        the_response = Response()
+        the_response.code = "expired"
+        the_response.error_type = "expired"
+        the_response.status_code = 200
+        the_response._content = json.dumps(body).encode("utf-8")
+        the_response.headers["Content-Type"] = "application/json"
+        return the_response
+
+    async def test_plain_file(self):
+        body = {"error_code": 0, "b64_img": str(base64.b64encode(b"sodisodjsodjsdoijisodfj"))}
+        yaml_content = """openapi: 3.0.1
+info:
+  title: 文生图
+  description: 文生图 v2.0
+  version: v2.0
+servers:
+- url: http://tool-text-to-image.sandbox-aistudio-hub.baidu.com
+  description: 文生图
+paths:
+  /text2image:
+    post:
+      summary: 文生图
+      description: 文生图
+      operationId: text2image
+      parameters: []
+      responses:
+        "200":
+          description: response success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/text2imageResponse'
+components:
+  schemas:
+    text2imageResponse:
+      type: object
+      description: "文生图的返回内容"
+      properties:
+        error_code:
+            type: integer
+            description: 请求返回的错误吗
+        b64_img:
+            type: string
+            format: byte
+            description: "图片的base64编码数据"
+            x-ebagent-file-mime-type: image/png
+"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, "openapi.yaml")
+            with open(file_path, "w+", encoding="utf-8") as f:
+                f.write(yaml_content)
+            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            response = self.create_fake_response(body)
+            tool = toolkit.get_tools()[-1]
+
+            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+            assert len(file_infos) == 1
+
+            json_response = await parse_file_from_json_response(
+                response.json(),
+                file_manager=self.file_manager,
+                param_view=tool.tool_view.returns,
+                tool_name=tool.tool_name,
+            )
+            assert json_response["b64_img"].startswith("file-local-")
+
+
+class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.file_manager = FileManager()
+
+    def create_fake_response(self, body: dict):
+        the_response = Response()
+        the_response.code = "expired"
+        the_response.error_type = "expired"
+        the_response.status_code = 200
+        the_response._content = json.dumps(body).encode("utf-8")
+        the_response.headers["Content-Type"] = "application/json"
+        return the_response
+
+    async def test_plain_file(self):
+        body = {"error_code": 0, "image": {"b64_img": str(base64.b64encode(b"sodisodjsodjsdoijisodfj"))}}
+        yaml_content = """openapi: 3.0.1
+info:
+  title: 文生图
+  description: 文生图 v2.0
+  version: v2.0
+servers:
+- url: http://tool-text-to-image.sandbox-aistudio-hub.baidu.com
+  description: 文生图
+paths:
+  /text2image:
+    post:
+      summary: 文生图
+      description: 文生图
+      operationId: text2image
+      parameters: []
+      responses:
+        "200":
+          description: response success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/text2imageResponse'
+components:
+  schemas:
+    text2imageResponse:
+      type: object
+      description: "文生图的返回内容"
+      properties:
+        error_code:
+          type: integer
+          description: 请求返回的错误吗
+        image:
+          type: object
+          description: 图片内容信息
+          properties:
+            b64_img:
+              type: string
+              description: 图片的base64编码数据
+              format: byte
+              x-ebagent-file-mime-type: image/png
+"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, "openapi.yaml")
+            with open(file_path, "w+", encoding="utf-8") as f:
+                f.write(yaml_content)
+            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            response = self.create_fake_response(body)
+            tool = toolkit.get_tools()[-1]
+
+            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+            assert len(file_infos) == 1
+
+            assert file_infos["image"]["b64_img"]["format"] == "byte"
+
+            json_response = await parse_file_from_json_response(
+                response.json(),
+                file_manager=self.file_manager,
+                param_view=tool.tool_view.returns,
+                tool_name=tool.tool_name,
+            )
+            assert json_response["image"]["b64_img"].startswith("file-local-")
+
+
+class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.file_manager = FileManager()
+
+    def create_fake_response(self, body: dict):
+        the_response = Response()
+        the_response.code = "expired"
+        the_response.error_type = "expired"
+        the_response.status_code = 200
+        the_response._content = json.dumps(body).encode("utf-8")
+        the_response.headers["Content-Type"] = "application/json"
+        return the_response
+
+    async def test_plain_file(self):
+        body = {"error_code": 0, "data": [{"b64_img": str(base64.b64encode(b"sodisodjsodjsdoijisodfj"))}]}
+        yaml_content = """openapi: 3.0.1
+info:
+  title: 文生图
+  description: 文生图 v2.0
+  version: v2.0
+servers:
+- url: http://tool-text-to-image.sandbox-aistudio-hub.baidu.com
+  description: 文生图
+paths:
+  /text2image:
+    post:
+      summary: 文生图
+      description: 文生图
+      operationId: text2image
+      parameters: []
+      responses:
+        "200":
+          description: response success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/text2imageResponse'
+components:
+  schemas:
+    text2imageResponse:
+      type: object
+      description: "文生图的返回内容"
+      properties:
+        error_code:
+          type: integer
+          description: 请求返回的错误吗
+        data:
+          type: array
+          description: 图片内容列表信息
+          items:
+            type: object
+            description: 图片的列表内容实体
+            properties:
+                b64_img:
+                    type: string
+                    description: 图片的base64编码数据
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
+"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, "openapi.yaml")
+            with open(file_path, "w+", encoding="utf-8") as f:
+                f.write(yaml_content)
+            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            response = self.create_fake_response(body)
+            tool = toolkit.get_tools()[-1]
+
+            file_infos = get_file_info_from_param_view(tool.tool_view.returns)
+            assert len(file_infos) == 1
+            assert file_infos["data"]["b64_img"]["format"] == "byte"
+
+            json_response = await parse_file_from_json_response(
+                response.json(),
+                file_manager=self.file_manager,
+                param_view=tool.tool_view.returns,
+                tool_name=tool.tool_name,
+            )
+            assert json_response["data"][0]["b64_img"].startswith("file-local-")

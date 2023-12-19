@@ -22,7 +22,7 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
@@ -79,14 +79,14 @@ class CallbackManager(object):
     ) -> None:
         await self.handle_event(EventType.LLM_ERROR, agent=agent, llm=llm, error=error)
 
-    async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
+    async def on_tool_start(self, agent: Agent, tool: BaseTool, input_args: str) -> None:
         await self.handle_event(EventType.TOOL_START, agent=agent, tool=tool, input_args=input_args)
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: Agent, tool: BaseTool, response: ToolResponse) -> None:
         await self.handle_event(EventType.TOOL_END, agent=agent, tool=tool, response=response)
 
     async def on_tool_error(
-        self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
+        self, agent: Agent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
         await self.handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 

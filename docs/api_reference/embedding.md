@@ -9,7 +9,7 @@ erniebot.Embedding.create(
     model: str,
     input: List[str],
     *,
-    user_id: Optional[str] = ...,
+    user_id: Union[str, NotGiven] = ...,
     headers: Optional[HeadersType] = ...,
     request_timeout: Optional[float] = ...,
     _config_: Optional[ConfigDictType] = ...,

@@ -21,10 +21,10 @@ from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import Message
-from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
-from erniebot_agent.utils.output_style import color_msg, color_text
+from erniebot_agent.utils.output_style import ColoredContent
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
@@ -35,13 +35,9 @@ class LoggingHandler(CallbackHandler):
 
     def __init__(
         self,
-        log_max_length: int = 100,
-        enable_role_color: bool = True,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         super().__init__()
-        self.log_max_length = log_max_length
-        self.open_role_color(enable_role_color)
 
         if logger is None:
             self.logger = default_logger
@@ -50,9 +46,9 @@ class LoggingHandler(CallbackHandler):
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
         self.agent_info(
-            "%s is about to start running with input:\n %s\n",
+            "%s is about to start running with input:\n%s",
             agent.__class__.__name__,
-            color_text(prompt, self.role_color.get("user")),
+            ColoredContent(prompt, role="user"),
             subject="Run",
             state="Start",
         )
@@ -60,18 +56,18 @@ class LoggingHandler(CallbackHandler):
     async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
         # TODO: Prettier messages
         self.agent_info(
-            "%s is about to start running with input:\n%s\n",
+            "%s is about to start running with input:\n%s",
             llm.__class__.__name__,
-            color_msg(messages, self.role_color, self.log_max_length),
+            ColoredContent(messages),
             subject="LLM",
             state="Start",
         )
 
     async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
         self.agent_info(
-            "%s finished running with output: \n%s\n",
+            "%s finished running with output:\n%s",
             llm.__class__.__name__,
-            color_msg(response.message, self.role_color, self.log_max_length),
+            ColoredContent(response.message),
             subject="LLM",
             state="End",
         )
@@ -81,33 +77,33 @@ class LoggingHandler(CallbackHandler):
     ) -> None:
         pass
 
-    async def on_tool_start(self, agent: Agent, tool: Tool, input_args: str) -> None:
+    async def on_tool_start(self, agent: Agent, tool: BaseTool, input_args: str) -> None:
         js_inputs = to_pretty_json(input_args, from_json=True)
         self.agent_info(
-            "%s is about to start running with input:\n%s\n",
-            color_text(tool.__class__.__name__, self.role_color.get("function")),
-            color_text(js_inputs, self.role_color.get("function")),
+            "%s is about to start running with input:\n%s",
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Agent, tool: Tool, response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: Agent, tool: BaseTool, response: ToolResponse) -> None:
         js_inputs = to_pretty_json(response.json, from_json=True)
         self.agent_info(
-            "%s finished running with output:\n%s\n",
-            color_text(tool.__class__.__name__, self.role_color.get("function")),
-            color_text(js_inputs, self.role_color.get("function")),
+            "%s finished running with output:\n%s",
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="End",
         )
 
     async def on_tool_error(
-        self, agent: Agent, tool: Tool, error: Union[Exception, KeyboardInterrupt]
+        self, agent: Agent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
         pass
 
     async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
-        self.agent_info("%s finished running.\n", agent.__class__.__name__, subject="Run", state="End")
+        self.agent_info("%s finished running.", agent.__class__.__name__, subject="Run", state="End")
 
     def agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
         msg = f"[{subject}][{state}] {msg}"

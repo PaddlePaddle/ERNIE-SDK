@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, Optional, Tuple, Union
 
 from typing_extensions import TypeAlias
 
@@ -20,7 +20,7 @@ import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import ConfigDictType, HeadersType, Request
-from erniebot.utils.misc import filter_args
+from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args
 
 from .resource import EBResource
 
@@ -107,23 +107,24 @@ class ImageV1(_Image):
         resolution: str,
         style: str,
         *,
-        num: Optional[int] = None,
+        num: Union[int, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
     ) -> EBResponse:
         config = _config_ or {}
         resource = cls(**config)
-        resp = resource.create_resource(
-            **filter_args(
-                text=text,
-                resolution=resolution,
-                style=style,
-                num=num,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            text=text,
+            resolution=resolution,
+            style=style,
+            num=num,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = resource.create_resource(**kwargs)
         return resp
 
     @classmethod
@@ -133,23 +134,24 @@ class ImageV1(_Image):
         resolution: str,
         style: str,
         *,
-        num: Optional[int] = None,
+        num: Union[int, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
     ) -> EBResponse:
         config = _config_ or {}
         resource = cls(**config)
-        resp = await resource.acreate_resource(
-            **filter_args(
-                text=text,
-                resolution=resolution,
-                style=style,
-                num=num,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            text=text,
+            resolution=resolution,
+            style=style,
+            num=num,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = await resource.acreate_resource(**kwargs)
         return resp
 
     def _prepare_paint(self, kwargs: Dict[str, Any]) -> Request:
@@ -258,8 +260,8 @@ class ImageV2(_Image):
         width: int,
         height: int,
         *,
-        version: Optional[str] = None,
-        image_num: Optional[int] = None,
+        version: Union[str, NotGiven] = NOT_GIVEN,
+        image_num: Union[int, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -282,18 +284,19 @@ class ImageV2(_Image):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = resource.create_resource(
-            **filter_args(
-                model=model,
-                prompt=prompt,
-                width=width,
-                height=height,
-                version=version,
-                image_num=image_num,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            prompt=prompt,
+            width=width,
+            height=height,
+            version=version,
+            image_num=image_num,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = resource.create_resource(**kwargs)
         return ImageV2Response.from_mapping(resp)
 
     @classmethod
@@ -304,8 +307,8 @@ class ImageV2(_Image):
         width: int,
         height: int,
         *,
-        version: Optional[str] = None,
-        image_num: Optional[int] = None,
+        version: Union[str, NotGiven] = NOT_GIVEN,
+        image_num: Union[int, NotGiven] = NOT_GIVEN,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
         _config_: Optional[ConfigDictType] = None,
@@ -328,18 +331,19 @@ class ImageV2(_Image):
         """
         config = _config_ or {}
         resource = cls(**config)
-        resp = await resource.acreate_resource(
-            **filter_args(
-                model=model,
-                prompt=prompt,
-                width=width,
-                height=height,
-                version=version,
-                image_num=image_num,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
+        kwargs = filter_args(
+            model=model,
+            prompt=prompt,
+            width=width,
+            height=height,
+            version=version,
+            image_num=image_num,
         )
+        if headers is not None:
+            kwargs["headers"] = headers
+        if request_timeout is not None:
+            kwargs["request_timeout"] = request_timeout
+        resp = await resource.acreate_resource(**kwargs)
         return ImageV2Response.from_mapping(resp)
 
     def _prepare_paint(self, kwargs: Dict[str, Any]) -> Request:

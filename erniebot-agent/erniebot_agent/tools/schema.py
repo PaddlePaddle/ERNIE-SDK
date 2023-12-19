@@ -15,20 +15,21 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
+from erniebot_agent.utils.common import create_enum_class
 from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
-from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.utils.logging import logger
-
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
+logger = logging.getLogger(__name__)
 
-def is_optional_type(type: Type) -> bool:
+
+def is_optional_type(type: Type):
     args = get_args(type)
     if len(args) == 0:
         return False
@@ -59,6 +60,7 @@ def json_type(type: Optional[Type[object]] = None):
         str: "string",
         list: "array",
         List: "array",
+        bytes: "string",
         float: "number",
         ToolParameterView: "object",
     }
@@ -90,6 +92,11 @@ def json_type(type: Optional[Type[object]] = None):
 
 def python_type_from_json_type(json_type_dict: dict) -> Type[object]:
     simple_types = {"integer": int, "string": str, "number": float, "object": ToolParameterView}
+    format = json_type_dict.get("format", None)
+
+    if json_type_dict["type"] == "string" and format == "binary":
+        return bytes
+
     if json_type_dict["type"] in simple_types:
         return simple_types[json_type_dict["type"]]
 
@@ -164,8 +171,6 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     typing_list_type = get_typing_list_type(field_info.annotation)
     if typing_list_type is not None:
         field_type = "array"
-    if field_info.annotation is None:
-        raise TypeError
     elif is_optional_type(field_info.annotation):
         field_type = json_type(get_args(field_info.annotation)[0])
     elif issubclass(field_info.annotation, Enum):
@@ -173,7 +178,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
     else:
         field_type = json_type(field_info.annotation)
 
-    property: Dict[str, Any] = {
+    property = {
         "type": field_type,
         "description": field_info.description,
     }
@@ -200,6 +205,11 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 
 class ToolParameterView(BaseModel):
+    __prompt__: Optional[str] = None
+
+    class Config:
+        use_enum_values = True
+
     @classmethod
     def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
         """parse openapi component schemas to ParameterView
@@ -211,8 +221,12 @@ class ToolParameterView(BaseModel):
         """
 
         # TODO(wj-Mcat): to load Optional field
-        fields: dict = {}
+        fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
+            # skip loading invalid field to improve compatibility
+            if "type" not in field_dict or "description" not in field_dict:
+                continue
+
             field_type = python_type_from_json_type(field_dict)
 
             if field_type is List[ToolParameterView]:
@@ -220,6 +234,8 @@ class ToolParameterView(BaseModel):
                     field_dict["items"]
                 )
                 field_type = List[SubParameterView]  # type: ignore
+            elif field_type is ToolParameterView:
+                field_type = ToolParameterView.from_openapi_dict(field_dict)
             elif "enum" in field_dict:
                 field_type = create_enum_class(field_name, field_dict["enum"])
 
@@ -241,7 +257,9 @@ class ToolParameterView(BaseModel):
             if format is not None:
                 json_schema_extra["format"] = format
 
-            json_schema_extra["x-ebagent-file-mime-type"] = field_dict.get("x-ebagent-file-mime-type", None)
+            json_schema_extra.update(
+                {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
+            )
 
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
@@ -257,6 +275,9 @@ class ToolParameterView(BaseModel):
             fields[field_name] = (field_type, field)
 
         model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+
+        # get the prompt for schema
+        model.__prompt__ = schema.get("x-ebagent-prompt", None)
         return model
 
     @classmethod
@@ -269,8 +290,6 @@ class ToolParameterView(BaseModel):
 
         required_names, properties = [], {}
         for field_name, field_info in cls.model_fields.items():
-            if field_info.annotation is None:
-                raise TypeError
             if field_info.is_required() and not is_optional_type(field_info.annotation):
                 required_names.append(field_name)
 
