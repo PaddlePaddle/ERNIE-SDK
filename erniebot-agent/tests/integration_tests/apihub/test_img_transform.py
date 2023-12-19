@@ -3,9 +3,8 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit
-from PIL import Image
 
 from .base import RemoteToolTesting
 
@@ -13,11 +12,11 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     def setUp(self) -> None:
         super().setUp()
-        self.file_manager = FileManager()
+        self.file_manager = get_file_manager()
         self.file = asyncio.run(
             self.file_manager.create_file_from_path(
                 self.download_file(
-                    "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/trans.png"
+                    "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/" "remote-tools/trans.png"
                 )
             )
         )
@@ -30,7 +29,6 @@ class TestRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("帮我把这个图片转换为铅笔风格", files=[self.file])
         self.assertEqual(len(result.files), 2)
-        Image.open(result.files[-1].file.path).show()
 
     @pytest.mark.asyncio
     async def test_person_animation(self):
@@ -40,4 +38,3 @@ class TestRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("帮我把这张人像图片转化为动漫的图片", files=[self.file])
         self.assertEqual(len(result.files), 2)
-        Image.open(result.files[-1].file.path).show()
