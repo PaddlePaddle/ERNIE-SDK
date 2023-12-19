@@ -1,0 +1,7 @@
+[tool.isort]
+profile = 'black'
+src_paths = ['src']
+
+[tool.black]
+line-length = 109
+target_version = ['py38', 'py39', 'py310']

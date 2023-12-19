@@ -20,6 +20,7 @@ import time
 from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
+
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
