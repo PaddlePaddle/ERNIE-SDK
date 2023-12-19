@@ -110,7 +110,7 @@ def is_port_in_use(port):
             return True
 
 
-class TestToolWithFile(unittest.TestCase):
+class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
     def avaliable_free_port(self, exclude=None):
         exclude = exclude or []
         for port in range(8000, 9000):
@@ -145,7 +145,7 @@ class TestToolWithFile(unittest.TestCase):
             print("waiting for server ...")
             time.sleep(1)
 
-    def test_plugin_schema(self):
+    async def test_plugin_schema(self):
         self.wait_until_server_is_ready()
         with tempfile.TemporaryDirectory() as tempdir:
             openapi_file = os.path.join(tempdir, "openapi.yaml")
@@ -157,7 +157,7 @@ class TestToolWithFile(unittest.TestCase):
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            with FileManager() as file_manager:
+            async with FileManager() as file_manager:
                 input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
                 result = asyncio.run(tool(file=input_file.id))
                 self.assertIn("response_file", result)
