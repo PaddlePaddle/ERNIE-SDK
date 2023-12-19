@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit
-from PIL import Image
 
 from .base import RemoteToolTesting
 
@@ -12,7 +11,7 @@ class TestPPRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_pp_matting(self):
         toolkit = RemoteToolkit.from_aistudio("pp-matting")
-        file_manager = FileManager()
+        file_manager = get_file_manager()
 
         file = await file_manager.create_file_from_path(
             self.download_file("https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/trans.png")
@@ -20,19 +19,20 @@ class TestPPRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.async_run("请帮我对图片中的人像抠出来", files=[file])
+
         self.assertEqual(len(result.files), 2)
-        Image.open(result.files[-1].file.path).show()
 
     @pytest.mark.asyncio
     async def test_pp_human_v2(self):
         toolkit = RemoteToolkit.from_aistudio("pp-human-v2")
-        file_manager = FileManager()
+        file_manager = get_file_manager()
 
         file = await file_manager.create_file_from_path(
-            self.download_file("https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/trans.png")
+            self.download_file(
+                "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/human_attr.jpg"
+            )
         )
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请分割图中的人", files=[file])
-        self.assertEqual(len(result.files), 2)
-        Image.open(result.files[-1].file.path).show()
+        result = await agent.async_run("请帮我分割图中的人", files=[file])
+        self.assertEqual(len(result.files), 1)  # input的image不会出现
