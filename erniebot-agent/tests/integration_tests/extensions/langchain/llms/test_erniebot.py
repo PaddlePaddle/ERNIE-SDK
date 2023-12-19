@@ -3,8 +3,9 @@
 from typing import Generator
 
 import pytest
-from erniebot_agent.extensions.langchain.llms import ErnieBot
 from langchain.schema import LLMResult
+
+from erniebot_agent.extensions.langchain.llms import ErnieBot
 
 
 def test_erniebot_call() -> None:
