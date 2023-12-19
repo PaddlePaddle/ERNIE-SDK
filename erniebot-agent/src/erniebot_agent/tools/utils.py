@@ -71,13 +71,19 @@ def get_file_info_from_param_view(
         model_field = param_view.model_fields[key]
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
-        if list_base_annotation == "object":
-            # get base type
-            arg_type = get_args(model_field.annotation)[0]
-            sub_file_infos = get_file_info_from_param_view(arg_type)
-            if len(sub_file_infos) > 0:
-                file_infos[key] = sub_file_infos
-            continue
+        json_schema_extra = model_field.json_schema_extra
+
+        if list_base_annotation is not None:
+            if list_base_annotation == "object":
+                # get base type
+                arg_type = get_args(model_field.annotation)[0]
+                sub_file_infos = get_file_info_from_param_view(arg_type)
+                if len(sub_file_infos) > 0:
+                    file_infos[key] = sub_file_infos
+                continue
+
+            if "array_items_schema" in model_field.json_schema_extra:
+                json_schema_extra = model_field.json_schema_extra["array_items_schema"]
         elif issubclass(model_field.annotation, ToolParameterView):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
             if len(sub_file_infos) > 0:

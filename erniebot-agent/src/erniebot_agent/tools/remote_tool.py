@@ -67,6 +67,13 @@ class RemoteTool(BaseTool):
             byte_str = await file.read_contents()
             return byte_str
 
+        async def convert_to_file_data(file_data: str, format: str):
+            value = file_data.replace("<file>", "").replace("</file>", "")
+            byte_value = await fileid_to_byte(value, self.file_manager)
+            if format == "byte":
+                byte_value = base64.b64encode(byte_value).decode()
+            return byte_value
+
         # 1. replace fileid with byte string
         parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
         for key in tool_arguments.keys():
@@ -82,11 +89,19 @@ class RemoteTool(BaseTool):
                 continue
             if self.tool_view.parameters is None:
                 break
-            tool_arguments[key] = tool_arguments[key].replace("<file>", "").replace("</file>", "")
-            byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
-            if parameter_file_info[key]["format"] == "byte":
-                byte_str = base64.b64encode(byte_str).decode()
-            tool_arguments[key] = byte_str
+
+            argument_value = tool_arguments[key]
+            if isinstance(argument_value, list):
+                for index in range(len(argument_value)):
+                    argument_value[index] = await convert_to_file_data(
+                        argument_value[index], parameter_file_info[key]["format"]
+                    )
+            else:
+                argument_value = await convert_to_file_data(
+                    argument_value, parameter_file_info[key]["format"]
+                )
+
+            tool_arguments[key] = argument_value
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
