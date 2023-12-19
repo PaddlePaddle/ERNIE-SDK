@@ -1,3 +1,4 @@
+# pre-commit == 3.6.0
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: a11d9314b22d8f8c7556443875b731ef05965464
