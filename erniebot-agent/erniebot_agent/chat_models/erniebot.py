@@ -25,7 +25,13 @@ from typing import (
 )
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
+from erniebot_agent.messages import (
+    AIMessage,
+    AIMessageChunk,
+    FunctionCall,
+    Message,
+    PluginInfo,
+)
 
 import erniebot
 from erniebot.response import EBResponse
@@ -152,6 +158,24 @@ class ERNIEBot(ChatModel):
                 thoughts=response.function_call["thoughts"],
                 arguments=response.function_call["arguments"],
             )
-            return output_type(content="", function_call=function_call, token_usage=response.usage)
+            return output_type(
+                content="", function_call=function_call, plugin_info=None, token_usage=response.usage
+            )
+        elif hasattr(response, "plugin_info"):
+            plugin_info = PluginInfo(
+                names=[
+                    response["plugin_info"]["plugins"][i]["name"]
+                    for i in range(len(response["plugin_info"]))
+                ],
+                finish_reason=response["plugin_info"]["finish_reason"],
+            )
+            return output_type(
+                content=response.result,
+                function_call=None,
+                plugin_info=plugin_info,
+                token_usage=response.usage,
+            )
         else:
-            return output_type(content=response.result, function_call=None, token_usage=response.usage)
+            return output_type(
+                content=response.result, function_call=None, plugin_info=None, token_usage=response.usage
+            )

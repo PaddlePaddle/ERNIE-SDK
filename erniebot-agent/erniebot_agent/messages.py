@@ -139,6 +139,11 @@ class TokenUsage(TypedDict):
     completion_tokens: int
 
 
+class PluginInfo(TypedDict):
+    names: List[str]
+    finish_reason: str
+
+
 class AIMessage(Message):
     """A message from an assistant."""
 
@@ -147,6 +152,7 @@ class AIMessage(Message):
         content: str,
         function_call: Optional[FunctionCall],
         token_usage: Optional[TokenUsage] = None,
+        plugin_info: Optional[PluginInfo] = None,
     ):
         if token_usage is None:
             prompt_tokens = 0
@@ -155,6 +161,7 @@ class AIMessage(Message):
             prompt_tokens, completion_tokens = self._parse_token_count(token_usage)
         super().__init__(role="assistant", content=content, token_count=completion_tokens)
         self.function_call = function_call
+        self.plugin_info = plugin_info
         self.query_tokens_count = prompt_tokens
         self._param_names = ["role", "content", "function_call"]
 
