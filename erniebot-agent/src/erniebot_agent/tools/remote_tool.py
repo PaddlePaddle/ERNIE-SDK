@@ -95,6 +95,7 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
+        tool_response = self.__adhoc_post_process__(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
@@ -206,6 +207,56 @@ class RemoteTool(BaseTool):
             schema["examples"] = [example.to_dict() for example in self.examples]
 
         return schema or {}
+
+    def __adhoc_post_process__(self, tool_response: dict) -> dict:
+        # temporary adhoc post processing logic for certain toolkits
+        if self.tool_name.startswith("official-doc-rec") and self.tool_name.endswith("office_doc_rec"):
+            if "results" in tool_response and isinstance(tool_response["results"], list):
+                reformatted_result = []
+                for result_line in tool_response["results"]:
+                    if "words" in result_line and "word" in result_line["words"]:
+                        reformatted_result.append(result_line["words"]["word"])
+                tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("highacc-ocr") and self.tool_name.endswith("OCR"):
+            if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
+                reformatted_result = []
+                for result in tool_response["words_result"]:
+                    if "words" in result:
+                        reformatted_result.append(result["words"])
+                tool_response["words_result"] = reformatted_result
+        elif self.tool_name.startswith("doc-analysis") and self.tool_name.endswith("doc_analysis"):
+            if "results" in tool_response and isinstance(tool_response["results"], list):
+                reformatted_result = []
+                for result in tool_response["results"]:
+                    if "words" in result and "word" in result["words"]:
+                        reformatted_result.append(result["words"]["word"])
+                tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("shopping-receipt") and self.tool_name.endswith("shopping_receip"):
+            if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
+                keys = [
+                    "shop_name",
+                    "receipt_num",
+                    "machine_num",
+                    "employee_num",
+                    "consumption_date",
+                    "consumption_time",
+                    "total_amount",
+                    "change",
+                    "currency",
+                    "paid_amount",
+                    "discount",
+                    "print_time",
+                ]
+                for result in tool_response["words_result"]:
+                    for key in keys:
+                        if (
+                            key in result
+                            and len(result[key]) > 0
+                            and "word" in result[key][0]
+                            and result[key][0]["word"] == ""
+                        ):
+                            result.pop(key)
+        return tool_response
 
 
 class RemoteToolRegistor:
