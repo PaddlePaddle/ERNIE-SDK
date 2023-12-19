@@ -392,17 +392,27 @@ class ContextAugmentedFunctionalAgent(FunctionalAgent):
         return results
 
 
+QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+1.严格按照【JSON格式】的形式输出：{'子问题1':'具体子问题1','子问题2':'具体子问题2'}
+问题：{{prompt}} 子问题："""
+
+
 class FunctionalAgentWithQueryPlanning(FunctionalAgent):
-    def __init__(self, top_k: int = 3, threshold: float = 0.1, **kwargs):
+    def __init__(self, knowledge_base, top_k: int = 2, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.top_k = top_k
         self.threshold = threshold
         self.system_message = SystemMessage(content="您是一个智能体，旨在回答有关知识库的查询。请始终使用提供的工具回答问题。不要依赖先验知识。")
+        self.query_transform = PromptTemplate(QUERY_DECOMPOSITION, input_variables=["prompt"])
+        self.knowledge_base = knowledge_base
+        self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        chat_history: List[Message] = []
+        # chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
+        chat_history: List[Message] = []
+
         # 会有无限循环调用工具的问题
         # next_step_input = HumanMessage(
         #     content=f"请选择合适的工具来回答：{prompt}，如果需要的话，可以对把问题分解成子问题，然后每个子问题选择合适的工具回答。"
@@ -419,5 +429,56 @@ class FunctionalAgentWithQueryPlanning(FunctionalAgent):
                 self.memory.add_message(chat_history[-1])
                 return response
             num_steps_taken += 1
-        response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+        # TODO(wugaosheng): Add manual planning and execute
+        # response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+        return await self.plan_and_execute(prompt, actions_taken, files_involved)
+
+    async def plan_and_execute(self, prompt, actions_taken, files_involved):
+        step_input = HumanMessage(content=self.query_transform.format(prompt=prompt))
+        fake_chat_history: List[Message] = [step_input]
+        llm_resp = await self._async_run_llm_without_hooks(
+            messages=fake_chat_history,
+            functions=None,
+            system=self.system_message.content if self.system_message is not None else None,
+        )
+        output_message = llm_resp.message
+
+        json_results = self._parse_results(output_message.content)
+        sub_queries = json_results.values()
+        retrieval_results = []
+        duplicates = set()
+        for query in sub_queries:
+            documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
+            docs = [item for item in documents["documents"]]
+            for doc in docs:
+                if doc["document"] not in duplicates:
+                    duplicates.add(doc["document"])
+                    retrieval_results.append(doc)
+        step_input = HumanMessage(
+            content=self.rag_prompt.format(query=prompt, documents=retrieval_results[:3])
+        )
+        chat_history: List[Message] = [step_input]
+        llm_resp = await self._async_run_llm_without_hooks(
+            messages=chat_history,
+            functions=None,
+            system=self.system_message.content if self.system_message is not None else None,
+        )
+
+        output_message = llm_resp.message
+        chat_history.append(output_message)
+        response = self._create_finished_response(chat_history, actions_taken, files_involved)
+        self.memory.add_message(chat_history[0])
+        self.memory.add_message(chat_history[-1])
         return response
+
+    def _parse_results(self, results):
+        left_index = results.find("{")
+        right_index = results.rfind("}")
+        if left_index == -1 or right_index == -1:
+            # if invalid json, use Functional Agent
+            return {"is_relevant": False}
+        try:
+            return json.loads(results[left_index : right_index + 1])
+        except Exception:
+            # if invalid json, use Functional Agent
+            return {"is_relevant": False}

@@ -143,6 +143,13 @@ if __name__ == "__main__":
             threshold=0.1,
             return_meta_data=True,
         )
+        fulltext_faiss = FAISS.load_local("fulltext", embeddings)
+        vector_tool = OpenAISearchTool(
+            name="fulltext_search",
+            description="使用这个工具检索特定的上下文，以回答有关建筑规范具体的问题",
+            db=fulltext_faiss,
+            threshold=0.1,
+        )
     elif args.search_engine == "openai" and args.retrieval_type == "summary_fulltext_tools":
         embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
         summary_faiss = FAISS.load_local("summary", embeddings)
@@ -158,14 +165,14 @@ if __name__ == "__main__":
         )
 
     queries = [
-        "量化交易",
-        "OpenAI管理层变更会带来哪些影响?",
-        "城市景观照明中有过度照明的规定是什么？",
-        "城市景观照明中有过度照明的规定是什么？并把搜索的内容添加到笔记本中",
+        # "量化交易",
+        # "OpenAI管理层变更会带来哪些影响?",
+        # "城市景观照明中有过度照明的规定是什么？",
+        # "城市景观照明中有过度照明的规定是什么？并把搜索的内容添加到笔记本中",
         "请比较一下城市设计管理和照明管理规定的区别？",
-        "这几篇文档主要内容是什么？",
-        "今天天气怎么样？",
-        "abcabc",
+        # "这几篇文档主要内容是什么？",
+        # "今天天气怎么样？",
+        # "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
@@ -183,6 +190,7 @@ if __name__ == "__main__":
             agent = FunctionalAgentWithQueryPlanning(  # type: ignore
                 llm=llm,
                 top_k=3,
+                knowledge_base=vector_tool,
                 # tools=toolkit.get_tools() + [city_management, city_design, city_lighting],
                 # tools = [NotesTool(),city_management, city_design, city_lighting],
                 tools=[NotesTool()] + selected_tools,
