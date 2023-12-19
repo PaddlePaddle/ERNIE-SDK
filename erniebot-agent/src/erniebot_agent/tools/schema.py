@@ -189,7 +189,14 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
             list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
             property["items"] = list_type.to_openapi_dict()
         else:
-            property["items"] = {"type": typing_list_type}
+            if "array_items_schema" in field_info.json_schema_extra:
+                items_schema: dict = field_info.json_schema_extra["array_items_schema"]
+                property["items"] = {
+                    "type": items_schema["type"],
+                    "description": items_schema["description"],
+                }
+            else:
+                property["items"] = {"type": typing_list_type}
     elif property["type"] == "object":
         if is_optional_type(field_info.annotation):
             field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
@@ -261,6 +268,9 @@ class ToolParameterView(BaseModel):
             json_schema_extra.update(
                 {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
             )
+
+            if field_type is List[str]:
+                json_schema_extra["array_items_schema"] = field_dict["items"]
 
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
