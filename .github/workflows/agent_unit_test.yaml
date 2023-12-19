@@ -1,6 +1,14 @@
 name: AgentUnitTest
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
+  pull_request:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
 
 jobs:
   AgentUnitTest:
@@ -15,13 +23,16 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
-          cache: 'pip' # caching pip dependencies
-      - name: Install dependencies
+          cache: pip # Caching pip dependencies
+          cache-dependency-path: |
+            erniebot-agent/setup.cfg
+            erniebot-agent/tests/requirements.txt
+      - name: Install erniebot-agent and dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e erniebot-agent/
+          python -m pip install -e erniebot-agent[all]
           python -m pip install -r erniebot-agent/tests/requirements.txt
-      - name: Run the command
+      - name: Run the commands
         run: cd erniebot-agent && python -m pytest tests/unit_tests/ --cov erniebot_agent --cov-report xml:coverage.xml
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
