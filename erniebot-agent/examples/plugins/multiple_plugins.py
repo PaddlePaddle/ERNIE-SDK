@@ -1,6 +1,8 @@
 import asyncio
 from typing import Any, Dict, List, Type
 
+from pydantic import Field
+
 from erniebot_agent.agents.callback.default import get_no_ellipsis_callback
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
@@ -10,7 +12,6 @@ from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.calculator_tool import CalculatorTool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 
 class TextRepeaterToolInputView(ToolParameterView):

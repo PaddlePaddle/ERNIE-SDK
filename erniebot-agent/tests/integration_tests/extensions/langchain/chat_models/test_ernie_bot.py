@@ -3,7 +3,6 @@
 from typing import List
 
 import pytest
-from erniebot_agent.extensions.langchain.chat_models import ErnieBotChat
 from langchain.schema import ChatGeneration, LLMResult
 from langchain.schema.messages import (
     AIMessage,
@@ -11,6 +10,8 @@ from langchain.schema.messages import (
     FunctionMessage,
     HumanMessage,
 )
+
+from erniebot_agent.extensions.langchain.chat_models import ErnieBotChat
 
 
 def test_erniebot_call() -> None:

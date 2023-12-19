@@ -7,16 +7,16 @@ import tempfile
 from unittest import mock
 
 import pytest
+from tests.unit_tests.testing_utils.mocks.mock_remote_file_client_server import (
+    FakeRemoteFileClient,
+    FakeRemoteFileServer,
+)
+
 from erniebot_agent.file_io.caching import (
     CacheDiscardedError,
     CacheNotFoundError,
     FileCache,
     FileCacheManager,
-)
-
-from tests.unit_tests.testing_utils.mocks.mock_remote_file_client_server import (
-    FakeRemoteFileClient,
-    FakeRemoteFileServer,
 )
 
 

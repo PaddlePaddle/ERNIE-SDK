@@ -1,14 +1,14 @@
 from unittest import mock
 
 import pytest
+from tests.unit_tests.testing_utils.components import CountingCallbackHandler
+
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.messages import AIMessage
 from erniebot_agent.tools.base import Tool
-
-from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 
 
 @pytest.mark.asyncio

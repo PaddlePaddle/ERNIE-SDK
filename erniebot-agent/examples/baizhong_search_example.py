@@ -2,6 +2,11 @@ import argparse
 import asyncio
 from typing import List
 
+import erniebot
+from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain.text_splitter import SpacyTextSplitter
+from tqdm import tqdm
+
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
@@ -13,11 +18,6 @@ from erniebot_agent.tools.baizhong_tool import (
     BaizhongSearchToolOutputView,
     SearchResponseDocument,
 )
-from langchain.document_loaders import PyPDFDirectoryLoader
-from langchain.text_splitter import SpacyTextSplitter
-from tqdm import tqdm
-
-import erniebot
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path", default="construction_regulations", type=str, help="The data path.")

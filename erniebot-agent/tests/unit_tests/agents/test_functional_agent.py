@@ -1,9 +1,6 @@
 import json
 
 import pytest
-from erniebot_agent.agents.functional_agent import FunctionalAgent
-from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage
-
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeChatModelWithPresetResponses,
@@ -11,6 +8,9 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
+
+from erniebot_agent.agents.functional_agent import FunctionalAgent
+from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage
 
 
 @pytest.fixture(scope="module")
