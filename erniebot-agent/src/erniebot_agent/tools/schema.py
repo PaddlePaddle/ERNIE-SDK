@@ -193,10 +193,12 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
                 items_schema: dict = field_info.json_schema_extra["array_items_schema"]
                 property["items"] = {
                     "type": items_schema["type"],
-                    "description": items_schema["description"],
                 }
+                if "description" in items_schema:
+                    property["items"]["description"] = items_schema["description"]
             else:
                 property["items"] = {"type": typing_list_type}
+
     elif property["type"] == "object":
         if is_optional_type(field_info.annotation):
             field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
