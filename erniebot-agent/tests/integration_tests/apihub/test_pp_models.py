@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit
 
 from .base import RemoteToolTesting
