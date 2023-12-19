@@ -29,12 +29,21 @@ class OpenAISearchTool(Tool):
     ouptut_type: Type[ToolParameterView] = OpenAISearchToolOutputView
 
     def __init__(
-        self, name, description, db, threshold: float = 0.0, input_type=None, output_type=None, examples=None
+        self,
+        name,
+        description,
+        db,
+        threshold: float = 0.0,
+        input_type=None,
+        output_type=None,
+        examples=None,
+        return_meta_data: bool = False,
     ) -> None:
         super().__init__()
         self.name = name
         self.db = db
         self.description = description
+        self.return_meta_data = return_meta_data
         self.few_shot_examples = []
         if input_type is not None:
             self.input_type = input_type
@@ -49,9 +58,13 @@ class OpenAISearchTool(Tool):
         docs = []
         for doc, score in documents:
             if score > self.threshold:
-                docs.append(
-                    {"document": doc.page_content, "title": doc.metadata["source"], "meta": doc.metadata}
-                )
+                new_doc = {"document": doc.page_content}
+                if self.return_meta_data:
+                    new_doc["meta"] = doc.metadata
+                if "source" in doc.metadata:
+                    new_doc["title"] = doc.metadata["source"]
+
+                docs.append(new_doc)
 
         return {"documents": docs}
 

@@ -146,7 +146,11 @@ if __name__ == "__main__":
 
         faiss_tool = FAISS.from_documents(docs, embeddings)
         tool_retriever = OpenAISearchTool(  # type: ignore
-            name="tool_retriever", description="用于检索与query相关的tools列表", db=faiss_tool, threshold=0.1
+            name="tool_retriever",
+            description="用于检索与query相关的tools列表",
+            db=faiss_tool,
+            threshold=0.1,
+            return_meta_data=True,
         )
 
     queries = [
@@ -170,7 +174,6 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "knowledge_tools":
-            # TODO(wugaosheng) Add knowledge base tool retriever for tool selection
             tool_results = asyncio.run(tool_retriever(query))["documents"]
             selected_tools = [tool_map[item["meta"]["tool_name"]] for item in tool_results]
             agent = FunctionalAgentWithQueryPlanning(  # type: ignore
@@ -178,7 +181,7 @@ if __name__ == "__main__":
                 top_k=3,
                 # tools=toolkit.get_tools() + [city_management, city_design, city_lighting],
                 # tools = [NotesTool(),city_management, city_design, city_lighting],
-                tools=[NotesTool] + selected_tools,
+                tools=[NotesTool()] + selected_tools,
                 memory=memory,
             )
 

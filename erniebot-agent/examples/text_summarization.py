@@ -27,10 +27,13 @@ def summarize_text(text: str):
     print(f"Summarizing text with total chunks: {len(chunks)}")
     for i, chunk in enumerate(chunks):
         messages = [create_abstract(chunk)]
-        summary = erniebot_chat(messages, api_type=args.api_type, access_token=args.access_token)
+        summary = erniebot_chat(messages, api_type=args.api_type, access_token=args.access_token).rbody[
+            "result"
+        ]
         print(summary)
         summaries.append(summary)
 
+    # breakpoint()
     combined_summary = "\n".join(summaries)
     combined_summary = combined_summary[:7000]
     messages = [create_abstract(combined_summary)]

@@ -9,7 +9,13 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
+from erniebot_agent.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    Message,
+    SystemMessage,
+)
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
@@ -392,11 +398,9 @@ class FunctionalAgentWithQueryPlanning(FunctionalAgent):
         super().__init__(**kwargs)
         self.top_k = top_k
         self.threshold = threshold
-        self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
-        # self.search_tool = KnowledgeBaseTool()
+        self.system_message = SystemMessage(content="您是一个智能体，旨在回答有关知识库的查询。请始终使用提供的工具回答问题。不要依赖先验知识。")
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        # RAG
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
