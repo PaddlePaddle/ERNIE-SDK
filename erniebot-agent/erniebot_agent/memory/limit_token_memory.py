@@ -22,7 +22,7 @@ class LimitTokensMemory(Memory):
     If tokens >= max_token_limit, pop message from memory.
     """
 
-    def __init__(self, max_token_limit=4000):
+    def __init__(self, max_token_limit=3000):
         super().__init__()
         self.max_token_limit = max_token_limit
         self.mem_token_count = 0
