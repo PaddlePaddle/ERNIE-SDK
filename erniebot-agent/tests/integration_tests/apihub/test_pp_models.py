@@ -78,8 +78,8 @@ class TestPPRemoteTool(RemoteToolTesting):
         toolkit = RemoteToolkit.from_aistudio("pp-structure-v2")
 
         agent = self.get_agent(toolkit)
-
-        result = await agent.async_run("请帮我提取一下这个表格的内容", files=[self.file])
+        file = await self.file_manager.create_file_from_path(self.download_fixture_file("ocr_table.png"))
+        result = await agent.async_run("请帮我提取一下这个表格的内容", files=[file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("设备", result.text)
 
