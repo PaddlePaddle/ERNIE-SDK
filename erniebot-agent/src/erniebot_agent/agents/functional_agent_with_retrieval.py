@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, Type
 
+import erniebot.utils
 from pydantic import Field
 
 from erniebot_agent.agents import FunctionalAgent
@@ -71,13 +72,21 @@ class KnowledgeBaseTool(Tool):
 
 
 class FunctionalAgentWithRetrieval(FunctionalAgent):
-    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.0, **kwargs):
+    def __init__(
+        self,
+        knowledge_base: BaizhongSearch,
+        top_k: int = 3,
+        threshold: float = 0.0,
+        token_limit: int = 3000,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
+        self.token_limit = token_limit
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
@@ -89,9 +98,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
             try:
-                step_input = HumanMessage(
-                    content=self.rag_prompt.format(query=prompt, documents=results["documents"])
-                )
+                docs = self._enforce_token_limit(results)
+                step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[ToolAction] = []
                 actions_taken.append(ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
@@ -118,6 +126,21 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
             return await super()._async_run(prompt)
+
+    def _enforce_token_limit(self, results):
+        docs = []
+        token_count = 0
+        for doc in results["documents"]:
+            num_tokens = erniebot.utils.token_helper.approx_num_tokens(doc["content"])
+            if token_count + num_tokens > self.token_limit:
+                logger.warning(
+                    f"Retrieval results exceed token limit. Truncating retrieval results to under {self.token_limit} tokens"
+                )
+                break
+            else:
+                token_count += num_tokens
+                docs.append(doc)
+        return docs
 
     async def _maybe_retrieval(
         self,
