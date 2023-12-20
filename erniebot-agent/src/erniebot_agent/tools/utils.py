@@ -1,5 +1,7 @@
 import base64
 import inspect
+import re
+import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
 
@@ -71,7 +73,7 @@ def get_file_info_from_param_view(
         model_field = param_view.model_fields[key]
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
-        json_schema_extra = model_field.json_schema_extra
+        json_schema_extra: dict = typing.cast(dict, model_field.json_schema_extra)
 
         if list_base_annotation is not None:
             if list_base_annotation == "object":
@@ -82,16 +84,23 @@ def get_file_info_from_param_view(
                     file_infos[key] = sub_file_infos
                 continue
 
-            if "array_items_schema" in model_field.json_schema_extra:
-                json_schema_extra = model_field.json_schema_extra["array_items_schema"]
-        elif issubclass(model_field.annotation, ToolParameterView):
+            if "array_items_schema" in json_schema_extra:
+                json_schema_extra = json_schema_extra["array_items_schema"]
+                if not isinstance(json_schema_extra, dict):
+                    raise RemoteToolError(
+                        f"<array_items_schema> field must be dict type in model_field<{key}> "
+                        f"with the field_info<{model_field}>. Please check the format of yaml "
+                        "in current tool.",
+                        stage="Output parsing",
+                    )
+
+        elif model_field.annotation is not None and issubclass(model_field.annotation, ToolParameterView):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
 
-        json_schema_extra = model_field.json_schema_extra
-        if json_schema_extra and json_schema_extra.get("format", None) in [
+        if json_schema_extra and json_schema_extra.get("format", None) in [  # type: ignore
             "byte",
             "binary",
         ]:
@@ -139,13 +148,28 @@ async def parse_file_from_json_response(
                 file_infos[key] = sub_file_infos
         else:
             json_schema_extra = model_field.json_schema_extra
+            if not isinstance(json_schema_extra, dict):
+                raise RemoteToolError(
+                    f"<json_schema_extra> field must be dict type in model_field<{key}> "
+                    f"with the field_info<{model_field}>. Please check the format of yaml in current tool.",
+                    stage="Output parsing",
+                )
+
             format = json_schema_extra.get("format", None)
             if format in ["byte", "binary"]:
                 content = json_data[key]
                 if format == "byte":
                     content = base64.b64decode(content)
 
-                suffix = get_file_suffix(json_schema_extra.get("x-ebagent-file-mime-type", None))
+                mime_type = json_schema_extra.get("x-ebagent-file-mime-type", None)
+                if mime_type is not None and not isinstance(mime_type, str):
+                    raise RemoteToolError(
+                        f"x-ebagent-file-mime-type value must be None or string in key<{key}>, "
+                        f"but receive ({type(mime_type)})<{mime_type}>",
+                        stage="Output parsing",
+                    )
+
+                suffix = get_file_suffix(mime_type)
                 file = await file_manager.create_file_from_bytes(
                     content,
                     filename=f"test{suffix}",
@@ -217,3 +241,22 @@ async def parse_file_from_response(
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",
         stage="Output parsing",
     )
+
+
+def is_base64_string(element: Any) -> bool:
+    """check whether a string is base64 sdtring
+
+    refer to: https://stackoverflow.com/a/8571649
+
+    Args:
+        element (str): the content of string
+
+    Returns:
+        bool: whether is base64 string
+    """
+    if not isinstance(element, str):
+        return False
+
+    expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
+    matches = re.match(expression, element)
+    return matches is not None
