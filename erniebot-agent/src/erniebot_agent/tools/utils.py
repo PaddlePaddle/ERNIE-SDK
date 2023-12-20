@@ -87,7 +87,11 @@ def get_file_info_from_param_view(
             if "array_items_schema" in json_schema_extra:
                 json_schema_extra = json_schema_extra["array_items_schema"]
                 if not isinstance(json_schema_extra, dict):
-                    raise RemoteToolError("<array_items_schema> field must be dict type")
+                    raise RemoteToolError(
+                        f"<array_items_schema> field must be dict type in model_field<{key}> "
+                        f"with the field_info<{model_field}>. Please check the format of yaml "
+                        "in current tool."
+                    )
 
         elif model_field.annotation is not None and issubclass(model_field.annotation, ToolParameterView):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
@@ -144,7 +148,10 @@ async def parse_file_from_json_response(
         else:
             json_schema_extra = model_field.json_schema_extra
             if not isinstance(json_schema_extra, dict):
-                raise RemoteToolError("<json_schema_extra> field must be dict")
+                raise RemoteToolError(
+                    f"<json_schema_extra> field must be dict type in model_field<{key}> "
+                    f"with the field_info<{model_field}>. Please check the format of yaml in current tool."
+                )
 
             format = json_schema_extra.get("format", None)
             if format in ["byte", "binary"]:
@@ -154,7 +161,10 @@ async def parse_file_from_json_response(
 
                 mime_type = json_schema_extra.get("x-ebagent-file-mime-type", None)
                 if mime_type is not None and not isinstance(mime_type, str):
-                    raise RemoteToolError("x-ebagent-file-mime-type value must be None or string")
+                    raise RemoteToolError(
+                        f"x-ebagent-file-mime-type value must be None or string in key<{key}>, "
+                        f"but receive ({type(mime_type)})<{mime_type}>"
+                    )
 
                 suffix = get_file_suffix(mime_type)
                 file = await file_manager.create_file_from_bytes(
