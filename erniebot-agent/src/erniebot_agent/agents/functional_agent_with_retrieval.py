@@ -8,13 +8,9 @@ from pydantic import Field
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import (
     AgentAction,
+    AgentFile,
     AgentResponse,
-    NoActionStep,
-    PluginStep,
-    ToolAction,
-    ToolInfo,
     ToolResponse,
-    ToolStep,
 )
 from erniebot_agent.file_io.base import File
 from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
@@ -101,10 +97,11 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
-                actions_taken: List[ToolAction] = []
-                actions_taken.append(ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
+                actions_taken: List[AgentAction] = []
+                files_involved: List[AgentFile] = []
+                actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
-                tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
+                tool_resp = ToolResponse(json=tool_ret_json, files=[])
                 llm_resp = await self._async_run_llm_without_hooks(
                     messages=chat_history,
                     functions=None,
@@ -117,7 +114,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
                 raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            response = self._create_finished_response(chat_history, actions_taken)
+            response = self._create_finished_response(chat_history, actions_taken, files_involved)
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
             return response
@@ -134,8 +131,8 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             num_tokens = erniebot.utils.token_helper.approx_num_tokens(doc["content"])
             if token_count + num_tokens > self.token_limit:
                 logger.warning(
-                    f"Retrieval results exceed token limit. \
-Truncating retrieval results to under {self.token_limit} tokens"
+                    "Retrieval results exceed token limit. Truncating retrieval results to "
+                    f"under {self.token_limit} tokens"
                 )
                 break
             else:
@@ -169,7 +166,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[File] = []
+            files_involved: List[AgentFile] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -265,7 +262,8 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         if len(results["documents"]) > 0:
             # RAG
             chat_history: List[Message] = []
-            steps: List[ToolStep] = []
+            actions_taken: List[AgentAction] = []
+            files_involved: List[AgentFile] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -292,33 +290,27 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     },
                 )
             )
-            # return response
-            tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            tool_resp = ToolResponse(json=tool_ret_json, files=[])
 
             # Knowledge Retrieval Tool
-            step = ToolStep(
-                info=ToolInfo(tool_name="KnowledgeBaseTool", tool_args=tool_args),
-                result=tool_resp.json,
-                input_files=tool_resp.input_files,
-                output_files=tool_resp.output_files,
-            )
-
-            steps.append(step)
+            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
+            actions_taken.append(action)
+            # return response
+            tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
+            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step, new_messages = await self._step(chat_history)
-                chat_history.extend(new_messages)
-                if not isinstance(curr_step, NoActionStep):
-                    steps.append(curr_step)
-                if isinstance(curr_step, (NoActionStep, PluginStep)):
-                    response = self._create_finished_response(chat_history, steps)
+                curr_step_output = await self._async_step(
+                    next_step_input, chat_history, actions_taken, files_involved
+                )
+                if curr_step_output is None:
+                    response = self._create_finished_response(chat_history, actions_taken, files_involved)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
                 num_steps_taken += 1
-            response = self._create_stopped_response(chat_history, steps)
+            response = self._create_stopped_response(chat_history, actions_taken, files_involved)
             return response
         else:
             logger.info(
