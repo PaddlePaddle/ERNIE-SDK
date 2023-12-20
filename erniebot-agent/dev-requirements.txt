@@ -2,6 +2,5 @@ black[jupyter] == 23.3.0
 flake8 == 5.0.4
 isort == 5.11.5
 mypy == 1.6.1
-types-colorama
-types-jsonschema
-types-requests
+types-PyYAML == 6.0.12.12
+types-requests == 2.31.0.2
