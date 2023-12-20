@@ -29,7 +29,6 @@ from fastapi.responses import FileResponse
 from requests.models import Response
 
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
@@ -112,8 +111,7 @@ def is_port_in_use(port):
 
 class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_registry = FileRegistry()
-        self.file_manager = FileManager(self.file_registry)
+        self.file_manager = FileManager()
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -176,8 +174,7 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_registry = FileRegistry()
-        self.file_manager = FileManager(self.file_registry)
+        self.file_manager = FileManager()
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -252,8 +249,7 @@ components:
 
 class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_registry = FileRegistry()
-        self.file_manager = FileManager(self.file_registry)
+        self.file_manager = FileManager()
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -334,8 +330,7 @@ components:
 
 class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_registry = FileRegistry()
-        self.file_manager = FileManager(self.file_registry)
+        self.file_manager = FileManager()
 
     async def asyncTearDown(self):
         await self.file_manager.close()

@@ -194,7 +194,7 @@ class RemoteToolkit:
                 )
 
         if file_manager is None:
-            file_manager = get_global_file_manager(access_token)
+            file_manager = get_global_file_manager(access_token=access_token)
 
         return RemoteToolkit(
             openapi=openapi_dict["openapi"],

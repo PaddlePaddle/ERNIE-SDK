@@ -32,7 +32,7 @@ class TextRepeaterTool(Tool):
         if "<split>" in input_file_id:
             input_file_id = input_file_id.split("<split>")[0]
 
-        file_manager = get_global_file_manager()  # Access_token needs to be set here.
+        file_manager = get_global_file_manager(access_token=None)  # Access_token needs to be set here.
         input_file = file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")

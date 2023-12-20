@@ -15,35 +15,40 @@
 import asyncio
 import atexit
 import functools
-from typing import Optional
+from typing import List, Optional
 
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.file_registry import get_global_file_registry
 from erniebot_agent.file_io.remote_file import AIStudioFileClient
 from erniebot_agent.utils.mixins import Closeable
 from erniebot_agent.utils.temp_file import create_tracked_temp_dir
 
+_objects_to_close: List[Closeable] = []
+
 
 @functools.lru_cache(maxsize=None)
-def get_global_file_manager(access_token: Optional[str] = None) -> FileManager:
-    global_file_registry = get_global_file_registry()
+def get_global_file_manager(*, access_token: Optional[str]) -> FileManager:
     if access_token is None:
-        # TODO: Use a default global access token.
-        file_manager = FileManager(global_file_registry, save_dir=create_tracked_temp_dir())
+        file_manager = FileManager(save_dir=create_tracked_temp_dir())
     else:
         remote_file_client = AIStudioFileClient(access_token=access_token)
-        atexit.register(_close_object, remote_file_client)
-        file_manager = FileManager(
-            global_file_registry, remote_file_client, save_dir=create_tracked_temp_dir()
-        )
-    atexit.register(_close_object, file_manager)
+        _objects_to_close.append(remote_file_client)
+        file_manager = FileManager(remote_file_client, save_dir=create_tracked_temp_dir())
+    _objects_to_close.append(file_manager)
+
     return file_manager
 
 
-def _close_object(closeable: Closeable):
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        asyncio.run(closeable.close())
-    else:
-        loop.create_task(closeable.close())
+def _close_objects():
+    async def _close_objects_sequentially():
+        for obj in _objects_to_close:
+            await obj.close()
+
+    if _objects_to_close:
+        # Since async atexit is not officially supported by Python,
+        # we start a new event loop to do the cleanup.
+        asyncio.run(_close_objects_sequentially())
+        _objects_to_close.clear()
+
+
+# FIXME: The exit handler may not be called when using multiprocessing.
+atexit.register(_close_objects)

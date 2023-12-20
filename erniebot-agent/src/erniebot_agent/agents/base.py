@@ -78,7 +78,7 @@ class Agent(GradioMixin, BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
-            file_manager = file_io.get_global_file_manager()
+            file_manager = file_io.get_global_file_manager(access_token=None)
         self.plugins = plugins
         self._file_manager = file_manager
         self._init_file_repr()

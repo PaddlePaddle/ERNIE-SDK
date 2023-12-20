@@ -17,7 +17,7 @@ class CVToolkit:
 llm = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token="<your-access-token>")
 toolkit = CVToolkit()
 memory = WholeMemory()
-file_manager = get_global_file_manager()
+file_manager = get_global_file_manager(access_token=None)
 agent = FunctionalAgent(llm=llm, tools=toolkit.tools, memory=memory, file_manager=file_manager)
 
 

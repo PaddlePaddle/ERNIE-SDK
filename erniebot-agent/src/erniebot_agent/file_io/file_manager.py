@@ -32,7 +32,7 @@ from erniebot_agent.file_io.caching import (
     bind_cache_to_remote_file,
     create_default_file_cache_manager,
 )
-from erniebot_agent.file_io.file_registry import BaseFileRegistry
+from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exception import FileError
@@ -50,7 +50,6 @@ class FileManager(Closeable):
 
     def __init__(
         self,
-        file_registry: BaseFileRegistry,
         remote_file_client: Optional[RemoteFileClient] = None,
         *,
         auto_register: bool = True,
@@ -59,7 +58,6 @@ class FileManager(Closeable):
     ) -> None:
         super().__init__()
 
-        self._file_registry = file_registry
         self._remote_file_client = remote_file_client
         self._auto_register = auto_register
         if save_dir is not None:
@@ -69,6 +67,8 @@ class FileManager(Closeable):
             self._temp_dir = self._create_temp_dir()
             self._save_dir = pathlib.Path(self._temp_dir.name)
         self._cache_remote_files = cache_remote_files
+
+        self._file_registry = FileRegistry()
         if self._cache_remote_files:
             self._file_cache_manager = create_default_file_cache_manager()
         else:
@@ -76,10 +76,6 @@ class FileManager(Closeable):
 
         self._closed = False
         self._clean_up_cache_files_on_discard = True
-
-    @property
-    def registry(self) -> BaseFileRegistry:
-        return self._file_registry
 
     @property
     def remote_file_client(self) -> RemoteFileClient:
@@ -282,22 +278,29 @@ class FileManager(Closeable):
         files = await self.remote_file_client.list_files()
         return files
 
-    def register_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
+    def register_file(
+        self, file: Union[LocalFile, RemoteFile], *, allow_overwrite: bool = False, check_type: bool = True
+    ) -> None:
         self.ensure_not_closed()
-        self._file_registry.register_file(file, *args, **kwargs)
+        self._file_registry.register_file(file, allow_overwrite=allow_overwrite, check_type=check_type)
 
-    def unregister_file(self, file: Union[LocalFile, RemoteFile], *args: Any, **kwargs: Any) -> None:
+    def unregister_file(self, file: Union[LocalFile, RemoteFile]) -> None:
         self.ensure_not_closed()
-        self._file_registry.unregister_file(file, *args, **kwargs)
+        self._file_registry.unregister_file(file)
 
-    def look_up_file_by_id(self, file_id: str, *args: Any, **kwargs: Any) -> Optional[File]:
-        file = self._file_registry.look_up_file(file_id, *args, **kwargs)
+    def look_up_file_by_id(self, file_id: str) -> Optional[File]:
+        self.ensure_not_closed()
+        file = self._file_registry.look_up_file(file_id)
         if file is None:
             raise FileError(
                 f"File with ID '{file_id}' not found. "
                 "Please check if `file_id` is correct and the file is registered."
             )
         return file
+
+    def list_registered_files(self) -> List[File]:
+        self.ensure_not_closed()
+        return self._file_registry.list_files()
 
     async def close(self) -> None:
         if not self._closed:

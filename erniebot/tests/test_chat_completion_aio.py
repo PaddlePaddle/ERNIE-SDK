@@ -78,6 +78,8 @@ if __name__ == "__main__":
 
     erniebot.api_type = "qianfan"
 
-    asyncio.run(test_chat_completion_aio(acreate_chat_completion, args=("ernie-bot-turbo",)))
+    async def main():
+        await test_chat_completion_aio(acreate_chat_completion, args=("ernie-bot-turbo",))
+        await test_chat_completion_aio(acreate_chat_completion_stream, args=("ernie-bot-turbo",))
 
-    asyncio.run(test_chat_completion_aio(acreate_chat_completion_stream, args=("ernie-bot-turbo",)))
+    asyncio.run(main())

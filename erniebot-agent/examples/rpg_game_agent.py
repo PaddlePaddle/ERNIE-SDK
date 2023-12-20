@@ -87,7 +87,7 @@ class GameAgent(Agent):
             tools=tools,
             system_message=system_message,
         )
-        self.file_manager: FileManager = get_global_file_manager()
+        self.file_manager: FileManager = get_global_file_manager(access_token)
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
         tool_response = await self._async_run_tool(

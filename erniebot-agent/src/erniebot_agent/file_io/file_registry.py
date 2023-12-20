@@ -15,7 +15,6 @@
 from typing import Dict, List, Optional, final
 
 from erniebot_agent.file_io.base import File
-from erniebot_agent.utils.misc import Singleton
 
 
 class BaseFileRegistry(object):
@@ -32,6 +31,7 @@ class BaseFileRegistry(object):
         raise NotImplementedError
 
 
+@final
 class FileRegistry(BaseFileRegistry):
     def __init__(self) -> None:
         super().__init__()
@@ -58,12 +58,3 @@ class FileRegistry(BaseFileRegistry):
 
     def list_files(self) -> List[File]:
         return list(self._id_to_file.values())
-
-
-@final
-class GlobalFileRegistry(FileRegistry, metaclass=Singleton):
-    pass
-
-
-def get_global_file_registry() -> GlobalFileRegistry:
-    return GlobalFileRegistry()

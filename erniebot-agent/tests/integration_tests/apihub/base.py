@@ -11,7 +11,6 @@ import requests
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager
@@ -20,8 +19,7 @@ from erniebot_agent.tools.tool_manager import ToolManager
 class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
-        self.file_registry = FileRegistry()
-        self.file_manager = FileManager(self.file_registry)
+        self.file_manager = FileManager()
 
     async def asyncTearDown(self) -> None:
         shutil.rmtree(self.temp_dir)

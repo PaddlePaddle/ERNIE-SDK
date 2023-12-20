@@ -119,7 +119,7 @@ class GradioMixin:
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = self._file_manager.registry.list_files()
+            output_lis = self._file_manager.list_registered_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
@@ -164,7 +164,7 @@ class GradioMixin:
                         )
 
                 with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager.registry.list_files()
+                    file_lis = self._file_manager.list_registered_files()
                     all_files = gr.HTML(value=file_lis, label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
