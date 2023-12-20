@@ -15,7 +15,8 @@ jobs:
     name: Lint
     runs-on: ubuntu-20.04
     defaults:
-      working-directory: erniebot
+      run:
+        working-directory: erniebot
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
