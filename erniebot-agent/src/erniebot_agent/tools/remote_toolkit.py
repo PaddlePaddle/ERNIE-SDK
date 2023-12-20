@@ -218,7 +218,9 @@ class RemoteToolkit:
             raise RemoteToolError(f"invalid openapi yaml file: {file}", stage="Loading")
 
         spec_dict, _ = read_from_filename(file)
-        return cls.from_openapi_dict(spec_dict, access_token=access_token, file_manager=file_manager)
+        return cls.from_openapi_dict(
+            spec_dict, access_token=access_token, file_manager=file_manager  # type: ignore
+        )
 
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
@@ -361,7 +363,7 @@ class RemoteToolkit:
         Returns:
             List[Message]: the list of messages
         """
-        content: dict = read_from_filename(file)[0]
+        content: dict = read_from_filename(file)[0]  # type: ignore
         if len(content) == 0 or "examples" not in content:
             raise RemoteToolError("invalid examples configuration file", stage="Loading")
         return cls.load_examples_dict(content)
