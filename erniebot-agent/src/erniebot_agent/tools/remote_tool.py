@@ -12,6 +12,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
+    is_base64_string,
     parse_file_from_json_response,
     parse_file_from_response,
     tool_response_contains_file,
@@ -19,6 +20,27 @@ from erniebot_agent.tools.utils import (
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
+
+
+def check_base64_string(value: Any):
+    """check the dict contains base64 string
+
+    Args:
+        value (Any): the source of json data
+    """
+    if isinstance(value, str) and is_base64_string(value):
+        raise RemoteToolError(
+            "Base64 String is detected in http json response, which may contains base64 "
+            "file content but the openapi.yaml file is not configured correctly.",
+            stage="Output parsing",
+        )
+
+    elif isinstance(value, list):
+        for item in value:
+            check_base64_string(item)
+    elif isinstance(value, dict):
+        for value in value.values():
+            check_base64_string(value)
 
 
 class RemoteTool(BaseTool):
@@ -67,6 +89,13 @@ class RemoteTool(BaseTool):
             byte_str = await file.read_contents()
             return byte_str
 
+        async def convert_to_file_data(file_data: str, format: str):
+            value = file_data.replace("<file>", "").replace("</file>", "")
+            byte_value = await fileid_to_byte(value, self.file_manager)
+            if format == "byte":
+                byte_value = base64.b64encode(byte_value).decode()
+            return byte_value
+
         # 1. replace fileid with byte string
         parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
         for key in tool_arguments.keys():
@@ -82,11 +111,19 @@ class RemoteTool(BaseTool):
                 continue
             if self.tool_view.parameters is None:
                 break
-            tool_arguments[key] = tool_arguments[key].replace("<file>", "").replace("</file>", "")
-            byte_str = await fileid_to_byte(tool_arguments[key], self.file_manager)
-            if parameter_file_info[key]["format"] == "byte":
-                byte_str = base64.b64encode(byte_str).decode()
-            tool_arguments[key] = byte_str
+
+            argument_value = tool_arguments[key]
+            if isinstance(argument_value, list):
+                for index in range(len(argument_value)):
+                    argument_value[index] = await convert_to_file_data(
+                        argument_value[index], parameter_file_info[key]["format"]
+                    )
+            else:
+                argument_value = await convert_to_file_data(
+                    argument_value, parameter_file_info[key]["format"]
+                )
+
+            tool_arguments[key] = argument_value
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
@@ -95,12 +132,17 @@ class RemoteTool(BaseTool):
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
+        tool_response = self.__adhoc_post_process__(tool_response)
+        check_base64_string(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
             tool_response["prompt"] = self.tool_view.returns.__prompt__
         elif tool_response_contains_file(tool_response):
-            tool_response["prompt"] = "回复中提及符合'file-'格式的字段时，请直接展示，不要将其转换为链接或添加任何HTML, Markdown等格式化元素"
+            tool_response["prompt"] = (
+                "参考工具说明中对各个结果字段的描述，提取工具调用结果中的信息，生成一段通顺的文本满足用户的需求。",
+                "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。",
+            )
 
         # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
         # if self.tool_view.returns is not None:
@@ -205,6 +247,56 @@ class RemoteTool(BaseTool):
             schema["examples"] = [example.to_dict() for example in self.examples]
 
         return schema or {}
+
+    def __adhoc_post_process__(self, tool_response: dict) -> dict:
+        # temporary adhoc post processing logic for certain toolkits
+        if self.tool_name.startswith("official-doc-rec") and self.tool_name.endswith("office_doc_rec"):
+            if "results" in tool_response and isinstance(tool_response["results"], list):
+                reformatted_result = []
+                for result_line in tool_response["results"]:
+                    if "words" in result_line and "word" in result_line["words"]:
+                        reformatted_result.append(result_line["words"]["word"])
+                tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("highacc-ocr") and self.tool_name.endswith("OCR"):
+            if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
+                reformatted_result = []
+                for result in tool_response["words_result"]:
+                    if "words" in result:
+                        reformatted_result.append(result["words"])
+                tool_response["words_result"] = reformatted_result
+        elif self.tool_name.startswith("doc-analysis") and self.tool_name.endswith("doc_analysis"):
+            if "results" in tool_response and isinstance(tool_response["results"], list):
+                reformatted_result = []
+                for result in tool_response["results"]:
+                    if "words" in result and "word" in result["words"]:
+                        reformatted_result.append(result["words"]["word"])
+                tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("shopping-receipt") and self.tool_name.endswith("shopping_receip"):
+            if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
+                keys = [
+                    "shop_name",
+                    "receipt_num",
+                    "machine_num",
+                    "employee_num",
+                    "consumption_date",
+                    "consumption_time",
+                    "total_amount",
+                    "change",
+                    "currency",
+                    "paid_amount",
+                    "discount",
+                    "print_time",
+                ]
+                for result in tool_response["words_result"]:
+                    for key in keys:
+                        if (
+                            key in result
+                            and len(result[key]) > 0
+                            and "word" in result[key][0]
+                            and result[key][0]["word"] == ""
+                        ):
+                            result.pop(key)
+        return tool_response
 
 
 class RemoteToolRegistor:

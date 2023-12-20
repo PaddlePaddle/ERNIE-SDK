@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
+from erniebot_agent.utils.exception import RemoteToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -189,16 +190,32 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
             list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
             property["items"] = list_type.to_openapi_dict()
         else:
-            property["items"] = {"type": typing_list_type}
+            if not isinstance(field_info.json_schema_extra, dict):
+                raise RemoteToolError("<field_info.json_schema_extra> must be dict data", stage="Loading")
+
+            if "array_items_schema" in field_info.json_schema_extra:
+                items_schema: Any = field_info.json_schema_extra["array_items_schema"]
+
+                if not isinstance(items_schema, dict):
+                    raise RemoteToolError("<array_items_schema> must be dict data", stage="Loading")
+
+                property["items"] = {
+                    "type": items_schema["type"],
+                }
+                if "description" in items_schema:
+                    property["items"]["description"] = items_schema["description"]
+            else:
+                property["items"] = {"type": typing_list_type}
+
     elif property["type"] == "object":
         if is_optional_type(field_info.annotation):
-            field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+            field_type_class: Any = get_args(field_info.annotation)[0]
         else:
             field_type_class = field_info.annotation
 
         openapi_dict = field_type_class.to_openapi_dict()
         property.update(openapi_dict)
-    elif issubclass(field_info.annotation, Enum):
+    elif field_info.annotation is not None and issubclass(field_info.annotation, Enum):
         property["enum"] = list(field_info.annotation.__members__.keys())
 
     property["description"] = property.get("description", "")
@@ -262,6 +279,9 @@ class ToolParameterView(BaseModel):
                 {key: value for key, value in field_dict.items() if key.startswith("x-ebagent")}
             )
 
+            if get_typing_list_type(field_type) is not None and field_type is not List[ToolParameterView]:
+                json_schema_extra["array_items_schema"] = field_dict["items"]
+
             field_info_param = dict(
                 annotation=field_type, description=description, json_schema_extra=json_schema_extra
             )
@@ -275,7 +295,7 @@ class ToolParameterView(BaseModel):
 
             fields[field_name] = (field_type, field)
 
-        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)  # type: ignore
 
         # get the prompt for schema
         model.__prompt__ = schema.get("x-ebagent-prompt", None)
@@ -338,7 +358,7 @@ class ToolParameterView(BaseModel):
             description = field_dict["description"]
             field = FieldInfo(annotation=field_type, description=description)
             fields[field_name] = (field_type, field)
-        return create_model(cls.__name__, __base__=ToolParameterView, **fields)
+        return create_model(cls.__name__, __base__=ToolParameterView, **fields)  # type: ignore
 
 
 @dataclass

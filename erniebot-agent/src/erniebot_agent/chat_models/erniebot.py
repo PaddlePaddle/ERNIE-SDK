@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from typing import (
     Any,
     AsyncIterator,
@@ -28,7 +29,13 @@ import erniebot
 from erniebot.response import EBResponse
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import AIMessage, AIMessageChunk, FunctionCall, Message
+from erniebot_agent.messages import (
+    AIMessage,
+    AIMessageChunk,
+    FunctionCall,
+    Message,
+    SeachInfo,
+)
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -39,6 +46,7 @@ class ERNIEBot(ChatModel):
         model: str,
         api_type: Optional[str] = None,
         access_token: Optional[str] = None,
+        enable_multi_step_tool_call: bool = False,
         **default_chat_kwargs: Any,
     ) -> None:
         """Initializes an instance of the `ERNIEBot` class.
@@ -48,11 +56,15 @@ class ERNIEBot(ChatModel):
                 "ernie-bot-4".
             api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): The access token for erniebot.
+            close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
         """
         super().__init__(model=model, **default_chat_kwargs)
 
         self.api_type = api_type
         self.access_token = access_token
+        self.enable_multi_step_json = json.dumps(
+            {"multi_step_tool_call_close": not enable_multi_step_tool_call}
+        )
 
     @overload
     async def async_chat(
@@ -121,10 +133,12 @@ class ERNIEBot(ChatModel):
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
+
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
         # TODO: Improve this when erniebot typing issue is fixed.
+        # Note: If plugins is not None, erniebot will not use Baidu_search.
         if cfg_dict.get("plugins", None):
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
@@ -132,10 +146,18 @@ class ERNIEBot(ChatModel):
                 stream=stream,
                 _config_=cfg_dict["_config_"],
                 functions=functions,  # type: ignore
-                extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
             )
         else:
-            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+                **cfg_dict,
+            )
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
@@ -152,6 +174,20 @@ class ERNIEBot(ChatModel):
                 thoughts=response.function_call["thoughts"],
                 arguments=response.function_call["arguments"],
             )
-            return output_type(content="", function_call=function_call, token_usage=response.usage)
+            return output_type(
+                content="", function_call=function_call, search_info=None, token_usage=response.usage
+            )
+        elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
+            search_info = SeachInfo(
+                results=response.search_info["search_results"],
+            )
+            return output_type(
+                content=response.result,
+                function_call=None,
+                search_info=search_info,
+                token_usage=response.usage,
+            )
         else:
-            return output_type(content=response.result, function_call=None, token_usage=response.usage)
+            return output_type(
+                content=response.result, function_call=None, search_info=None, token_usage=response.usage
+            )
