@@ -1,5 +1,6 @@
 import base64
 import os
+import json
 import tempfile
 from typing import Any, List
 
@@ -8,7 +9,7 @@ from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
-
+from erniebot_agent.tools import RemoteToolkit
 
 class GradioMixin:
     _file_manager: FileManager  # make mypy happy
@@ -88,6 +89,30 @@ class GradioMixin:
         def _post_chat():
             return gr.update(interactive=True), gr.update(interactive=True)
 
+        def _load_tool(tool_id: str):
+            tools = RemoteToolkit.from_aistudio(tool_id).get_tools()
+            for tool in tools:
+                try:
+                    self.load_tool(tool)
+                except RuntimeError as e:
+                    raise gr.Error(str(e))
+            cur_tool_schema = [tool.function_call_schema() for tool in tools]
+            attached_tools = self._tool_manager.get_tools()
+            new_tool_schema = [tool.function_call_schema() for tool in attached_tools]
+            return cur_tool_schema, new_tool_schema
+
+        def _unload_tool(tool_name: str):
+            try:
+                self.unload_tool(self._tool_manager.get_tool(tool_name))
+            except RuntimeError as e:
+                raise gr.Error(str(e))
+
+            attached_tools = self._tool_manager.get_tools()
+
+            new_tool_schema = [tool.function_call_schema() for tool in attached_tools] if attached_tools else []
+
+            return {'Message': f'{tool_name} Remove Succeed'}, new_tool_schema
+
         def _clear():
             raw_messages.clear()
             self.reset_memory()
@@ -121,40 +146,61 @@ class GradioMixin:
             title="ERNIE Bot Agent Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
         ) as demo:
             with gr.Column():
-                chatbot = gr.Chatbot(
-                    label="Chat history",
-                    latex_delimiters=[
-                        {"left": "$$", "right": "$$", "display": True},
-                        {"left": "$", "right": "$", "display": False},
-                    ],
-                    bubble_full_width=False,
-                    height=750,
-                )
-
-                with gr.Row():
-                    prompt_textbox = gr.Textbox(
-                        label="Prompt", placeholder="Write a prompt here...", scale=15
+                with gr.Tab(label="Chat"):
+                    chatbot = gr.Chatbot(
+                        label="Chat history",
+                        latex_delimiters=[
+                            {"left": "$$", "right": "$$", "display": True},
+                            {"left": "$", "right": "$", "display": False},
+                        ],
+                        bubble_full_width=False,
+                        height=700,
                     )
-                    submit_button = gr.Button("Submit", min_width=150)
-                    with gr.Column(min_width=100):
-                        clear_button = gr.Button("Clear", min_width=100)
-                        file_button = gr.UploadButton(
-                            "Upload",
-                            min_width=100,
-                            file_count="multiple",
-                            file_types=["image", "video", "audio"],
-                        )
 
-                with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager.registry.list_files()
-                    all_files = gr.HTML(value=file_lis, label="All input files")
-                with gr.Accordion("Tools", open=False):
-                    attached_tools = self._tool_manager.get_tools()
-                    tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
-                    gr.JSON(value=tool_descriptions)
-                with gr.Accordion("Raw messages", open=False):
-                    all_messages_json = gr.JSON(label="All messages")
-                    agent_memory_json = gr.JSON(label="Messges in memory")
+                    with gr.Row():
+                        prompt_textbox = gr.Textbox(
+                            label="Prompt", placeholder="Write a prompt here...", scale=15
+                        )
+                        submit_button = gr.Button("Submit", min_width=150)
+                        with gr.Column(min_width=100):
+                            clear_button = gr.Button("Clear", min_width=100)
+                            file_button = gr.UploadButton(
+                                "Upload",
+                                min_width=100,
+                                file_count="multiple",
+                                file_types=["image", "video", "audio"],
+                            )
+
+                    with gr.Accordion("Files", open=False):
+                        file_lis = self._file_manager.registry.list_files()
+                        all_files = gr.HTML(value=file_lis, label="All input files")
+                    with gr.Accordion("Tools", open=False):
+                        attached_tools = self._tool_manager.get_tools()
+                        tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
+                        uploaded_tool = gr.JSON(value=tool_descriptions)
+                    with gr.Accordion("Raw messages", open=False):
+                        all_messages_json = gr.JSON(label="All messages")
+                        agent_memory_json = gr.JSON(label="Messges in memory")
+                with gr.Tab(label='Tool Load'):
+                    tool_textbox = gr.Textbox(
+                            label="Tool_ID", placeholder="Write your tool_id here...",
+                        )
+                    with gr.Row():
+                        tool_submit = gr.Button("Load")
+                        tool_unload = gr.Button("Unload")
+                    yaml_info = gr.JSON()
+
+
+            tool_submit.click(
+                _load_tool,
+                inputs=[tool_textbox],
+                outputs=[yaml_info, uploaded_tool],
+            )
+            tool_unload.click(
+                _unload_tool,
+                inputs=[tool_textbox],
+                outputs=[yaml_info, uploaded_tool],
+            )
             prompt_textbox.submit(
                 _pre_chat,
                 inputs=[prompt_textbox, chatbot],
