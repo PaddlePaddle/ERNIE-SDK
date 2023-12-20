@@ -1,6 +1,6 @@
 aiohttp
 anyio
-erniebot
+# erniebot
 jinja2
 langchain
 openapi_spec_validator
