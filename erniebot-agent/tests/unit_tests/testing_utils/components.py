@@ -1,6 +1,7 @@
+from pydantic import Field
+
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.tools.base import Tool, ToolParameterView
-from pydantic import Field
 
 
 class CountingCallbackHandler(CallbackHandler):

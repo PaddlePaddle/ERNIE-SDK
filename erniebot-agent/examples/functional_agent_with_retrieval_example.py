@@ -1,6 +1,11 @@
 import argparse
 import asyncio
 
+import erniebot
+from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain.text_splitter import SpacyTextSplitter
+from tqdm import tqdm
+
 from erniebot_agent.agents import (
     FunctionalAgentWithRetrieval,
     FunctionalAgentWithRetrievalScoreTool,
@@ -12,11 +17,6 @@ from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.retrieval.document import Document
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
-from langchain.document_loaders import PyPDFDirectoryLoader
-from langchain.text_splitter import SpacyTextSplitter
-from tqdm import tqdm
-
-import erniebot
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--base_url", type=str, help="The Aurora serving path.")
