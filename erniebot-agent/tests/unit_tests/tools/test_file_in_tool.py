@@ -23,6 +23,7 @@ import tempfile
 import time
 import unittest
 import uuid
+from erniebot_agent.file_io.file_registry import FileRegistry
 
 import uvicorn
 from fastapi import FastAPI
@@ -112,7 +113,8 @@ def is_port_in_use(port):
 
 class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_manager = FileManager()
+        self.file_registry = FileRegistry()
+        self.file_manager = FileManager(self.file_registry)
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -175,7 +177,8 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_manager = FileManager()
+        self.file_registry = FileRegistry()
+        self.file_manager = FileManager(self.file_registry)
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -250,7 +253,8 @@ components:
 
 class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_manager = FileManager()
+        self.file_registry = FileRegistry()
+        self.file_manager = FileManager(self.file_registry)
 
     async def asyncTearDown(self):
         await self.file_manager.close()
@@ -331,7 +335,8 @@ components:
 
 class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.file_manager = FileManager()
+        self.file_registry = FileRegistry()
+        self.file_manager = FileManager(self.file_registry)
 
     async def asyncTearDown(self):
         await self.file_manager.close()

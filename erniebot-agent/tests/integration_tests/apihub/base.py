@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from typing import Optional
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.file_registry import FileRegistry
 
 import requests
 
@@ -19,7 +20,8 @@ from erniebot_agent.tools.tool_manager import ToolManager
 class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
-        self.file_manager = FileManager()
+        self.file_registry = FileRegistry()
+        self.file_manager = FileManager(self.file_registry)
 
     async def asyncTearDown(self) -> None:
         shutil.rmtree(self.temp_dir)
