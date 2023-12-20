@@ -28,16 +28,12 @@ def check_base64_string(value: Any):
     Args:
         value (Any): the source of json data
     """
-
-    def raise_error():
+    if isinstance(value, str) and is_base64_string(value):
         raise RemoteToolError(
             "Base64 String is detected in http json response, which may contains base64 "
             "file content but the openapi.yaml file is not configured correctly.",
             stage="Output parsing",
         )
-
-    if isinstance(value, str) and is_base64_string(value):
-        raise_error()
 
     elif isinstance(value, list):
         for item in value:
