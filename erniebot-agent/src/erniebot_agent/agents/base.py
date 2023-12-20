@@ -20,11 +20,7 @@ from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.schema import (
-    AgentResponse,
-    LLMResponse,
-    ToolResponse,
-)
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
@@ -198,7 +194,7 @@ class Agent(GradioMixin, BaseAgent):
                 files.append(file)
         return files
 
-    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool) -> Optional(File=None):
+    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool) -> Optional[File]:
         if is_local_file_id(file_id):
             if self._file_manager is None:
                 logger.warning(

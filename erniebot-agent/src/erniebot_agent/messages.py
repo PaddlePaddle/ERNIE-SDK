@@ -139,7 +139,7 @@ class TokenUsage(TypedDict):
     completion_tokens: int
 
 
-class PluginInfo(TypedDict):
+class PluginInfo(Dict):
     names: List[str]
     finish_reason: str
 

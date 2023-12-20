@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Literal, TypedDict, TypeVar, Union
+from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import extract_file_ids
@@ -39,7 +39,7 @@ class PluginAction(object):  # save for plugins that can be planned
     finish_reason: str
 
 
-class ToolInfo(TypedDict):
+class ToolInfo(Dict):
     tool_name: str
     tool_args: str
 
@@ -52,6 +52,7 @@ class NullAction(object):
 NULL_ACTION = NullAction()
 
 
+# Note: save for plugins that can be planned
 AgentAction = Union[ToolAction, PluginAction, NullAction]
 PlanableAgentAction = Union[ToolAction, PluginAction]
 
@@ -113,7 +114,7 @@ class PluginStep(AgentStepWithFiles[PluginInfo, str]):
     """A step taken by an agent that calls a plugin."""
 
 
-class _NullInfo(TypedDict):
+class _NullInfo(Dict):
     pass
 
 
