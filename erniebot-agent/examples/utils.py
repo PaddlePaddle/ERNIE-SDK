@@ -29,6 +29,38 @@ def create_abstract(chunk: str) -> Dict[str, str]:
     }
 
 
+def create_questions(chunk: str, num_questions: int = 5) -> Dict[str, str]:
+    """Create a message for the chat completion
+
+    Args:
+        chunk (str): The chunk of text to summarize
+        question (str): The question to answer
+
+    Returns:
+        Dict[str, str]: The message to send to the chat completion
+    """
+    return {
+        "role": "user",
+        "content": f"""{chunk}，请根据上面的摘要，生成{num_questions}个问题，问题内容和形式要多样化，分条列举出来.""",
+    }
+
+
+def create_description(chunk: str) -> Dict[str, str]:
+    """Create a message for the chat completion
+
+    Args:
+        chunk (str): The chunk of text to summarize
+        question (str): The question to answer
+
+    Returns:
+        Dict[str, str]: The message to send to the chat completion
+    """
+    return {
+        "role": "user",
+        "content": f"""{chunk}，请根据上面的摘要，生成一个简短的描述，不超过30字.""",
+    }
+
+
 def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
     """Split text into chunks of a maximum length
 
@@ -60,13 +92,13 @@ def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
 
 
 def erniebot_chat(
-    messages, model="ernie-bot-8k", api_type="aistudio", access_token=None, functions=None, **kwargs
+    messages, model="ernie-bot", api_type="aistudio", access_token=None, functions=None, **kwargs
 ):
     """
     Args:
         messages: dict or list, 输入的消息(message)
         model: str, 模型名称
-        api_type: str, 接口类型，可选值包括 'aistudio' 和 'webchat'
+        api_type: str, 接口类型，可选值包括 'aistudio' 和 'qianfan'
         access_token: str, 访问令牌(access token)
         functions: list, 函数列表
         kwargs: 其他参数
