@@ -73,7 +73,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         knowledge_base: BaizhongSearch,
         top_k: int = 3,
         threshold: float = 0.0,
-        token_limit: int = 4800,
+        token_limit: int = 3000,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -94,7 +94,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
             try:
-                docs = self._token_limit(results)
+                docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[AgentAction] = []
@@ -124,7 +124,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
             return await super()._async_run(prompt)
 
-    def _token_limit(self, results):
+    def _enforce_token_limit(self, results):
         docs = []
         token_count = 0
         for doc in results["documents"]:
