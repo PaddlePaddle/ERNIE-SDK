@@ -95,6 +95,7 @@ class GradioMixin:
                 try:
                     self.load_tool(tool)
                 except RuntimeError as e:
+                    # If the tool is already loaded, raise the error message
                     raise gr.Error(str(e))
             cur_tool_schema = [tool.function_call_schema() for tool in tools]
             attached_tools = self._tool_manager.get_tools()
@@ -105,6 +106,7 @@ class GradioMixin:
             try:
                 self.unload_tool(self._tool_manager.get_tool(tool_name))
             except RuntimeError as e:
+                # If the tool do not exist, raise the error message
                 raise gr.Error(str(e))
 
             attached_tools = self._tool_manager.get_tools()
