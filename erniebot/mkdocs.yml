@@ -5,7 +5,7 @@ theme:
   features:
     - content.code.copy
   logo: assets/images/favicon.png
-  repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-sdk
+  repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK
   features:
     - navigation.sections
     - navigation.tabs

@@ -56,7 +56,7 @@ def create_components(functions):
     name2function = collections.OrderedDict(zip(func_name_list, functions))
     default_state = {"name2function": name2function, "context": []}
     default_api_type = "qianfan"
-    default_model = "ernie-bot"
+    default_model = "ernie-3.5"
 
     state = gr.State(value=default_state)
     auth_state = gr.State(
@@ -96,7 +96,7 @@ def create_components(functions):
                                 label="Access Token", info="用于访问后端平台的access token", type="password"
                             )
                             ernie_model = gr.Dropdown(
-                                label="Model", info="模型类型", value=default_model, choices=["ernie-bot"]
+                                label="Model", info="模型类型", value=default_model, choices=["ernie-3.5"]
                             )
                     with gr.Accordion(label="高级配置", open=False):
                         with gr.Group():

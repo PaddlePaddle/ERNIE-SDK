@@ -33,6 +33,7 @@ import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import ConfigDictType, HeadersType, RequestWithStream
+from erniebot.utils import logging
 from erniebot.utils.misc import NOT_GIVEN, NotGiven, filter_args, transform
 
 from .abc import CreatableWithStreaming
@@ -51,16 +52,16 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         APIType.QIANFAN: {
             "resource_id": "chat",
             "models": {
-                "ernie-bot": {
+                "ernie-3.5": {
                     "model_id": "completions",
                 },
-                "ernie-bot-turbo": {
+                "ernie-turbo": {
                     "model_id": "eb-instant",
                 },
-                "ernie-bot-4": {
+                "ernie-4.0": {
                     "model_id": "completions_pro",
                 },
-                "ernie-bot-8k": {
+                "ernie-longtext": {
                     "model_id": "ernie_bot_8k",
                 },
             },
@@ -68,16 +69,16 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         APIType.AISTUDIO: {
             "resource_id": "chat",
             "models": {
-                "ernie-bot": {
+                "ernie-3.5": {
                     "model_id": "completions",
                 },
-                "ernie-bot-turbo": {
+                "ernie-turbo": {
                     "model_id": "eb-instant",
                 },
-                "ernie-bot-4": {
+                "ernie-4.0": {
                     "model_id": "completions_pro",
                 },
-                "ernie-bot-8k": {
+                "ernie-longtext": {
                     "model_id": "ernie_bot_8k",
                 },
             },
@@ -85,7 +86,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         APIType.CUSTOM: {
             "resource_id": "chat",
             "models": {
-                "ernie-bot": {
+                "ernie-3.5": {
                     "model_id": "completions",
                 },
             },
@@ -405,6 +406,16 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         return transform(ChatCompletionResponse.from_mapping, resp)
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> RequestWithStream:
+        def _update_model_name(given_name: str, old_name_to_new_name: Dict[str, str]) -> str:
+            if given_name in old_name_to_new_name:
+                new_name = old_name_to_new_name[given_name]
+                logging.warning(
+                    "'%s' will be deprecated in the future. Please use '%s' instead.", given_name, new_name
+                )
+                return new_name
+            else:
+                return given_name
+
         def _set_val_if_key_exists(src: dict, dst: dict, key: str) -> None:
             if key in src:
                 dst[key] = src[key]
@@ -439,8 +450,15 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             raise errors.ArgumentNotFoundError("`model` is not found.")
         model = kwargs["model"]
         # For backward compatibility
-        if model == "ernie-bot-3.5":
-            model = "ernie-bot"
+        model = _update_model_name(
+            model,
+            {
+                "ernie-bot": "ernie-3.5",
+                "ernie-bot-turbo": "ernie-turbo",
+                "ernie-bot-4": "ernie-4.0",
+                "ernie-bot-8k": "ernie-longtext",
+            },
+        )
 
         # messages
         if "messages" not in kwargs:
@@ -460,7 +478,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # params
         params = {}
-        if model == "ernie-bot-turbo":
+        if model == "ernie-turbo":
             for arg in ("functions", "stop", "disable_search", "enable_citation"):
                 if arg in kwargs:
                     raise ValueError(f"`{arg}` is not supported by the {model} model.")

@@ -64,7 +64,7 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="erniebot-RPG")
     parser.add_argument("--access-token", type=str, default=None, help="Access token to use.")
     parser.add_argument("--game", type=str, default="射雕英雄传", help="Story name")
-    parser.add_argument("--model", type=str, default="ernie-bot-4", help="Model name")
+    parser.add_argument("--model", type=str, default="ernie-4.0", help="Model name")
     return parser.parse_args()
 
 

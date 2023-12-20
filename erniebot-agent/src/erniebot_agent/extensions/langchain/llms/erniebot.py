@@ -23,7 +23,7 @@ class ErnieBot(LLM):
         .. code-block:: python
 
             from erniebot_agent.extensions.langchain.llms import ErnieBot
-            erniebot = ErnieBot(model="ernie-bot")
+            erniebot = ErnieBot(model="ernie-3.5")
     """
 
     client: Any = None
@@ -34,7 +34,7 @@ class ErnieBot(LLM):
     streaming: bool = False
     """Whether to stream the results or not."""
 
-    model: str = "ernie-bot"
+    model: str = "ernie-3.5"
     """Model to use."""
     temperature: Optional[float] = 0.95
     """Sampling temperature to use."""

@@ -117,7 +117,7 @@ if __name__ == "__main__":
     print(aurora_search.function_call_schema())
     # Tool Test
     result = asyncio.run(aurora_search(query=query))
-    llm = ERNIEBot(model="ernie-bot", api_type="custom")
+    llm = ERNIEBot(model="ernie-3.5", api_type="custom")
     memory = WholeMemory()
     # Agent test
     agent = FunctionalAgent(llm=llm, tools=[aurora_search], memory=memory)
