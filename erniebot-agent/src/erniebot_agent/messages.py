@@ -169,7 +169,7 @@ class AIMessage(Message):
         self.plugin_info = plugin_info
         self.seach_info = search_info
         self.query_tokens_count = prompt_tokens
-        self._param_names = ["role", "content", "function_call", "plugin_info",  "seach_info"]
+        self._param_names = ["role", "content", "function_call", "plugin_info", "seach_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token count information from LLM."""

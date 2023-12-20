@@ -3,7 +3,8 @@ import unittest
 from typing import List, Literal
 
 from erniebot_agent.agents.schema import AgentResponse, ToolInfo, ToolStep
-from erniebot_agent.file_io import File, get_file_manager
+from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io.base import File
 
 
 class TestAgentResponseAnnotations(unittest.TestCase):

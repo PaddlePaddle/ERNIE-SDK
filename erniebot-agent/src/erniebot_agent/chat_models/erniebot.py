@@ -176,7 +176,11 @@ class ERNIEBot(ChatModel):
                 arguments=response.function_call["arguments"],
             )
             return output_type(
-                content="", function_call=function_call, plugin_info=None, search_info=None, token_usage=response.usage
+                content="",
+                function_call=function_call,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
             )
         elif hasattr(response, "plugin_info"):
             plugin_info = PluginInfo(
@@ -186,9 +190,13 @@ class ERNIEBot(ChatModel):
                 ],
                 finish_reason=response["plugin_info"]["finish_reason"],
             )
-            
-              return output_type(
-                content="", function_call=function_call, plugin_info=plugin_info, search_info=None, token_usage=response.usage
+
+            return output_type(
+                content="",
+                function_call=function_call,
+                plugin_info=plugin_info,
+                search_info=None,
+                token_usage=response.usage,
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
             search_info = SeachInfo(
@@ -202,5 +210,9 @@ class ERNIEBot(ChatModel):
             )
         else:
             return output_type(
-                content=response.result, function_call=None, plugin_info=None, search_info=None, token_usage=response.usage
+                content=response.result,
+                function_call=None,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
             )
