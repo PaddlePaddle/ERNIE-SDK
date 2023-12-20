@@ -13,7 +13,7 @@ import requests
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.remote_tool import RemoteTool, tool_registor
@@ -194,7 +194,7 @@ class RemoteToolkit:
                 )
 
         if file_manager is None:
-            file_manager = get_file_manager(access_token)
+            file_manager = get_global_file_manager(access_token)
 
         return RemoteToolkit(
             openapi=openapi_dict["openapi"],

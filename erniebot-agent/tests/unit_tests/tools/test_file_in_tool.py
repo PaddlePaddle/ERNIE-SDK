@@ -111,6 +111,12 @@ def is_port_in_use(port):
 
 
 class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.file_manager = FileManager()
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
+
     def avaliable_free_port(self, exclude=None):
         exclude = exclude or []
         for port in range(8000, 9000):
@@ -157,15 +163,14 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            async with FileManager() as file_manager:
-                input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
-                result = asyncio.run(tool(file=input_file.id))
-                self.assertIn("response_file", result)
-                file_id = result["response_file"]
+            input_file = asyncio.run(self.file_manager.create_file_from_path(self.file_path))
+            result = asyncio.run(tool(file=input_file.id))
+            self.assertIn("response_file", result)
+            file_id = result["response_file"]
 
-                file = file_manager.look_up_file_by_id(file_id=file_id)
-                content = asyncio.run(file.read_contents())
-                self.assertEqual(content.decode("utf-8"), self.content)
+            file = self.file_manager.look_up_file_by_id(file_id=file_id)
+            content = asyncio.run(file.read_contents())
+            self.assertEqual(content.decode("utf-8"), self.content)
 
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
