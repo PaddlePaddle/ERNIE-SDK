@@ -32,7 +32,6 @@ jobs:
           python -m pip install -r erniebot-agent/dev-requirements.txt
       - name: Show make version
         run: make --version
-        working-directory: erniebot-agent
       - name: Format Python code
         run: make format
         working-directory: erniebot-agent
@@ -67,7 +66,6 @@ jobs:
           python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Show make version
         run: make --version
-        working-directory: erniebot-agent
       - name: Run unit tests
         run: make test_coverage
         working-directory: erniebot-agent
