@@ -14,21 +14,22 @@
 
 import abc
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
+from erniebot_agent.agents.schema import (
+    AgentFile,
+    AgentResponse,
+    LLMResponse,
+    ToolResponse,
+)
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import (
-    extract_file_ids,
-    is_local_file_id,
-    is_remote_file_id,
-)
+from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
@@ -43,7 +44,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class Agent(GradioMixin, BaseAgent):  # agent 中有sniff
+class Agent(GradioMixin, BaseAgent):
     def __init__(
         self,
         llm: ChatModel,
@@ -138,14 +139,14 @@ class Agent(GradioMixin, BaseAgent):  # agent 中有sniff
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool)
+        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
         tool_ret = await tool(**parsed_tool_args)
         if isinstance(tool_ret, dict):
-            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool)
+            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
         else:
             output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
-        return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
+        return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
     async def _async_run_llm_without_hooks(
         self, messages: List[Message], functions=None, **opts: Any
@@ -163,12 +164,10 @@ class Agent(GradioMixin, BaseAgent):  # agent 中有sniff
             raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
         return args_dict
 
-    def _sniff_and_extract_files_from_text(self, text: str) -> List[File]:
-        files = extract_file_ids(text)
-        return files
-
-    async def _sniff_and_extract_files_from_args(self, args: Dict[str, Any], tool: BaseTool) -> List[File]:
-        files: List[File] = []
+    async def _sniff_and_extract_files_from_args(
+        self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
+    ) -> List[AgentFile]:
+        agent_files: List[AgentFile] = []
         for val in args.values():
             if isinstance(val, str):
                 if is_local_file_id(val):
@@ -191,10 +190,10 @@ class Agent(GradioMixin, BaseAgent):  # agent 中有sniff
                         file = await self._file_manager.retrieve_remote_file_by_id(val)
                 else:
                     continue
-                files.append(file)
+                agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
             elif isinstance(val, dict):
-                files.extend(await self._sniff_and_extract_files_from_args(val, tool))
+                agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
             elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
                 for item in val:
-                    files.extend(await self._sniff_and_extract_files_from_args(item, tool))
-        return files
+                    agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
+        return agent_files
