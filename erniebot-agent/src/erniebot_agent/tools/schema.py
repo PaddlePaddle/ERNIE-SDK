@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
+from erniebot_agent.utils.exception import RemoteToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -189,12 +190,15 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
             list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
             property["items"] = list_type.to_openapi_dict()
         else:
-            assert isinstance(
-                field_info.json_schema_extra, dict
-            ), "<field_info.json_schema_extra> must be dict data"
+            if not isinstance(field_info.json_schema_extra, dict):
+                raise RemoteToolError("<field_info.json_schema_extra> must be dict data")
+
             if "array_items_schema" in field_info.json_schema_extra:
                 items_schema: Any = field_info.json_schema_extra["array_items_schema"]
-                assert isinstance(items_schema, dict), "<array_items_schema> must be dict data"
+
+                if isinstance(items_schema, dict):
+                    raise RemoteToolError("<array_items_schema> must be dict data")
+
                 property["items"] = {
                     "type": items_schema["type"],
                 }
