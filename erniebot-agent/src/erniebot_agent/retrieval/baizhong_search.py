@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Any, ClassVar, Dict, Optional
@@ -84,10 +85,11 @@ class BaizhongSearch:
                 raise BaizhongError(message=result["errorMsg"], error_code=result["errorCode"])
             list_data = []
             for item in result["result"]:
+                doc = json.loads(item["source"]["doc"])
                 list_data.append(
                     {
                         "id": item["fileId"],
-                        "content": item["source"]["doc"],
+                        "content": doc["content_se"],
                         "title": item["source"]["title"],
                         "score": item["score"],
                     }
