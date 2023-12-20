@@ -91,11 +91,11 @@ if __name__ == "__main__":
     # ]
     queries = [
         "心血管科,高血压可以蒸桑拿吗？",
-        # "量化交易",
-        # "城市景观照明中有过度照明的规定是什么？",
-        # "这几篇文档主要内容是什么？",
-        # "今天天气怎么样？",
-        # "abcabc",
+        "量化交易",
+        "城市景观照明中有过度照明的规定是什么？",
+        "这几篇文档主要内容是什么？",
+        "今天天气怎么样？",
+        "abcabc",
     ]
     toolkit = RemoteToolkit.from_openapi_file("../tests/fixtures/openapi.yaml")
     for query in queries:
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             agent = FunctionalAgentWithRetrieval(
                 llm=llm,
                 knowledge_base=baizhong_db,
-                top_k=10,
+                top_k=3,
                 threshold=0.1,
                 tools=toolkit.get_tools() + [retrieval_tool],
                 memory=memory,
