@@ -24,7 +24,11 @@ from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolRespons
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file_io.protocol import (
+    extract_file_ids,
+    is_local_file_id,
+    is_remote_file_id,
+)
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
@@ -39,7 +43,7 @@ class BaseAgent(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class Agent(GradioMixin, BaseAgent):
+class Agent(GradioMixin, BaseAgent):  # agent 中有sniff
     def __init__(
         self,
         llm: ChatModel,
@@ -158,6 +162,10 @@ class Agent(GradioMixin, BaseAgent):
         if not isinstance(args_dict, dict):
             raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
         return args_dict
+
+    def _sniff_and_extract_files_from_text(self, text: str) -> List[File]:
+        files = extract_file_ids(text)
+        return files
 
     async def _sniff_and_extract_files_from_args(self, args: Dict[str, Any], tool: BaseTool) -> List[File]:
         files: List[File] = []

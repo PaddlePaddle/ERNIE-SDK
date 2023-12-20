@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
+from typing import Any, Dict, Generic, List, Literal, TypedDict, TypeVar, Union
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.protocol import extract_file_ids
-from erniebot_agent.messages import AIMessage, Message
+from erniebot_agent.messages import AIMessage, Message, PluginInfo
 
 
 @dataclass
@@ -32,11 +32,16 @@ class ToolAction(object):
 
 
 @dataclass
-class PluginAction(object):
+class PluginAction(object):  # save for plugins that can be planned
     """A plugin calling action for an agent to execute."""
 
     plugin_name: str
-    plugin_prompt: str
+    finish_reason: str
+
+
+class ToolInfo(TypedDict):
+    tool_name: str
+    tool_args: str
 
 
 @dataclass
@@ -74,20 +79,20 @@ class ToolResponse(object):
     output_files: List[File]
 
 
-_AT = TypeVar("_AT", bound=AgentAction)
+_IT = TypeVar("_IT", bound=TypedDict)
 _RT = TypeVar("_RT")
 
 
 @dataclass
-class AgentStep(Generic[_AT, _RT]):
+class AgentStep(Generic[_IT, _RT]):
     """A step taken by an agent."""
 
-    action: _AT
+    info: _IT
     result: _RT
 
 
 @dataclass
-class AgentStepWithFiles(AgentStep[_AT, _RT]):
+class AgentStepWithFiles(AgentStep[_IT, _RT]):
     """A step taken by an agent involving file input and output."""
 
     input_files: List[File]
@@ -99,15 +104,17 @@ class AgentStepWithFiles(AgentStep[_AT, _RT]):
 
 
 @dataclass
-class ToolStep(AgentStepWithFiles[ToolAction, Any]):
+class ToolStep(AgentStepWithFiles[ToolInfo, Any]):
     """A step taken by an agent that calls a tool."""
 
 
 @dataclass
-class PluginStep(AgentStepWithFiles[PluginAction, str]):
+class PluginStep(AgentStepWithFiles[PluginInfo, str]):
     """A step taken by an agent that calls a plugin."""
 
-    plugin_info: Dict[str, Any]
+
+class _NullInfo(TypedDict):
+    pass
 
 
 class _NullResult(object):
@@ -115,11 +122,11 @@ class _NullResult(object):
 
 
 @dataclass
-class NoActionStep(AgentStep[NullAction, _NullResult]):
+class NoActionStep(AgentStep[_NullInfo, _NullResult]):
     """A step taken by an agent that performs no action and gives no result."""
 
 
-NO_ACTION_STEP = NoActionStep(action=NULL_ACTION, result=_NullResult())
+NO_ACTION_STEP = NoActionStep(info=_NullInfo(), result=_NullResult())
 
 
 @dataclass

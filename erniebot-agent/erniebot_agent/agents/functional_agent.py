@@ -23,7 +23,7 @@ from erniebot_agent.agents.schema import (
     AgentStep,
     NoActionStep,
     PluginStep,
-    ToolAction,
+    ToolInfo,
     ToolStep,
 )
 from erniebot_agent.chat_models.base import ChatModel
@@ -103,7 +103,7 @@ class FunctionalAgent(Agent):
             system=self.system_message.content if self.system_message is not None else None,
             plugins=self.plugins,
         )
-        output_message = llm_resp.message
+        output_message = llm_resp.message  # AIMessage
         new_messages.append(output_message)
         if output_message.function_call is not None:
             tool_name = output_message.function_call["name"]
@@ -112,10 +112,22 @@ class FunctionalAgent(Agent):
             new_messages.append(FunctionMessage(name=tool_name, content=tool_resp.json))
             return (
                 ToolStep(
-                    action=ToolAction(tool_name=tool_name, tool_args=tool_args),
+                    info=ToolInfo(tool_name=tool_name, tool_args=tool_args),
                     result=tool_resp.json,
                     input_files=tool_resp.input_files,
                     output_files=tool_resp.output_files,
+                ),
+                new_messages,
+            )
+        elif output_message.plugin_info is not None:
+            return (
+                PluginStep(
+                    info=output_message.plugin_info,
+                    result=output_message.content,
+                    input_files=self._sniff_and_extract_files_from_text(
+                        chat_history[-1].content
+                    ),  # TODO: make sure this is correct.
+                    output_files=self._sniff_and_extract_files_from_text(output_message.content),
                 ),
                 new_messages,
             )
