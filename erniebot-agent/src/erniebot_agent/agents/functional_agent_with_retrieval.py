@@ -130,7 +130,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         for doc in results["documents"]:
             num_tokens = erniebot.utils.token_helper.approx_num_tokens(doc["content"])
             if token_count + num_tokens > self.token_limit:
-                logger.warning(f"Retrieval results exceed limit: {self.token_limit} will be deprecated")
+                logger.warning(f"Retrieval results exceed token limit. Truncating retrieval results to under {self.token_limit} tokens")
                 break
             else:
                 token_count += num_tokens
