@@ -22,23 +22,29 @@ from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
 
 
-def check_base64_string(json_dict: Dict[str, Any]):
+def check_base64_string(value: Any):
     """check the dict contains base64 string
 
     Args:
-        json_dict (Dict[str, Any]): the source of json data
+        value (Any): the source of json data
     """
-    if not isinstance(json_dict, dict):
-        return
-    for value in json_dict.values():
-        if isinstance(value, dict):
-            check_base64_string(value)
 
-        if is_base64_string(value) and len(value) > 3096:
-            raise RemoteToolError(
-                "Base64 String is detected in http json response, which may contains base64 "
-                "file content but the openapi.yaml file is not configured correctly."
-            )
+    def raise_error():
+        raise RemoteToolError(
+            "Base64 String is detected in http json response, which may contains base64 "
+            "file content but the openapi.yaml file is not configured correctly.",
+            stage="Output parsing",
+        )
+
+    if isinstance(value, str) and is_base64_string(value):
+        raise_error()
+
+    elif isinstance(value, list):
+        for item in value:
+            check_base64_string(item)
+    elif isinstance(value, dict):
+        for value in value.values():
+            check_base64_string(value)
 
 
 class RemoteTool(BaseTool):

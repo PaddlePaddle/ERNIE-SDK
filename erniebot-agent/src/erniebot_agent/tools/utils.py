@@ -90,7 +90,8 @@ def get_file_info_from_param_view(
                     raise RemoteToolError(
                         f"<array_items_schema> field must be dict type in model_field<{key}> "
                         f"with the field_info<{model_field}>. Please check the format of yaml "
-                        "in current tool."
+                        "in current tool.",
+                        stage="Output parsing",
                     )
 
         elif model_field.annotation is not None and issubclass(model_field.annotation, ToolParameterView):
@@ -150,7 +151,8 @@ async def parse_file_from_json_response(
             if not isinstance(json_schema_extra, dict):
                 raise RemoteToolError(
                     f"<json_schema_extra> field must be dict type in model_field<{key}> "
-                    f"with the field_info<{model_field}>. Please check the format of yaml in current tool."
+                    f"with the field_info<{model_field}>. Please check the format of yaml in current tool.",
+                    stage="Output parsing",
                 )
 
             format = json_schema_extra.get("format", None)
@@ -163,7 +165,8 @@ async def parse_file_from_json_response(
                 if mime_type is not None and not isinstance(mime_type, str):
                     raise RemoteToolError(
                         f"x-ebagent-file-mime-type value must be None or string in key<{key}>, "
-                        f"but receive ({type(mime_type)})<{mime_type}>"
+                        f"but receive ({type(mime_type)})<{mime_type}>",
+                        stage="Output parsing",
                     )
 
                 suffix = get_file_suffix(mime_type)

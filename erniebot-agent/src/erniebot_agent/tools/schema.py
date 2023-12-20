@@ -191,13 +191,13 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
             property["items"] = list_type.to_openapi_dict()
         else:
             if not isinstance(field_info.json_schema_extra, dict):
-                raise RemoteToolError("<field_info.json_schema_extra> must be dict data")
+                raise RemoteToolError("<field_info.json_schema_extra> must be dict data", stage="Loading")
 
             if "array_items_schema" in field_info.json_schema_extra:
                 items_schema: Any = field_info.json_schema_extra["array_items_schema"]
 
                 if isinstance(items_schema, dict):
-                    raise RemoteToolError("<array_items_schema> must be dict data")
+                    raise RemoteToolError("<array_items_schema> must be dict data", stage="Loading")
 
                 property["items"] = {
                     "type": items_schema["type"],
