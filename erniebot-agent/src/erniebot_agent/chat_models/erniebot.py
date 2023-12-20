@@ -39,6 +39,7 @@ class ERNIEBot(ChatModel):
         model: str,
         api_type: Optional[str] = None,
         access_token: Optional[str] = None,
+        close_multi_step_tool_call: bool = False,
         **default_chat_kwargs: Any,
     ) -> None:
         """Initializes an instance of the `ERNIEBot` class.
@@ -48,11 +49,13 @@ class ERNIEBot(ChatModel):
                 "ernie-bot-4".
             api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): The access token for erniebot.
+            close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
         """
         super().__init__(model=model, **default_chat_kwargs)
 
         self.api_type = api_type
         self.access_token = access_token
+        self.close_multi_step_tool_call = close_multi_step_tool_call
 
     @overload
     async def async_chat(
@@ -132,10 +135,18 @@ class ERNIEBot(ChatModel):
                 stream=stream,
                 _config_=cfg_dict["_config_"],
                 functions=functions,  # type: ignore
-                extra_params={"extra_data": '{"multi_step_tool_call_close":false}'},
+                extra_params={
+                    "extra_data": f'{"multi_step_tool_call_close":{self.close_multi_step_tool_call}}'
+                },
             )
         else:
-            response = await erniebot.ChatCompletion.acreate(stream=stream, **cfg_dict)
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": f'{"multi_step_tool_call_close":{self.close_multi_step_tool_call}}'
+                },
+                **cfg_dict,
+            )
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
