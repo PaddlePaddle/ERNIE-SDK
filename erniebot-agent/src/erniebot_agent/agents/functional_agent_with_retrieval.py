@@ -7,7 +7,6 @@ from pydantic import Field
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import (
     AgentAction,
-    AgentFile,
     AgentResponse,
     ToolResponse,
 )
@@ -90,7 +89,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 )
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[AgentAction] = []
-                files_involved: List[AgentFile] = []
+                files_involved: List[File] = []
                 actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, files=[])
@@ -142,7 +141,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -239,7 +238,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(

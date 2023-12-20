@@ -48,7 +48,7 @@ class GradioMixin:
             if (
                 response.files
                 and response.files[-1].type == "output"
-                and response.files[-1].used_by == response.actions[-1].tool_name
+                and response.files[-1].used_by == response.steps[-1].info.tool_name
             ):
                 # If there is a file output in the last round, then we need to show it
                 output_file_id = response.files[-1].file.id

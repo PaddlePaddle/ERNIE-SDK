@@ -47,9 +47,9 @@ async def test_functional_agent_run_one_hit(llm, tool, memory):
     assert isinstance(messages[3], AIMessage)
     assert messages[3].content == response.text
 
-    actions = response.actions
-    assert len(actions) == 1
-    assert actions[0].tool_name == tool.tool_name
+    steps = response.steps
+    assert len(steps) == 1
+    assert steps[0].info.tool_name == tool.tool_name
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ async def test_functional_agent_run_no_hit(llm, tool, memory):
     assert isinstance(messages[1], AIMessage)
     assert messages[1].content == response.text
 
-    assert len(response.actions) == 0
+    assert len(response.steps) == 0
 
 
 @pytest.mark.asyncio
@@ -83,4 +83,4 @@ async def test_functional_agent_run_no_tool(llm, memory, prompt):
     assert isinstance(messages[1], AIMessage)
     assert messages[1].content == response.text
 
-    assert len(response.actions) == 0
+    assert len(response.steps) == 0

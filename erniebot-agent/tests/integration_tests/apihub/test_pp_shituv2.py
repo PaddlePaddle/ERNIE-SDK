@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from erniebot_agent.file_io import get_file_manager
 from erniebot_agent.tools import RemoteToolkit
 
@@ -24,5 +25,5 @@ class TestRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("对这张图片进行通用识别，包含的文件为：", files=[file])
         self.assertEqual(len(result.files), 2)
-        self.assertEqual(len(result.actions), 1)
+        self.assertEqual(len(result.steps), 1)
         self.assertIn("file-", result.text)

@@ -48,7 +48,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         response = await agent.async_run("请帮我识别出这幅图片中的文字", files=[file])
 
-        self.assertEqual(len(response.actions), 1)
+        self.assertEqual(len(response.steps), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)
         self.assertEqual(decoded_tool_ret, {"result": "中国\n汉字"})
 

@@ -79,7 +79,7 @@ class ToolResponse(object):
     output_files: List[File]
 
 
-_IT = TypeVar("_IT", bound=TypedDict)
+_IT = TypeVar("_IT", bound=Dict)
 _RT = TypeVar("_RT")
 
 
@@ -181,12 +181,3 @@ class AgentResponse(object):
                 annotations["content_parts"].append({"text": file_id})
 
         return annotations
-
-
-@dataclass
-class AgentFile(object):
-    """A file that is used by an agent."""
-
-    file: File
-    type: Literal["input", "output"]
-    used_by: str

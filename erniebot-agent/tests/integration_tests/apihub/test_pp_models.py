@@ -42,7 +42,7 @@ class TestPPRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("对这张图片进行人像分割，包含的文件为：", files=[file])
         self.assertEqual(len(result.files), 2)
-        self.assertEqual(len(result.actions), 1)
+        self.assertEqual(len(result.steps), 1)
 
     @pytest.mark.asyncio
     async def test_pp_tinypose(self):
@@ -54,7 +54,7 @@ class TestPPRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("检测这张图片中的人体关键点，包含的文件为：", files=[file])
         self.assertEqual(len(result.files), 2)
-        self.assertEqual(len(result.actions), 1)
+        self.assertEqual(len(result.steps), 1)
 
     @pytest.mark.asyncio
     async def test_pp_vehicle(self):
@@ -95,6 +95,6 @@ class TestPPRemoteTool(RemoteToolTesting):
 
         response = await agent.async_run("请帮我识别出这幅图片中的文字", files=[file])
 
-        self.assertEqual(len(response.actions), 1)
+        self.assertEqual(len(response.steps), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)
         self.assertEqual(decoded_tool_ret, {"result": "中国\n汉字"})

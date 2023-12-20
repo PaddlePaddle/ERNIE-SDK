@@ -21,7 +21,7 @@ class TestAgentResponseAnnotations(unittest.TestCase):
         text = f"根据您的要求，我已经将图像中的汽车分割出来，生成的图像文件为{self.file1.id}，您可以保存该文件进行查看。如果您还有其他问题或需要进一步的操作，请随时告诉我。"
 
         agent_response = AgentResponse(
-            files=self.files, text=text, chat_history=[], actions=[], status=Literal["FINISHED"]
+            files=self.files, text=text, chat_history=[], steps=[], status=Literal["FINISHED"]
         )
         self.assertEqual(
             agent_response.annotations,
@@ -50,7 +50,7 @@ class TestAgentResponseAnnotations(unittest.TestCase):
         text = f"根据您的要求，我已经将图像中的汽车分割出来，生成的图像文件为{self.file1.id}，您可以保存该文件进行查看。如果您还有其他问题或需要进一步的操作，请随时告诉我。"
 
         agent_response = AgentResponse(
-            files=self.files, text=text, chat_history=[], actions=[], status=Literal["FINISHED"]
+            files=self.files, text=text, chat_history=[], steps=[], status=Literal["FINISHED"]
         )
         self.assertEqual(
             agent_response.annotations,
@@ -78,7 +78,7 @@ class TestAgentResponseAnnotations(unittest.TestCase):
         text = "根据您的要求，我已经将图像中的汽车分割出来，您可以保存该文件进行查看。如果您还有其他问题或需要进一步的操作，请随时告诉我。"
 
         agent_response = AgentResponse(
-            files=self.files, text=text, chat_history=[], actions=[], status=Literal["FINISHED"]
+            files=self.files, text=text, chat_history=[], steps=[], status=Literal["FINISHED"]
         )
         self.assertEqual(
             agent_response.annotations,
