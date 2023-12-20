@@ -127,7 +127,7 @@ class RemoteToolkit:
 
         TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return TOOL_CLASS(
-            paths[0],
+            copy.deepcopy(paths[0]),
             self.servers[0].url,
             self.headers,
             self.info.version,

@@ -5,13 +5,13 @@ import shutil
 import tempfile
 import unittest
 from typing import Optional
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.file_registry import FileRegistry
 
 import requests
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager

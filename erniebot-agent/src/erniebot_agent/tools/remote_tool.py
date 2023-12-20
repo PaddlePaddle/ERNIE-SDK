@@ -141,7 +141,6 @@ class RemoteTool(BaseTool):
             raise RemoteToolError(
                 f"Unsupported content type: {self.tool_view.parameters_content_type}", stage="Executing"
             )
-
         if self.tool_view.method == "get":
             response = requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":

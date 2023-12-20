@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
 import os
@@ -23,7 +22,6 @@ import tempfile
 import time
 import unittest
 import uuid
-from erniebot_agent.file_io.file_registry import FileRegistry
 
 import uvicorn
 from fastapi import FastAPI
@@ -31,6 +29,7 @@ from fastapi.responses import FileResponse
 from requests.models import Response
 
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
@@ -161,17 +160,17 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
             with open(openapi_file, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            toolkit = RemoteToolkit.from_openapi_file(openapi_file)
+            toolkit = RemoteToolkit.from_openapi_file(openapi_file, file_manager=self.file_manager)
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            input_file = asyncio.run(self.file_manager.create_file_from_path(self.file_path))
-            result = asyncio.run(tool(file=input_file.id))
+            input_file = await self.file_manager.create_file_from_path(self.file_path)
+            result = await tool(file=input_file.id)
             self.assertIn("response_file", result)
             file_id = result["response_file"]
 
             file = self.file_manager.look_up_file_by_id(file_id=file_id)
-            content = asyncio.run(file.read_contents())
+            content = await file.read_contents()
             self.assertEqual(content.decode("utf-8"), self.content)
 
 
@@ -235,7 +234,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 
@@ -315,7 +314,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 
@@ -400,7 +399,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 
