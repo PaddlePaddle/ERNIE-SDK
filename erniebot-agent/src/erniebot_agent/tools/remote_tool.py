@@ -34,7 +34,7 @@ def check_base64_string(json_dict: Dict[str, Any]):
         if isinstance(value, dict):
             check_base64_string(value)
 
-        if is_base64_string(value):
+        if is_base64_string(value) and len(value) > 3096:
             raise RemoteToolError(
                 "Base64 String is detected in http json response, which may contains base64 "
                 "file content but the openapi.yaml file is not configured correctly."
