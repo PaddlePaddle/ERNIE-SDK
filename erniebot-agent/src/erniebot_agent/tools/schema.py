@@ -189,8 +189,12 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
             list_type: Type[ToolParameterView] = get_args(field_info.annotation)[0]
             property["items"] = list_type.to_openapi_dict()
         else:
+            assert isinstance(
+                field_info.json_schema_extra, dict
+            ), "<field_info.json_schema_extra> must be dict data"
             if "array_items_schema" in field_info.json_schema_extra:
-                items_schema: dict = field_info.json_schema_extra["array_items_schema"]
+                items_schema: Any = field_info.json_schema_extra["array_items_schema"]
+                assert isinstance(items_schema, dict), "<array_items_schema> must be dict data"
                 property["items"] = {
                     "type": items_schema["type"],
                 }
@@ -201,13 +205,13 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
     elif property["type"] == "object":
         if is_optional_type(field_info.annotation):
-            field_type_class: Type[ToolParameterView] = get_args(field_info.annotation)[0]
+            field_type_class: Any = get_args(field_info.annotation)[0]
         else:
             field_type_class = field_info.annotation
 
         openapi_dict = field_type_class.to_openapi_dict()
         property.update(openapi_dict)
-    elif issubclass(field_info.annotation, Enum):
+    elif field_info.annotation is not None and issubclass(field_info.annotation, Enum):
         property["enum"] = list(field_info.annotation.__members__.keys())
 
     property["description"] = property.get("description", "")
@@ -287,7 +291,7 @@ class ToolParameterView(BaseModel):
 
             fields[field_name] = (field_type, field)
 
-        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)
+        model = create_model("OpenAPIParameterView", __base__=ToolParameterView, **fields)  # type: ignore
 
         # get the prompt for schema
         model.__prompt__ = schema.get("x-ebagent-prompt", None)
@@ -350,7 +354,7 @@ class ToolParameterView(BaseModel):
             description = field_dict["description"]
             field = FieldInfo(annotation=field_type, description=description)
             fields[field_name] = (field_type, field)
-        return create_model(cls.__name__, __base__=ToolParameterView, **fields)
+        return create_model(cls.__name__, __base__=ToolParameterView, **fields)  # type: ignore
 
 
 @dataclass

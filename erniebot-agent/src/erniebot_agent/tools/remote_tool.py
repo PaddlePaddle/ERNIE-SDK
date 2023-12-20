@@ -12,6 +12,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
+    is_base64_string,
     parse_file_from_json_response,
     parse_file_from_response,
     tool_response_contains_file,
@@ -19,6 +20,25 @@ from erniebot_agent.tools.utils import (
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
+
+
+def check_base64_string(json_dict: Dict[str, Any]):
+    """check the dict contains base64 string
+
+    Args:
+        json_dict (Dict[str, Any]): the source of json data
+    """
+    if not isinstance(json_dict, dict):
+        return
+    for value in json_dict.values():
+        if isinstance(value, dict):
+            check_base64_string(value)
+
+        if is_base64_string(value):
+            raise RemoteToolError(
+                "Base64 String is detected in http json response, which may contains base64 "
+                "file content but the openapi.yaml file is not configured correctly."
+            )
 
 
 class RemoteTool(BaseTool):
@@ -111,6 +131,7 @@ class RemoteTool(BaseTool):
 
     async def __post_process__(self, tool_response: dict) -> dict:
         tool_response = self.__adhoc_post_process__(tool_response)
+        check_base64_string(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
