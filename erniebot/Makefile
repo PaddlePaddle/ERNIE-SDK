@@ -1,9 +1,5 @@
-.DEFAULT_GOAL := all
-
+.DEFAULT_GOAL = format lint type_check
 files_to_format_and_lint = src examples tests
-
-.PHONY: all
-all: format lint type_check
 
 .PHONY: format
 format:
