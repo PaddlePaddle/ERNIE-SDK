@@ -29,7 +29,7 @@ from erniebot_agent.agents.schema import (
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id, extract_file_ids
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
@@ -170,30 +170,46 @@ class Agent(GradioMixin, BaseAgent):
         agent_files: List[AgentFile] = []
         for val in args.values():
             if isinstance(val, str):
-                if is_local_file_id(val):
-                    if self._file_manager is None:
-                        logger.warning(
-                            f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                        )
-                        continue
-                    file = self._file_manager.look_up_file_by_id(val)
-                    if file is None:
-                        raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
-                elif is_remote_file_id(val):
-                    if self._file_manager is None:
-                        logger.warning(
-                            f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                        )
-                        continue
-                    file = self._file_manager.look_up_file_by_id(val)
-                    if file is None:
-                        file = await self._file_manager.retrieve_remote_file_by_id(val)
-                else:
+                file = self._get_file_from_file_id(val, tool)
+                if file is None:
                     continue
-                agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
+                else:
+                    agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
             elif isinstance(val, dict):
                 agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
             elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
                 for item in val:
                     agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
         return agent_files
+    
+    def _sniff_and_extract_files_from_text(self, text: str, plugin_name, file_type: Literal["input", "output"]) -> List[AgentFile]:
+        agent_files: List[AgentFile] = []
+        file_ids = extract_file_ids(text)
+        for file_id in file_ids:
+            file = self._get_file_from_file_id(file_id, plugin_name)
+            if file is None:
+                continue
+            agent_files.append(AgentFile(file=file, type=file_type, used_by=plugin_name))
+        return agent_files
+    
+    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool) -> File:
+        if is_local_file_id(file_id):
+            if self._file_manager is None:
+                logger.warning(
+                    f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
+                )
+                return None
+            file = self._file_manager.look_up_file_by_id(file_id)
+            if file is None:
+                raise RuntimeError(f"Unregistered ID {repr(file_id)} is used by {repr(tool)}.")
+        elif is_remote_file_id(file_id):
+            if self._file_manager is None:
+                logger.warning(
+                    f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
+                )
+                return None
+            file = self._file_manager.look_up_file_by_id(file_id)
+            if file is None:
+                file = await self._file_manager.retrieve_remote_file_by_id(file_id)
+        else:
+            return None

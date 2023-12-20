@@ -85,7 +85,7 @@ class FunctionalAgent(Agent):
             chat_history.extend(new_messages)
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
-            if isinstance(curr_step, (NoActionStep, PluginStep)):
+            if isinstance(curr_step, (NoActionStep, PluginStep)): # plugin with action
                 response = self._create_finished_response(chat_history, steps_taken)
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
@@ -120,14 +120,16 @@ class FunctionalAgent(Agent):
                 new_messages,
             )
         elif output_message.plugin_info is not None:
+            plugin_name = output_message.plugin_info["name"]
             return (
-                PluginStep(
+                PluginStep( 
                     info=output_message.plugin_info,
                     result=output_message.content,
                     input_files=self._sniff_and_extract_files_from_text(
-                        chat_history[-1].content
+                        chat_history[-1].content, plugin_name, file_type="input"
                     ),  # TODO: make sure this is correct.
-                    output_files=self._sniff_and_extract_files_from_text(output_message.content),
+                    output_files=self._sniff_and_extract_files_from_text(
+                        output_message.content, plugin_name, file_type="output"),
                 ),
                 new_messages,
             )
