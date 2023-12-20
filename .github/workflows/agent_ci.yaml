@@ -5,10 +5,12 @@ on:
     paths:
       - .github/workflows/agent_*.yaml
       - erniebot-agent/**
+      - erniebot/**
   pull_request:
     paths:
       - .github/workflows/agent_*.yaml
       - erniebot-agent/**
+      - erniebot/**
 
 jobs:
   Lint:
@@ -27,8 +29,8 @@ jobs:
       - name: Install erniebot-agent and dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install erniebot
-          python -m pip install erniebot-agent[all]
+          python -m pip install --no-cache-dir erniebot
+          python -m pip install --no-cache-dir erniebot-agent[all]
           python -m pip install -r erniebot-agent/dev-requirements.txt
       - name: Show make version
         run: make --version
@@ -61,8 +63,8 @@ jobs:
       - name: Install erniebot-agent and dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install erniebot
-          python -m pip install erniebot-agent[all]
+          python -m pip install --no-cache-dir erniebot
+          python -m pip install --no-cache-dir erniebot-agent[all]
           python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Show make version
         run: make --version
