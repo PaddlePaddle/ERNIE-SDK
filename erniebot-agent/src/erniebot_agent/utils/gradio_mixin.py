@@ -1,15 +1,15 @@
 import base64
 import os
-import json
 import tempfile
 from typing import Any, List
 
 from erniebot_agent.file_io.base import File
 from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
-from erniebot_agent.tools import RemoteToolkit
+
 
 class GradioMixin:
     _file_manager: FileManager  # make mypy happy
@@ -51,12 +51,12 @@ class GradioMixin:
                 and response.files[-1].type == "output"
                 and response.files[-1].used_by == response.actions[-1].tool_name
             ):
-                # If there is a file output in the last round, then we need to show it
+                # If there is a file output in the last round, then we need to show it.
                 output_file_id = response.files[-1].file.id
                 output_file = self._file_manager.look_up_file_by_id(output_file_id)
                 file_content = await output_file.read_contents()
                 if get_file_type(response.files[-1].file.filename) == "image":
-                    # If it is a image, we can display it in the same chat page
+                    # If it is a image, we can display it in the same chat page.
                     base64_encoded = base64.b64encode(file_content).decode("utf-8")
                     if output_file_id in response.text:
                         output_result = response.text
@@ -66,7 +66,7 @@ class GradioMixin:
                     else:
                         output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                 else:
-                    # TODO: Support multiple files, support audio now
+                    # TODO: Support multiple files, support audio now.
                     temp_save_file_name = os.path.join(td, response.files[-1].file.filename)
                     with open(temp_save_file_name, "wb") as f:
                         f.write(file_content)
@@ -111,9 +111,11 @@ class GradioMixin:
 
             attached_tools = self._tool_manager.get_tools()
 
-            new_tool_schema = [tool.function_call_schema() for tool in attached_tools] if attached_tools else []
+            new_tool_schema = (
+                [tool.function_call_schema() for tool in attached_tools] if attached_tools else []
+            )
 
-            return {'Message': f'{tool_name} Remove Succeed'}, new_tool_schema
+            return {"Message": f"{tool_name} Remove Succeed"}, new_tool_schema
 
         def _clear():
             raw_messages.clear()
@@ -183,15 +185,15 @@ class GradioMixin:
                     with gr.Accordion("Raw messages", open=False):
                         all_messages_json = gr.JSON(label="All messages")
                         agent_memory_json = gr.JSON(label="Messges in memory")
-                with gr.Tab(label='Tool Load'):
+                with gr.Tab(label="Tool Load"):
                     tool_textbox = gr.Textbox(
-                            label="Tool_ID", placeholder="Write your tool_id here...",
-                        )
+                        label="Tool_ID",
+                        placeholder="Write your tool_id here...",
+                    )
                     with gr.Row():
                         tool_submit = gr.Button("Load")
                         tool_unload = gr.Button("Unload")
                     yaml_info = gr.JSON()
-
 
             tool_submit.click(
                 _load_tool,
