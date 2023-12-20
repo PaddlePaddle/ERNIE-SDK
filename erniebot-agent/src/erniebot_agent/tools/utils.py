@@ -246,6 +246,8 @@ async def parse_file_from_response(
 def is_base64_string(element: Any) -> bool:
     """check whether a string is base64 sdtring
 
+    refer to: https://stackoverflow.com/a/8571649
+
     Args:
         element (str): the content of string
 
