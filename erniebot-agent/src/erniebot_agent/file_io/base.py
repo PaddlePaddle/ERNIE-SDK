@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import abc
-from typing import Any, Dict
+import os
+from typing import Any, Dict, Union
+
+import anyio
 
 
 class File(metaclass=abc.ABCMeta):
@@ -23,7 +26,7 @@ class File(metaclass=abc.ABCMeta):
         id: str,
         filename: str,
         byte_size: int,
-        created_at: int,
+        created_at: str,
         purpose: str,
         metadata: Dict[str, Any],
     ) -> None:
@@ -40,7 +43,7 @@ class File(metaclass=abc.ABCMeta):
         if isinstance(other, File):
             return self.id == other.id
         else:
-            return False
+            return NotImplemented
 
     def __repr__(self) -> str:
         attrs_str = self._get_attrs_str()
@@ -49,6 +52,10 @@ class File(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def read_contents(self) -> bytes:
         raise NotImplementedError
+
+    async def write_contents_to(self, local_path: Union[str, os.PathLike[str]]) -> None:
+        contents = await self.read_contents()
+        await anyio.Path(local_path).write_bytes(contents)
 
     def get_file_repr(self) -> str:
         return f"<file>{self.id}</file>"

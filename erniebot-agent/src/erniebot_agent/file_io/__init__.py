@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.file_io.factory import get_file_manager
+from erniebot_agent.file_io.global_file_manager import (
+    configure_global_file_manager,
+    get_global_file_manager,
+)

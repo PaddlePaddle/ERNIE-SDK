@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import re
 from typing import List, Literal
 
@@ -28,8 +29,12 @@ _compiled_local_file_id_pattern = re.compile(_LOCAL_FILE_ID_PATTERN)
 _compiled_remote_file_id_pattern = re.compile(_REMOTE_FILE_ID_PATTERN)
 
 
-def build_local_file_id_from_uuid(uuid: str) -> str:
+def create_local_file_id_from_uuid(uuid: str) -> str:
     return _LOCAL_FILE_ID_PREFIX + uuid
+
+
+def get_timestamp() -> str:
+    return datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
 
 
 def is_file_id(str_: str) -> bool:
