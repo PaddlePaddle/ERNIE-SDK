@@ -31,8 +31,9 @@ def check_json_length(value: Dict[str, Any]):
     json_string = json.dumps(value)
     if len(json_string) > 4096:
         raise RemoteToolError(
-            "The lenght of json response is greater than 4096, please "
-            "check that your openapi.yaml file is correct.",
+            "The length of json response is greater than 4096, please "
+            "check whether `format:byte` is missing in openapi.yaml or "
+            "the tool returned too much information.",
             stage="Output parsing",
         )
         
