@@ -37,7 +37,9 @@ def configure_global_file_manager(
 ) -> None:
     global _global_file_manager
     if _global_file_manager is not None:
-        raise RuntimeError("The global file manager can only be configured once.")
+        raise RuntimeError(
+            "The global file manager can only be configured once before calling `get_global_file_manager`."
+        )
     _global_file_manager = _create_default_file_manager(access_token=access_token, save_dir=save_dir, **opts)
 
 
