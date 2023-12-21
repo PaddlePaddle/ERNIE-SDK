@@ -21,8 +21,8 @@ from typing import Any, ClassVar, Dict, List, Optional
 
 import aiohttp
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import FilePurpose, is_remote_file_id
+from erniebot_agent.file.base import File
+from erniebot_agent.file.protocol import FilePurpose, is_remote_file_id
 from erniebot_agent.utils.exception import FileError
 
 

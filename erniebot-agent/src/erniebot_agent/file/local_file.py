@@ -19,8 +19,8 @@ from typing import Any, Dict
 
 import anyio
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import (
+from erniebot_agent.file.base import File
+from erniebot_agent.file.protocol import (
     FilePurpose,
     build_local_file_id_from_uuid,
     is_local_file_id,

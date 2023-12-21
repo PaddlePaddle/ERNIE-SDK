@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Optional, Type
 
 import requests
 
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.messages import Message
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.memory import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (

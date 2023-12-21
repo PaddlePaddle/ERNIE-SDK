@@ -16,9 +16,9 @@ from typing import Dict, List, Optional, TypedDict
 import erniebot.utils.token_helper as token_helper
 from typing_extensions import Self
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.remote_file import RemoteFile
+from erniebot_agent.file import protocol
+from erniebot_agent.file.base import File
+from erniebot_agent.file.remote_file import RemoteFile
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from erniebot_agent.memory import Memory
-from erniebot_agent.messages import Message
+from erniebot_agent.memory import Message
 
 
 class SlidingWindowMemory(Memory):

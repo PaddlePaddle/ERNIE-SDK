@@ -15,8 +15,8 @@
 import functools
 from typing import Optional
 
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.remote_file import AIStudioFileClient
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.remote_file import AIStudioFileClient
 
 
 @functools.lru_cache(maxsize=None)
