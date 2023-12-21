@@ -116,8 +116,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:
-                    search_info = SearchInfo()
-                    search_info["results"] = []
+                    search_info = SearchInfo(results=[])
                     for index, item in enumerate(docs):
                         search_info["results"].append(
                             {
