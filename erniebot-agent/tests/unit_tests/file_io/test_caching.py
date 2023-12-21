@@ -12,13 +12,13 @@ from tests.unit_tests.testing_utils.mocks.mock_remote_file_client_server import 
     FakeRemoteFileServer,
 )
 
-from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.file_io.caching import (
     CacheDiscardedError,
     CacheNotFoundError,
     FileCache,
     FileCacheManager,
 )
+from erniebot_agent.utils.exceptions import ObjectClosedError
 
 
 @contextlib.asynccontextmanager

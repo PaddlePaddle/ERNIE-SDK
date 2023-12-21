@@ -35,7 +35,7 @@ from erniebot_agent.file_io.caching import (
 from erniebot_agent.file_io.file_registry import FileRegistry
 from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
-from erniebot_agent.utils.exception import FileError
+from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import Closeable
 
 logger = logging.getLogger(__name__)
@@ -301,13 +301,13 @@ class FileManager(Closeable):
         for file in self._fully_managed_files:
             if isinstance(file, RemoteFile):
                 await file.delete()
-                if isinstance(file, RemoteFileWithCache):
+                if self._file_cache_manager is not None and isinstance(file, RemoteFileWithCache):
                     await self._file_cache_manager.remove_cache(file.id)
             elif isinstance(file, LocalFile):
                 assert self._save_dir in file.path.parents
                 await anyio.Path(file.path).unlink()
             else:
-                raise RuntimeError("Unexpected file type")
+                raise AssertionError("Unexpected file type")
             self._file_registry.unregister_file(file)
         self._fully_managed_files.clear()
 
@@ -326,7 +326,7 @@ class FileManager(Closeable):
         file_path: pathlib.Path,
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
-    ) -> RemoteFile:
+    ) -> LocalFile:
         return create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
