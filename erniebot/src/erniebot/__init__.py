@@ -27,6 +27,7 @@ from .resources import (
     ImageV1,
     ImageV2,
 )
+from .http_client import close_all_sessions
 from .response import EBResponse
 from .utils.logging import setup_logging as _setup_logging
 from .version import VERSION
@@ -49,6 +50,7 @@ __all__ = [
     "EmbeddingResponse",
     "ImageResponse",
     "GlobalConfig",
+    "close_all_sessions",
     "__version__",
 ]
 

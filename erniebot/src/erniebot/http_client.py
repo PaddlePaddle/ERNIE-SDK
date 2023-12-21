@@ -71,7 +71,7 @@ from .types import FilesType, HeadersType, ParamsType
 from .utils import logging
 from .utils.url import add_query_params, extract_base_url
 
-__all__ = ["EBClient"]
+__all__ = ["EBClient", "close_all_sessions"]
 
 _thread_context = threading.local()
 _thread_context.sessions = {}
@@ -476,9 +476,9 @@ class EBClient(object):
             yield session
 
 
-def _close_all_sessions(sessions: Dict[str, requests.Session]) -> None:
+def close_all_sessions(sessions: Dict[str, requests.Session]) -> None:
     for session in sessions.values():
         session.close()
 
 
-atexit.register(_close_all_sessions, _thread_context.sessions)
+atexit.register(close_all_sessions, _thread_context.sessions)
