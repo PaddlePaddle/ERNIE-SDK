@@ -61,13 +61,6 @@ def is_json_response(response) -> bool:
         return False
 
 
-def is_base64_string(string: str) -> bool:
-    try:
-        return base64.b64encode(base64.b64decode(string)) == string
-    except Exception:
-        return False
-
-
 def get_file_type(file_name: str) -> str:
     # Expected output record: image/video/audio
     guess_type = mimetypes.guess_type(file_name)[0]

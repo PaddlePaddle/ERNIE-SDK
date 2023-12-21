@@ -241,22 +241,3 @@ async def parse_file_from_response(
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",
         stage="Output parsing",
     )
-
-
-def is_base64_string(element: Any) -> bool:
-    """check whether a string is base64 sdtring
-
-    refer to: https://stackoverflow.com/a/8571649
-
-    Args:
-        element (str): the content of string
-
-    Returns:
-        bool: whether is base64 string
-    """
-    if not isinstance(element, str):
-        return False
-
-    expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
-    matches = re.match(expression, element)
-    return matches is not None
