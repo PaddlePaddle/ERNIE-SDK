@@ -14,7 +14,7 @@
 
 import datetime
 import re
-from typing import List, Literal
+from typing import Generator, List, Literal
 
 from typing_extensions import TypeAlias
 
@@ -23,7 +23,8 @@ FilePurpose: TypeAlias = Literal["assistants", "assistants_output"]
 _LOCAL_FILE_ID_PREFIX = "file-local-"
 _UUID_PATTERN = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 _LOCAL_FILE_ID_PATTERN = _LOCAL_FILE_ID_PREFIX + _UUID_PATTERN
-_REMOTE_FILE_ID_PATTERN = r"file-[0-9]{15}"
+_REMOTE_FILE_ID_PREFIX = "file-"
+_REMOTE_FILE_ID_PATTERN = _REMOTE_FILE_ID_PREFIX + r"[0-9]{15}"
 
 _compiled_local_file_id_pattern = re.compile(_LOCAL_FILE_ID_PATTERN)
 _compiled_remote_file_id_pattern = re.compile(_REMOTE_FILE_ID_PATTERN)
@@ -59,3 +60,9 @@ def extract_local_file_ids(str_: str) -> List[str]:
 
 def extract_remote_file_ids(str_: str) -> List[str]:
     return _compiled_remote_file_id_pattern.findall(str_)
+
+
+def generate_fake_remote_file_ids() -> Generator[str, None, None]:
+    counter = 0
+    while True:
+        yield _REMOTE_FILE_ID_PREFIX + f"{counter:015d}"
