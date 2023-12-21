@@ -17,5 +17,5 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.async_run("这张照片里面讲了啥？", files=[file])
-        self.assertGreater(len(result.actions), 0)
-        # self.assertIn("合规", result.text)
+        self.assertEqual(len(result.actions), 1)
+        self.assertIn("春天的梦", result.text)
