@@ -52,14 +52,12 @@ class FileManager(Closeable):
         self,
         remote_file_client: Optional[RemoteFileClient] = None,
         *,
-        auto_register: bool = True,
         save_dir: Optional[FilePath] = None,
         cache_remote_files: bool = True,
     ) -> None:
         super().__init__()
 
         self._remote_file_client = remote_file_client
-        self._auto_register = auto_register
         if save_dir is not None:
             self._save_dir = pathlib.Path(save_dir)
         else:
@@ -163,7 +161,7 @@ class FileManager(Closeable):
             file_purpose,
             file_metadata or {},
         )
-        self.register_file(file)
+        self._file_registry.register_file(file)
         return file
 
     async def create_remote_file_from_path(
@@ -269,24 +267,17 @@ class FileManager(Closeable):
                 cache_path=None,
                 init_cache_in_sync=None,
             )
-        if self._auto_register:
-            self.register_file(file, allow_overwrite=True)
+        if self._file_registry.look_up_file(file_id) is not None:
+            logger.warning("File with ID '%s' is already registered. The old file will be replaced by the newly retrieved file.", file_id)
+            self._file_registry.register_file(file, allow_overwrite=True)
+        else:
+            self._file_registry.register_file(file)
         return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
         self.ensure_not_closed()
         files = await self.remote_file_client.list_files()
         return files
-
-    def register_file(
-        self, file: Union[LocalFile, RemoteFile], *, allow_overwrite: bool = False, check_type: bool = True
-    ) -> None:
-        self.ensure_not_closed()
-        self._file_registry.register_file(file, allow_overwrite=allow_overwrite, check_type=check_type)
-
-    def unregister_file(self, file: Union[LocalFile, RemoteFile]) -> None:
-        self.ensure_not_closed()
-        self._file_registry.unregister_file(file)
 
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
         self.ensure_not_closed()
@@ -324,8 +315,7 @@ class FileManager(Closeable):
             file = await self._cache_remote_file(
                 file, cache_path=cache_path, init_cache_in_sync=init_cache_in_sync
             )
-        if self._auto_register:
-            self.register_file(file)
+        self._file_registry.register_file(file)
         return file
 
     async def _cache_remote_file(

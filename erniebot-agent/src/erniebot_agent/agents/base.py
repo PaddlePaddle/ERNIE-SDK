@@ -175,7 +175,7 @@ class Agent(GradioMixin, BaseAgent):
         agent_files: List[AgentFile] = []
         for val in args.values():
             if isinstance(val, str):
-                if protocol.is_local_file_id(val):
+                if protocol.is_file_id(val):
                     if self._file_manager is None:
                         logger.warning(
                             f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
@@ -183,18 +183,7 @@ class Agent(GradioMixin, BaseAgent):
                         continue
                     file = self._file_manager.look_up_file_by_id(val)
                     if file is None:
-                        raise RuntimeError(f"Unregistered ID {repr(val)} is used by {repr(tool)}.")
-                elif protocol.is_remote_file_id(val):
-                    if self._file_manager is None:
-                        logger.warning(
-                            f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                        )
-                        continue
-                    file = self._file_manager.look_up_file_by_id(val)
-                    if file is None:
-                        file = await self._file_manager.retrieve_remote_file_by_id(val)
-                else:
-                    continue
+                        raise RuntimeError(f"Unregistered file with ID {repr(val)} is used by {repr(tool)}.")
                 agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
             elif isinstance(val, dict):
                 agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))

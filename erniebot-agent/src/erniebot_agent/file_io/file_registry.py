@@ -41,7 +41,7 @@ class FileRegistry(BaseFileRegistry):
         file_id = file.id
         if file_id in self._id_to_file:
             if not allow_overwrite:
-                raise RuntimeError(f"ID {repr(file_id)} is already registered.")
+                raise RuntimeError(f"File with ID {repr(file_id)} is already registered.")
             else:
                 if check_type and type(file) is not type(self._id_to_file[file_id]):  # noqa: E721
                     raise RuntimeError("Cannot register a file with a different type.")
@@ -50,7 +50,7 @@ class FileRegistry(BaseFileRegistry):
     def unregister_file(self, file: File) -> None:
         file_id = file.id
         if file_id not in self._id_to_file:
-            raise RuntimeError(f"ID {repr(file_id)} is not registered.")
+            raise RuntimeError(f"File with ID {repr(file_id)} is not registered.")
         self._id_to_file.pop(file_id)
 
     def look_up_file(self, file_id: str) -> Optional[File]:
