@@ -13,7 +13,6 @@
 # limitations under the License.
 from __future__ import annotations
 
-import base64
 import mimetypes
 import os
 from enum import Enum
@@ -57,13 +56,6 @@ def is_json_response(response) -> bool:
     try:
         response.json()
         return True
-    except Exception:
-        return False
-
-
-def is_base64_string(string: str) -> bool:
-    try:
-        return base64.b64encode(base64.b64decode(string)) == string
     except Exception:
         return False
 
