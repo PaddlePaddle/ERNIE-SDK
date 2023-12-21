@@ -53,7 +53,7 @@ class File(metaclass=abc.ABCMeta):
     async def read_contents(self) -> bytes:
         raise NotImplementedError
 
-    async def write_contents_to(self, local_path: Union[str, os.PathLike[str]]) -> None:
+    async def write_contents_to(self, local_path: Union[str, os.PathLike]) -> None:
         contents = await self.read_contents()
         await anyio.Path(local_path).write_bytes(contents)
 

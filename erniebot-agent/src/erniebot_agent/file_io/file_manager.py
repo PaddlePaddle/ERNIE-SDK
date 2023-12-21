@@ -33,7 +33,7 @@ from erniebot_agent.utils.mixins import Closeable
 
 logger = logging.getLogger(__name__)
 
-FilePath: TypeAlias = Union[str, os.PathLike[str]]
+FilePath: TypeAlias = Union[str, os.PathLike]
 
 
 @final
