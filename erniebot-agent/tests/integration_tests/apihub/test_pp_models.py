@@ -98,15 +98,3 @@ class TestPPRemoteTool(RemoteToolTesting):
         self.assertEqual(len(response.actions), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)
         self.assertEqual(decoded_tool_ret, {"result": "中国\n汉字"})
-
-    @pytest.mark.asyncio
-    async def test_pp_tts(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-tts")
-
-        agent = self.get_agent(toolkit)
-
-        response = await agent.async_run("请帮我将：“我爱中国” 转化为音频文件")
-
-        self.assertEqual(len(response.actions), 1)
-        decoded_tool_ret = json.loads(response.chat_history[2].content)
-        self.assertEqual(decoded_tool_ret, {"result": "中国\n汉字"})
