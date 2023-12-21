@@ -32,7 +32,7 @@ class GradioMixin:
     _file_manager: FileManager  # make mypy happy
     _tool_manager: ToolManager  # make mypy happy
 
-    def launch_gradio_demo(self, **launch_kwargs: Any):
+    def launch_gradio_demo(self, **launch_kwargs):
         # TODO: Unified optional dependencies management
         try:
             import gradio as gr
@@ -111,7 +111,7 @@ class GradioMixin:
             self.reset_memory()
             return None, None, None, None
 
-        async def _upload(file: List[gr.utils.NamedString], history: list):
+        async def _upload(file, history):
             nonlocal _uploaded_file_cache
             for single_file in file:
                 upload_file = await self._file_manager.create_file_from_path(single_file.name)
