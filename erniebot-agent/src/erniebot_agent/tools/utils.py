@@ -257,6 +257,9 @@ def is_base64_string(element: Any) -> bool:
     if not isinstance(element, str):
         return False
 
+    if len(element) < 100:
+        return False
+
     expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
     matches = re.match(expression, element)
     return matches is not None
