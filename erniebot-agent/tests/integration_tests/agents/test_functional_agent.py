@@ -14,7 +14,7 @@ NO_HIT_PROMPT = "深圳今天天气怎么样？"
 
 @pytest.fixture(scope="module")
 def llm():
-    return ERNIEBot(model="ernie-bot")
+    return ERNIEBot(model="ernie-3.5")
 
 
 @pytest.fixture(scope="module")

@@ -145,7 +145,7 @@ def create_chat_completion_tab():
                     label="Access Token", info="用于访问后端平台的access token，如果设置了AK、SK则无需设置此参数", type="password"
                 )
                 ernie_model = gr.Dropdown(
-                    label="Model", info="模型类型", value="ernie-bot", choices=["ernie-bot", "ernie-bot-turbo"]
+                    label="Model", info="模型类型", value="ernie-3.5", choices=["ernie-3.5", "ernie-turbo"]
                 )
                 top_p = gr.Slider(
                     label="Top-p", info="控制采样范围，该参数越小生成结果越稳定", value=0.7, minimum=0, maximum=1, step=0.05
@@ -676,8 +676,8 @@ def create_rag_tab():
                         ernie_model = gr.Dropdown(
                             label="Model",
                             info="模型类型",
-                            value="ernie-bot-4",
-                            choices=["ernie-bot-4", "ernie-bot-turbo", "ernie-bot"],
+                            value="ernie-4.0",
+                            choices=["ernie-4。0", "ernie-turbo", "ernie-3.5"],
                         )
                         api_type = gr.Dropdown(
                             label="API Type",

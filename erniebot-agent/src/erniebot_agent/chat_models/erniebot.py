@@ -52,8 +52,8 @@ class ERNIEBot(ChatModel):
         """Initializes an instance of the `ERNIEBot` class.
 
         Args:
-            model (str): The model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or
-                "ernie-bot-4".
+            model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
+                "ernie-longtext".
             api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): The access token for erniebot.
             close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.

@@ -71,7 +71,7 @@ async def test_erniebot_astream() -> None:
 
 def test_erniebot_params() -> None:
     """Test setting parameters."""
-    chat = ErnieBotChat(model="ernie-bot-turbo", temperature=0.7)
+    chat = ErnieBotChat(model="ernie-turbo", temperature=0.7)
     message = HumanMessage(content="Hello")
     response = chat([message])
     assert isinstance(response, BaseMessage)
