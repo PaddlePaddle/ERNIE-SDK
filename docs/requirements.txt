@@ -1,0 +1,3 @@
+mkdocstrings[python]
+mkdocstrings-python
+griffe
