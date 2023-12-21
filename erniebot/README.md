@@ -60,10 +60,10 @@ import erniebot
 models = erniebot.Model.list()
 
 print(models)
-# ernie-bot             文心一言模型（ernie-bot）
-# ernie-bot-turbo       文心一言模型（ernie-bot-turbo）
-# ernie-bot-4           文心一言模型（ernie-bot-4）
-# ernie-bot-8k          文心一言模型（ernie-bot-8k）
+# ernie-3.5             文心大模型（ernie-3.5）
+# ernie-turbo           文心大模型（ernie-turbo）
+# ernie-4.0             文心大模型（ernie-4.0）
+# ernie-longtext        文心大模型（ernie-longtext）
 # ernie-text-embedding  文心百中语义模型
 # ernie-vilg-v2         文心一格模型
 
@@ -72,7 +72,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 # Create a chat completion
-response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
+response = erniebot.ChatCompletion.create(model="ernie-3.5", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
 
 print(response.get_result())
 ```
@@ -87,8 +87,8 @@ erniebot api model.list
 export EB_API_TYPE="aistudio"
 export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
 
-# Create a chat completion (using ernie-bot, ernie-bot-turbo, etc.)
-erniebot api chat_completion.create --model ernie-bot --message user "请介绍下你自己"
+# Create a chat completion (using ernie-3.5, ernie-turbo, etc.)
+erniebot api chat_completion.create --model ernie-3.5 --message user "请介绍下你自己"
 
 # Set authentication params for image.create
 export EB_API_TYPE="yinian"
@@ -102,11 +102,11 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ### 对话补全（Chat Completion）
 
-ERNIE Bot SDK提供具备对话补全能力的ernie-bot、ernie-bot-turbo、ernie-bot-4、ernie-bot-8k等文心一言系列模型。
+ERNIE Bot SDK提供具备对话补全能力的ernie-3.5、ernie-turbo、ernie-4.0、ernie-longtext等文心大模型。
 
 不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
 
-以下是调用ernie-bot模型进行多轮对话的示例：
+以下是调用ernie-3.5模型进行多轮对话的示例：
 
 ```python
 import erniebot
@@ -115,7 +115,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model="ernie-3.5",
     messages=[{
         "role": "user",
         "content": "请问你是谁？"
@@ -194,7 +194,7 @@ ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确�
 
 借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。
 
-以下是调用ernie-bot模型进行函数调用的示例：
+以下是调用ernie-3.5模型进行函数调用的示例：
 
 ```python
 import erniebot
@@ -203,7 +203,7 @@ erniebot.api_type = "aistudio"
 erniebot.access_token = "<access-token-for-aistudio>"
 
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model="ernie-3.5",
     messages=[{
         "role": "user",
         "content": "深圳市今天气温多少摄氏度？",

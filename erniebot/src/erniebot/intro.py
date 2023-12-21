@@ -24,10 +24,10 @@ class Model(object):
     def list() -> List[Tuple[str, str]]:
         """Lists the available models."""
         return [
-            ("ernie-bot", "文心一言模型（ernie-bot）"),
-            ("ernie-bot-turbo", "文心一言模型（ernie-bot-turbo）"),
-            ("ernie-bot-4", "文心一言模型（ernie-bot-4）"),
-            ("ernie-bot-8k", "文心一言模型（ernie-bot-8k）"),
+            ("ernie-3.5", "文心大模型（ernie-3.5）"),
+            ("ernie-turbo", "文心大模型（ernie-turbo）"),
+            ("ernie-4.0", "文心大模型（ernie-4.0）"),
+            ("ernie-longtext", "文心大模型（ernie-longtext）"),
             ("ernie-text-embedding", "文心百中语义模型"),
             ("ernie-vilg-v2", "文心一格模型"),
         ]

@@ -57,7 +57,7 @@ class TestImageGenerationTool(unittest.TestCase):
         if yinian_ak is None or yinian_sk is None:
             return
 
-        eb = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token=aistudio_access_token)
+        eb = ERNIEBot(model="ernie-3.5", api_type="aistudio", access_token=aistudio_access_token)
         memory = WholeMemory()
         img_gen_tool = ImageGenerationTool(yinian_ak=yinian_ak, yinian_sk=yinian_sk)
         agent = FunctionalAgent(llm=eb, tools=[img_gen_tool], memory=memory)
