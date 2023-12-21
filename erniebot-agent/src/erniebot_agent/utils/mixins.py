@@ -1,13 +1,32 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
 import base64
 import os
 import tempfile
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List, Protocol
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
+from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
+
+if TYPE_CHECKING:
+    from erniebot_agent.file_io.base import File
+    from erniebot_agent.file_io.file_manager import FileManager
+    from erniebot_agent.tools.tool_manager import ToolManager
 
 
 class GradioMixin:
@@ -93,7 +112,7 @@ class GradioMixin:
             self.reset_memory()
             return None, None, None, None
 
-        async def _upload(file: List[gr.utils.NamedString], history: list):
+        async def _upload(file, history):
             nonlocal _uploaded_file_cache
             for single_file in file:
                 upload_file = await self._file_manager.create_file_from_path(single_file.name)
@@ -101,7 +120,7 @@ class GradioMixin:
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = self._file_manager.registry.list_files()
+            output_lis = self._file_manager.list_registered_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
@@ -146,7 +165,7 @@ class GradioMixin:
                         )
 
                 with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager.registry.list_files()
+                    file_lis = self._file_manager.list_registered_files()
                     all_files = gr.HTML(value=file_lis, label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
@@ -209,3 +228,16 @@ class GradioMixin:
             else:
                 allowed_paths = [td]
             demo.launch(allowed_paths=allowed_paths, **launch_kwargs)
+
+
+class Closeable(Protocol):
+    @property
+    def closed(self) -> bool:
+        ...
+
+    async def close(self) -> None:
+        ...
+
+    def ensure_not_closed(self) -> None:
+        if self.closed:
+            raise ObjectClosedError(f"{repr(self)} is closed.")

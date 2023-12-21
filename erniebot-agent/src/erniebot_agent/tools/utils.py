@@ -18,7 +18,7 @@ from erniebot_agent.tools.schema import (
     get_typing_list_type,
 )
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
-from erniebot_agent.utils.exception import RemoteToolError
+from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.logging import logger
 
 
