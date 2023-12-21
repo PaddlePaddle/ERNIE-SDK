@@ -88,11 +88,11 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
     )
 
     agent.load_tool(tool2)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         agent.load_tool(tool1)
 
     agent.unload_tool(tool1)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         agent.unload_tool(tool1)
 
 
@@ -148,7 +148,7 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
     assert json.loads(tool_response.json) == {}
 
     tool_input = {}
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         await agent._async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
 
 

@@ -40,14 +40,14 @@ class CallbackManager(object):
 
     def add_handler(self, handler: CallbackHandler):
         if handler in self._handlers:
-            raise RuntimeError(f"The callback handler {handler} is already registered.")
+            raise ValueError(f"The callback handler {handler} is already registered.")
         self._handlers.append(handler)
 
     def remove_handler(self, handler):
         try:
             self._handlers.remove(handler)
         except ValueError as e:
-            raise RuntimeError(f"The callback handler {handler} is not registered.") from e
+            raise ValueError(f"The callback handler {handler} is not registered.") from e
 
     def set_handlers(self, handlers: List[CallbackHandler]):
         self._handlers = []

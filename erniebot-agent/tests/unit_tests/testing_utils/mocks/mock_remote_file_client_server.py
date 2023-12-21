@@ -161,13 +161,13 @@ class FakeRemoteFileServer(object):
         try:
             return self._storage[file_id]
         except KeyError as e:
-            raise RuntimeError("File not found") from e
+            raise ServerError("File not found") from e
 
     async def retrieve_file_contents(self, file_id):
         try:
             file = self._storage[file_id]
         except KeyError as e:
-            raise RuntimeError("File not found") from e
+            raise ServerError("File not found") from e
         else:
             return file["contents"]
 
@@ -178,10 +178,14 @@ class FakeRemoteFileServer(object):
         try:
             return self._storage[file_id]
         except KeyError as e:
-            raise RuntimeError("File not found") from e
+            raise ServerError("File not found") from e
 
     @contextlib.contextmanager
     def start(self):
         self._storage = {}
         yield self
         self._storage = None
+
+
+class ServerError(Exception):
+    pass

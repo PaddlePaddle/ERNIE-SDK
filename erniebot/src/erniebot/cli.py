@@ -121,7 +121,7 @@ class _ResourceCLIHelper(object):
                 raise AttributeError(f"{cls.__name__}.{method_name} is not found.")
             method = getattr(cls, method_name)
             if not callable(method):
-                raise TypeError(f"{cls.__name__}.{method_name} is not callable.")
+                raise RuntimeError(f"{cls.__name__}.{method_name} is not callable.")
             return method
 
         cls.add_resource_arguments(parser)
