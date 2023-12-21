@@ -268,7 +268,11 @@ class FileManager(Closeable):
                 init_cache_in_sync=None,
             )
         if self._file_registry.look_up_file(file_id) is not None:
-            logger.warning("File with ID '%s' is already registered. The old file will be replaced by the newly retrieved file.", file_id)
+            logger.warning(
+                "File with ID '%s' is already registered."
+                " The old file will be replaced by the newly retrieved file.",
+                file_id,
+            )
             self._file_registry.register_file(file, allow_overwrite=True)
         else:
             self._file_registry.register_file(file)
