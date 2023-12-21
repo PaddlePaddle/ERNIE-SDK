@@ -15,6 +15,7 @@
 from . import errors
 from .config import GlobalConfig
 from .config import init_global_config as _init_global_config
+from .http_client import close_all_sessions
 from .intro import Model
 from .resources import (
     ChatCompletion,
@@ -27,7 +28,6 @@ from .resources import (
     ImageV1,
     ImageV2,
 )
-from .http_client import close_all_sessions
 from .response import EBResponse
 from .utils.logging import setup_logging as _setup_logging
 from .version import VERSION
