@@ -5,7 +5,7 @@ from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.message import HumanMessage
 
 
-async def test_ernie_bot(model="ernie-bot-turbo", stream=False):
+async def test_ernie_bot(model="ernie-turbo", stream=False):
     api_type = "aistudio"
     access_token = os.getenv("ACCESS_TOKEN")  # set your access token as an environment variable
     assert (

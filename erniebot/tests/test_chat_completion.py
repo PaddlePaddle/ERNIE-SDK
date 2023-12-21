@@ -67,6 +67,6 @@ if __name__ == "__main__":
 
     erniebot.api_type = "qianfan"
 
-    create_chat_completion(model="ernie-bot-turbo")
+    create_chat_completion(model="ernie-turbo")
 
-    create_chat_completion_stream(model="ernie-bot-turbo")
+    create_chat_completion_stream(model="ernie-turbo")

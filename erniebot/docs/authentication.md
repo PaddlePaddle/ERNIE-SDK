@@ -6,8 +6,8 @@ ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格）�
 
 | 后端 | api_type | 支持的模型 |
 | :--- | :--- | :--- |
-| AI Studio | aistudio | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-bot-8k，ernie-text-embedding |
-| 千帆大模型平台 | qianfan | ernie-bot，ernie-bot-turbo，ernie-bot-4，ernie-bot-8k，ernie-text-embedding |
+| AI Studio | aistudio | ernie-3.5，ernie-turbo，ernie-4.0，ernie-longtext，ernie-text-embedding |
+| 千帆大模型平台 | qianfan | ernie-3.5，ernie-turbo，ernie-4.0，ernie-longtext，ernie-text-embedding |
 | 智能创作平台 | yinian | ernie-vilg-v2 |
 
 ## AI Studio后端的认证鉴权
@@ -22,7 +22,7 @@ ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格）�
 
 注意事项：
 
-* AI Studio每个账户的access token，有100万token的免费额度，可以用于ERNIE Bot SDK调用文心一言大模型。
+* AI Studio每个账户的access token，有100万token的免费额度，可以用于ERNIE Bot SDK调用文心大模型。
 * 在[token管理页面](https://aistudio.baidu.com/token/manage)可以查看token获取、消耗明细和过期记录，或者购买更多token。
 * access token是私密信息，切记不要对外公开。
 
@@ -56,7 +56,7 @@ AI Studio后端可以使用access token进行鉴权，支持如下三种方法�
             api_type="aistudio",
             access_token="<access-token-for-aistudio>",
         ),
-        model="ernie-bot",
+        model="ernie-3.5",
         messages=[{"role": "user", "content": "你好，请介绍下你自己",
         }],
     )

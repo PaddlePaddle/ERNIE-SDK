@@ -26,7 +26,7 @@ ERNIE Bot SDK支持3种参数配置的方法：（1）使用环境变量，（2�
         _config_=dict(
             api_type="<eb-api-type>",
         ),
-        model="ernie-bot",
+        model="ernie-3.5",
         messages=[{
             "role": "user",
             "content": "你好，请介绍下你自己",

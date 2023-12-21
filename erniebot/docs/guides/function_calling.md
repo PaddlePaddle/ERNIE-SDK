@@ -89,7 +89,7 @@ def get_current_temperature(location: str, unit: str) -> dict:
     ]
 
     response = erniebot.ChatCompletion.create(
-        model="ernie-bot",
+        model="ernie-3.5",
         messages=messages,
         functions=functions,
     )
@@ -137,7 +137,7 @@ def get_current_temperature(location: str, unit: str) -> dict:
         }
     )
     response = erniebot.ChatCompletion.create(
-        model="ernie-bot",
+        model="ernie-3.5",
         messages=messages,
         functions=functions,
     )
