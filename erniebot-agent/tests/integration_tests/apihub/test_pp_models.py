@@ -106,7 +106,6 @@ class TestPPRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         response = await agent.async_run("请帮我将：“我爱中国” 转化为音频文件")
-        import pdb; pdb.set_trace()
 
         self.assertEqual(len(response.actions), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)
