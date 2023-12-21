@@ -6,7 +6,7 @@ from pydantic import Field
 from erniebot_agent.agents.callback.default import get_no_ellipsis_callback
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
@@ -32,7 +32,7 @@ class TextRepeaterTool(Tool):
         if "<split>" in input_file_id:
             input_file_id = input_file_id.split("<split>")[0]
 
-        file_manager = get_file_manager()  # Access_token needs to be set here.
+        file_manager = get_global_file_manager()
         input_file = file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")
@@ -109,7 +109,7 @@ class TextRepeaterNoFileTool(Tool):
 # TODO(shiyutang): replace this when model is online
 llm = ERNIEBot(model="ernie-3.5", api_type="custom")
 memory = SlidingWindowMemory(max_round=1)
-file_manager = get_file_manager(access_token="")  # Access_token needs to be set here.
+file_manager = get_global_file_manager()
 # plugins = ["ChatFile", "eChart"]
 plugins: List[str] = []
 agent = FunctionalAgent(
