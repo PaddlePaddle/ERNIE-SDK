@@ -2,7 +2,7 @@
 
 基础功能演示应用提供对话补全、语义向量以及文生图demo，可供大家快速体验ERNIE Bot SDK的功能。
 
-* **对话补全（Chat Completion）** 基于ernie-bot或ernie-bot-turbo的生成式对话能力；
+* **对话补全（Chat Completion）** 基于ernie-3.5、ernie-3.5-turbo等模型的生成式对话能力；
 * **语义向量（Embedding）** 生成输入文本的语义向量表征，并计算不同向量间的余弦相似度；
 * **文生图（Image Generation）** 根据输入文本，生成不同尺寸的图像。
 
