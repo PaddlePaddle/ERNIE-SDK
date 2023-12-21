@@ -18,7 +18,7 @@ from erniebot_agent.tools.utils import (
     tool_response_contains_file,
 )
 from erniebot_agent.utils.common import is_json_response
-from erniebot_agent.utils.exception import RemoteToolError
+from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.logging import logger
 
 

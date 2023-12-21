@@ -223,12 +223,14 @@ class FileCacheManager(Closeable):
         except KeyError as e:
             raise CacheNotFoundError from e
 
-    async def remove_cache_if_exists(self, file_id: str) -> None:
+    async def remove_cache(self, file_id: str) -> None:
         self.ensure_not_closed()
-        if self._has_cache(file_id):
+        try:
             cache = self._get_cache(file_id)
-            await cache.discard()
-            self._delete_cache(file_id)
+        except KeyError as e:
+            raise CacheNotFoundError from e
+        await cache.discard()
+        self._delete_cache(file_id)
 
     async def close(self) -> None:
         if not self._closed:

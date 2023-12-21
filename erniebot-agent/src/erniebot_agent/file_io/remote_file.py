@@ -23,7 +23,7 @@ import aiohttp
 
 from erniebot_agent.file_io import protocol
 from erniebot_agent.file_io.base import File
-from erniebot_agent.utils.exception import FileError
+from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import Closeable
 
 

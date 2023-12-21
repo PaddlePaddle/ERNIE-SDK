@@ -25,7 +25,7 @@ from erniebot_agent.tools.schema import (
     scrub_dict,
 )
 from erniebot_agent.tools.utils import validate_openapi_yaml
-from erniebot_agent.utils.exception import RemoteToolError
+from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
 
 logger = logging.getLogger(__name__)

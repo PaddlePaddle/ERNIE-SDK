@@ -19,6 +19,7 @@ import os
 import tempfile
 from typing import TYPE_CHECKING, Any, List, Protocol
 
+from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 
@@ -239,4 +240,4 @@ class Closeable(Protocol):
 
     def ensure_not_closed(self) -> None:
         if self.closed:
-            raise RuntimeError(f"{repr(self)} is closed.")
+            raise ObjectClosedError(f"{repr(self)} is closed.")

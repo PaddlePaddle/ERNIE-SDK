@@ -12,6 +12,7 @@ from tests.unit_tests.testing_utils.mocks.mock_remote_file_client_server import 
     FakeRemoteFileServer,
 )
 
+from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.file_io.caching import (
     CacheDiscardedError,
     CacheNotFoundError,
@@ -95,7 +96,7 @@ async def test_file_cache_manager_crd():
                     retrieved_cache = await manager.get_cache(file.id)
                     assert retrieved_cache is cache
 
-                    await manager.remove_cache_if_exists(file.id)
+                    await manager.remove_cache(file.id)
                     with pytest.raises(CacheNotFoundError):
                         await manager.get_cache(file.id)
 
@@ -138,14 +139,14 @@ async def test_file_cache_manager_after_closing():
                 async with create_file_cache_manager() as manager:
                     await manager.close()
 
-                    with pytest.raises(RuntimeError):
+                    with pytest.raises(ObjectClosedError):
                         await manager.get_or_create_cache(file.id, cache_path=cache_path)
 
-                    with pytest.raises(RuntimeError):
+                    with pytest.raises(ObjectClosedError):
                         await manager.get_cache(file.id)
 
-                    with pytest.raises(RuntimeError):
-                        await manager.remove_cache_if_exists(file.id)
+                    with pytest.raises(ObjectClosedError):
+                        await manager.remove_cache(file.id)
 
 
 @pytest.mark.asyncio

@@ -53,6 +53,7 @@ class FileManager(Closeable):
         remote_file_client: Optional[RemoteFileClient] = None,
         *,
         save_dir: Optional[FilePath] = None,
+        prune_on_close: bool = True,
         cache_remote_files: bool = True,
     ) -> None:
         super().__init__()
@@ -64,6 +65,7 @@ class FileManager(Closeable):
             # This can be done lazily, but we need to be careful about race conditions.
             self._temp_dir = self._create_temp_dir()
             self._save_dir = pathlib.Path(self._temp_dir.name)
+        self._prune_on_close = prune_on_close
         self._cache_remote_files = cache_remote_files
 
         self._file_registry = FileRegistry()
@@ -71,6 +73,7 @@ class FileManager(Closeable):
             self._file_cache_manager = create_default_file_cache_manager()
         else:
             self._file_cache_manager = None
+        self._fully_managed_files: List[Union[LocalFile, RemoteFile]] = []
 
         self._closed = False
         self._clean_up_cache_files_on_discard = True
@@ -156,7 +159,7 @@ class FileManager(Closeable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
-        file = create_local_file_from_path(
+        file = await self._create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
             file_metadata or {},
@@ -170,11 +173,14 @@ class FileManager(Closeable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
-        return await self._create_remote_file_from_path(
+        file = await self._create_remote_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
             file_metadata,
         )
+        self._file_registry.register_file(file)
+        self._fully_managed_files.append(file)
+        return file
 
     @overload
     async def create_file_from_bytes(
@@ -236,7 +242,7 @@ class FileManager(Closeable):
                 await f.write(file_contents)
             file: Union[LocalFile, RemoteFile]
             if file_type == "local":
-                file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
+                file = await self._create_local_file_from_path(file_path, file_purpose, file_metadata)
                 should_remove_file = False
             elif file_type == "remote":
                 file = await self._create_remote_file_from_path(
@@ -256,6 +262,8 @@ class FileManager(Closeable):
         finally:
             if should_remove_file:
                 await async_file_path.unlink()
+        self._file_registry.register_file(file)
+        self._fully_managed_files.append(file)
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
@@ -267,15 +275,7 @@ class FileManager(Closeable):
                 cache_path=None,
                 init_cache_in_sync=None,
             )
-        if self._file_registry.look_up_file(file_id) is not None:
-            logger.warning(
-                "File with ID '%s' is already registered."
-                " The old file will be replaced by the newly retrieved file.",
-                file_id,
-            )
-            self._file_registry.register_file(file, allow_overwrite=True)
-        else:
-            self._file_registry.register_file(file)
+        self._file_registry.register_file(file)
         return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
@@ -288,7 +288,7 @@ class FileManager(Closeable):
         file = self._file_registry.look_up_file(file_id)
         if file is None:
             raise FileError(
-                f"File with ID '{file_id}' not found. "
+                f"File with ID {repr(file_id)} not found. "
                 "Please check if `file_id` is correct and the file is registered."
             )
         return file
@@ -297,13 +297,41 @@ class FileManager(Closeable):
         self.ensure_not_closed()
         return self._file_registry.list_files()
 
+    async def prune(self) -> None:
+        for file in self._fully_managed_files:
+            if isinstance(file, RemoteFile):
+                await file.delete()
+                if isinstance(file, RemoteFileWithCache):
+                    await self._file_cache_manager.remove_cache(file.id)
+            elif isinstance(file, LocalFile):
+                assert self._save_dir in file.path.parents
+                await anyio.Path(file.path).unlink()
+            else:
+                raise RuntimeError("Unexpected file type")
+            self._file_registry.unregister_file(file)
+        self._fully_managed_files.clear()
+
     async def close(self) -> None:
         if not self._closed:
+            if self._prune_on_close:
+                await self.prune()
             if self._file_cache_manager is not None:
                 await self._file_cache_manager.close()
             if self._temp_dir is not None:
                 self._clean_up_temp_dir(self._temp_dir)
             self._closed = True
+
+    async def _create_local_file_from_path(
+        self,
+        file_path: pathlib.Path,
+        file_purpose: protocol.FilePurpose,
+        file_metadata: Optional[Dict[str, Any]],
+    ) -> RemoteFile:
+        return create_local_file_from_path(
+            pathlib.Path(file_path),
+            file_purpose,
+            file_metadata or {},
+        )
 
     async def _create_remote_file_from_path(
         self,
@@ -319,7 +347,6 @@ class FileManager(Closeable):
             file = await self._cache_remote_file(
                 file, cache_path=cache_path, init_cache_in_sync=init_cache_in_sync
             )
-        self._file_registry.register_file(file)
         return file
 
     async def _cache_remote_file(
