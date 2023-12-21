@@ -29,19 +29,18 @@ def create_abstract(chunk: str) -> Dict[str, str]:
     }
 
 
-def create_questions(chunk: str, num_questions: int = 5) -> Dict[str, str]:
-    """Create a message for the chat completion
-
-    Args:
-        chunk (str): The chunk of text to summarize
-        question (str): The question to answer
-
-    Returns:
-        Dict[str, str]: The message to send to the chat completion
-    """
+def create_questions(chunk: str, num_questions: int = 5):
     return {
         "role": "user",
-        "content": f"""{chunk}，请根据上面的摘要，生成{num_questions}个问题，问题内容和形式要多样化，分条列举出来.""",
+        "content": f"""{chunk}，请根据上面的摘要，生成{num_questions}个问题，问题内容和形式要多样化，口语化，不允许重复，分条列举出来.""",
+    }
+
+
+def create_keywords(chunk: str, num_keywords: int = 3):
+    return {
+        "role": "user",
+        "content": f"""{chunk}，请根据上面的摘要，抽取{num_keywords}个关键字或者简短关键句，分条列举出来。
+        要求：只需要输出关键字或者简短的关键句，不需要输出其它的内容.""",
     }
 
 
@@ -57,7 +56,7 @@ def create_description(chunk: str) -> Dict[str, str]:
     """
     return {
         "role": "user",
-        "content": f"""{chunk}，请根据上面的摘要，生成一个简短的描述，不超过30字.""",
+        "content": f"""{chunk}，请根据上面的摘要，生成一个简短的描述，不超过40字.""",
     }
 
 
