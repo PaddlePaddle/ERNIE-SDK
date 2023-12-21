@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
 import os
@@ -110,7 +109,13 @@ def is_port_in_use(port):
             return True
 
 
-class TestToolWithFile(unittest.TestCase):
+class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.file_manager = FileManager()
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
+
     def avaliable_free_port(self, exclude=None):
         exclude = exclude or []
         for port in range(8000, 9000):
@@ -145,7 +150,7 @@ class TestToolWithFile(unittest.TestCase):
             print("waiting for server ...")
             time.sleep(1)
 
-    def test_plugin_schema(self):
+    async def test_plugin_schema(self):
         self.wait_until_server_is_ready()
         with tempfile.TemporaryDirectory() as tempdir:
             openapi_file = os.path.join(tempdir, "openapi.yaml")
@@ -153,24 +158,26 @@ class TestToolWithFile(unittest.TestCase):
             with open(openapi_file, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            toolkit = RemoteToolkit.from_openapi_file(openapi_file)
+            toolkit = RemoteToolkit.from_openapi_file(openapi_file, file_manager=self.file_manager)
             tool = toolkit.get_tool("getFile")
             # tool.tool_name should have `tool_name_prefix`` prepended
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
-            file_manager = FileManager()
-            input_file = asyncio.run(file_manager.create_file_from_path(self.file_path))
-            result = asyncio.run(tool(file=input_file.id))
+            input_file = await self.file_manager.create_file_from_path(self.file_path)
+            result = await tool(file=input_file.id)
             self.assertIn("response_file", result)
             file_id = result["response_file"]
 
-            file = file_manager.look_up_file_by_id(file_id=file_id)
-            content = asyncio.run(file.read_contents())
+            file = self.file_manager.look_up_file_by_id(file_id=file_id)
+            content = await file.read_contents()
             self.assertEqual(content.decode("utf-8"), self.content)
 
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
+    async def asyncSetUp(self):
         self.file_manager = FileManager()
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
 
     def create_fake_response(self, body: dict):
         the_response = Response()
@@ -224,7 +231,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 
@@ -241,8 +248,11 @@ components:
 
 
 class TestJsonNestFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
+    async def asyncSetUp(self):
         self.file_manager = FileManager()
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
 
     def create_fake_response(self, body: dict):
         the_response = Response()
@@ -300,7 +310,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 
@@ -319,8 +329,11 @@ components:
 
 
 class TestJsonNestListFileParser(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
+    async def asyncSetUp(self):
         self.file_manager = FileManager()
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
 
     def create_fake_response(self, body: dict):
         the_response = Response()
@@ -381,7 +394,7 @@ components:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(yaml_content)
-            toolkit = RemoteToolkit.from_openapi_file(file_path)
+            toolkit = RemoteToolkit.from_openapi_file(file_path, file_manager=self.file_manager)
             response = self.create_fake_response(body)
             tool = toolkit.get_tools()[-1]
 

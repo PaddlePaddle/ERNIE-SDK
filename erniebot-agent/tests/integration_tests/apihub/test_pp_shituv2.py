@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.tools import RemoteToolkit
 
 from .base import RemoteToolTesting
@@ -17,7 +17,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
 
-        file_manager = get_file_manager()
+        file_manager = get_global_file_manager()
         file_path = self.download_file(
             "https://paddlenlp.bj.bcebos.com/ebagent/ci/fixtures/remote-tools/pp_shituv2_input_img.png"
         )
