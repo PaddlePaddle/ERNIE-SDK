@@ -29,7 +29,7 @@ import erniebot
 from erniebot.response import EBResponse
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.memory import (
+from erniebot_agent.memory.messages import (
     AIMessage,
     AIMessageChunk,
     FunctionCall,

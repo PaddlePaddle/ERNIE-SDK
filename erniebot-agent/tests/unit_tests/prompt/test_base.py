@@ -1,7 +1,7 @@
 import unittest
 
-from erniebot_agent.messages import HumanMessage
-from erniebot_agent.prompt.prompt_template import PromptTemplate
+from erniebot_agent.memory import HumanMessage
+from erniebot_agent.prompt import PromptTemplate
 
 
 class TestPrompt(unittest.TestCase):

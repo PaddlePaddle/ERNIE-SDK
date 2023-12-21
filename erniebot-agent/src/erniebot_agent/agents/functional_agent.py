@@ -21,13 +21,8 @@ from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.memory import FunctionMessage, HumanMessage, Message, SystemMessage
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.memory import (
-    FunctionMessage,
-    HumanMessage,
-    Message,
-    SystemMessage,
-)
 from erniebot_agent.tools.base import BaseTool
 
 _MAX_STEPS = 5

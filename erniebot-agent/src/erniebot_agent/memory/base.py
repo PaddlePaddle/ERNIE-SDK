@@ -15,7 +15,7 @@
 
 from typing import List, Optional, Union
 
-from erniebot_agent.memory import AIMessage, Message, SystemMessage
+from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 
 
 class MessageManager:
