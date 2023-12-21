@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
-                threshold=0.0,
+                threshold=0.1,
                 tools=toolkit.get_tools() + [retrieval_tool],
                 memory=memory,
             )

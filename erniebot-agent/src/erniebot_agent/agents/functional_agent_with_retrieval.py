@@ -117,9 +117,9 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 output_message = llm_resp.message
                 if output_message.search_info is None:
                     search_info = SearchInfo()
-                    search_info["search_results"] = []
+                    search_info["results"] = []
                     for index, item in enumerate(docs):
-                        search_info["search_results"].append(
+                        search_info["results"].append(
                             {
                                 "index": index + 1,
                                 "url": "",
@@ -128,9 +128,9 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                         )
                     output_message.search_info = search_info
                 else:
-                    cur_index = len(output_message.search_info["search_results"])
+                    cur_index = len(output_message.search_info["results"])
                     for index, item in enumerate(docs):
-                        output_message.search_info["search_results"].append(
+                        output_message.search_info["results"].append(
                             {"index": cur_index + index + 1, "url": "", "title": item["title"]}
                         )
                 chat_history.append(output_message)
