@@ -4,6 +4,7 @@ import base64
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
+import json
 import requests
 
 from erniebot_agent.file_io.file_manager import FileManager
@@ -12,7 +13,6 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
-    is_base64_string,
     parse_file_from_json_response,
     parse_file_from_response,
     tool_response_contains_file,
@@ -22,25 +22,20 @@ from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
 
 
-def check_base64_string(value: Any):
+def check_json_length(value: Dict[str, Any]):
     """check the dict contains base64 string
 
     Args:
-        value (Any): the source of json data
+        value (Dict[str, Any]): the source of json data
     """
-    if isinstance(value, str) and is_base64_string(value):
+    json_string = json.dumps(value)
+    if len(json_string) > 4096:
         raise RemoteToolError(
-            "Base64 String is detected in http json response, which may contains base64 "
-            "file content but the openapi.yaml file is not configured correctly.",
+            "The length of json response is greater than 4096, please "
+            "check whether `format:byte` is missing in openapi.yaml or "
+            "the tool returned too much information.",
             stage="Output parsing",
         )
-
-    elif isinstance(value, list):
-        for item in value:
-            check_base64_string(item)
-    elif isinstance(value, dict):
-        for value in value.values():
-            check_base64_string(value)
 
 
 class RemoteTool(BaseTool):
@@ -133,7 +128,7 @@ class RemoteTool(BaseTool):
 
     async def __post_process__(self, tool_response: dict) -> dict:
         tool_response = self.__adhoc_post_process__(tool_response)
-        check_base64_string(tool_response)
+        check_json_length(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
