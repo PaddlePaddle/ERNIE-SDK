@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import base64
+import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
-import json
 import requests
 
 from erniebot_agent.file_io.file_manager import FileManager

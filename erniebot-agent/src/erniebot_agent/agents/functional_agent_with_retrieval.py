@@ -13,7 +13,13 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message
+from erniebot_agent.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    Message,
+    SearchInfo,
+)
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
@@ -100,6 +106,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 actions_taken: List[AgentAction] = []
                 files_involved: List[AgentFile] = []
                 actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
+
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, files=[])
                 llm_resp = await self._async_run_llm_without_hooks(
@@ -108,6 +115,23 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                     system=self.system_message.content if self.system_message is not None else None,
                 )
                 output_message = llm_resp.message
+                if output_message.search_info is None:
+                    search_info = SearchInfo(results=[])
+                    for index, item in enumerate(docs):
+                        search_info["results"].append(
+                            {
+                                "index": index + 1,
+                                "url": "",
+                                "title": item["title"],
+                            }
+                        )
+                    output_message.search_info = search_info
+                else:
+                    cur_index = len(output_message.search_info["results"])
+                    for index, item in enumerate(docs):
+                        output_message.search_info["results"].append(
+                            {"index": cur_index + index + 1, "url": "", "title": item["title"]}
+                        )
                 chat_history.append(output_message)
             # Using on_tool_error here since retrieval is formatted as a tool
             except (Exception, KeyboardInterrupt) as e:
