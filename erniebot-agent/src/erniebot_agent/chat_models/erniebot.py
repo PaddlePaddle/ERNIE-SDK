@@ -34,7 +34,7 @@ from erniebot_agent.messages import (
     AIMessageChunk,
     FunctionCall,
     Message,
-    SeachInfo,
+    SearchInfo,
 )
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
@@ -178,7 +178,7 @@ class ERNIEBot(ChatModel):
                 content="", function_call=function_call, search_info=None, token_usage=response.usage
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
-            search_info = SeachInfo(
+            search_info = SearchInfo(
                 results=response.search_info["search_results"],
             )
             return output_type(
