@@ -36,7 +36,7 @@ def check_json_length(value: Dict[str, Any]):
             "the tool returned too much information.",
             stage="Output parsing",
         )
-        
+
 
 class RemoteTool(BaseTool):
     def __init__(
