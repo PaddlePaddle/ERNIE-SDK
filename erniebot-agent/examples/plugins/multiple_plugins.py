@@ -107,7 +107,7 @@ class TextRepeaterNoFileTool(Tool):
 
 
 # TODO(shiyutang): replace this when model is online
-llm = ERNIEBot(model="ernie-bot", api_type="custom")
+llm = ERNIEBot(model="ernie-3.5", api_type="custom")
 memory = SlidingWindowMemory(max_round=1)
 file_manager = get_global_file_manager(access_token="")  # Access_token needs to be set here.
 # plugins = ["ChatFile", "eChart"]
