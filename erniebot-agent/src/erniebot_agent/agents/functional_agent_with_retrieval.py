@@ -13,7 +13,13 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import AIMessage, FunctionMessage, HumanMessage, Message, SearchInfo
+from erniebot_agent.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    Message,
+    SearchInfo,
+)
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
@@ -95,7 +101,6 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             )
             try:
                 docs = self._enforce_token_limit(results)
-                
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[AgentAction] = []
@@ -110,27 +115,24 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                     system=self.system_message.content if self.system_message is not None else None,
                 )
                 output_message = llm_resp.message
-                
                 if output_message.search_info is None:
                     search_info = SearchInfo()
-                    search_info["search_results"]=[]
+                    search_info["search_results"] = []
                     for index, item in enumerate(docs):
-                        search_info["search_results"].append({
-                            "index":index+1,
-                            "url":"",
-                            "title": item['title']
-                        })
+                        search_info["search_results"].append(
+                            {
+                                "index": index + 1,
+                                "url": "",
+                                "title": item["title"],
+                            }
+                        )
                     output_message.search_info = search_info
                 else:
                     cur_index = len(output_message.search_info["search_results"])
                     for index, item in enumerate(docs):
-                        output_message.search_info["search_results"].append({
-                            "index":cur_index+index+1,
-                            "url":"",
-                            "title": item['title']
-                        })
-
-
+                        output_message.search_info["search_results"].append(
+                            {"index": cur_index + index + 1, "url": "", "title": item["title"]}
+                        )
                 chat_history.append(output_message)
             # Using on_tool_error here since retrieval is formatted as a tool
             except (Exception, KeyboardInterrupt) as e:
