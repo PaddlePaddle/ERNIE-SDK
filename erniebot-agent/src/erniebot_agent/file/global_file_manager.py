@@ -23,14 +23,14 @@ from erniebot_agent.utils import config_from_environ as C
 _global_file_manager: Optional[FileManager] = None
 
 
-def get_global_file_manager() -> FileManager:
+async def get_global_file_manager() -> FileManager:
     global _global_file_manager
     if _global_file_manager is None:
-        _global_file_manager = _create_default_file_manager(access_token=None, save_dir=None)
+        _global_file_manager = await _create_default_file_manager(access_token=None, save_dir=None)
     return _global_file_manager
 
 
-def configure_global_file_manager(
+async def configure_global_file_manager(
     access_token: Optional[str] = None, save_dir: Optional[str] = None, **opts: Any
 ) -> None:
     global _global_file_manager
@@ -38,10 +38,10 @@ def configure_global_file_manager(
         raise RuntimeError(
             "The global file manager can only be configured once before calling `get_global_file_manager`."
         )
-    _global_file_manager = _create_default_file_manager(access_token=access_token, save_dir=save_dir, **opts)
+    _global_file_manager = await _create_default_file_manager(access_token=access_token, save_dir=save_dir, **opts)
 
 
-def _create_default_file_manager(
+async def _create_default_file_manager(
     access_token: Optional[str], save_dir: Optional[str], **opts: Any
 ) -> FileManager:
     async def _close_file_manager():
