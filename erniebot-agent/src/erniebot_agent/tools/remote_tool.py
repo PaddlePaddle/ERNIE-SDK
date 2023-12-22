@@ -4,6 +4,7 @@ import base64
 import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
+from erniebot_agent.file import get_global_file_manager
 
 import requests
 
@@ -45,7 +46,7 @@ class RemoteTool(BaseTool):
         server_url: str,
         headers: dict,
         version: str,
-        file_manager: FileManager,
+        file_manager: Optional[FileManager],
         examples: Optional[List[Message]] = None,
         tool_name_prefix: Optional[str] = None,
     ) -> None:
@@ -86,10 +87,12 @@ class RemoteTool(BaseTool):
 
         async def convert_to_file_data(file_data: str, format: str):
             value = file_data.replace("<file>", "").replace("</file>", "")
-            byte_value = await fileid_to_byte(value, self.file_manager)
+            byte_value = await fileid_to_byte(value, file_manager)
             if format == "byte":
                 byte_value = base64.b64encode(byte_value).decode()
             return byte_value
+
+        file_manager = await self._get_file_manager()
 
         # 1. replace fileid with byte string
         parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
@@ -203,19 +206,21 @@ class RemoteTool(BaseTool):
         if len(returns_file_infos) == 0 and is_json_response(response):
             return response.json()
 
+        file_manager = await self._get_file_manager()
+
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
             response_json = response.json()
             file_info = await parse_file_from_json_response(
                 response_json,
-                file_manager=self.file_manager,
+                file_manager=file_manager,
                 param_view=self.tool_view.returns,  # type: ignore
                 tool_name=self.tool_name,
             )
             response_json.update(file_info)
             return response_json
         file = await parse_file_from_response(
-            response, self.file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
+            response, file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
         )
 
         if file is not None:
@@ -292,6 +297,13 @@ class RemoteTool(BaseTool):
                         ):
                             result.pop(key)
         return tool_response
+
+    async def _get_file_manager(self) -> FileManager:
+        if self.file_manager is None:
+            file_manager = await get_global_file_manager()
+        else:
+            file_manager = self.file_manager
+        return file_manager
 
 
 class RemoteToolRegistor:

@@ -76,18 +76,16 @@ class Agent(GradioMixin, BaseAgent):
             self._callback_manager = callbacks
         else:
             self._callback_manager = CallbackManager(callbacks)
-        if file_manager is None:
-            file_manager = get_global_file_manager()
-        self.plugins = plugins
         self._file_manager = file_manager
+        self._plugins = plugins
         self._init_file_repr()
 
     def _init_file_repr(self):
         self.file_needs_url = False
 
-        if self.plugins:
+        if self._plugins:
             PLUGIN_WO_FILE = ["eChart"]
-            for plugin in self.plugins:
+            for plugin in self._plugins:
                 if plugin not in PLUGIN_WO_FILE:
                     self.file_needs_url = True
 
@@ -175,12 +173,8 @@ class Agent(GradioMixin, BaseAgent):
         for val in args.values():
             if isinstance(val, str):
                 if protocol.is_file_id(val):
-                    if self._file_manager is None:
-                        logger.warning(
-                            f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                        )
-                        continue
-                    file = self._file_manager.look_up_file_by_id(val)
+                    file_manager = await self._get_file_manager()
+                    file = file_manager.look_up_file_by_id(val)
                     if file is None:
                         raise RuntimeError(f"Unregistered file with ID {repr(val)} is used by {repr(tool)}.")
                     agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
@@ -190,3 +184,10 @@ class Agent(GradioMixin, BaseAgent):
                 for item in val:
                     agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
         return agent_files
+
+    async def _get_file_manager(self) -> FileManager:
+        if self._file_manager is None:
+            file_manager = await get_global_file_manager()
+        else:
+            file_manager = self._file_manager
+        return file_manager

@@ -2,7 +2,7 @@ import asyncio
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import (
+from erniebot_agent.file import (
     configure_global_file_manager,
     get_global_file_manager,
 )
@@ -25,7 +25,7 @@ agent = FunctionalAgent(llm=llm, tools=toolkit.tools, memory=memory)
 
 
 async def run_agent():
-    file_manager = get_global_file_manager()
+    file_manager = await get_global_file_manager()
     seg_file = await file_manager.create_file_from_path(file_path="cityscapes_demo.png", file_type="local")
     clas_file = await file_manager.create_file_from_path(file_path="class_img.jpg", file_type="local")
     ocr_file = await file_manager.create_file_from_path(file_path="ch.png", file_type="local")
