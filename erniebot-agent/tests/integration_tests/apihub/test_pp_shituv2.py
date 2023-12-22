@@ -1,8 +1,8 @@
 from __future__ import annotations
-from erniebot_agent.file.file_manager import FileManager
 
 import pytest
 
+from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.tools import RemoteToolkit
 
 from .base import RemoteToolTesting

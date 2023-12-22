@@ -27,7 +27,7 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file import get_global_file_manager, protocol
+from erniebot_agent.file import GlobalFileManager, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Message, SystemMessage
@@ -187,7 +187,7 @@ class Agent(GradioMixin, BaseAgent):
 
     async def _get_file_manager(self) -> FileManager:
         if self._file_manager is None:
-            file_manager = await get_global_file_manager()
+            file_manager = await GlobalFileManager().get()
         else:
             file_manager = self._file_manager
         return file_manager

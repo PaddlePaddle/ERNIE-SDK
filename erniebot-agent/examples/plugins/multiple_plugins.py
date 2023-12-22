@@ -6,9 +6,9 @@ from pydantic import Field
 from erniebot_agent.agents.callback.default import get_no_ellipsis_callback
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file import get_global_file_manager
-from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
+from erniebot_agent.file import GlobalFileManager
 from erniebot_agent.memory import AIMessage, HumanMessage, Message
+from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.calculator_tool import CalculatorTool
 from erniebot_agent.tools.schema import ToolParameterView
@@ -32,7 +32,7 @@ class TextRepeaterTool(Tool):
         if "<split>" in input_file_id:
             input_file_id = input_file_id.split("<split>")[0]
 
-        file_manager = await get_global_file_manager()
+        file_manager = await GlobalFileManager().get()
         input_file = file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")
@@ -121,8 +121,8 @@ agent = FunctionalAgent(
 
 
 async def run_agent():
-    file_manager = await get_global_file_manager()
-    
+    file_manager = await GlobalFileManager().get()
+
     docx_file = await file_manager.create_file_from_path(
         file_path="浅谈牛奶的营养与消费趋势.docx",
         file_type="remote",

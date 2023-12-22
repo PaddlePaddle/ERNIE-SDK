@@ -13,52 +13,66 @@
 # limitations under the License.
 
 import asyncio
-from typing import Any, Optional
+from typing import Any, Optional, final
 
 import asyncio_atexit  # type: ignore
 
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
-
-_global_file_manager: Optional[FileManager] = None
-_lock = asyncio.Lock()
+from erniebot_agent.utils.misc import Singleton
 
 
-async def get_global_file_manager() -> FileManager:
-    global _global_file_manager
-    async with _lock:
-        if _global_file_manager is None:
-            _global_file_manager = await _create_default_file_manager(access_token=None, save_dir=None)
-    return _global_file_manager
+@final
+class GlobalFileManager(metaclass=Singleton):
+    _file_manager: Optional[FileManager]
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._lock = asyncio.Lock()
+        self._file_manager = None
 
-async def configure_global_file_manager(
-    access_token: Optional[str] = None, save_dir: Optional[str] = None, **opts: Any
-) -> None:
-    global _global_file_manager
-    async with _lock:
-        if _global_file_manager is not None:
-            raise RuntimeError(
-                "The global file manager can only be configured once before calling `get_global_file_manager`."
+    async def get(self) -> FileManager:
+        async with self._lock:
+            if self._file_manager is None:
+                self._file_manager = await self._create_default_file_manager(
+                    access_token=None, save_dir=None
+                )
+        return self._file_manager
+
+    async def configure(
+        self,
+        access_token: Optional[str] = None,
+        save_dir: Optional[str] = None,
+        **opts: Any,
+    ) -> None:
+        async with self._lock:
+            if self._file_manager is not None:
+                raise RuntimeError(
+                    "`GlobalFileManager.configure` can only be called once"
+                    " and must be called before calling `GlobalFileManager.get`."
+                )
+            self._file_manager = await self._create_default_file_manager(
+                access_token=access_token, save_dir=save_dir, **opts
             )
-        _global_file_manager = await _create_default_file_manager(access_token=access_token, save_dir=save_dir, **opts)
 
+    async def _create_default_file_manager(
+        self,
+        access_token: Optional[str],
+        save_dir: Optional[str],
+        **opts: Any,
+    ) -> FileManager:
+        async def _close_file_manager():
+            await file_manager.close()
 
-async def _create_default_file_manager(
-    access_token: Optional[str], save_dir: Optional[str], **opts: Any
-) -> FileManager:
-    async def _close_file_manager():
-        await file_manager.close()
-
-    if access_token is None:
-        access_token = C.get_global_access_token()
-    if save_dir is None:
-        save_dir = C.get_global_save_dir()
-    if access_token is not None:
-        remote_file_client = AIStudioFileClient(access_token=access_token)
-    else:
-        remote_file_client = None
-    file_manager = FileManager(remote_file_client, save_dir, **opts)
-    asyncio_atexit.register(_close_file_manager)
-    return file_manager
+        if access_token is None:
+            access_token = C.get_global_access_token()
+        if save_dir is None:
+            save_dir = C.get_global_save_dir()
+        if access_token is not None:
+            remote_file_client = AIStudioFileClient(access_token=access_token)
+        else:
+            remote_file_client = None
+        file_manager = FileManager(remote_file_client, save_dir, **opts)
+        asyncio_atexit.register(_close_file_manager)
+        return file_manager

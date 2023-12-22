@@ -4,10 +4,10 @@ import base64
 import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
-from erniebot_agent.file import get_global_file_manager
 
 import requests
 
+from erniebot_agent.file import GlobalFileManager
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Message
 from erniebot_agent.tools.base import BaseTool
@@ -300,7 +300,7 @@ class RemoteTool(BaseTool):
 
     async def _get_file_manager(self) -> FileManager:
         if self.file_manager is None:
-            file_manager = await get_global_file_manager()
+            file_manager = await GlobalFileManager().get()
         else:
             file_manager = self.file_manager
         return file_manager

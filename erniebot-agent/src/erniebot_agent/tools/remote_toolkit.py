@@ -43,7 +43,7 @@ class RemoteToolkit:
     info: EndpointInfo
     servers: List[Endpoint]
     paths: List[RemoteToolView]
-    file_manager: FileManager
+    file_manager: Optional[FileManager]
 
     component_schemas: dict[str, Type[ToolParameterView]]
     headers: dict
