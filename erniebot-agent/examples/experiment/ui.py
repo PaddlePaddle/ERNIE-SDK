@@ -54,14 +54,26 @@ def generate_report(query, history=[]):
     aurora_db_citation = BaizhongSearch(
         base_url=base_url, project_name="citation_data", remark="construction test dataset", project_id=292
     )
+    # aurora_db_retriver = BaizhongSearch(
+    #     base_url=base_url, project_name="demo_data_1", remark="construction test dataset", project_id=293
+    # )
+    # aurora_db_retriver_abstract = BaizhongSearch(
+    #     base_url=base_url,
+    #     project_name="demo_data_abstact",
+    #     remark="construction test dataset",
+    #     project_id=294,
+    # )
     aurora_db_retriver = BaizhongSearch(
-        base_url=base_url, project_name="demo_data_1", remark="construction test dataset", project_id=293
+        base_url=base_url,
+        project_name="retriver_abstract",
+        remark="construction test dataset",
+        project_id=337,
     )
     aurora_db_retriver_abstract = BaizhongSearch(
         base_url=base_url,
-        project_name="demo_data_abstact",
+        project_name="retriver_abstract",
         remark="construction test dataset",
-        project_id=294,
+        project_id=337,
     )
     intent_detection_tool = IntentDetectionTool()
     abstract_search = BaizhongSearchTool(description="abstact", db=aurora_db_retriver_abstract)
