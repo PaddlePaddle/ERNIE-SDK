@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
 parser.add_argument("--access_token", type=str, default="", help="The access token.")
 parser.add_argument("--base_url", type=str, default="", help="The base url.")
-parser.add_argument("--num_research_agent", type=int, default=3, help="The number of research agent")
+parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
 parser.add_argument(
     "--report_type",
     type=str,
@@ -28,10 +28,10 @@ os.environ["access_token"] = access_token
 import jsonlines
 from EditorActorAgent import EditorActorAgent
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
 from RankingAgent import RankingAgent
 from ResearchAgent import ResearchAgent
 from ReviserActorAgent import ReviserActorAgent
-from tools.baizhong_tool import BaizhongSearchTool
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
 from tools.ranking_tool import TextRankingTool

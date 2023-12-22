@@ -30,7 +30,7 @@ class ReviserActorAgent(Agent):
         messages = [
             {
                 "role": "user",
-                "content": self.prompt_template.format(draft=draft, notes=notes),
+                "content": self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."),
             }
         ]
         while True:

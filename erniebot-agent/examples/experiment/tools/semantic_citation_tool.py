@@ -54,7 +54,12 @@ class SemanticCitationTool(Tool):
                 for sentence in sentence_splits:
                     if not sentence:
                         continue
-                    query_result = aurora_db.search(query=sentence, top_k=1, filters=None)
+                    try:
+                        query_result = aurora_db.search(query=sentence, top_k=1, filters=None)
+                    except Exception as e:
+                        output_sent.append(sentence)
+                        print(e)
+                        continue
                     source = query_result[0]["meta"]
                     if len(sentence.strip()) > 0:
                         if not self.is_punctuation(sentence[-1]):

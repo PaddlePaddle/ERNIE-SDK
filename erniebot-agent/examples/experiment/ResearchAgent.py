@@ -79,7 +79,7 @@ class ResearchAgent(Agent):
         url_dict = {}
         results = await self.retriever(query, top_k=3)
         length_limit = 0
-        for doc in results:
+        for doc in results["documents"]:
             res = await self.summarize(doc["content_se"], query)
             # Add reference to avoid hallucination
             data = {"summary": res, "url": doc["meta"]["url"], "name": doc["title"]}
@@ -113,7 +113,7 @@ class ResearchAgent(Agent):
         if self.use_context_planning:
             sub_queries = []
             res = await self.retriever_abstract(query, top_k=3)
-            context = [item["content_se"] for item in res]
+            context = [item["content_se"] for item in res["documents"]]
             context_content = ""
             for index, item in enumerate(context):
                 sub_queries_item = await self.task_planning(
