@@ -20,9 +20,6 @@ def erniebot_chat(messages: list, functions: Optional[str] = None, model: Option
         access_token=access_token,
     )
     if functions is None:
-        import time
-
-        time.sleep(2)
         resp_stream = erniebot.ChatCompletion.create(
             _config_=_config, model=model, messages=messages, **kwargs, stream=False
         )
