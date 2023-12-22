@@ -1,0 +1,79 @@
+name: Agent CI
+
+on:
+  push:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
+      - erniebot/**
+  pull_request:
+    paths:
+      - .github/workflows/agent_*.yaml
+      - erniebot-agent/**
+      - erniebot/**
+
+jobs:
+  Lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: pip # Caching pip dependencies
+          cache-dependency-path: |
+            erniebot/setup.cfg
+            erniebot-agent/setup.cfg
+            erniebot-agent/dev-requirements.txt
+      - name: Install erniebot-agent and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ./erniebot
+          python -m pip install ./erniebot-agent[all]
+          python -m pip install -r erniebot-agent/dev-requirements.txt
+      - name: Show make version
+        run: make --version
+      - name: Format Python code
+        run: make format
+        working-directory: erniebot-agent
+      - name: Lint Python code
+        run: make lint
+        working-directory: erniebot-agent
+      - name: Type-check Python code
+        run: make type_check
+        working-directory: erniebot-agent
+  UnitTest:
+    name: Unit Test
+    runs-on: ubuntu-20.04
+    permissions:
+      pull-requests: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: pip # Caching pip dependencies
+          cache-dependency-path: |
+            erniebot/setup.cfg
+            erniebot-agent/setup.cfg
+            erniebot-agent/tests/requirements.txt
+      - name: Install erniebot-agent and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ./erniebot
+          python -m pip install ./erniebot-agent[all]
+          python -m pip install -r erniebot-agent/tests/requirements.txt
+      - name: Show make version
+        run: make --version
+      - name: Run unit tests
+        run: make test_coverage
+        working-directory: erniebot-agent
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: erniebot-agent
+          name: erniebot-agent

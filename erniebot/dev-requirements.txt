@@ -1,0 +1,7 @@
+black[jupyter] == 23.3.0
+flake8 == 5.0.4
+isort == 5.11.5
+mypy == 1.6.1
+types-colorama == 0.4.15.12
+types-jsonschema == 4.19.0.3
+types-requests == 2.31.0.2

@@ -134,6 +134,10 @@ class FunctionCall(TypedDict):
     arguments: str
 
 
+class SearchInfo(TypedDict):
+    results: List[Dict]
+
+
 class TokenUsage(TypedDict):
     prompt_tokens: int
     completion_tokens: int
@@ -147,6 +151,7 @@ class AIMessage(Message):
         content: str,
         function_call: Optional[FunctionCall],
         token_usage: Optional[TokenUsage] = None,
+        search_info: Optional[SearchInfo] = None,
     ):
         if token_usage is None:
             prompt_tokens = 0
@@ -156,7 +161,8 @@ class AIMessage(Message):
         super().__init__(role="assistant", content=content, token_count=completion_tokens)
         self.function_call = function_call
         self.query_tokens_count = prompt_tokens
-        self._param_names = ["role", "content", "function_call"]
+        self.search_info = search_info
+        self._param_names = ["role", "content", "function_call", "search_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token count information from LLM."""

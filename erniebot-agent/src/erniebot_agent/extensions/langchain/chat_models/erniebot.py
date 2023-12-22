@@ -33,7 +33,7 @@ class ErnieBotChat(BaseChatModel):
     Example:
         .. code-block:: python
             from erniebot_agent.extensions.langchain.chat_models import ErnieBotChat
-            erniebot_chat = ErnieBotChat(model="ernie-bot")
+            erniebot_chat = ErnieBotChat(model="ernie-3.5")
     """
 
     client: Any = None
@@ -44,7 +44,7 @@ class ErnieBotChat(BaseChatModel):
     streaming: bool = False
     """Whether to stream the results or not."""
 
-    model: str = "ernie-bot"
+    model: str = "ernie-3.5"
     """Model to use."""
     temperature: Optional[float] = 0.95
     """Sampling temperature to use."""

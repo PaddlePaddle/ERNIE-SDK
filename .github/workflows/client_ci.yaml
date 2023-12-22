@@ -1,0 +1,41 @@
+name: Client CI
+
+on:
+  push:
+    paths:
+      - .github/workflows/client_*.yaml
+      - erniebot/**
+  pull_request:
+    paths:
+      - .github/workflows/client_*.yaml
+      - erniebot/**
+
+jobs:
+  Lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: erniebot
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: pip # Caching pip dependencies
+          cache-dependency-path: |
+            setup.cfg
+            dev-requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install -r dev-requirements.txt
+      - name: Show make version
+        run: make --version
+      - name: Format Python code
+        run: make format
+      - name: Lint Python code
+        run: make lint
+      - name: Type-check Python code
+        run: make type_check
