@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio_atexit
 from typing import Any, Optional
+
+import asyncio_atexit  # type: ignore
 
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.remote_file import AIStudioFileClient
