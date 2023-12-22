@@ -41,7 +41,7 @@ class GroupChat:
         """Returns the agent with a given name."""
         return self.agents[self.agent_names.index(name)]
 
-    def next_agent(self, agent: Agent, agents: List[Agent]):
+    def next_agent(self, agent, agents):
         """Return the next agent in the list."""
         idx = self.agent_names.index(agent.name) if agent.name in self.agent_names else -1
         # Return the next agent
@@ -53,20 +53,20 @@ class GroupChat:
                 if self.agents[(offset + i) % len(self.agents)] in agents:
                     return self.agents[(offset + i) % len(self.agents)]
 
-    def select_speaker_msg(self, agents: List[Agent]):
+    def select_speaker_msg(self, agents):
         return f"""您正在玩角色扮演游戏。可以使用以下角色：
 {self._participant_roles(agents)}.
 
 阅读下面的对话。
 从 {[agent.name for agent in agents]}中选择下一个角色来扮演。仅返回扮演的角色。"""
 
-    def select_speaker_prompt(self, agents: List[Agent]):
+    def select_speaker_prompt(self, agents):
         strs = ""
         for i in agents:
             strs += i.name + ":" + i.system_message + "\n"
         return f"阅读下面的对话。 从{[agent.name for agent in agents]} 中选择下一个角色来扮演。仅返回扮演的角色。" + strs
 
-    def manual_select_speaker(self, agents: List[Agent]):
+    def manual_select_speaker(self, agents):
         print("请从以下列表中选择下一位Agent：")
         _n_agents = len(agents)
         for i in range(_n_agents):
@@ -92,7 +92,7 @@ class GroupChat:
                 print(f"输入无效。请输入 1 到 {_n_agents} 之间的数字。")
         return None
 
-    def _prepare_and_select_agents(self, last_speaker: Agent):
+    def _prepare_and_select_agents(self, last_speaker):
         if self.speaker_selection_method.lower() not in _VALID_SPEAKER_SELECTION_METHODS:
             raise ValueError(
                 f"GroupChat speaker_selection_method is set to '{self.speaker_selection_method}'. "
@@ -134,7 +134,7 @@ class GroupChat:
             selected_agent = None
         return selected_agent, agents
 
-    def select_speaker(self, last_speaker: Agent, messages: List):
+    def select_speaker(self, last_speaker, messages: List):
         """Select the next speaker."""
         selected_agent, agents = self._prepare_and_select_agents(last_speaker)
         if selected_agent:
@@ -160,7 +160,7 @@ class GroupChat:
         except ValueError:
             return self.next_agent(last_speaker, agents)
 
-    async def a_select_speaker(self, last_speaker: Agent, messages):
+    async def a_select_speaker(self, last_speaker, messages):
         """Select the next speaker."""
         return self.select_speaker(last_speaker, messages)
 
@@ -179,7 +179,7 @@ class GroupChat:
             roles.append(f"{agent.name}: {agent.system_message}".strip())
         return "\n".join(roles)
 
-    def _mentioned_agents(self, message_content: str, agents: List[Agent]):
+    def _mentioned_agents(self, message_content: str, agents):
         # Cast message content to str
         mentions = dict()
         for agent in agents:
@@ -215,7 +215,7 @@ class GroupChatManager(Agent):
         self,
         query: str,
         report: str,
-        speaker: Agent,
+        speaker,
     ):
         """Run a group chat."""
         report_list = [report]
