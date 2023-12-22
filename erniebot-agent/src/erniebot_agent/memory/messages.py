@@ -161,12 +161,12 @@ class HumanMessage(Message):
         <role: user, content: I want to order a pizza.>
 
         >>> from erniebot_agent.file_io.base import File
-        >>> prompt = "I want to know text in this image."
+        >>> prompt = "What is the text in this image?"
         >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
         >>> message = await HumanMessage.create_with_files(
                 prompt, files, include_file_urls=True)
         >>> message
-        <role: user, content: I want to know text in this image.<file>File-local-xxxx</file><url>{url}</url>.>
+        <role: user, content: W h ha t.<file>File-local-xxxx</file><url>{url}</url>.>
         
     """
 
@@ -248,7 +248,7 @@ class AIMessage(Message):
         
         .. code-block:: python
 
-            >>> human_message = HumanMessage(content="I want to know text in this image.")
+            >>> human_message = HumanMessage(content="What is the text in this image?")
             >>> ai_message = AIMessage(
                 function_call={"name": "OCR", "thoughts": "The user want to know the text in the image, 
                      I need to use the OCR tool", 
@@ -257,7 +257,7 @@ class AIMessage(Message):
                 search_info={}]}
                 )
             >>> human_message.content
-            "I want to know text in this image."
+            "What is the text in this image?"
             >>> ai_message.function_call
             {"name": "OCR",
                 "thoughts": "The user want to know the text in the image, I need to use the OCR tool",
