@@ -13,7 +13,13 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.file.base import File
-from erniebot_agent.memory.messages import AIMessage, FunctionMessage, HumanMessage, Message, SearchInfo
+from erniebot_agent.memory.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    Message,
+    SearchInfo,
+)
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool

@@ -8,7 +8,6 @@ from .base import RemoteToolTesting
 
 
 class TestRemoteTool(RemoteToolTesting):
-
     @pytest.mark.asyncio
     async def test_tool(self):
         toolkit = RemoteToolkit.from_aistudio("img-enhance")
@@ -18,7 +17,4 @@ class TestRemoteTool(RemoteToolTesting):
 
         result = await agent.async_run("请将这张照片放大一些", files=[file])
         self.assertGreater(len(result.actions), 0)
-        self.assertEqual(
-            len(result.files),
-            2
-        )
+        self.assertEqual(len(result.files), 2)
