@@ -17,7 +17,7 @@ from __future__ import annotations
 import base64
 import os
 import tempfile
-from typing import TYPE_CHECKING, Any, List, Protocol
+from typing import TYPE_CHECKING, Any, List, Optional, Protocol, cast
 
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.exceptions import ObjectClosedError
@@ -30,8 +30,12 @@ if TYPE_CHECKING:
 
 
 class GradioMixin:
-    _file_manager: FileManager  # make mypy happy
+    _file_manager: Optional[FileManager]  # make mypy happy
     _tool_manager: ToolManager  # make mypy happy
+
+    # make mypy happy
+    async def _get_file_manager(self) -> FileManager:
+        return cast(FileManager, None)
 
     def launch_gradio_demo(self, **launch_kwargs: Any):
         # TODO: Unified optional dependencies management
@@ -71,7 +75,8 @@ class GradioMixin:
             ):
                 # If there is a file output in the last round, then we need to show it
                 output_file_id = response.files[-1].file.id
-                output_file = self._file_manager.look_up_file_by_id(output_file_id)
+                file_manager = await self._get_file_manager()
+                output_file = file_manager.look_up_file_by_id(output_file_id)
                 file_content = await output_file.read_contents()
                 if get_file_type(response.files[-1].file.filename) == "image":
                     # If it is a image, we can display it in the same chat page
@@ -114,13 +119,14 @@ class GradioMixin:
 
         async def _upload(file, history):
             nonlocal _uploaded_file_cache
+            file_manager = await self._get_file_manager()
             for single_file in file:
-                upload_file = await self._file_manager.create_file_from_path(single_file.name)
+                upload_file = await file_manager.create_file_from_path(single_file.name)
                 _uploaded_file_cache.append(upload_file)
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = self._file_manager.list_registered_files()
+            output_lis = file_manager.list_registered_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
@@ -165,8 +171,7 @@ class GradioMixin:
                         )
 
                 with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager.list_registered_files()
-                    all_files = gr.HTML(value=file_lis, label="All input files")
+                    all_files = gr.HTML(value=[], label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
                     tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
