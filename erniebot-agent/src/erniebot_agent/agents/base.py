@@ -176,7 +176,10 @@ class Agent(GradioMixin, BaseAgent):
                     file_manager = await self._get_file_manager()
                     file = file_manager.look_up_file_by_id(val)
                     if file is None:
-                        raise RuntimeError(f"Unregistered file with ID {repr(val)} is used by {repr(tool)}.")
+                        raise RuntimeError(
+                            f"Unregistered file with ID {repr(val)} is used by {repr(tool)}."
+                            f" File type: {file_type}"
+                        )
                     agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
             elif isinstance(val, dict):
                 agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
