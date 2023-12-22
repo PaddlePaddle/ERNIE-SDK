@@ -22,6 +22,20 @@ from erniebot_agent.file_io.remote_file import RemoteFile
 
 logger = logging.getLogger(__name__)
 
+class FunctionCall(TypedDict):
+    name: str
+    thoughts: str
+    arguments: str
+
+
+class SearchInfo(TypedDict):
+    results: List[Dict]
+
+
+class TokenUsage(TypedDict):
+    prompt_tokens: int
+    completion_tokens: int
+
 
 class Message:
     """
@@ -31,9 +45,11 @@ class Message:
         role (str): character of the message.
         content (str): content of the message.
         token_count (Optional[int], optional): number of tokens of the message content. Defaults to None.
-
-    Returns:
-        A message object。
+    
+    Attributes:
+        role (str): character of the message. 
+        content (str): content of the message. 
+        token_count (Optional[int]): number of tokens of the message content.    
     
     Examples:
         >>> Message("user", "hello")
@@ -95,16 +111,18 @@ class Message:
 
 
 class SystemMessage(Message):
-    r"""
+    """
     Definition of system message, such that the feature of the Agent can be customized.
 
     Args:
         content (str): the content of the message.
     
-    Returns:
-        A system message object.
+    Attributes:
+        role (str): character of the message. 
+        content (str): content of the message. 
+        token_count (Optional[int]): number of tokens of the message content. 
     
-     Examples:
+    Examples:
 
         .. code-block:: python
         >>> from erniebot_agent.messages import SystemMessage
@@ -129,9 +147,11 @@ class HumanMessage(Message):
     
     Args:
         content (str): the content of the message.
-
-    Returns:
-        A HumanMessage object.
+    
+    Attributes:
+        role (str): character of the message. 
+        content (str): content of the message. 
+        token_count (Optional[int]): number of tokens of the message content. 
     
     Examples:
     .. code-block:: python
@@ -165,7 +185,7 @@ class HumanMessage(Message):
             include_file_urls: Whehter to include file URLs in the content of message.
         
         Returns:
-            A HumanMessage object contains file.
+            A HumanMessage object that contains file in the content.
         
         Raises:
             RuntimeError: Only `RemoteFile` objects can set include_file_urls as True.
@@ -204,29 +224,23 @@ class HumanMessage(Message):
         return cls(content)
 
 
-class FunctionCall(TypedDict):
-    name: str
-    thoughts: str
-    arguments: str
-
-
-class SearchInfo(TypedDict):
-    results: List[Dict]
-
-
-class TokenUsage(TypedDict):
-    prompt_tokens: int
-    completion_tokens: int
-
-
 class AIMessage(Message):
     """
     The definition of the message from an assistant.
+
     Args:
         content (str): the content of the message.
         function_call (Optional[FunctionCall], optional): The function that agent calls. Defaults to None.
         token_usage (Optional[TokenUsage], optional): the token usage calculate by ERNIE. Defaults to None.
         search_info (Optional[SearchInfo], optional): The SearchInfo content of the chat model's response. Defaults to None.
+    
+    Attributes:
+        role (str): character of the message. 
+        content (str): content of the message. 
+        token_count (Optional[int]): number of tokens of the message content. 
+        function_call (Optional[FunctionCall]): The function that agent calls.
+        query_tokens_count (int): the number of tokens in the query.
+        search_info (Optional[SearchInfo]): The SearchInfo in the chat model's response.
     
     Examples:
         
@@ -271,7 +285,32 @@ class AIMessage(Message):
 
 class FunctionMessage(Message):
     """
-    The definition of a message that calls tools, containing the result of a function call."""
+    The definition of a message that calls tools, containing the result of a function call.
+    
+    Args:
+        name (str): the name of the function.
+        content (str): the content of the message.
+    
+    Attributes:
+        name (str): the name of the function. 
+        role (str): character of the message. 
+        content (str): content of the message. 
+        token_count (Optional[int]): number of tokens of the message content. 
+    
+    Examples:
+
+        .. code-block:: python
+
+            >>> function_message = FunctionMessage(name="OCR", content="The text in the image is: 1234567")
+            >>> function_message.name
+            "OCR"
+            >>> function_message.content
+            "The text in the image is: 1234567"
+            >>> function_message.role
+            "function"
+            >>> function_message.token_count
+            0
+    """
 
     def __init__(self, name: str, content: str):
         super().__init__(role="function", content=content)
@@ -280,4 +319,4 @@ class FunctionMessage(Message):
 
 
 class AIMessageChunk(AIMessage):
-    """A message chunk from an assistant."""
+    """The definition of a message chunk from an assistant."""

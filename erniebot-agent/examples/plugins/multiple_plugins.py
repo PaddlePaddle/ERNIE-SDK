@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Any, Dict, List, Type
 
 from pydantic import Field
@@ -107,11 +108,13 @@ class TextRepeaterNoFileTool(Tool):
 
 
 # TODO(shiyutang): replace this when model is online
-llm = ERNIEBot(model="ernie-3.5", api_type="custom")
+os.environ["EB_BASE_URL"] = "http://10.12.107.243:8871/ernie-foundry/v1"
+llm = ERNIEBot(model="ernie-3.5", api_type="custom",
+              access_token="1dc43e5843cfb51b7b41ba766aff2372cf2f3ccb")
 memory = SlidingWindowMemory(max_round=1)
-file_manager = get_file_manager(access_token="")  # Access_token needs to be set here.
-# plugins = ["ChatFile", "eChart"]
-plugins: List[str] = []
+file_manager = get_file_manager(access_token="1dc43e5843cfb51b7b41ba766aff2372cf2f3ccb")  # Access_token needs to be set here.
+plugins = ["ChatFile", "eChart"]
+# plugins: List[str] = []
 agent = FunctionalAgent(
     llm=llm,
     tools=[TextRepeaterTool(), TextRepeaterNoFileTool(), CalculatorTool()],

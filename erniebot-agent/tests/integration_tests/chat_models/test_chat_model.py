@@ -64,7 +64,7 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
                 },
             }
         ]
-        # use ernie-3.5 here since ernie-turbo doesn't support function call
+        # NOTE：use ernie-3.5 here since ernie-turbo doesn't support function call
         eb = ERNIEBot(
             model="ernie-3.5", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
         )

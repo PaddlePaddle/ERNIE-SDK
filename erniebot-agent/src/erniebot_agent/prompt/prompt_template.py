@@ -34,7 +34,20 @@ def jinja2_formatter(template: str, **kwargs: Any) -> str:
 
 
 class PromptTemplate(BasePromptTemplate):
-    """format the prompt for llm input."""
+    """
+    Format the prompt for llm input.
+    
+    Args:
+        template: The template string.
+        name: The name of the prompt.
+        input_variables: The input variables of the template.
+    
+    Attributes:
+        name: The name of the prompt.
+        template: The template string.
+        input_variables: The input variables of the template.
+        validate_template: Whether to validate the template.
+    """
 
     def __init__(
         self, template: str, name: Optional[str] = None, input_variables: Optional[List[str]] = None
@@ -45,6 +58,7 @@ class PromptTemplate(BasePromptTemplate):
         self.validate_template = True if input_variables is not None else False
 
     def format(self, **kwargs) -> str:
+        """Fill the template with the given input variables."""
         if self.validate_template:
             error = self._validate_template()
             if error:
@@ -77,5 +91,6 @@ class PromptTemplate(BasePromptTemplate):
         return Error_message
 
     def format_as_message(self, **kwargs):
+        """Return the prompt as a HumanMessage"""
         prompt = self.format(**kwargs)
         return HumanMessage(content=prompt)
