@@ -162,7 +162,6 @@ class HumanMessage(Message):
         >>> HumanMessage("I want to order a pizza.")
         <role: user, content: I want to order a pizza.>
 
-        >>> from erniebot_agent.file_io.base import File
         >>> prompt = "What is the text in this image?"
         >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
         >>> message = await HumanMessage.create_with_files(

@@ -11,7 +11,7 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_pp_shituv2(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-shituv2")
+        toolkit = RemoteToolkit.from_aistudio("pp-shituv2", file_manager=self.file_manager)
         tools = toolkit.get_tools()
         print(tools[0].function_call_schema())
 

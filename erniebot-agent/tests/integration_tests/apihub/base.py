@@ -10,7 +10,7 @@ import requests
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager
@@ -44,10 +44,11 @@ class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
         if "EB_BASE_URL" in os.environ:
             llm = ERNIEBot(model="ernie-3.5", api_type="custom")
         else:
-            llm = ERNIEBot(model="ernie-3.5")
+            llm = ERNIEBot(model="ernie-3.5", api_type="aistudio")
 
         return FunctionalAgent(
             llm=llm,
             tools=ToolManager(tools=toolkit.get_tools()),
             memory=WholeMemory(),
+            file_manager=self.file_manager,
         )

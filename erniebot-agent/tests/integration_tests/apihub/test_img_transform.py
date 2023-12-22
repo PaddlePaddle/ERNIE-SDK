@@ -14,7 +14,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_img_style_trans(self):
-        toolkit = RemoteToolkit.from_aistudio("img-style-trans")
+        toolkit = RemoteToolkit.from_aistudio("img-style-trans", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 
@@ -23,7 +23,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_person_animation(self):
-        toolkit = RemoteToolkit.from_aistudio("person-animation")
+        toolkit = RemoteToolkit.from_aistudio("person-animation", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 

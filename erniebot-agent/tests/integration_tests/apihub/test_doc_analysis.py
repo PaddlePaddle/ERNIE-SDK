@@ -14,7 +14,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_doc_analysis(self):
-        toolkit = RemoteToolkit.from_aistudio("doc-analysis")
+        toolkit = RemoteToolkit.from_aistudio("doc-analysis", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 
@@ -23,7 +23,7 @@ class TestRemoteTool(RemoteToolTesting):
         self.assertIn("城市管理执法办法", result.text)
 
     async def test_official_doc(self):
-        toolkit = RemoteToolkit.from_aistudio("official-doc-rec")
+        toolkit = RemoteToolkit.from_aistudio("official-doc-rec", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 
