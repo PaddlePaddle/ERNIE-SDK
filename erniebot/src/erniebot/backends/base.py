@@ -26,12 +26,16 @@ class EBBackend(object):
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__()
-
         self.api_type = self.API_TYPE
         self.base_url = config_dict.get("api_base_url", None) or self.BASE_URL
         self._cfg = config_dict
         self._client = EBClient(
-            session=self._cfg.get("requests_session", None), asession=self._cfg.get("aiohttp_session", None), response_handler=self.handle_response, proxy=self._cfg.get("proxy", None),)
+            self.base_url,
+            session=self._cfg.get("requests_session", None),
+            asession=self._cfg.get("aiohttp_session", None),
+            response_handler=self.handle_response,
+            proxy=self._cfg.get("proxy", None),
+        )
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         raise NotImplementedError
@@ -61,6 +65,3 @@ class EBBackend(object):
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         raise NotImplementedError
-
-    def _get_url(self, path: str) -> str:
-        return f"{self.base_url}{path}"

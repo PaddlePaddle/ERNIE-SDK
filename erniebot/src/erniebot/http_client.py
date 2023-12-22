@@ -42,8 +42,7 @@ from __future__ import annotations
 import asyncio
 import http
 import json
-import time
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from json import JSONDecodeError
 from typing import (
     Any,
@@ -52,12 +51,12 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Generator,
     Iterator,
     Mapping,
     Optional,
     Tuple,
     Union,
-    Generator,
 )
 
 import aiohttp
@@ -86,12 +85,15 @@ class EBClient(object):
 
     def __init__(
         self,
+        base_url: str,
+        *,
         session: Optional[requests.Session] = None,
         asession: Optional[aiohttp.ClientSession] = None,
         response_handler: Optional[Callable[[EBResponse], EBResponse]] = None,
         proxy: Optional[str] = None,
     ) -> None:
         super().__init__()
+        self._base_url = base_url
         self._session = session
         self._asession = asession
         self._resp_handler = response_handler
@@ -100,13 +102,13 @@ class EBClient(object):
     def prepare_request(
         self,
         method: str,
-        url: str,
+        path: str,
         supplied_headers: Optional[HeadersType],
         params: Optional[ParamsType],
         files: Optional[FilesType],
     ) -> Tuple[str, HeadersType, Optional[bytes]]:
+        url = f"{self._base_url}{path}"
         headers = self._validate_headers(supplied_headers)
-
         data = None
         method = method.upper()
         if method == "GET" or method == "DELETE":
@@ -118,7 +120,6 @@ class EBClient(object):
                 headers["Content-Type"] = "application/json"
         else:
             raise errors.ConnectionError(f"Unrecognized HTTP method: {repr(method)}")
-
         headers = self.get_request_headers(method, headers)
 
         logging.debug("Method: %s", method)
@@ -185,7 +186,7 @@ class EBClient(object):
             if should_clean_up_ctx:
                 # We don't care about the exception type and the stack trace.
                 ctx.__exit__(None, None, None)
-                
+
         return resp
 
     async def asend_request(
@@ -223,6 +224,7 @@ class EBClient(object):
                         f"but got a {'streamed' if got_stream else 'non-streamed'} response. "
                     )
                 if got_stream:
+
                     async def wrap_resp(resp: AsyncIterator) -> AsyncIterator[EBResponse]:
                         try:
                             async for r in resp:
@@ -281,7 +283,7 @@ class EBClient(object):
             raise errors.TimeoutError(f"Request timed out: {e}") from e
         except requests.exceptions.RequestException as e:
             raise errors.ConnectionError(f"Error communicating with server: {e}") from e
-            
+
         return result
 
     async def asend_request_raw(
@@ -381,8 +383,7 @@ class EBClient(object):
             )
 
     async def _interpret_async_response(
-        self,
-        response: aiohttp.ClientResponse
+        self, response: aiohttp.ClientResponse
     ) -> Tuple[Union[EBResponse, AsyncIterator[EBResponse]], bool]:
         if "Content-Type" in response.headers and response.headers["Content-Type"].startswith(
             "text/event-stream"
@@ -407,19 +408,13 @@ class EBClient(object):
                     False,
                 )
 
-    def _interpret_stream_response(
-        self,
-        response: requests.Response
-    ) -> Iterator[EBResponse]:
+    def _interpret_stream_response(self, response: requests.Response) -> Iterator[EBResponse]:
         for line in self._parse_stream(response.iter_lines()):
-            resp = self._interpret_response_line(
-                line, response.status_code, response.headers, stream=True
-            )
+            resp = self._interpret_response_line(line, response.status_code, response.headers, stream=True)
             yield resp
 
     async def _interpret_async_stream_response(
-        self,
-        response: aiohttp.ClientResponse
+        self, response: aiohttp.ClientResponse
     ) -> AsyncIterator[EBResponse]:
         async for line in self._parse_async_stream(response.content):
             resp = self._interpret_response_line(line, response.status, response.headers, stream=True)
@@ -497,7 +492,9 @@ class EBClient(object):
                 session.close()
 
     @asynccontextmanager
-    async def _make_aiohttp_session_context_manager(self) -> AsyncGenerator[aiohttp.ClientSession, None, None]:
+    async def _make_aiohttp_session_context_manager(
+        self,
+    ) -> AsyncGenerator[aiohttp.ClientSession, None]:
         # TODO: Support proxies
         if self._asession is not None:
             session = self._asession

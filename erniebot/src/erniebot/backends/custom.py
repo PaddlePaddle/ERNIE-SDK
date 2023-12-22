@@ -43,10 +43,9 @@ class CustomBackend(EBBackend):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
@@ -73,10 +72,9 @@ class CustomBackend(EBBackend):
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
