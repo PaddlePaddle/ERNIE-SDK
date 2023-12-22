@@ -9,6 +9,7 @@ nav:
     - 介绍: 'tutorials/index.md' 
   - 使用指南:
     - 介绍: 'how-to/how-to_introduction.md'
+    - 模型: 'tutorials/chat_models.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"

@@ -8,3 +8,4 @@ tqdm
 typing_extensions
 pydantic >= 2
 PyYAML
+gradio

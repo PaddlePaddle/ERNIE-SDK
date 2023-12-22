@@ -2,3 +2,4 @@ mkdocs
 mkdocstrings[python]
 mkdocstrings-python
 griffe
+mkdocs-material
