@@ -28,9 +28,6 @@ class MessageManager:
 
     Note:
         Each message manager have only one system message.
-
-    Returns:
-        A message manager object.
     """
 
     def __init__(self) -> None:
