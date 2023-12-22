@@ -60,7 +60,6 @@ class CustomBackend(EBBackend):
             headers=headers,
             files=files,
             request_timeout=request_timeout,
-            base_url=self.base_url,
         )
 
     async def arequest(

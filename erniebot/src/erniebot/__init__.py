@@ -15,7 +15,6 @@
 from . import errors
 from .config import GlobalConfig
 from .config import init_global_config as _init_global_config
-from .http_client import close_all_sessions
 from .intro import Model
 from .resources import (
     ChatCompletion,
@@ -50,7 +49,6 @@ __all__ = [
     "EmbeddingResponse",
     "ImageResponse",
     "GlobalConfig",
-    "close_all_sessions",
     "__version__",
 ]
 
