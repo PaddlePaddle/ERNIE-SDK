@@ -80,13 +80,13 @@ class TestBaizhongSearch(unittest.TestCase):
         mock_request.return_value = mock_response
         access_token = "your access token"
         knowledge_base_id = ""
-        self.baizhong_db = BaizhongSearch(
+        baizhong_db = BaizhongSearch(
             knowledge_base_name=knowledge_base_name,
             access_token=access_token,
             knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
         )
 
-        self.assertEqual(self.baizhong_db.knowledge_base_id, "123456")
+        self.assertEqual(baizhong_db.knowledge_base_id, "123456")
 
     @patch("requests.post")
     def test_search(self, mock_request):
