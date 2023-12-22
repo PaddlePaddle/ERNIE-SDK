@@ -18,7 +18,7 @@ _VALID_SPEAKER_SELECTION_METHODS = ["auto", "manual", "random", "round_robin"]
 class GroupChat:
     def __init__(
         self,
-        agents: List[Agent],
+        agents: List,
         max_round: int = 10,
         admin_name: str = "Admin",
         func_call_filter: bool = True,
