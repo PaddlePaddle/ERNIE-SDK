@@ -202,7 +202,7 @@ class GroupChatManager(Agent):
         # unlimited consecutive auto reply by default
         max_consecutive_auto_reply: Optional[int] = sys.maxsize,
         human_input_mode: bool = True,
-        system_message: str = "Group chat manager.",
+        system_message: Optional[str] = None,
         **kwargs,
     ):
         self.groupchat = groupchat
