@@ -17,8 +17,7 @@ import os
 import re
 from typing import Dict, List, Optional, Union
 
-from erniebot_agent import messages
-from erniebot_agent.messages import FunctionMessage, Message
+from erniebot_agent.memory import FunctionMessage, Message
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
@@ -108,7 +107,7 @@ class FileFormatter(logging.Formatter):
             chat_lis = []
             func_lis = []
             for i in range(len(text)):
-                if isinstance(text[i], messages.Message):
+                if isinstance(text[i], Message):
                     chat_res, func_res = self.handle_message(text[i])
                     chat_lis.append(chat_res)
                     if func_res:

@@ -71,7 +71,9 @@ if __name__ == "__main__":
         res = offline_ann(args.data_path, baizhong_db)
         print(res)
 
-    llm = ERNIEBot(model="ernie-3.5", api_type="custom")
+    llm = ERNIEBot(
+        model="ernie-bot", api_type="aistudio", enable_multi_step_tool_call=True, enable_citation=True
+    )
 
     retrieval_tool = BaizhongSearchTool(
         description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1
@@ -90,6 +92,7 @@ if __name__ == "__main__":
     #     "abcabc",
     # ]
     queries = [
+        "今天百度美股的股价是多少?",
         "心血管科,高血压可以蒸桑拿吗？",
         "量化交易",
         "城市景观照明中有过度照明的规定是什么？",

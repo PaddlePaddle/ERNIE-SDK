@@ -16,7 +16,7 @@ from typing import Any, List, Optional
 
 from jinja2 import Environment, meta
 
-from erniebot_agent.messages import HumanMessage
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import BasePromptTemplate
 
 

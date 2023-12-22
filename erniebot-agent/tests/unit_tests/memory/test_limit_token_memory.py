@@ -3,8 +3,7 @@ import unittest
 import pytest
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
-from erniebot_agent.memory import LimitTokensMemory
-from erniebot_agent.messages import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage, LimitTokensMemory, SystemMessage
 
 
 class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):

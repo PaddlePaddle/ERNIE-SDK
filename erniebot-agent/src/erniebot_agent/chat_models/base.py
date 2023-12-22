@@ -15,7 +15,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any, AsyncIterator, List, Literal, Union, overload
 
-from erniebot_agent.messages import AIMessage, AIMessageChunk, Message
+from erniebot_agent.memory.messages import AIMessage, AIMessageChunk, Message
 
 
 class ChatModel(metaclass=ABCMeta):

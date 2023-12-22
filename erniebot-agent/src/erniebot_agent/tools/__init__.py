@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .base import Tool
 from .chat_with_eb import ChatWithEB
 from .image_generation_tool import ImageGenerationTool
 from .remote_toolkit import RemoteToolkit
