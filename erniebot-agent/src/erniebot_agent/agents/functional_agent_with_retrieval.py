@@ -12,8 +12,8 @@ from erniebot_agent.agents.schema import (
     AgentResponse,
     ToolResponse,
 )
-from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import (
+from erniebot_agent.file.base import File
+from erniebot_agent.memory.messages import (
     AIMessage,
     FunctionMessage,
     HumanMessage,

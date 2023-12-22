@@ -8,9 +8,9 @@ from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_args,

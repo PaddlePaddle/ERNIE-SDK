@@ -149,7 +149,7 @@ class ErnieBot(LLM):
         **kwargs: Any,
     ) -> Iterator[GenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = [self._build_user_message_from_prompt(prompt)]

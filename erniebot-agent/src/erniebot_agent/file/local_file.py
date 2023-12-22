@@ -18,8 +18,8 @@ from typing import Any, Dict
 
 import anyio
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
+from erniebot_agent.file import protocol
+from erniebot_agent.file.base import File
 
 
 def create_local_file_from_path(

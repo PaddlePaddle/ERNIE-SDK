@@ -263,7 +263,7 @@ class EBClient(object):
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
         if files is not None:
-            raise TypeError("`files` is currently not supported.")
+            raise ValueError("`files` is currently not supported.")
 
         timeout = aiohttp.ClientTimeout(
             total=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS

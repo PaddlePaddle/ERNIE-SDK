@@ -3,8 +3,7 @@ import unittest
 import pytest
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 
-from erniebot_agent.memory import WholeMemory
-from erniebot_agent.messages import AIMessage, HumanMessage
+from erniebot_agent.memory import AIMessage, HumanMessage, WholeMemory
 
 
 class TestWholeMemory(unittest.IsolatedAsyncioTestCase):

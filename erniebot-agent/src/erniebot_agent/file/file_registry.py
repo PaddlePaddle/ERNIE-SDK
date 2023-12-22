@@ -14,25 +14,11 @@
 
 from typing import Dict, List, Optional, final
 
-from erniebot_agent.file_io.base import File
-
-
-class BaseFileRegistry(object):
-    def register_file(self, file: File, *, allow_overwrite: bool = False, check_type: bool = True) -> None:
-        raise NotImplementedError
-
-    def unregister_file(self, file: File) -> None:
-        raise NotImplementedError
-
-    def look_up_file(self, file_id: str) -> Optional[File]:
-        raise NotImplementedError
-
-    def list_files(self) -> List[File]:
-        raise NotImplementedError
+from erniebot_agent.file.base import File
 
 
 @final
-class FileRegistry(BaseFileRegistry):
+class FileRegistry(object):
     def __init__(self) -> None:
         super().__init__()
         self._id_to_file: Dict[str, File] = {}

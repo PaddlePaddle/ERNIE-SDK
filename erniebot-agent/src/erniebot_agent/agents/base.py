@@ -17,7 +17,6 @@ import json
 import logging
 from typing import Any, Dict, List, Literal, Optional, Union, final
 
-from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
@@ -28,11 +27,11 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file import get_global_file_manager, protocol
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.memory import Message, SystemMessage
 from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.mixins import GradioMixin
@@ -78,7 +77,7 @@ class Agent(GradioMixin, BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
-            file_manager = file_io.get_global_file_manager()
+            file_manager = get_global_file_manager()
         self.plugins = plugins
         self._file_manager = file_manager
         self._init_file_repr()
@@ -163,10 +162,10 @@ class Agent(GradioMixin, BaseAgent):
         try:
             args_dict = json.loads(tool_args)
         except json.JSONDecodeError:
-            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args`: {tool_args}")
 
         if not isinstance(args_dict, dict):
-            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
 
     async def _sniff_and_extract_files_from_args(

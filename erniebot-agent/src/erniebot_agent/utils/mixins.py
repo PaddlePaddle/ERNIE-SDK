@@ -24,8 +24,8 @@ from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 
 if TYPE_CHECKING:
-    from erniebot_agent.file_io.base import File
-    from erniebot_agent.file_io.file_manager import FileManager
+    from erniebot_agent.file.base import File
+    from erniebot_agent.file.file_manager import FileManager
     from erniebot_agent.tools.tool_manager import ToolManager
 
 
