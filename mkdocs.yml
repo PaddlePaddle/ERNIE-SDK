@@ -17,13 +17,6 @@ nav:
 
 theme:
   name: material
-  favicon: img/favicon.ico
-
-markdown_extensions:
-  - pymdownx.highlight
-  - pymdownx.superfences
-  - toc:
-      baselevel: 2
 
 plugins:
   - search
@@ -39,6 +32,3 @@ plugins:
           selection:
             filters:
               - "^__init__$"  # but always include __init__ modules and methods
-      watch:
-        - erniebot-agent/src
-        - erniebot/src

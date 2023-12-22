@@ -54,9 +54,13 @@ def init_global_config() -> None:
     # Miscellaneous settings
     # Proxy to use
     cfg.add_item(URLItem(key="proxy", env_key="EB_PROXY"))
+    # requests session
+    cfg.add_item(AnyObjectItem(key="requests_session"))
+    # aiohttp session
+    cfg.add_item(AnyObjectItem(key="aiohttp_session"))
 
 
-class _BaseConfig(object):
+class _Config(object):
     def __init__(self, cfg_dict: Optional[Dict[str, "_ConfigItem"]] = None) -> None:
         super().__init__()
         self._cfg_dict: Dict[str, "_ConfigItem"] = cfg_dict if cfg_dict is not None else dict()
@@ -75,7 +79,7 @@ class _BaseConfig(object):
         cfg.value = value
 
 
-class GlobalConfig(_BaseConfig, metaclass=Singleton):
+class GlobalConfig(_Config, metaclass=Singleton):
     def create_dict(self, **overrides: Any) -> ConfigDictType:
         dict_: ConfigDictType = {}
         for key, cfg in self._cfg_dict.items():
@@ -153,7 +157,8 @@ class NumberItem(_ConfigItem):
     def factory(self, env_val: str) -> Any:
         if self.ensure_integer:
             return int(env_val)
-        return float(env_val)
+        else:
+            return float(env_val)
 
     def _validate(self, val: Any) -> None:
         if not isinstance(val, int if self.ensure_integer else numbers.Real):
@@ -191,3 +196,15 @@ class URLItem(StringItem):
         res = re.match(pat, val)
         if res is None:
             raise ValueError(f"Invalid URL: {val}")
+
+
+class AnyObjectItem(_ConfigItem):
+    def __init__(self, key: str, default: Any = None) -> None:
+        super().__init__(key=key, env_key=None, default=default)
+
+    def factory(self, env_val: str) -> Any:
+        raise AssertionError
+
+    def _validate(self, val: Any) -> None:
+        # Any object is valid
+        pass
