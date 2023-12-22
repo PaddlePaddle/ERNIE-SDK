@@ -8,7 +8,7 @@ from tools.utils import add_citation, erniebot_chat, write_to_json
 
 SUMMARIZE_MAX_LENGTH = 1800
 
-select_prompt = """
+SELECT_PROMPT = """
 请你从多个综合性搜索查询{{queries}}，选取4个内容不重复搜索查询，对{{question}}问题形成客观意见。
 您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
 """
@@ -72,7 +72,7 @@ class ResearchAgent(Agent):
         self.save_log_path = save_log_path
         self.use_context_planning = use_context_planning
         self.nums_queries = nums_queries
-        self.select_prompt = PromptTemplate(select_prompt, input_variables=["queries", "question"])
+        self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
 
     async def run_search_summary(self, query):
         responses = []
