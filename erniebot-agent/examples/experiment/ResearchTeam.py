@@ -39,7 +39,6 @@ class ResearchTeam:
         else:
             immedia_report = await self.ranker_actor_instance._async_run(list_reports, query)
         revised_report = immedia_report
-        # 可以考虑封装成一个 chain或者pipeline
         for i in range(iterations):
             if i == 0:
                 markdown_report = immedia_report

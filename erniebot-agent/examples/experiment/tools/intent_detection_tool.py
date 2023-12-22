@@ -23,18 +23,14 @@ class IntentDetectionTool(Tool):
     description: str = "query intent detection tool"
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
-    config: dict = {}
 
     async def __call__(self, content: str, functions: Optional[str] = None, **kwargs):
         prompt = auto_agent_instructions()
-        messages = [{"role": "user", "content": prompt + f"\ntask: {content}\n response: \n "}]
+        messages = [{"role": "user", "content": prompt.format(content=content)}]
         result = erniebot_chat(messages=messages, functions=functions, **kwargs)
         # parse json object
         start_idx = result.index("{")
         end_idx = result.rindex("}")
         result = result[start_idx : end_idx + 1]
         result = json.loads(result)
-        if self.description not in self.config:
-            self.config["message"] = messages[0]["content"]
-            self.config["result"] = result
         return result

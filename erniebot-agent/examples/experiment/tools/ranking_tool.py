@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import List, Type
 
 from erniebot_agent.tools.base import Tool
@@ -28,12 +29,31 @@ class TextRankingTool(Tool):
         reports: List,
         query: str,
     ):
-        messages = [{"role": "user", "content": rank_report_prompt(reports=reports, query=query)}]
-        rank_result = erniebot_chat(messages, model="ernie-bot-8k")
-        rank_list = rank_result.split(">")
-        for item in rank_list:
-            report_num = item.strip()[1:-1]
-            if int(report_num) <= len(reports):
-                break
-        final_report = reports[int(report_num) - 1]
-        return final_report, int(report_num)
+        if len(reports) == 1:
+            return reports[0]
+        elif len(reports) > 1:
+            socres_all = []
+            for item in reports:
+                content = rank_report_prompt(report=item, query=query)
+                messages = [{"role": "user", "content": content}]
+                while True:
+                    try:
+                        if len(content) <= 4800:
+                            result = erniebot_chat(messages=messages, temperature=1e-10)
+                        else:
+                            result = erniebot_chat(
+                                messages=messages, temperature=1e-10, model="ernie-bot-8k"
+                            )
+                        l_index = result.index("{")
+                        r_index = result.rindex("}")
+                        result = result[l_index : r_index + 1]
+                        result_dict = json.loads(result)
+                        socre = int(result_dict["报告总得分"])
+                        socres_all.append(socre)
+                        break
+                    except Exception as e:
+                        print(e)
+                continue
+            best_index = socres_all.index(max(socres_all))
+            rank_result = reports[best_index]
+            return rank_result

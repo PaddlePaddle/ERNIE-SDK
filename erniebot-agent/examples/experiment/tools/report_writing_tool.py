@@ -44,10 +44,12 @@ class ReportWritingTool(Tool):
         final_report = call_function(
             report_type_func(question, research_summary, outline), agent_role_prompt=agent_role_prompt
         )
+        if final_report == "":
+            raise Exception("报告生成错误")
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:
             final_report += "\n\n## 参考文献 \n"
-            messages = [{"role": "user", "content": generate_reference(meta_data)}]
+            messages = [{"role": "user", "content": generate_reference(meta_data).replace(". ", ".")}]
             response = erniebot_chat(messages)
             start_idx = response.index("{")
             end_idx = response.rindex("}")

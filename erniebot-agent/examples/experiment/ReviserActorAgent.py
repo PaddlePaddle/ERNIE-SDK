@@ -21,7 +21,7 @@ class ReviserActorAgent(Agent):
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
         self.model = llm
-        self.template = "草稿:\n\n{draft}" + "编辑的备注:\n\n{notes}"
+        self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
         self.config = config
         self.save_log_path = save_log_path
@@ -30,13 +30,19 @@ class ReviserActorAgent(Agent):
         messages = [
             {
                 "role": "user",
-                "content": "草稿:\n\n" + draft + "\n编辑的备注:\n\n" + notes,
+                "content": self.prompt_template.format(draft=draft, notes=notes),
             }
         ]
-        report = erniebot_chat(messages=messages, system=self.system_message)
-        self.config.append(("修订后的报告", report))
-        self.save_log()
-        return report
+        while True:
+            try:
+                report = erniebot_chat(messages=messages, system=self.system_message)
+                self.config.append(("修订后的报告", report))
+                self.save_log()
+                return report
+            except Exception as e:
+                print(e)
+                self.config.append(("报错信息", e))
+                continue
 
     def save_log(self):
         write_to_json(self.save_log_path, self.config, mode="a")
