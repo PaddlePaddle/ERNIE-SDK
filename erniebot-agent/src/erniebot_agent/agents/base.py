@@ -30,8 +30,9 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file import GlobalFileManagerHandler, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.memory import Message, SystemMessage
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.memory import Memory
+from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.exceptions import FileError
