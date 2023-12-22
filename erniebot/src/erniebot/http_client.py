@@ -477,8 +477,8 @@ class EBClient(object):
     @contextmanager
     def _make_requests_session_context_manager(self) -> Generator[requests.Session, None, None]:
         if self._session is not None:
-            should_close_session = False
             session = self._session
+            should_close_session = False
         else:
             session = requests.Session()
             should_close_session = True
@@ -500,8 +500,8 @@ class EBClient(object):
     async def _make_aiohttp_session_context_manager(self) -> AsyncGenerator[aiohttp.ClientSession, None, None]:
         # TODO: Support proxies
         if self._asession is not None:
-            should_close_session = False
             session = self._asession
+            should_close_session = False
         else:
             session = aiohttp.ClientSession()
             should_close_session = True
