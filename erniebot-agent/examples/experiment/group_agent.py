@@ -2,7 +2,7 @@ import logging
 import random
 import re
 import sys
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from EditorActorAgent import EditorActorAgent
 from erniebot_agent.agents.base import Agent
@@ -202,7 +202,7 @@ class GroupChatManager(Agent):
         # unlimited consecutive auto reply by default
         max_consecutive_auto_reply: Optional[int] = sys.maxsize,
         human_input_mode: bool = True,
-        system_message: Optional[Union[str, List]] = "Group chat manager.",
+        system_message: str = "Group chat manager.",
         **kwargs,
     ):
         self.groupchat = groupchat
