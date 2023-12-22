@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import os
 import tempfile
 from dataclasses import asdict, dataclass, field
 from typing import Any, ClassVar, Dict, List, Optional, Type
 
-import erniebot
 import requests
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io import get_global_file_manager
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
 from erniebot_agent.tools.remote_tool import RemoteTool, tool_registor
@@ -24,9 +24,11 @@ from erniebot_agent.tools.schema import (
     scrub_dict,
 )
 from erniebot_agent.tools.utils import validate_openapi_yaml
-from erniebot_agent.utils.exception import RemoteToolError
+from erniebot_agent.utils import config_from_environ as C
+from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
-from erniebot_agent.utils.logging import logger
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -125,7 +127,7 @@ class RemoteToolkit:
 
         TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return TOOL_CLASS(
-            paths[0],
+            copy.deepcopy(paths[0]),
             self.servers[0].url,
             self.headers,
             self.info.version,
@@ -170,6 +172,9 @@ class RemoteToolkit:
         info = EndpointInfo(**openapi_dict["info"])
         servers = [Endpoint(**server) for server in openapi_dict.get("servers", [])]
 
+        if access_token is None:
+            access_token = C.get_global_access_token()
+
         # components
         component_schemas = openapi_dict["components"]["schemas"]
         fields = {}
@@ -192,7 +197,7 @@ class RemoteToolkit:
                 )
 
         if file_manager is None:
-            file_manager = get_file_manager(access_token)
+            file_manager = get_global_file_manager()
 
         return RemoteToolkit(
             openapi=openapi_dict["openapi"],
@@ -217,6 +222,9 @@ class RemoteToolkit:
         if not validate_openapi_yaml(file):
             raise RemoteToolError(f"invalid openapi yaml file: {file}", stage="Loading")
 
+        if access_token is None:
+            access_token = C.get_global_access_token()
+
         spec_dict, _ = read_from_filename(file)
         return cls.from_openapi_dict(
             spec_dict, access_token=access_token, file_manager=file_manager  # type: ignore
@@ -224,9 +232,6 @@ class RemoteToolkit:
 
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
-        if access_token is None:
-            access_token = erniebot.access_token
-
         headers = {"Content-Type": "application/json"}
         if access_token is None:
             logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
@@ -243,6 +248,9 @@ class RemoteToolkit:
         file_manager: Optional[FileManager] = None,
     ) -> RemoteToolkit:
         from urllib.parse import urlparse
+
+        if access_token is None:
+            access_token = C.get_global_access_token()
 
         aistudio_base_url = os.getenv("AISTUDIO_HUB_BASE_URL", cls._AISTUDIO_HUB_BASE_URL)
         parsed_url = urlparse(aistudio_base_url)
@@ -264,6 +272,9 @@ class RemoteToolkit:
 
         if version:
             openapi_yaml_url = openapi_yaml_url + "?version=" + version
+
+        if access_token is None:
+            access_token = C.get_global_access_token()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
@@ -303,6 +314,9 @@ class RemoteToolkit:
         examples_yaml_url = url + ".well-known/examples.yaml"
         if not url_file_exists(examples_yaml_url, cls._get_authorization_headers(access_token)):
             return []
+
+        if access_token is None:
+            access_token = C.get_global_access_token()
 
         examples = []
         with tempfile.TemporaryDirectory() as temp_dir:

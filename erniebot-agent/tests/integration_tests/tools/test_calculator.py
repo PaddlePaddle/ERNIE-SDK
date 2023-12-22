@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import unittest
 
 import erniebot
 
 from erniebot_agent.tools.calculator_tool import CalculatorTool
-
-erniebot.api_type = "aistudio"
-erniebot.access_token = os.environ["AISTUDIO_ACCESS_TOKEN"]
 
 
 class TestCalculator(unittest.TestCase):

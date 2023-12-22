@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 
 import pytest
@@ -11,10 +10,10 @@ from .base import RemoteToolTesting
 
 
 class TestRemoteTool(RemoteToolTesting):
-    def setUp(self) -> None:
-        super().setUp()
-        self.file = asyncio.run(
-            self.file_manager.create_file_from_path(self.download_fixture_file("ocr_table.png"))
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+        self.file = await self.file_manager.create_file_from_path(
+            self.download_fixture_file("ocr_table.png")
         )
 
     @pytest.mark.asyncio

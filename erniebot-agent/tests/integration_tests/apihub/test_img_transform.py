@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 from erniebot_agent.tools.remote_toolkit import RemoteToolkit
@@ -10,11 +8,9 @@ from .base import RemoteToolTesting
 
 
 class TestRemoteTool(RemoteToolTesting):
-    def setUp(self) -> None:
-        super().setUp()
-        self.file = asyncio.run(
-            self.file_manager.create_file_from_path(self.download_fixture_file("trans.png"))
-        )
+    async def asyncSetUp(self) -> None:
+        await super().asyncSetUp()
+        self.file = await self.file_manager.create_file_from_path(self.download_fixture_file("trans.png"))
 
     @pytest.mark.asyncio
     async def test_img_style_trans(self):

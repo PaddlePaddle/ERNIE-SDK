@@ -1,17 +1,19 @@
-import asyncio
 import unittest
 from typing import List, Literal
 
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file_io.file_manager import FileManager
 
 
-class TestAgentResponseAnnotations(unittest.TestCase):
-    def setUp(self):
+class TestAgentResponseAnnotations(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
         self.test = ""
-        self.file_manager = get_file_manager()
-        self.file1 = asyncio.run(self.file_manager.create_file_from_bytes(b"test1", "test1.txt"))
-        self.file2 = asyncio.run(self.file_manager.create_file_from_bytes(b"test2", "test2.txt"))
+        self.file_manager = FileManager()
+        self.file1 = await self.file_manager.create_file_from_bytes(b"test1", "test1.txt")
+        self.file2 = await self.file_manager.create_file_from_bytes(b"test2", "test2.txt")
+
+    async def asyncTearDown(self):
+        await self.file_manager.close()
 
     def test_agent_response_onefile_oneagentfile(self):
         agent_file = AgentFile(file=self.file1, type="input", used_by="")
