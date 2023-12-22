@@ -1,3 +1,11 @@
+'''
+Author: Southpika 513923576@qq.com
+Date: 2023-12-22 14:20:41
+LastEditors: Southpika 513923576@qq.com
+LastEditTime: 2023-12-22 15:22:39
+FilePath: /ERINE/ERNIE-Bot-SDK/erniebot-agent/src/erniebot_agent/file/global_file_manager.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 # Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +24,8 @@ import asyncio
 import atexit
 from typing import Any, List, Optional
 
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.remote_file import AIStudioFileClient
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.mixins import Closeable
 

@@ -17,82 +17,121 @@ import os
 import pathlib
 import tempfile
 import uuid
-from types import TracebackType
-from typing import Any, Dict, List, Literal, Optional, Type, Union, final, overload
+import weakref
+from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 import anyio
-from typing_extensions import Self, TypeAlias
+from typing_extensions import TypeAlias
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_registry import FileRegistry
-from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
-from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
-from erniebot_agent.utils.exceptions import FileError
-from erniebot_agent.utils.mixins import Closeable
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_registry import FileRegistry, get_file_registry
+from erniebot_agent.file.local_file import LocalFile, create_local_file_from_path
+from erniebot_agent.file.protocol import FilePurpose
+from erniebot_agent.file.remote_file import RemoteFile, RemoteFileClient
+from erniebot_agent.utils.exception import FileError
 
 logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
 
 
-@final
-class FileManager(Closeable):
-    _temp_dir: Optional[tempfile.TemporaryDirectory] = None
+class FileManager(object):
+    """
+    Manages files, providing methods for creating, retrieving, and listing files.
+
+    Attributes:
+        registry(FileRegistry): The file registry.
+        remote_file_client(RemoteFileClient): The remote file client.
+        save_dir (Optional[FilePath]): Directory for saving local files.
+        _file_registry (FileRegistry): Registry for keeping track of files.
+
+    Methods:
+        __init__: Initialize the FileManager object.
+        
+        
+        create_file_from_path: Create a file from a specified file path.
+        create_local_file_from_path: Create a local file from a file path.
+        create_remote_file_from_path: Create a remote file from a file path.
+        create_file_from_bytes: Create a file from bytes.
+        retrieve_remote_file_by_id: Retrieve a remote file by its ID.
+        look_up_file_by_id: Look up a file by its ID.
+        list_remote_files: List remote files.
+        _fs_create_file: Create a file in the file system.
+        _fs_create_temp_dir: Create a temporary directory in the file system.
+        _clean_up_temp_dir: Clean up a temporary directory.
+
+    """
+    _remote_file_client: Optional[RemoteFileClient]
 
     def __init__(
         self,
         remote_file_client: Optional[RemoteFileClient] = None,
-        save_dir: Optional[FilePath] = None,
         *,
-        prune_on_close: bool = True,
+        auto_register: bool = True,
+        save_dir: Optional[FilePath] = None,
     ) -> None:
-        super().__init__()
+        """
+        Initialize the FileManager object.
 
-        self._remote_file_client = remote_file_client
+        Args:
+            remote_file_client (Optional[RemoteFileClient]): The remote file client.
+            auto_register (bool): Automatically register files in the file registry.
+            save_dir (Optional[FilePath]): Directory for saving local files.
+
+        Returns:
+            None
+
+        """
+        super().__init__()
+        if remote_file_client is not None:
+            self._remote_file_client = remote_file_client
+        else:
+            self._remote_file_client = None
+        self._auto_register = auto_register
         if save_dir is not None:
             self._save_dir = pathlib.Path(save_dir)
         else:
             # This can be done lazily, but we need to be careful about race conditions.
-            self._temp_dir = self._create_temp_dir()
-            self._save_dir = pathlib.Path(self._temp_dir.name)
-        self._prune_on_close = prune_on_close
+            self._save_dir = self._fs_create_temp_dir()
 
-        self._file_registry = FileRegistry()
-        self._fully_managed_files: List[Union[LocalFile, RemoteFile]] = []
+        self._file_registry = get_file_registry()
 
-        self._closed = False
+    @property
+    def registry(self) -> FileRegistry:
+        """
+        Get the file registry.
+
+        Returns:
+            FileRegistry: The file registry.
+
+        """
+        return self._file_registry
 
     @property
     def remote_file_client(self) -> RemoteFileClient:
+        """
+        Get the remote file client.
+
+        Returns:
+            RemoteFileClient: The remote file client.
+
+        Raises:
+            AttributeError: If no remote file client is set.
+
+        """
         if self._remote_file_client is None:
             raise AttributeError("No remote file client is set.")
         else:
             return self._remote_file_client
-
-    @property
-    def closed(self):
-        return self._closed
-
-    async def __aenter__(self) -> Self:
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]] = None,
-        exc_value: Optional[BaseException] = None,
-        traceback: Optional[TracebackType] = None,
-    ) -> None:
-        await self.close()
 
     @overload
     async def create_file_from_path(
         self,
         file_path: FilePath,
         *,
-        file_purpose: protocol.FilePurpose = ...,
+        file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: Literal["local"],
+        file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
 
@@ -101,35 +140,42 @@ class FileManager(Closeable):
         self,
         file_path: FilePath,
         *,
-        file_purpose: protocol.FilePurpose = ...,
+        file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
 
-    @overload
     async def create_file_from_path(
         self,
         file_path: FilePath,
         *,
-        file_purpose: protocol.FilePurpose = ...,
-        file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: None = ...,
-    ) -> Union[LocalFile, RemoteFile]:
-        ...
-
-    async def create_file_from_path(
-        self,
-        file_path: FilePath,
-        *,
-        file_purpose: protocol.FilePurpose = "assistants",
+        file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
-        self.ensure_not_closed()
+        """
+        Create a file from a specified file path.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+            file_type (Optional[Literal["local", "remote"]]): The type of file ("local" or "remote").
+
+        Returns:
+            Union[LocalFile, RemoteFile]: The created file.
+
+        Raises:
+            ValueError: If an unsupported file type is provided.
+
+        """
         file: Union[LocalFile, RemoteFile]
         if file_type is None:
-            file_type = self._get_default_file_type()
+            if self._remote_file_client is not None:
+                file_type = "remote"
+            else:
+                file_type = "local"
         if file_type == "local":
             file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
@@ -141,10 +187,22 @@ class FileManager(Closeable):
     async def create_local_file_from_path(
         self,
         file_path: FilePath,
-        file_purpose: protocol.FilePurpose,
+        file_purpose: FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
-        file = await self._create_local_file_from_path(
+        """
+        Create a local file from a local file path.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+
+        Returns:
+            LocalFile: The created local file.
+
+        """
+        file = create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
             file_metadata or {},
@@ -153,18 +211,25 @@ class FileManager(Closeable):
         return file
 
     async def create_remote_file_from_path(
-        self,
-        file_path: FilePath,
-        file_purpose: protocol.FilePurpose,
-        file_metadata: Optional[Dict[str, Any]],
+        self, file_path: FilePath, file_purpose: FilePurpose, file_metadata: Optional[Dict[str, Any]]
     ) -> RemoteFile:
-        file = await self._create_remote_file_from_path(
-            pathlib.Path(file_path),
-            file_purpose,
-            file_metadata,
+        """
+        Create a remote file from a file path.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+
+        Returns:
+            RemoteFile: The created remote file.
+
+        """
+        file = await self.remote_file_client.upload_file(
+            pathlib.Path(file_path), file_purpose, file_metadata or {}
         )
-        self._file_registry.register_file(file)
-        self._fully_managed_files.append(file)
+        if self._auto_register:
+            self._file_registry.register_file(file)
         return file
 
     @overload
@@ -173,9 +238,9 @@ class FileManager(Closeable):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: protocol.FilePurpose = ...,
+        file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: Literal["local"],
+        file_type: Literal["local"] = ...,
     ) -> LocalFile:
         ...
 
@@ -185,155 +250,130 @@ class FileManager(Closeable):
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: protocol.FilePurpose = ...,
+        file_purpose: FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: Literal["remote"],
     ) -> RemoteFile:
         ...
 
-    @overload
     async def create_file_from_bytes(
         self,
         file_contents: bytes,
         filename: str,
         *,
-        file_purpose: protocol.FilePurpose = ...,
-        file_metadata: Optional[Dict[str, Any]] = ...,
-        file_type: None = ...,
-    ) -> Union[LocalFile, RemoteFile]:
-        ...
-
-    async def create_file_from_bytes(
-        self,
-        file_contents: bytes,
-        filename: str,
-        *,
-        file_purpose: protocol.FilePurpose = "assistants",
+        file_purpose: FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
-        self.ensure_not_closed()
-        if file_type is None:
-            file_type = self._get_default_file_type()
-        file_path = self._get_unique_file_path(
-            prefix=pathlib.PurePath(filename).stem,
-            suffix=pathlib.PurePath(filename).suffix,
+        """
+        Create a file from bytes.
+
+        Args:
+            file_contents (bytes): The content bytes of the file.
+            filename (str): The name of the file.
+            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+            file_type (Optional[Literal["local", "remote"]]): The type of file ("local" or "remote").
+
+        Returns:
+            Union[LocalFile, RemoteFile]: The created file.
+
+        """
+        # Can we do this with in-memory files?
+        file_path = await self._fs_create_file(
+            prefix=pathlib.PurePath(filename).stem, suffix=pathlib.PurePath(filename).suffix
         )
-        async_file_path = anyio.Path(file_path)
-        await async_file_path.touch()
-        should_remove_file = True
         try:
-            async with await async_file_path.open("wb") as f:
+            async with await file_path.open("wb") as f:
                 await f.write(file_contents)
-            file: Union[LocalFile, RemoteFile]
-            if file_type == "local":
-                file = await self._create_local_file_from_path(file_path, file_purpose, file_metadata)
-                should_remove_file = False
-            elif file_type == "remote":
-                file = await self._create_remote_file_from_path(
-                    file_path,
-                    file_purpose,
-                    file_metadata,
-                )
-            else:
-                raise ValueError(f"Unsupported file type: {file_type}")
+            if file_type is None:
+                if self._remote_file_client is not None:
+                    file_type = "remote"
+                else:
+                    file_type = "local"
+            file = await self.create_file_from_path(
+                file_path,
+                file_purpose=file_purpose,
+                file_metadata=file_metadata,
+                file_type=file_type,
+            )
         finally:
-            if should_remove_file:
-                await async_file_path.unlink()
-        self._file_registry.register_file(file)
-        self._fully_managed_files.append(file)
+            if file_type == "remote":
+                await file_path.unlink()
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
-        self.ensure_not_closed()
+        """
+        Retrieve a remote file by its ID.
+
+        Args:
+            file_id (str): The ID of the remote file.
+
+        Returns:
+            RemoteFile: The retrieved remote file.
+
+        """
         file = await self.remote_file_client.retrieve_file(file_id)
-        self._file_registry.register_file(file)
+        if self._auto_register:
+            self._file_registry.register_file(file, allow_overwrite=True)
         return file
 
-    async def list_remote_files(self) -> List[RemoteFile]:
-        self.ensure_not_closed()
-        files = await self.remote_file_client.list_files()
-        return files
-
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
-        self.ensure_not_closed()
+        """
+        Look up a file by its ID.
+
+        Args:
+            file_id (str): The ID of the file.
+
+        Returns:
+            Optional[Union[LocalFile, RemoteFile]]: The looked-up file, or None if not found.
+
+        Raises:
+            FileError: If the file with the specified ID is not found.
+
+        """
         file = self._file_registry.look_up_file(file_id)
         if file is None:
             raise FileError(
-                f"File with ID {repr(file_id)} not found. "
-                "Please check if `file_id` is correct and the file is registered."
+                f"File with ID '{file_id}' not found. "
+                "Please check if the file exists and the `file_id` is correct."
             )
         return file
 
-    def list_registered_files(self) -> List[File]:
-        self.ensure_not_closed()
-        return self._file_registry.list_files()
+    async def list_remote_files(self) -> List[RemoteFile]:
+        """
+        List remote files.
 
-    async def prune(self) -> None:
-        for file in self._fully_managed_files:
-            if isinstance(file, RemoteFile):
-                # FIXME: Currently this is not supported.
-                # await file.delete()
-                pass
-            elif isinstance(file, LocalFile):
-                assert self._save_dir in file.path.parents
-                await anyio.Path(file.path).unlink()
-            else:
-                raise AssertionError("Unexpected file type")
-            self._file_registry.unregister_file(file)
-        self._fully_managed_files.clear()
+        Returns:
+            List[RemoteFile]: The list of remote files.
 
-    async def close(self) -> None:
-        if not self._closed:
-            if self._remote_file_client is not None:
-                await self._remote_file_client.close()
-            if self._prune_on_close:
-                await self.prune()
-            if self._temp_dir is not None:
-                self._clean_up_temp_dir(self._temp_dir)
-            self._closed = True
+        """
+        files = await self.remote_file_client.list_files()
+        if self._auto_register:
+            for file in files:
+                self._file_registry.register_file(file, allow_overwrite=True)
+        return files
 
-    async def _create_local_file_from_path(
-        self,
-        file_path: pathlib.Path,
-        file_purpose: protocol.FilePurpose,
-        file_metadata: Optional[Dict[str, Any]],
-    ) -> LocalFile:
-        return create_local_file_from_path(
-            pathlib.Path(file_path),
-            file_purpose,
-            file_metadata or {},
-        )
-
-    async def _create_remote_file_from_path(
-        self,
-        file_path: pathlib.Path,
-        file_purpose: protocol.FilePurpose,
-        file_metadata: Optional[Dict[str, Any]],
-    ) -> RemoteFile:
-        file = await self.remote_file_client.upload_file(file_path, file_purpose, file_metadata or {})
-        return file
-
-    def _get_default_file_type(self) -> Literal["local", "remote"]:
-        if self._remote_file_client is not None:
-            return "remote"
-        else:
-            return "local"
-
-    def _get_unique_file_path(
+    async def _fs_create_file(
         self, prefix: Optional[str] = None, suffix: Optional[str] = None
-    ) -> pathlib.Path:
+    ) -> anyio.Path:
+        """Create a file in the file system."""
         filename = f"{prefix or ''}{str(uuid.uuid4())}{suffix or ''}"
-        file_path = self._save_dir / filename
+        file_path = anyio.Path(self._save_dir / filename)
+        await file_path.touch()
         return file_path
 
-    @staticmethod
-    def _create_temp_dir() -> tempfile.TemporaryDirectory:
+    def _fs_create_temp_dir(self) -> pathlib.Path:
+        """Create a temporary directory in the file system."""
         temp_dir = tempfile.TemporaryDirectory()
-        return temp_dir
+        # The temporary directory shall be cleaned up when the file manager is
+        # garbage collected.
+        weakref.finalize(self, self._clean_up_temp_dir, temp_dir)
+        return pathlib.Path(temp_dir.name)
 
     @staticmethod
     def _clean_up_temp_dir(temp_dir: tempfile.TemporaryDirectory) -> None:
+        """Clean up a temporary directory."""
         try:
             temp_dir.cleanup()
         except Exception as e:

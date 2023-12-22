@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.file_io.global_file_manager import (
+"""
+File module is used to manage the file system by a global file_manager. 
+Including `local file` and `remote file`.
+
+A few notes about the current state of this submodule:
+- If you do not set environment variable `EB_ACCESS_TOKEN`, it will be under default setting.
+- Method `configure_global_file_manager` can only be called once at the beginning.
+- When you want to get file_manger, you can use method `get_global_file_manager`.
+"""
+
+from erniebot_agent.file.global_file_manager import (
     configure_global_file_manager,
     get_global_file_manager,
 )
