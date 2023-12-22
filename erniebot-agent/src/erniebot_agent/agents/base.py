@@ -30,7 +30,8 @@ from erniebot_agent.file import get_file_manager
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
-from erniebot_agent.memory.base import Memory, Message, SystemMessage
+from erniebot_agent.memory import Memory
+from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.gradio_mixin import GradioMixin

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.memory import Message
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.logging import logger as default_logger
