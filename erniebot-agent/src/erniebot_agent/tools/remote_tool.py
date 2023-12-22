@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Type
 
 import requests
 
-from erniebot_agent.file import GlobalFileManager
+from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Message
 from erniebot_agent.tools.base import BaseTool
@@ -300,7 +300,7 @@ class RemoteTool(BaseTool):
 
     async def _get_file_manager(self) -> FileManager:
         if self.file_manager is None:
-            file_manager = await GlobalFileManager().get()
+            file_manager = await GlobalFileManagerHandler().get()
         else:
             file_manager = self.file_manager
         return file_manager

@@ -24,7 +24,7 @@ from erniebot_agent.utils.misc import Singleton
 
 
 @final
-class GlobalFileManager(metaclass=Singleton):
+class GlobalFileManagerHandler(metaclass=Singleton):
     _file_manager: Optional[FileManager]
 
     def __init__(self) -> None:
@@ -49,8 +49,8 @@ class GlobalFileManager(metaclass=Singleton):
         async with self._lock:
             if self._file_manager is not None:
                 raise RuntimeError(
-                    "`GlobalFileManager.configure` can only be called once"
-                    " and must be called before calling `GlobalFileManager.get`."
+                    "`GlobalFileManagerHandler.configure` can only be called once"
+                    " and must be called before calling `GlobalFileManagerHandler.get`."
                 )
             self._file_manager = await self._create_default_file_manager(
                 access_token=access_token, save_dir=save_dir, **opts

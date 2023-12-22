@@ -1,8 +1,8 @@
 import asyncio
-from erniebot_agent.file import GlobalFileManager
+from erniebot_agent.file import GlobalFileManagerHandler
 
 async def fun():
-    await GlobalFileManager().get()
+    await GlobalFileManagerHandler().get()
 
 async def main():
     await asyncio.gather(fun(), fun(), fun(), fun())

@@ -27,13 +27,14 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file import GlobalFileManager, protocol
+from erniebot_agent.file import GlobalFileManagerHandler, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Message, SystemMessage
 from erniebot_agent.memory.base import Memory
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import GradioMixin
 
 logger = logging.getLogger(__name__)
@@ -174,12 +175,13 @@ class Agent(GradioMixin, BaseAgent):
             if isinstance(val, str):
                 if protocol.is_file_id(val):
                     file_manager = await self._get_file_manager()
-                    file = file_manager.look_up_file_by_id(val)
-                    if file is None:
-                        raise RuntimeError(
+                    try:
+                        file = file_manager.look_up_file_by_id(val)
+                    except FileError as e:
+                        raise FileError(
                             f"Unregistered file with ID {repr(val)} is used by {repr(tool)}."
                             f" File type: {file_type}"
-                        )
+                        ) from e
                     agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
             elif isinstance(val, dict):
                 agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
@@ -190,7 +192,7 @@ class Agent(GradioMixin, BaseAgent):
 
     async def _get_file_manager(self) -> FileManager:
         if self._file_manager is None:
-            file_manager = await GlobalFileManager().get()
+            file_manager = await GlobalFileManagerHandler().get()
         else:
             file_manager = self._file_manager
         return file_manager

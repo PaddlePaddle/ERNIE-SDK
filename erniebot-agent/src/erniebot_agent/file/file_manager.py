@@ -257,7 +257,7 @@ class FileManager(Closeable):
         files = await self.remote_file_client.list_files()
         return files
 
-    def look_up_file_by_id(self, file_id: str) -> Optional[File]:
+    def look_up_file_by_id(self, file_id: str) -> File:
         self.ensure_not_closed()
         file = self._file_registry.look_up_file(file_id)
         if file is None:

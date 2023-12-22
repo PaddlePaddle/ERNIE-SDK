@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.file.global_file_manager import GlobalFileManager
+from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler
