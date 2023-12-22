@@ -36,17 +36,15 @@ logger = logging.getLogger(__name__)
 FilePath: TypeAlias = Union[str, os.PathLike]
 
 
-class FileManager(object):
+class FileManager(Closeable):
     """
     Manages files, providing methods for creating, retrieving, and listing files.
 
     Attributes:
-        registry(FileRegistry): The file registry.
         remote_file_client(RemoteFileClient): The remote file client.
         save_dir (Optional[FilePath]): Directory for saving local files.
-        _file_registry (FileRegistry): Registry for keeping track of files.
 
-    Methods:        
+    Methods:
         create_file_from_path: Create a file from a specified file path.
         create_local_file_from_path: Create a local file from a file path.
         create_remote_file_from_path: Create a remote file from a file path.
@@ -54,19 +52,18 @@ class FileManager(object):
         retrieve_remote_file_by_id: Retrieve a remote file by its ID.
         look_up_file_by_id: Look up a file by its ID.
         list_remote_files: List remote files.
-        _fs_create_file: Create a file in the file system.
-        _fs_create_temp_dir: Create a temporary directory in the file system.
-        _clean_up_temp_dir: Clean up a temporary directory.
 
     """
-    _remote_file_client: Optional[RemoteFileClient]
+
+    _temp_dir: Optional[tempfile.TemporaryDirectory] = None
 
     def __init__(
         self,
         remote_file_client: Optional[RemoteFileClient] = None,
-        *,
-        auto_register: bool = True,
         save_dir: Optional[FilePath] = None,
+        *,
+        default_file_type: Optional[Literal["local", "remote"]] = None,
+        prune_on_close: bool = True,
     ) -> None:
         """
         Initialize the FileManager object.
@@ -81,11 +78,8 @@ class FileManager(object):
 
         """
         super().__init__()
-        if remote_file_client is not None:
-            self._remote_file_client = remote_file_client
-        else:
-            self._remote_file_client = None
-        self._auto_register = auto_register
+
+        self._remote_file_client = remote_file_client
         if save_dir is not None:
             self._save_dir = pathlib.Path(save_dir)
         else:
@@ -159,7 +153,7 @@ class FileManager(object):
         self,
         file_path: FilePath,
         *,
-        file_purpose: FilePurpose = "assistants",
+        file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> Union[LocalFile, RemoteFile]:
@@ -179,12 +173,10 @@ class FileManager(object):
             ValueError: If an unsupported file type is provided.
 
         """
+        self.ensure_not_closed()
         file: Union[LocalFile, RemoteFile]
         if file_type is None:
-            if self._remote_file_client is not None:
-                file_type = "remote"
-            else:
-                file_type = "local"
+            file_type = self._get_default_file_type()
         if file_type == "local":
             file = await self.create_local_file_from_path(file_path, file_purpose, file_metadata)
         elif file_type == "remote":
@@ -196,7 +188,7 @@ class FileManager(object):
     async def create_local_file_from_path(
         self,
         file_path: FilePath,
-        file_purpose: FilePurpose,
+        file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
         """
@@ -211,7 +203,7 @@ class FileManager(object):
             LocalFile: The created local file.
 
         """
-        file = create_local_file_from_path(
+        file = await self._create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
             file_metadata or {},

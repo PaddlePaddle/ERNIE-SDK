@@ -22,7 +22,7 @@ import anyio
 class File(metaclass=abc.ABCMeta):
     """
     Abstract base class representing a generic file.
-    
+
     Attributes:
         id (str): Unique identifier for the file.
         filename (str): File name.
@@ -36,7 +36,8 @@ class File(metaclass=abc.ABCMeta):
         write_contents_to: Asynchronously write the file contents to a local path.
         get_file_repr: Return a string representation for use in specific contexts.
         to_dict: Convert the File object to a dictionary.
-    """    
+    """
+
     def __init__(
         self,
         *,
@@ -49,7 +50,7 @@ class File(metaclass=abc.ABCMeta):
     ) -> None:
         """
         Init method for the File class.
-        
+
         Args:
             id (str): Unique identifier for the file.
             filename (str): File name.
@@ -57,7 +58,7 @@ class File(metaclass=abc.ABCMeta):
             created_at (str): Timestamp indicating the file creation time.
             purpose (str): Purpose or use case of the file. []
             metadata (Dict[str, Any]): Additional metadata associated with the file.
-        
+
         Returns:
             None
         """
