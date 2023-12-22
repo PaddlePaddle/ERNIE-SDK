@@ -218,9 +218,8 @@ class GroupChatManager(Agent):
         speaker: Agent,
     ) -> Union[str, Dict, None]:
         """Run a group chat."""
+        report_list = [report]
         messages = [{"role": "user", "content": "你需要对生成的报告进行质量检测，请调用已有的各种助手完成这个任务,每次只调用1个助手。请你只返回助手的名字"}]
-        report_list = []
-        report_list.append(report)
         notes = ""
         for i in range(self.groupchat.max_round):
             if i == self.groupchat.max_round - 1:

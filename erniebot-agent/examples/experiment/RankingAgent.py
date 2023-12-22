@@ -2,6 +2,7 @@ import json
 from typing import Optional
 
 from erniebot_agent.agents.base import Agent
+from tools.prompt_utils import prompt_markdow
 from tools.utils import erniebot_chat, write_to_json
 
 
@@ -11,59 +12,53 @@ class RankingAgent(Agent):
     def __init__(
         self,
         name: str,
-        summarize_tool,
         ranking_tool,
         system_message: Optional[str] = None,
-        use_summarize: bool = False,
         config: list = [],
         save_log_path=None,
+        is_reset=False,
     ) -> None:
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
 
-        self.summarize = summarize_tool
         self.ranking = ranking_tool
-        self.use_summarize = use_summarize
         self.config = config
         self.save_log_path = save_log_path
+        self.is_reset = False
 
     async def _async_run(self, list_reports, query):
-        # filter one
-        new_list_reports = []
-        for report in list_reports:
-            response = self.check_format(report)
-            if response["accept"] == "true":
-                new_list_reports.append(report)
-        if self.use_summarize:
-            # summarize
-            summarize_list = []
-            for item in new_list_reports:
-                summarize_text = await self.summarize(item, query)
-                summarize_list.append(summarize_text)
-            _, index = await self.ranking(summarize_list, query)
-            best_report = new_list_reports[index - 1]
-        else:
-            best_report, index = await self.ranking(new_list_reports, query)
-        self.config.append(("None", "最优的report的序号是" + str(index)))
-        self.save_log()
-        # Select the best one (first)
-        return best_report
+        reports = []
+        for item in list_reports:
+            if self.check_format(item):
+                reports.append(item)
+        if len(reports) == 0:
+            if self.is_reset:
+                print("所有的report都不是markdown格式，重新生成report")
+                return [], None
+            else:
+                reports = list_reports
+        best_report = await self.ranking(reports, query)
+        self.config.append(("最好的report", best_report))
+        if self.save_log_path:
+            self.save_log()
+        return reports, best_report
 
     def save_log(self):
         write_to_json(self.save_log_path, self.config, mode="a")
 
     def check_format(self, report):
-        prompt = """你是一名校对员。
-            你应该校对以下事项：
-            - 这份草稿必须充分回答原始问题。
-            - 这份草稿必须按照APA格式编写。
-            - 这份草稿必须不包含低级的句法错误。
-            校对结果，请以json的格式输出：
-            如果这份草搞满足上述所有事项，则输出：{"accept":"true"} 否则输出： {"accept": "false"}
-            """
-        messages = [{"role": "user", "content": "草稿为:\n\n" + report}]
-        respose = erniebot_chat(messages=messages, system=prompt)
-        start = respose.index("{")
-        end = respose.rindex("}")
-        respose = respose[start : end + 1]
-        return json.loads(respose)
+        while True:
+            try:
+                messages = [{"role": "user", "content": prompt_markdow.format(report=report)}]
+                result = erniebot_chat(messages=messages, temperature=0.001)
+                l_index = result.index("{")
+                r_index = result.index("}")
+                result = result[l_index : r_index + 1]
+                result_dict = json.loads(result)
+                if result_dict["accept"] is True or result_dict["accept"] == "true":
+                    return True
+                elif result_dict["accept"] is False or result_dict["accept"] == "false":
+                    return False
+            except Exception as e:
+                print(e)
+                continue

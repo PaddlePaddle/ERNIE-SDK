@@ -10,6 +10,7 @@ from pydantic import Field
 from .prompt_utils import (
     generate_search_queries_prompt,
     generate_search_queries_with_context,
+    generate_search_queries_with_context_comprehensive,
 )
 from .utils import call_function
 
@@ -32,7 +33,7 @@ class TaskPlanningTool(Tool):
         question: str,
         agent_role_prompt: str,
         context: Optional[str] = None,
-        model: str = "ernie-bot-8k",
+        is_comprehensive: bool = False,
         **kwargs,
     ):
         if not context:
@@ -43,15 +44,23 @@ class TaskPlanningTool(Tool):
             )
         else:
             try:
-                result = call_function(
-                    action=generate_search_queries_with_context(context, question),
-                    agent_role_prompt=agent_role_prompt,
-                    temperature=0.7,
-                )
+                if not is_comprehensive:
+                    result = call_function(
+                        action=generate_search_queries_with_context(context, question),
+                        agent_role_prompt=agent_role_prompt,
+                        temperature=0.7,
+                    )
+                else:
+                    result = call_function(
+                        action=generate_search_queries_with_context_comprehensive(context, question),
+                        agent_role_prompt=agent_role_prompt,
+                        temperature=0.7,
+                    )
                 start_idx = result.index("[")
                 end_idx = result.rindex("]")
                 result = result[start_idx : end_idx + 1]
+                plan = json.loads(result)
             except Exception as e:
                 print(e)
-        plan = json.loads(result)
+                plan = []
         return plan

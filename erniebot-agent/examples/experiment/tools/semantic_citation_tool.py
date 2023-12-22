@@ -35,6 +35,8 @@ class SemanticCitationTool(Tool):
         report_type: str,
         dir_path: str,
         aurora_db,
+        theta_min=0.4,
+        theta_max=0.95,
         **kwargs,
     ):
         list_data = reports.split("\n\n")
@@ -43,7 +45,7 @@ class SemanticCitationTool(Tool):
             if "参考文献" in chunk_text:
                 output_text.append(chunk_text)
                 break
-            if "#" in chunk_text:
+            elif "#" in chunk_text:
                 output_text.append(chunk_text)
                 continue
             else:
@@ -52,12 +54,17 @@ class SemanticCitationTool(Tool):
                 for sentence in sentence_splits:
                     if not sentence:
                         continue
-                    query_result = aurora_db.search(query=sentence, top_k=1, filters=None)
+                    try:
+                        query_result = aurora_db.search(query=sentence, top_k=1, filters=None)
+                    except Exception as e:
+                        output_sent.append(sentence)
+                        print(e)
+                        continue
                     source = query_result[0]["meta"]
                     if len(sentence.strip()) > 0:
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
-                        if query_result[0]["score"] >= 0.9:
+                        if query_result[0]["score"] >= theta_min and query_result[0]["score"] <= theta_max:
                             sentence += (
                                 f"<sup>[\\[{url_index[source['url']]['index']}\\]]({source['url']})</sup>"
                             )

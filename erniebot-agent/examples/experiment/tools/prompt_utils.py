@@ -1,5 +1,7 @@
 from typing import Dict
 
+from erniebot_agent.prompt import PromptTemplate
+
 
 def generate_agent_role_prompt(agent):
     """Generates the agent role prompt.
@@ -21,7 +23,7 @@ def generate_agent_role_prompt(agent):
 
 
 def auto_agent_instructions():
-    return """
+    agent_instructions = """
         这项任务涉及研究一个给定的主题，不论其复杂性或是否有确定的答案。研究是由一个特定的agent进行的，该agent由其类型和角色来定义，每个agent需要不同的指令。
         Agent: agent是由主题领域和可用于研究所提供的主题的特定agent的名称来确定的。agent根据其专业领域进行分类，每种agent类型都与相应的表情符号相关联。
         示例:
@@ -43,7 +45,10 @@ def auto_agent_instructions():
             "agent:  "🌍 Travel Agent",
             "agent_role_prompt": "您是一位环游世界的AI导游助手。您的主要任务是撰写有关给定地点的引人入胜、富有洞察力、公正和结构良好的旅行报告，包括历史、景点和文化见解。"
         }
+        task: {{content}}
+        response:
     """
+    return PromptTemplate(agent_instructions, input_variables=["content"])
 
 
 def create_message(chunk: str, question: str) -> Dict[str, str]:
@@ -95,11 +100,12 @@ def generate_search_queries_prompt(question):
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
-
-    return (
-        f'写出 4 个谷歌搜索查询，以从以下内容形成客观意见： "{question}"'
-        f'您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].'
-    )
+    queries_prompt = """
+    写出 4 个谷歌搜索查询，以从以下内容形成客观意见： "{{question}}"
+    您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
+    """
+    Queries_prompt = PromptTemplate(queries_prompt, input_variables=["question"])
+    return Queries_prompt.format(question=question)
 
 
 def generate_search_queries_with_context(context, question):
@@ -107,11 +113,26 @@ def generate_search_queries_with_context(context, question):
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
+    queries_prompt = """
+    {{context}} 根据上述信息，写出 4 个搜索查询，以从以下内容形成客观意见： "{{question}}"
+    您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
+    """
+    Queries_prompt = PromptTemplate(queries_prompt, input_variables=["context", "question"])
+    return Queries_prompt.format(context=context, question=question)
 
-    return (
-        f'{context} 根据上述信息，写出 4 个搜索查询，以从以下内容形成客观意见： "{question}"'
-        f'您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].'
-    )
+
+def generate_search_queries_with_context_comprehensive(context, question):
+    """Generates the search queries prompt for the given question.
+    Args: question (str): The question to generate the search queries prompt for
+    Returns: str: The search queries prompt for the given question
+    """
+    context_comprehensive = """
+    你的任务是根据给出的多篇context内容，综合考虑这些context的内容，写出4个综合性搜索查询。现在多篇context为{{context}}
+    你需要综合考虑上述信息，写出 4 个综合性搜索查询，以从以下内容形成客观意见： "{{question}}"
+    您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"]。
+    """
+    prompt = PromptTemplate(context_comprehensive, input_variables=["context", "question"])
+    return prompt.format(context=str(context), question=question)
 
 
 def generate_report_prompt(question, research_summary, outline=None):
@@ -121,22 +142,37 @@ def generate_report_prompt(question, research_summary, outline=None):
     Returns: str: The report prompt for the given question and research summary
     """
     if outline is None:
-        return (
-            f'"""{research_summary}""" 使用上述信息，详细报告回答以下问题或主题："{question}" --'
-            " 报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字到3500字之间，并采用Markdown语法和APA格式。\n"
-            "您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。\n"
-            f"[在报告末尾以APA格式列出所有使用的来源URL。]\n "
-        )
+        report_prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
+        现在给你一些信息，帮助你进行报告生成任务
+        信息：{{information}}
+        使用上述信息，详细报告回答以下问题或主题{{question}}
+        -----
+        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字，并采用Markdown语法和APA格式。
+        注意报告标题前面必须有'#'
+        您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
+        在报告末尾以APA格式列出所有使用的来源URL。
+        """
+        Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "question"])
+        strs = Report_prompt.format(information=research_summary, question=question)
     else:
-        return (
-            f'"""{research_summary}""" 使用上述信息，根据设定好的大纲{outline}，详细报告回答以下问题或主题："{question}" --'
-            "报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字，并采用Markdown语法和APA格式。\n"
-            "您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。\n"
-            f"在报告末尾以APA格式列出所有使用的来源URL。\n"
-        )
+        outline = outline.replace('"', "'")
+        report_prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
+        现在给你一些信息，帮助你进行报告生成任务
+        信息：{{information}}
+        使用上述信息，根据设定好的大纲{{outline}}
+        详细报告回答以下问题或主题{{question}}
+        -----
+        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字，并采用Markdown语法和APA格式。
+        注意报告标题前面必须有'#'
+        您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
+        在报告末尾以APA格式列出所有使用的来源URL。
+        """
+        Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "outline", "question"])
+        strs = Report_prompt.format(information=research_summary, outline=outline, question=question)
+    return strs.replace(". ", ".")
 
 
-def generate_resource_report_prompt(question, research_summary):
+def generate_resource_report_prompt(question, research_summary, **kwargs):
     """Generates the resource report prompt for the given question and research summary.
 
     Args:
@@ -146,27 +182,31 @@ def generate_resource_report_prompt(question, research_summary):
     Returns:
         str: The resource report prompt for the given question and research summary.
     """
-    return (
-        f'"""{research_summary}""" 根据上述信息，为以下问题或主题生成一份参考文献推荐报告"{question}"'
-        f'"{question}". 该报告应详细分析每个推荐的资源，解释每个来源如何有助于找到研究问题的答案。'
-        + "着重考虑每个来源的相关性、可靠性和重要性。确保报告结构良好，信息丰富，深入，并遵循Markdown语法。"
-        + " 在可用时包括相关的事实、数字和数据。报告的最低长度应为1,200字。"
-    )
+    report_prompt = """
+    {{information}}根据上述信息，为以下问题或主题生成一份参考文献推荐报告"{{question}}"。
+    该报告应详细分析每个推荐的资源，解释每个来源如何有助于找到研究问题的答案。
+    着重考虑每个来源的相关性、可靠性和重要性。确保报告结构良好，信息丰富，深入，并遵循Markdown语法。
+    在可用时包括相关的事实、数字和数据。报告的最低长度应为1,200字。
+    """
+    Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "question"])
+    strs = Report_prompt.format(information=research_summary, question=question)
+    return strs.replace(". ", ".")
 
 
-def generate_outline_report_prompt(question, research_summary):
+def generate_outline_report_prompt(question, research_summary, **kwargs):
     """Generates the outline report prompt for the given question and research summary.
     Args: question (str): The question to generate the outline report prompt for
             research_summary (str): The research summary to generate the outline report prompt for
     Returns: str: The outline report prompt for the given question and research summary
     """
-
-    return (
-        f'"""{research_summary}""" 使用上述信息，为以下问题或主题：'
-        f' "{question}". 生成一个Markdown语法的研究报告大纲。'
-        " 大纲应为研究报告提供一个良好的结构框架，包括主要部分、子部分和要涵盖的关键要点。"
-        " 研究报告应详细、信息丰富、深入，至少1,200字。使用适当的Markdown语法来格式化大纲，确保可读性。"
-    )
+    report_prompt = """{{information}}使用上述信息，为以下问题或主题：
+    "{{question}}". 生成一个Markdown语法的研究报告大纲。
+    大纲应为研究报告提供一个良好的结构框架，包括主要部分、子部分和要涵盖的关键要点。
+    研究报告应详细、信息丰富、深入，至少1,200字。使用适当的Markdown语法来格式化大纲，确保可读性。
+    """
+    Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "question"])
+    strs = Report_prompt.format(information=research_summary, question=question)
+    return strs.replace(". ", ".")
 
 
 def get_report_by_type(report_type):
@@ -195,6 +235,7 @@ EB_EDIT_TEMPLATE = """你是一名编辑。
 - 这份草稿必须充分回答原始问题。
 - 这份草稿必须按照APA格式编写。
 - 这份草稿必须不包含低级的句法错误。
+- 这份草稿的标题不能包含任何引用
 如果不符合以上所有标准，你应该发送适当的修订笔记，请以json的格式输出：
 如果需要进行修订，则按照下面的格式输出：{"accept":"false","notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": "true","notes":""}
 """
@@ -207,19 +248,24 @@ def generate_revisor_prompt(draft, notes):
             """
 
 
-def rank_report_prompt(reports, query):
-    num = len(reports)
-    text_reports = ""
-    for i in range(num):
-        text_reports += f"[{i+1}]. 报告 {i+1} = {reports[i]}\n"
-    return f"""{text_reports}
-            对上述{num} 篇报告进行排名，排序标准如下：
-            1.遵循Markdown语法，并且标题有"#"符号标注的报告排到前面。
-            2.报告结构完整的排在前面。
-            3.报告内容完整的排在前面
-            4.所有报告都应包括在内，并使用标识符列出。
-            输出格式应为 [] > []，例如，[2] > [1]。只回复{num} 篇文章的排名结果，不用言语或解释。
-            """
+def rank_report_prompt(report, query):
+    prompt_socre = """现在给你1篇报告，现在你需要严格按照以下的标准，对这个报告进行打分，越符合标准得分越高，打分区间在0-10之间，
+    你输出的应该是一个json格式，json中的键值为"打分理由"和"报告总得分"，{'打分理由':...,'报告总得分':...}
+    对报告进行打分,打分标准如下：
+    1.仔细检查报告格式，报告必须是完整的，包括标题、摘要、正文、参考文献等，完整性越高，得分越高，这一点最高给4分。
+    3.仔细检查报告内容，报告内容与{{query}}问题相关性越高得分越高，这一点最高给4分。
+    4.仔细检查报告格式，标题是否有"#"符号标注，这一点最高给2分，没有"#"给0分，有"#"给1分。
+    5.仔细检查报告格式，报告的标题句结尾不能有任何中文符号，标题结尾有中文符号给0分，标题结尾没有中文符号给1分。
+    以下是这篇报告的内容：{{content}}
+    请你记住，你需要根据打分标准给出每篇报告的打分理由，打分理由报告
+    最后给出打分结果和最终的打分列表。
+    你的输出需要按照以下格式进行输出：
+    为了对这报告进行打分，我将根据给定的标准进行评估。报告的打分理由将基于以下五个标准：
+    1) 是否包含标题、摘要、正文、参考文献等，3) 内容与问题的相关性，4) 标题是否有"#"标注，5) 标题是否有中文符号。
+    """
+    Prompt_socre = PromptTemplate(prompt_socre, input_variables=["query", "content"])
+    strs = Prompt_socre.format(content=report, query=query)
+    return strs
 
 
 def filter_report(report):
@@ -277,3 +323,11 @@ eb_functions = [
         },
     },
 ]
+prompt_markdow_str = """
+现在给你1篇报告，你需要判断报告是不是markdown格式，并给出理由。你需要输出判断理由以及判断结果，判断结果是报告是markdown形式或者报告不是markdown格式
+你的输出结果应该是个json形式，包括两个键值，一个是"判断理由"，一个是"accept"，如果你认为报告是markdown形式，则"accept"取值为True,如果你认为报告不是markdown形式，则"accept"取值为False，
+你需要判断报告是不是markdown格式，并给出理由
+{'判断理由':...,'accept':...}
+报告：{{report}}
+"""
+prompt_markdow = PromptTemplate(prompt_markdow_str, input_variables=["report"])

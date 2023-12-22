@@ -17,6 +17,8 @@ parser.add_argument(
     help="['research_report','resource_report','outline_report']",
 )
 parser.add_argument("--iterations", type=int, default=4, help="")
+parser.add_argument("--server_name", type=str, default="0.0.0.0")
+parser.add_argument("--server_port", type=int, default=8878)
 args = parser.parse_args()
 base_url = args.base_url
 api_type = args.api_type
@@ -26,10 +28,10 @@ os.environ["access_token"] = access_token
 import jsonlines
 from EditorActorAgent import EditorActorAgent
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
 from RankingAgent import RankingAgent
 from ResearchAgent import ResearchAgent
 from ReviserActorAgent import ReviserActorAgent
-from tools.baizhong_tool import BaizhongSearchTool
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
 from tools.ranking_tool import TextRankingTool
@@ -52,18 +54,30 @@ def generate_report(query, history=[]):
     aurora_db_citation = BaizhongSearch(
         base_url=base_url, project_name="citation_data", remark="construction test dataset", project_id=292
     )
+    # aurora_db_retriver = BaizhongSearch(
+    #     base_url=base_url, project_name="demo_data_1", remark="construction test dataset", project_id=293
+    # )
+    # aurora_db_retriver_abstract = BaizhongSearch(
+    #     base_url=base_url,
+    #     project_name="demo_data_abstact",
+    #     remark="construction test dataset",
+    #     project_id=294,
+    # )
     aurora_db_retriver = BaizhongSearch(
-        base_url=base_url, project_name="demo_data_1", remark="construction test dataset", project_id=293
+        base_url=base_url,
+        project_name="retriver_abstract",
+        remark="construction test dataset",
+        project_id=337,
     )
     aurora_db_retriver_abstract = BaizhongSearch(
         base_url=base_url,
-        project_name="demo_data_abstact",
+        project_name="retriver_abstract",
         remark="construction test dataset",
-        project_id=294,
+        project_id=337,
     )
     intent_detection_tool = IntentDetectionTool()
     abstract_search = BaizhongSearchTool(description="abstact", db=aurora_db_retriver_abstract)
-    faiss_search = BaizhongSearchTool(description="all paper", db=aurora_db_retriver)
+    retriever_search = BaizhongSearchTool(description="all paper", db=aurora_db_retriver)
     outline_generation_tool = OutlineGenerationTool()
     ranking_tool = TextRankingTool()
     report_writing_tool = ReportWritingTool()
@@ -84,7 +98,7 @@ def generate_report(query, history=[]):
             dir_path=dir_path,
             report_type=args.report_type,
             retriever_abstract_tool=abstract_search,
-            retriever_tool=faiss_search,
+            retriever_tool=retriever_search,
             intent_detection_tool=intent_detection_tool,
             task_planning_tool=task_planning_tool,
             report_writing_tool=report_writing_tool,
@@ -99,36 +113,16 @@ def generate_report(query, history=[]):
     reviser_actor = ReviserActorAgent(name="reviser", save_log_path="./outputs/erniebot/log.jsonl")
     ranker_actor = RankingAgent(
         name="ranker",
-        summarize_tool=summarization_tool,
         ranking_tool=ranking_tool,
-        use_summarize=True,
         save_log_path="./outputs/erniebot/log.jsonl",
     )
     list_reports = []
     for researcher in research_actor:
-        for i in range(3):
-            try:
-                report, _ = asyncio.run(researcher._async_run(query))
-                break
-            except Exception as e:
-                print(e)
-                import time
-
-                time.sleep(2)
-                continue
+        report, _ = asyncio.run(researcher._async_run(query))
         list_reports.append(report)
     for i in range(args.iterations):
         if len(list_reports) > 1:
-            for i in range(3):
-                try:
-                    immedia_report = asyncio.run(ranker_actor._async_run(list_reports, query))
-                    break
-                except Exception as e:
-                    print(e)
-                    import time
-
-                    time.sleep(2)
-                    continue
+            list_reports, immedia_report = asyncio.run(ranker_actor._async_run(list_reports, query))
         else:
             immedia_report = list_reports[0]
         revised_report = immedia_report
@@ -136,51 +130,57 @@ def generate_report(query, history=[]):
             markdown_report = immedia_report
         else:
             markdown_report = revised_report
-        for j in range(3):
-            try:
-                respose = asyncio.run(editor_actor._async_run(markdown_report))
-                break
-            except Exception as e:
-                print(e)
-                continue
+        respose = asyncio.run(editor_actor._async_run(markdown_report))
         if respose["accept"] is True:
             break
         else:
-            for j in range(3):
-                try:
-                    revised_report = asyncio.run(reviser_actor._async_run(markdown_report, respose["notes"]))
-                    list_reports.append(revised_report)
-                    break
-                except Exception as e:
-                    print(e)
-                    continue
+            revised_report = asyncio.run(reviser_actor._async_run(markdown_report, respose["notes"]))
+            list_reports.append(revised_report)
     path = write_md_to_pdf(args.report_type, target_path, revised_report)
     return revised_report, path
 
 
-with gr.Blocks(title="报告生成小助手", theme=gr.themes.Base()) as demo:
-    gr.HTML("""<h1 align="center">generation report小助手</h1>""")
-    with gr.Row():
-        with gr.Column():
-            agents = gr.Dropdown(
-                choices=["research_agent", "editor_agent", "ranking_agent", "reviser_agent", "user_agent"],
-                multiselect=True,
-                label="agents",
-                info="",
-            )
-    report = gr.Markdown(label="生成的report")
-    report_url = gr.File(label="原文下载链接")
-    with gr.Row():
-        query_textbox = gr.Textbox(placeholder="写一份关于机器学习发展的报告")
+def launch_ui():
+    with gr.Blocks(title="报告生成小助手", theme=gr.themes.Base()) as demo:
+        gr.HTML("""<h1 align="center">generation report小助手</h1>""")
         with gr.Row():
-            submit = gr.Button("🚀 提交", variant="primary", scale=1)
-            clear = gr.Button("清除", variant="primary", scale=1)
-        submit.click(generate_report, inputs=[query_textbox], outputs=[report, report_url])
-        clear.click(lambda _: ([None, None]), outputs=[report, report_url])
-    recording = gr.Chatbot(label="历史记录")
-    with gr.Row():
-        clear_recoding = gr.Button(value="记录清除")
-        submit_recoding = gr.Button(value="记录更新")
-    submit_recoding.click(get_logs, inputs=[], outputs=[recording])
-    clear_recoding.click(lambda _: ([[None, None]]), outputs=[recording])
-demo.launch(server_name="10.99.15.133", server_port=8878)
+            with gr.Column():
+                gr.Dropdown(
+                    choices=[
+                        "research_agent",
+                        "editor_agent",
+                        "ranking_agent",
+                        "reviser_agent",
+                        "user_agent",
+                    ],
+                    multiselect=True,
+                    label="agents",
+                    info="",
+                )
+        report = gr.Markdown(label="生成的report")
+        report_url = gr.File(label="原文下载链接")
+        with gr.Row():
+            with gr.Column():
+                query_textbox = gr.Textbox(placeholder="写一份关于机器学习发展的报告")
+                gr.Examples(
+                    [["写一份数字经济发展的报告"], ["写一份关于机器学习发展的报告"]],
+                    inputs=[query_textbox],
+                    outputs=[query_textbox],
+                    label="示例输入",
+                )
+            with gr.Row():
+                submit = gr.Button("🚀 提交", variant="primary", scale=1)
+                clear = gr.Button("清除", variant="primary", scale=1)
+            submit.click(generate_report, inputs=[query_textbox], outputs=[report, report_url])
+            clear.click(lambda _: ([None, None]), outputs=[report, report_url])
+        recording = gr.Chatbot(label="历史记录")
+        with gr.Row():
+            clear_recoding = gr.Button(value="记录清除")
+            submit_recoding = gr.Button(value="记录更新")
+        submit_recoding.click(get_logs, inputs=[], outputs=[recording])
+        clear_recoding.click(lambda _: ([[None, None]]), outputs=[recording])
+    demo.launch(server_name=args.server_name, server_port=args.server_port)
+
+
+if "__main__" == __name__:
+    launch_ui()
