@@ -1,3 +1,4 @@
+mkdocs
 mkdocstrings[python]
 mkdocstrings-python
 griffe
