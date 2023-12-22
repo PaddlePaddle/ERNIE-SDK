@@ -7,11 +7,12 @@ nav:
   - 介绍: 'index.md'
   - 快速开始:
     - 介绍: 'tutorials/index.md' 
-  - 使用指南:
-    - 介绍: 'how-to/how-to_introduction.md'
+  - 核心模块:
+    - memory: 'modules/memory.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
+      - memory: "package/erniebot_agent/memory.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
 
 theme:
