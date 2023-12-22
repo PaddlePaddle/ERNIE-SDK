@@ -18,9 +18,9 @@ import functools
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import AIMessage, Message
+from erniebot_agent.file import protocol
+from erniebot_agent.file.base import File
+from erniebot_agent.memory import AIMessage, Message
 
 
 @dataclass

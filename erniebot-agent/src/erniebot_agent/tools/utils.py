@@ -1,6 +1,5 @@
 import base64
 import inspect
-import re
 import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
@@ -9,9 +8,9 @@ from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_args,
@@ -241,22 +240,3 @@ async def parse_file_from_response(
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",
         stage="Output parsing",
     )
-
-
-def is_base64_string(element: Any) -> bool:
-    """check whether a string is base64 sdtring
-
-    refer to: https://stackoverflow.com/a/8571649
-
-    Args:
-        element (str): the content of string
-
-    Returns:
-        bool: whether is base64 string
-    """
-    if not isinstance(element, str):
-        return False
-
-    expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
-    matches = re.match(expression, element)
-    return matches is not None

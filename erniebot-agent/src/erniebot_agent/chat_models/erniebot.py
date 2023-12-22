@@ -29,12 +29,12 @@ import erniebot
 from erniebot.response import EBResponse
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import (
+from erniebot_agent.memory.messages import (
     AIMessage,
     AIMessageChunk,
     FunctionCall,
     Message,
-    SeachInfo,
+    SearchInfo,
 )
 from erniebot_agent.utils import config_from_environ as C
 
@@ -181,7 +181,7 @@ class ERNIEBot(ChatModel):
                 content="", function_call=function_call, search_info=None, token_usage=response.usage
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
-            search_info = SeachInfo(
+            search_info = SearchInfo(
                 results=response.search_info["search_results"],
             )
             return output_type(

@@ -23,11 +23,11 @@ from typing import Any, Dict, List, Literal, Optional, Type, Union, final, overl
 import anyio
 from typing_extensions import Self, TypeAlias
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_registry import FileRegistry
-from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
-from erniebot_agent.file_io.remote_file import RemoteFile, RemoteFileClient
+from erniebot_agent.file import protocol
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_registry import FileRegistry
+from erniebot_agent.file.local_file import LocalFile, create_local_file_from_path
+from erniebot_agent.file.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import Closeable
 

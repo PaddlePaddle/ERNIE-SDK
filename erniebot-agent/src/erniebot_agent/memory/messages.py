@@ -16,9 +16,9 @@ from typing import Dict, List, Optional, TypedDict
 import erniebot.utils.token_helper as token_helper
 from typing_extensions import Self
 
-from erniebot_agent.file_io import protocol
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.remote_file import RemoteFile
+from erniebot_agent.file import protocol
+from erniebot_agent.file.base import File
+from erniebot_agent.file.remote_file import RemoteFile
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class FunctionCall(TypedDict):
     arguments: str
 
 
-class SeachInfo(TypedDict):
+class SearchInfo(TypedDict):
     results: List[Dict]
 
 
@@ -151,7 +151,7 @@ class AIMessage(Message):
         content: str,
         function_call: Optional[FunctionCall],
         token_usage: Optional[TokenUsage] = None,
-        search_info: Optional[SeachInfo] = None,
+        search_info: Optional[SearchInfo] = None,
     ):
         if token_usage is None:
             prompt_tokens = 0
@@ -161,8 +161,8 @@ class AIMessage(Message):
         super().__init__(role="assistant", content=content, token_count=completion_tokens)
         self.function_call = function_call
         self.query_tokens_count = prompt_tokens
-        self.seach_info = search_info
-        self._param_names = ["role", "content", "function_call", "seach_info"]
+        self.search_info = search_info
+        self._param_names = ["role", "content", "function_call", "search_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token count information from LLM."""

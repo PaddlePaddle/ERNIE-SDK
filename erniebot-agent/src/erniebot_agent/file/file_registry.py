@@ -14,7 +14,7 @@
 
 from typing import Dict, List, Optional, final
 
-from erniebot_agent.file_io.base import File
+from erniebot_agent.file.base import File
 
 
 @final

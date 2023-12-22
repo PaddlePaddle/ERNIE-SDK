@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Type
 import erniebot
 from pydantic import Field
 
-from erniebot_agent.messages import AIMessage, HumanMessage, Message
+from erniebot_agent.memory import AIMessage, HumanMessage, Message
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 from erniebot_agent.utils.common import download_file, get_cache_dir

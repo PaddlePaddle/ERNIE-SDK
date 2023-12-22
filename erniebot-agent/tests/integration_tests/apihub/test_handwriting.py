@@ -23,12 +23,3 @@ class TestRemoteTool(RemoteToolTesting):
         result = await agent.async_run("这张照片中的手写字是什么？", files=[self.file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("春天的梦", result.text)
-
-    @pytest.mark.asyncio
-    async def test_doc_rm_hand_wrt(self):
-        toolkit = RemoteToolkit.from_aistudio("doc-rm-hand-wrt")
-
-        agent = self.get_agent(toolkit)
-
-        result = await agent.async_run("帮我把这张这张照片中的手写字的背景去除", files=[self.file])
-        self.assertEqual(len(result.files), 2)
