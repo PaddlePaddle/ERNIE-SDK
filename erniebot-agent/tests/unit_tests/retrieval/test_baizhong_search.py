@@ -52,6 +52,14 @@ SEARCH_RESULTS = [
     },
 ]
 
+KNOWLEDGEBASE_RESPONESE = {
+    "logId": "2dc5d9018f912bb4c62f2653bdf05424",
+    "errorCode": 0,
+    "errorMsg": "Success",
+    "timestamp": 1703208782306,
+    "result": {"knowledgeBaseId": "123456", "knowledgeBaseName": "test"},
+}
+
 
 class TestBaizhongSearch(unittest.TestCase):
     @patch("requests.request")
@@ -64,6 +72,21 @@ class TestBaizhongSearch(unittest.TestCase):
             access_token=access_token,
             knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
         )
+
+    @patch("requests.post")
+    def test_create_knowledge_base(self, mock_request):
+        knowledge_base_name = "test"
+        mock_response = MagicMock(status_code=200, json=lambda: KNOWLEDGEBASE_RESPONESE)
+        mock_request.return_value = mock_response
+        access_token = "your access token"
+        knowledge_base_id = ""
+        self.baizhong_db = BaizhongSearch(
+            knowledge_base_name=knowledge_base_name,
+            access_token=access_token,
+            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+        )
+
+        self.assertEqual(self.baizhong_db.knowledge_base_id, "123456")
 
     @patch("requests.post")
     def test_search(self, mock_request):
