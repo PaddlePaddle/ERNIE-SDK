@@ -8,7 +8,6 @@ from .base import RemoteToolTesting
 
 
 class TestRemoteTool(RemoteToolTesting):
-
     @pytest.mark.asyncio
     async def test_tool(self):
         toolkit = RemoteToolkit.from_aistudio("highacc-ocr")

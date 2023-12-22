@@ -15,7 +15,7 @@
 import threading
 from typing import Dict, List, Optional
 
-from erniebot_agent.file_io.base import File
+from erniebot_agent.file.base import File
 from erniebot_agent.utils.misc import Singleton
 
 

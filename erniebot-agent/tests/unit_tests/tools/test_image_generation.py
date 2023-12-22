@@ -17,9 +17,9 @@ import unittest
 
 import pytest
 
-from erniebot_agent.agents.functional_agent import FunctionalAgent
-from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.memory.whole_memory import WholeMemory
+from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools.image_generation_tool import ImageGenerationTool
 
 
