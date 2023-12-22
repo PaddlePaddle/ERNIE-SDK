@@ -26,6 +26,9 @@ class MessageManager:
         messages (List[Message]): the messages of a conversation.
         system_message (SystemMessage): the system message of a conversation.
 
+    Note:
+        Each message manager have only one system message.
+
     Returns:
         A message manager object.
     """
@@ -36,11 +39,6 @@ class MessageManager:
 
     @property
     def system_message(self) -> Optional[Message]:
-        """
-        Each message manager have only one system message.
-
-        return: Message or None
-        """
         return self._system_message
 
     @system_message.setter

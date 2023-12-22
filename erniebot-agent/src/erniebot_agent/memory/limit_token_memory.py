@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import AIMessage, Message
 
 

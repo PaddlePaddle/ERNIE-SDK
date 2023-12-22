@@ -4,7 +4,7 @@ import unittest
 import pytest
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.message import AIMessage, FunctionMessage, HumanMessage
+from erniebot_agent.memory import AIMessage, FunctionMessage, HumanMessage
 
 
 class TestChatModel(unittest.IsolatedAsyncioTestCase):

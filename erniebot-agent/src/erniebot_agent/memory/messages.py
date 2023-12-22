@@ -22,6 +22,7 @@ from erniebot_agent.file.remote_file import RemoteFile
 
 logger = logging.getLogger(__name__)
 
+
 class FunctionCall(TypedDict):
     name: str
     thoughts: str
@@ -155,17 +156,17 @@ class HumanMessage(Message):
     
     Examples:
     .. code-block:: python
-    >>> from erniebot_agent.messages import HumanMessage
-    >>> HumanMessage("I want to order a pizza.")
-    <role: user, content: I want to order a pizza.>
+        >>> from erniebot_agent.messages import HumanMessage
+        >>> HumanMessage("I want to order a pizza.")
+        <role: user, content: I want to order a pizza.>
 
-    >>> from erniebot_agent.file_io.base import File
-    >>> prompt = "I want to know text in this image."
-    >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
-    >>> message = await HumanMessage.create_with_files(
-            prompt, files, include_file_urls=True)
-    >>> message
-    <role: user, content: I want to know text in this image.<file>File-local-xxxx</file><url>{url}</url>.>
+        >>> from erniebot_agent.file_io.base import File
+        >>> prompt = "I want to know text in this image."
+        >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
+        >>> message = await HumanMessage.create_with_files(
+                prompt, files, include_file_urls=True)
+        >>> message
+        <role: user, content: I want to know text in this image.<file>File-local-xxxx</file><url>{url}</url>.>
         
     """
 
@@ -232,7 +233,8 @@ class AIMessage(Message):
         content (str): the content of the message.
         function_call (Optional[FunctionCall], optional): The function that agent calls. Defaults to None.
         token_usage (Optional[TokenUsage], optional): the token usage calculate by ERNIE. Defaults to None.
-        search_info (Optional[SearchInfo], optional): The SearchInfo content of the chat model's response. Defaults to None.
+        search_info (Optional[SearchInfo], optional): 
+                The SearchInfo content of the chat model's response. Defaults to None.
     
     Attributes:
         role (str): character of the message. 
@@ -248,16 +250,18 @@ class AIMessage(Message):
 
             >>> human_message = HumanMessage(content="I want to know text in this image.")
             >>> ai_message = AIMessage(
-                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image, \
-                     I need to use the OCR tool", "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
+                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image, 
+                     I need to use the OCR tool", 
+                     "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
                 token_usage={"prompt_tokens": 10, "completion_tokens": 20},
                 search_info={}]}
                 )
             >>> human_message.content
             "I want to know text in this image."
             >>> ai_message.function_call
-            {"name": "OCR", "thoughts": "The user want to know the text in the image, I need to use the OCR tool",\
-                     "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"}
+            {"name": "OCR",
+                "thoughts": "The user want to know the text in the image, I need to use the OCR tool",
+                "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"}
     """
 
     def __init__(

@@ -12,28 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message
 
 
 class SlidingWindowMemory(Memory):
-    """This class controls max number of messages using sliding window tactic.
-    
-    Args:
-        max_round(int): Max number of rounds. A round contains a piece of human message and a piece of AI message.
+    """
+    This class controls max number of rounds of message using sliding window tactic.
+    Each round contains a piece of human message and a piece of AI message.
+
+    Attributes:
+        max_round(int): Max number of rounds. 
         retained_round(int): The first number of rounds of memory will be preserverd. Default to 0.
 
+    Raises:
+        ValueError: If max_round is not positive integer.
     """
 
     def __init__(self, max_round: int, retained_round: int = 0) -> None:
-        """This class controls max number of messages.
-
+        """
         Args:
             max_round(int): Max number of rounds(round: human message and AI message).
             retained_round(int): The number remaining_memory rounds of memory to be retained. Default to 0.
 
-        Raises:
-            ValueError: If max_round is not positive integer.
         """
 
         super().__init__()

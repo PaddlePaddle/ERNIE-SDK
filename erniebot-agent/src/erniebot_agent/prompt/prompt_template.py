@@ -16,7 +16,7 @@ from typing import Any, List, Optional
 
 from jinja2 import Environment, meta
 
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory.messages import HumanMessage
 from erniebot_agent.prompt import BasePromptTemplate
 
 
@@ -36,12 +36,12 @@ def jinja2_formatter(template: str, **kwargs: Any) -> str:
 class PromptTemplate(BasePromptTemplate):
     """
     Format the prompt for llm input.
-    
+
     Args:
         template: The template string.
         name: The name of the prompt.
         input_variables: The input variables of the template.
-    
+
     Attributes:
         name: The name of the prompt.
         template: The template string.
