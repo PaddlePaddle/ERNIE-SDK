@@ -27,11 +27,11 @@ from erniebot_agent.agents.schema import (
     ToolResponse,
 )
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file import protocol
+from erniebot_agent.file import get_global_file_manager, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.memory.base import Memory
 from erniebot_agent.memory import Message, SystemMessage
+from erniebot_agent.memory.base import Memory
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.mixins import GradioMixin
@@ -77,7 +77,7 @@ class Agent(GradioMixin, BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
-            file_manager = file.get_global_file_manager()
+            file_manager = get_global_file_manager()
         self.plugins = plugins
         self._file_manager = file_manager
         self._init_file_repr()

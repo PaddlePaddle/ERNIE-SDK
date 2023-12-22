@@ -15,14 +15,9 @@
 import os
 from typing import Optional
 
-<<<<<<<< HEAD:erniebot-agent/src/erniebot_agent/utils/config_from_environ.py
 
 def get_global_access_token() -> Optional[str]:
     return _get_val_from_env_var("EB_AGENT_ACCESS_TOKEN")
-========
-from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.remote_file import AIStudioFileClient
->>>>>>>> official:erniebot-agent/src/erniebot_agent/file/factory.py
 
 
 def get_global_save_dir() -> Optional[str]:

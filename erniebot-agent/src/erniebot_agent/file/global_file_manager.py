@@ -16,8 +16,8 @@ from typing import Any, Optional
 
 import asyncio_atexit  # type: ignore
 
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.remote_file import AIStudioFileClient
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
 
 _global_file_manager: Optional[FileManager] = None

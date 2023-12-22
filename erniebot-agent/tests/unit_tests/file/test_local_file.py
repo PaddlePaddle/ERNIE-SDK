@@ -1,8 +1,8 @@
 import pathlib
 import tempfile
 
-import erniebot_agent.file_io.protocol as protocol
-from erniebot_agent.file_io.local_file import LocalFile, create_local_file_from_path
+import erniebot_agent.file.protocol as protocol
+from erniebot_agent.file.local_file import LocalFile, create_local_file_from_path
 
 
 def test_create_local_file_from_path():
