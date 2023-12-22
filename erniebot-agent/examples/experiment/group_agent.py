@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from EditorActorAgent import EditorActorAgent
 from erniebot_agent.agents.base import Agent
+from erniebot_agent.messages import SystemMessage
 from RankingAgent import RankingAgent
 from ResearchAgent import ResearchAgent
 from ReviserActorAgent import ReviserActorAgent
@@ -202,7 +203,7 @@ class GroupChatManager(Agent):
         # unlimited consecutive auto reply by default
         max_consecutive_auto_reply: Optional[int] = sys.maxsize,
         human_input_mode: bool = True,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         **kwargs,
     ):
         self.groupchat = groupchat
