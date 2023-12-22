@@ -173,7 +173,7 @@ class ErnieBotChat(BaseChatModel):
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = self._convert_messages_to_dicts(messages)
@@ -195,7 +195,7 @@ class ErnieBotChat(BaseChatModel):
         **kwargs: Any,
     ) -> AsyncIterator[ChatGenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = self._convert_messages_to_dicts(messages)

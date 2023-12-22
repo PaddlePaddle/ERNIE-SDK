@@ -56,7 +56,7 @@ class FakeRemoteFileServer(object):
     def __init__(self):
         super().__init__()
         self._storage = None
-        self._file_id_iter = protocol.generate_fake_remote_file_ids()
+        self._file_id_iter = None
 
     @property
     def storage(self):
@@ -67,6 +67,8 @@ class FakeRemoteFileServer(object):
         return self._storage is not None
 
     async def upload_file(self, file_path, file_purpose, file_metadata):
+        if not self.started:
+            raise ServerError("Server is not running.")
         id_ = next(self._file_id_iter)
         filename = file_path.name
         byte_size = file_path.stat().st_size
@@ -86,12 +88,16 @@ class FakeRemoteFileServer(object):
         return file
 
     async def retrieve_file(self, file_id):
+        if not self.started:
+            raise ServerError("Server is not running.")
         try:
             return self._storage[file_id]
         except KeyError as e:
             raise ServerError("File not found") from e
 
     async def retrieve_file_contents(self, file_id):
+        if not self.started:
+            raise ServerError("Server is not running.")
         try:
             file = self._storage[file_id]
         except KeyError as e:
@@ -100,9 +106,13 @@ class FakeRemoteFileServer(object):
             return file["contents"]
 
     async def list_files(self):
+        if not self.started:
+            raise ServerError("Server is not running.")
         return list(self._storage.values())
 
     async def delete_file(self, file_id) -> None:
+        if not self.started:
+            raise ServerError("Server is not running.")
         try:
             return self._storage[file_id]
         except KeyError as e:
@@ -111,8 +121,13 @@ class FakeRemoteFileServer(object):
     @contextlib.contextmanager
     def start(self):
         self._storage = {}
-        yield self
-        self._storage = None
+        self._file_id_iter = protocol.generate_fake_remote_file_ids()
+        try:
+            yield self
+        finally:
+            self._storage = None
+            self._file_id_iter.close()
+            self._file_id_iter = None
 
 
 class ServerError(Exception):

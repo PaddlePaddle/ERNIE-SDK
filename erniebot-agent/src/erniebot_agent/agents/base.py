@@ -163,10 +163,10 @@ class Agent(GradioMixin, BaseAgent):
         try:
             args_dict = json.loads(tool_args)
         except json.JSONDecodeError:
-            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args`: {tool_args}")
 
         if not isinstance(args_dict, dict):
-            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
 
     async def _sniff_and_extract_files_from_args(

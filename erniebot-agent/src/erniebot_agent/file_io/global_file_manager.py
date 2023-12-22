@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
-import atexit
-from typing import Any, List, Optional
+import asyncio_atexit
+from typing import Any, Optional
 
 from erniebot_agent.file_io.file_manager import FileManager
 from erniebot_agent.file_io.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
-from erniebot_agent.utils.mixins import Closeable
 
 _global_file_manager: Optional[FileManager] = None
-_objects_to_close: List[Closeable] = []
 
 
 def get_global_file_manager() -> FileManager:
@@ -46,6 +43,9 @@ def configure_global_file_manager(
 def _create_default_file_manager(
     access_token: Optional[str], save_dir: Optional[str], **opts: Any
 ) -> FileManager:
+    async def _close_file_manager():
+        await file_manager.close()
+
     if access_token is None:
         access_token = C.get_global_access_token()
     if save_dir is None:
@@ -55,21 +55,5 @@ def _create_default_file_manager(
     else:
         remote_file_client = None
     file_manager = FileManager(remote_file_client, save_dir, **opts)
-    _objects_to_close.append(file_manager)
+    asyncio_atexit.register(_close_file_manager)
     return file_manager
-
-
-def _close_objects():
-    async def _close_objects_sequentially():
-        for obj in _objects_to_close:
-            await obj.close()
-
-    if _objects_to_close:
-        # Since async atexit is not officially supported by Python,
-        # we start a new event loop to do the cleanup.
-        asyncio.run(_close_objects_sequentially())
-        _objects_to_close.clear()
-
-
-# FIXME: The exit handler may not be called when using multiprocessing.
-atexit.register(_close_objects)

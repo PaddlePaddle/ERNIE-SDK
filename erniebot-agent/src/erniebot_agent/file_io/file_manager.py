@@ -45,6 +45,7 @@ class FileManager(Closeable):
         remote_file_client: Optional[RemoteFileClient] = None,
         save_dir: Optional[FilePath] = None,
         *,
+        default_file_type: Optional[Literal["local", "remote"]] = None,
         prune_on_close: bool = True,
     ) -> None:
         super().__init__()
@@ -56,6 +57,7 @@ class FileManager(Closeable):
             # This can be done lazily, but we need to be careful about race conditions.
             self._temp_dir = self._create_temp_dir()
             self._save_dir = pathlib.Path(self._temp_dir.name)
+        self._default_file_type = default_file_type
         self._prune_on_close = prune_on_close
 
         self._file_registry = FileRegistry()
@@ -135,7 +137,7 @@ class FileManager(Closeable):
         elif file_type == "remote":
             file = await self.create_remote_file_from_path(file_path, file_purpose, file_metadata)
         else:
-            raise ValueError(f"Unsupported file type: {file_type}")
+            raise RuntimeError(f"Unsupported file type: {file_type}")
         return file
 
     async def create_local_file_from_path(
@@ -236,7 +238,7 @@ class FileManager(Closeable):
                     file_metadata,
                 )
             else:
-                raise ValueError(f"Unsupported file type: {file_type}")
+                raise RuntimeError(f"Unsupported file type: {file_type}")
         finally:
             if should_remove_file:
                 await async_file_path.unlink()
@@ -315,10 +317,13 @@ class FileManager(Closeable):
         return file
 
     def _get_default_file_type(self) -> Literal["local", "remote"]:
-        if self._remote_file_client is not None:
-            return "remote"
+        if self._default_file_type is not None:
+            return self._default_file_type
         else:
-            return "local"
+            if self._remote_file_client is not None:
+                return "remote"
+            else:
+                return "local"
 
     def _get_unique_file_path(
         self, prefix: Optional[str] = None, suffix: Optional[str] = None

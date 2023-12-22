@@ -481,7 +481,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         if model == "ernie-turbo":
             for arg in ("functions", "stop", "disable_search", "enable_citation"):
                 if arg in kwargs:
-                    raise ValueError(f"`{arg}` is not supported by the {model} model.")
+                    raise errors.InvalidArgumentError(f"`{arg}` is not supported by the {model} model.")
         params["messages"] = messages
         if "functions" in kwargs:
             functions = kwargs["functions"]
