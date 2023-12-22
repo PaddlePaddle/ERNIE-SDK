@@ -17,7 +17,7 @@ import os
 import re
 from typing import Dict, List, Optional, Union
 
-from erniebot_agent.memory import FunctionMessage, Message
+from erniebot_agent.memory.messages import FunctionMessage, Message
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
