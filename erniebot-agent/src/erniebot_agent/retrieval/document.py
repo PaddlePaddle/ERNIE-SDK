@@ -7,10 +7,10 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class Document:
-    id: str
     title: str
     content_se: str
     meta: Dict[str, Any]
+    id: Optional[str] = None
 
     def __init__(
         self,
