@@ -23,18 +23,18 @@ class LimitTokensMemory(Memory):
 
     Args:
         max_token_limit (int): The maximum number of tokens in the context.
-
+    
     Attributes:
         max_token_limit (int): The maximum number of tokens in the context.
         mem_token_count (int): The number of tokens in the context.
-
+    
     Examples:
 
         .. code-block:: python
             from erniebot_agent.memory import LimitTokensMemory
             memory = LimitTokensMemory(max_token_limit=3000)
             memory.add_message(AIMessage("Hello world!"))
-
+            
     """
 
     def __init__(self, max_token_limit=3000):
@@ -52,10 +52,10 @@ class LimitTokensMemory(Memory):
     def add_message(self, message: Message):
         """
         Add a message to memory. Prune the message if number of tokens in memory >= max_token_limit.
-
+        
         Args:
             message (Message): The message to be added.
-
+        
         Returns:
             None
         """
@@ -68,7 +68,7 @@ class LimitTokensMemory(Memory):
     def prune_message(self):
         """
         Prune the message if number of tokens in memory >= max_token_limit.
-
+        
         Raises:
             RuntimeError: If the message is empty after pruning.
 

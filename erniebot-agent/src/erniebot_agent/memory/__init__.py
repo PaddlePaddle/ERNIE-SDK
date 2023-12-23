@@ -14,13 +14,6 @@
 
 from .base import Memory
 from .limit_tokens_memory import LimitTokensMemory
-from .messages import (
-    AIMessage,
-    AIMessageChunk,
-    FunctionMessage,
-    HumanMessage,
-    Message,
-    SystemMessage,
-)
+from .messages import AIMessage, FunctionMessage, HumanMessage, Message, SystemMessage, AIMessageChunk
 from .sliding_window_memory import SlidingWindowMemory
 from .whole_memory import WholeMemory
