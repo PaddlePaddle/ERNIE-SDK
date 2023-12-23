@@ -46,12 +46,12 @@ class Message:
         role (str): character of the message.
         content (str): content of the message.
         token_count (Optional[int], optional): number of tokens of the message content. Defaults to None.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content.    
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
         >>> Message("user", "hello")
         <role: user, content: hello>
@@ -59,6 +59,7 @@ class Message:
         <role: user, content: hello, token_count: 5>
 
     """
+
     def __init__(self, role: str, content: str, token_count: Optional[int] = None):
         self._role = role
         self._content = content
@@ -117,12 +118,12 @@ class SystemMessage(Message):
 
     Args:
         content (str): the content of the message.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
 
         .. code-block:: python
@@ -138,6 +139,7 @@ class SystemMessage(Message):
         3
 
     """
+
     def __init__(self, content: str):
         super().__init__(role="system", content=content, token_count=len(content))
 
@@ -145,15 +147,15 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """
     The definition of the message created by a human.
-    
+
     Args:
         content (str): the content of the message.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
     .. code-block:: python
         >>> from erniebot_agent.messages import HumanMessage
@@ -167,7 +169,7 @@ class HumanMessage(Message):
                 prompt, files, include_file_urls=True)
         >>> message
         <role: user, content: W h ha t.<file>File-local-xxxx</file><url>{url}</url>.>
-        
+
     """
 
     def __init__(self, content: str):
@@ -179,18 +181,19 @@ class HumanMessage(Message):
     ) -> Self:
         """
         create a Human Message with file input
-        
+
         Args:
             text: content of the message.
-            files (List[File]): The file that the message contains. 
+            files (List[File]): The file that the message contains.
             include_file_urls: Whehter to include file URLs in the content of message.
-        
+
         Returns:
             A HumanMessage object that contains file in the content.
-        
+
         Raises:
             RuntimeError: Only `RemoteFile` objects can set include_file_urls as True.
         """
+
         def _get_file_reprs(files: List[File]) -> List[str]:
             file_reprs = []
             for file in files:
@@ -233,25 +236,25 @@ class AIMessage(Message):
         content (str): the content of the message.
         function_call (Optional[FunctionCall], optional): The function that agent calls. Defaults to None.
         token_usage (Optional[TokenUsage], optional): the token usage calculate by ERNIE. Defaults to None.
-        search_info (Optional[SearchInfo], optional): 
+        search_info (Optional[SearchInfo], optional):
                 The SearchInfo content of the chat model's response. Defaults to None.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
         function_call (Optional[FunctionCall]): The function that agent calls.
         query_tokens_count (int): the number of tokens in the query.
         search_info (Optional[SearchInfo]): The SearchInfo in the chat model's response.
-    
+
     Examples:
-        
+
         .. code-block:: python
 
             >>> human_message = HumanMessage(content="What is the text in this image?")
             >>> ai_message = AIMessage(
-                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image, 
-                     I need to use the OCR tool", 
+                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image,
+                     I need to use the OCR tool",
                      "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
                 token_usage={"prompt_tokens": 10, "completion_tokens": 20},
                 search_info={}]}
@@ -290,17 +293,17 @@ class AIMessage(Message):
 class FunctionMessage(Message):
     """
     The definition of a message that calls tools, containing the result of a function call.
-    
+
     Args:
         name (str): the name of the function.
         content (str): the content of the message.
-    
+
     Attributes:
-        name (str): the name of the function. 
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        name (str): the name of the function.
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
 
         .. code-block:: python
