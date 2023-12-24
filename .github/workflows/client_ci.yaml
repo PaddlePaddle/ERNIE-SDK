@@ -33,9 +33,9 @@ jobs:
           python -m pip install -r dev-requirements.txt
       - name: Show make version
         run: make --version
-      - name: Format Python code
-        run: make format
+      - name: Perform format checks on Python code
+        run: make format-check
       - name: Lint Python code
         run: make lint
-      - name: Type-check Python code
-        run: make type_check
+      - name: Perform type checks on Python code
+        run: make type-check

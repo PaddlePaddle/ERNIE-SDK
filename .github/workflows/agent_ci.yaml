@@ -34,14 +34,14 @@ jobs:
           python -m pip install -r erniebot-agent/dev-requirements.txt
       - name: Show make version
         run: make --version
-      - name: Format Python code
-        run: make format
+      - name: Perform format checks on Python code
+        run: make format-check
         working-directory: erniebot-agent
       - name: Lint Python code
         run: make lint
         working-directory: erniebot-agent
-      - name: Type-check Python code
-        run: make type_check
+      - name: Perform type checks on Python code
+        run: make type-check
         working-directory: erniebot-agent
   UnitTest:
     name: Unit Test
@@ -69,7 +69,7 @@ jobs:
       - name: Show make version
         run: make --version
       - name: Run unit tests
-        run: make test_coverage
+        run: make coverage
         working-directory: erniebot-agent
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
