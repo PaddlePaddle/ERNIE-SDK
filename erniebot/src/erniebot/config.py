@@ -20,9 +20,9 @@ import sys
 import types
 from typing import Any, Dict, Optional
 
+from .errors import ConfigItemNotFoundError
 from .types import ConfigDictType
 from .utils.misc import SingletonMeta
-from .errors import ConfigItemNotFoundError
 
 __all__ = ["GlobalConfig", "init_global_config"]
 

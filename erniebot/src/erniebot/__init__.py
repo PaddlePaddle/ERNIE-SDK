@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from . import errors
+from .config import GlobalConfig
+from .config import init_global_config as _init_global_config
 from .errors import ConfigItemNotFoundError as _ConfigItemNotFoundError
-from .config import GlobalConfig, init_global_config as _init_global_config
 from .intro import Model
 from .resources import (
     ChatCompletion,
