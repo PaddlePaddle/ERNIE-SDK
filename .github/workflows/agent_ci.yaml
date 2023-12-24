@@ -22,16 +22,17 @@ jobs:
         with:
           python-version: 3.8
           cache: pip # Caching pip dependencies
-          cache-dependency-path: |
+          cache-dependency-path: &dep_file_paths |
             erniebot/setup.cfg
             erniebot-agent/setup.cfg
-            erniebot-agent/dev-requirements.txt
+            erniebot-agent/*-requirements.txt
+            erniebot-agent/tests/requirements.txt
       - name: Install erniebot-agent and dependencies
         run: |
           python -m pip install --upgrade pip
+          python -m pip install -r erniebot-agent/dev-requirements.txt
           python -m pip install ./erniebot
           python -m pip install ./erniebot-agent[all]
-          python -m pip install -r erniebot-agent/dev-requirements.txt
       - name: Show make version
         run: make --version
       - name: Perform format checks on Python code
@@ -56,16 +57,13 @@ jobs:
         with:
           python-version: 3.8
           cache: pip # Caching pip dependencies
-          cache-dependency-path: |
-            erniebot/setup.cfg
-            erniebot-agent/setup.cfg
-            erniebot-agent/tests/requirements.txt
+          cache-dependency-path: *dep_file_paths
       - name: Install erniebot-agent and dependencies
         run: |
           python -m pip install --upgrade pip
+          python -m pip install -r erniebot-agent/tests/requirements.txt
           python -m pip install ./erniebot
           python -m pip install ./erniebot-agent[all]
-          python -m pip install -r erniebot-agent/tests/requirements.txt
       - name: Show make version
         run: make --version
       - name: Run unit tests
