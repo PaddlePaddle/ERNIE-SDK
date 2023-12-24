@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: 3.8
           cache: pip # Caching pip dependencies
-          cache-dependency-path: &dep_file_paths |
+          cache-dependency-path: |
             setup.cfg
             *-requirements.txt
       - name: Install erniebot and dependencies
