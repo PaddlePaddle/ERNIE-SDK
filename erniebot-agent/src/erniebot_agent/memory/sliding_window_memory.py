@@ -12,38 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message
 
 
 class SlidingWindowMemory(Memory):
-    """This class controls max number of messages."""
+    """
+    This class controls max number of rounds of message using sliding window tactic.
+    Each round contains a piece of human message and a piece of AI message.
+
+    Attributes:
+        max_round(int): Max number of rounds.
+        retained_round(int): The first number of rounds of memory will be preserverd. Default to 0.
+
+    Raises:
+        ValueError: If max_round is not positive integer.
+    """
 
     def __init__(self, max_round: int, retained_round: int = 0) -> None:
-        """This class controls max number of messages.
-
+        """
         Args:
-        max_round: Max number of rounds(round: human message and AI message).
-        retained_round: The first remaining_memory rounds of memory to be retained. Default to 0.
+            max_round(int): Max number of rounds(round: human message and AI message).
+            retained_round(int): The number remaining_memory rounds of memory to be retained. Default to 0.
+
         """
 
         super().__init__()
         self.max_round = max_round
         self.retained_round = retained_round
 
-        assert (isinstance(max_round, int)) and (
-            max_round > 0
-        ), "max_num_message should be positive integer, but got {max_token_limit}".format(
-            max_token_limit=max_round
-        )
+        if max_round <= 0:
+            raise ValueError(f"max_round should be positive integer, but got {max_round}")
 
     def add_message(self, message: Message) -> None:
+        """Add a message to memory."""
         super().add_message(message=message)
         self.prune_message()
 
     def prune_message(self) -> None:
+        """Prune memory to max_round if necessary."""
         while len(self.get_messages()) > self.max_round * 2:
             self.msg_manager.pop_message(self.retained_round * 2)
-            # `messages` must have an odd number of elements.
             if len(self.get_messages()) % 2 == 0:
                 self.msg_manager.pop_message()

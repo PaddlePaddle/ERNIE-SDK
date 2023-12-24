@@ -37,15 +37,15 @@ class CustomBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
@@ -59,7 +59,6 @@ class CustomBackend(EBBackend):
             headers=headers,
             files=files,
             request_timeout=request_timeout,
-            base_url=self.base_url,
         )
 
     async def arequest(
@@ -67,15 +66,15 @@ class CustomBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,

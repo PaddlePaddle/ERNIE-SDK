@@ -7,22 +7,16 @@ nav:
   - 介绍: 'index.md'
   - 快速开始:
     - 介绍: 'tutorials/index.md' 
-  - 使用指南:
-    - 介绍: 'how-to/how-to_introduction.md'
+  - 核心模块:
+    - memory: 'modules/memory.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
+      - memory: "package/erniebot_agent/memory.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
 
 theme:
   name: material
-  favicon: img/favicon.ico
-
-markdown_extensions:
-  - pymdownx.highlight
-  - pymdownx.superfences
-  - toc:
-      baselevel: 2
 
 plugins:
   - search
@@ -38,6 +32,3 @@ plugins:
           selection:
             filters:
               - "^__init__$"  # but always include __init__ modules and methods
-      watch:
-        - erniebot-agent/src
-        - erniebot/src

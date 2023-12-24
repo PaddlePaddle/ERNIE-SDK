@@ -20,7 +20,7 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
-from erniebot_agent.memory import AIMessage, Message
+from erniebot_agent.memory.messages import AIMessage, Message
 
 
 @dataclass

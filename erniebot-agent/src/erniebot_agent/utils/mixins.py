@@ -38,6 +38,8 @@ class GradioMixin:
         return cast(FileManager, None)
 
     def launch_gradio_demo(self, **launch_kwargs: Any):
+        # XXX: The current implementation requires that the inheriting objects
+        # be constructed outside an event loop, which is probably not sensible.
         # TODO: Unified optional dependencies management
         try:
             import gradio as gr  # type: ignore

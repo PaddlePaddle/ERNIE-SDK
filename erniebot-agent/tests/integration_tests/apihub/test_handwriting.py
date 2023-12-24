@@ -16,7 +16,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_hand_text_rec(self):
-        toolkit = RemoteToolkit.from_aistudio("hand-text-rec")
+        toolkit = RemoteToolkit.from_aistudio("hand-text-rec", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 

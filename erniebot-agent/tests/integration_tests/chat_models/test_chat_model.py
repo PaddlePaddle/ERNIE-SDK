@@ -3,7 +3,7 @@ import unittest
 import pytest
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.message import AIMessage, FunctionMessage, HumanMessage
+from erniebot_agent.memory import AIMessage, FunctionMessage, HumanMessage
 
 
 class TestChatModel(unittest.IsolatedAsyncioTestCase):
@@ -61,7 +61,7 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
                 },
             }
         ]
-        # use ernie-3.5 here since ernie-turbo doesn't support function call
+        # NOTE：use ernie-3.5 here since ernie-turbo doesn't support function call
         eb = ERNIEBot(model="ernie-3.5", api_type="aistudio")
         messages = [
             HumanMessage(content="深圳市今天的气温是多少摄氏度？"),

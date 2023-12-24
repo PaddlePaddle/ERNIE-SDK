@@ -21,4 +21,4 @@ A few notes about the current state of this submodule:
 - When you want to get file_manger, you can use method `get_global_file_manager`.
 """
 
-from erniebot_agent.file.global_file_manager import GlobalFileManager
+from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler

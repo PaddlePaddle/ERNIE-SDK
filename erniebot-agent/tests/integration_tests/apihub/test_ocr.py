@@ -18,7 +18,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_ocr_general(self):
-        toolkit = RemoteToolkit.from_aistudio("ocr-general")
+        toolkit = RemoteToolkit.from_aistudio("ocr-general", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 
@@ -28,7 +28,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_ocr_pp(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-structure-v2")
+        toolkit = RemoteToolkit.from_aistudio("pp-structure-v2", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 
@@ -38,7 +38,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_pp_ocr_v4(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-ocrv4")
+        toolkit = RemoteToolkit.from_aistudio("pp-ocrv4", file_manager=self.file_manager)
 
         file = await self.file_manager.create_file_from_path(
             self.download_fixture_file("ocr_example_input.png")
@@ -53,7 +53,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_shopping_receipt(self):
-        toolkit = RemoteToolkit.from_aistudio("shopping-receipt")
+        toolkit = RemoteToolkit.from_aistudio("shopping-receipt", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("xiaopiao.png"))
@@ -63,7 +63,7 @@ class TestRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_formula(self):
-        toolkit = RemoteToolkit.from_aistudio("formula")
+        toolkit = RemoteToolkit.from_aistudio("formula", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("fomula.png"))

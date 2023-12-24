@@ -12,13 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.memory.base import Memory
+from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import AIMessage, Message
 
 
 class LimitTokensMemory(Memory):
-    """This class controls max tokens less than max_token_limit.
-    If tokens >= max_token_limit, pop message from memory.
+    """
+    The class of memory that limits the number of tokens.
+    If number of tokens in the context >= max_token_limit, it will pop message from msg_manager.
+
+    Args:
+        max_token_limit (int): The maximum number of tokens in the context.
+
+    Attributes:
+        max_token_limit (int): The maximum number of tokens in the context.
+        mem_token_count (int): The number of tokens in the context.
+
+    Examples:
+
+        .. code-block:: python
+            from erniebot_agent.memory import LimitTokensMemory
+            memory = LimitTokensMemory(max_token_limit=3000)
+            memory.add_message(AIMessage("Hello world!"))
+
     """
 
     def __init__(self, max_token_limit=3000):
@@ -34,6 +50,15 @@ class LimitTokensMemory(Memory):
         )
 
     def add_message(self, message: Message):
+        """
+        Add a message to memory. Prune the message if number of tokens in memory >= max_token_limit.
+
+        Args:
+            message (Message): The message to be added.
+
+        Returns:
+            None
+        """
         super().add_message(message)
         # TODO(shiyutang): 仅在添加AIMessage时截断会导致HumanMessage传入到LLM时可能长度超限
         # 最优方案为每条message产生时确定token_count，从而在每次加入message时都进行prune_message
@@ -41,6 +66,16 @@ class LimitTokensMemory(Memory):
             self.prune_message()
 
     def prune_message(self):
+        """
+        Prune the message if number of tokens in memory >= max_token_limit.
+
+        Raises:
+            RuntimeError: If the message is empty after pruning.
+
+        Returns:
+            None
+
+        """
         self.mem_token_count += self.msg_manager.messages[-1].token_count
         self.mem_token_count += self.msg_manager.messages[-2].token_count  # add human message token length
         if self.max_token_limit is not None:
