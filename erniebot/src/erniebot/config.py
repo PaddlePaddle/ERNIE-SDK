@@ -21,7 +21,8 @@ import types
 from typing import Any, Dict, Optional
 
 from .types import ConfigDictType
-from .utils.misc import Singleton
+from .utils.misc import SingletonMeta
+from .errors import ConfigItemNotFoundError
 
 __all__ = ["GlobalConfig", "init_global_config"]
 
@@ -71,15 +72,21 @@ class _Config(object):
         self._cfg_dict[cfg.key] = cfg
 
     def get_value(self, key: str) -> Any:
-        cfg = self._cfg_dict[key]
+        try:
+            cfg = self._cfg_dict[key]
+        except KeyError as e:
+            raise ConfigItemNotFoundError from e
         return cfg.value
 
     def set_value(self, key: str, value: Any) -> None:
-        cfg = self._cfg_dict[key]
+        try:
+            cfg = self._cfg_dict[key]
+        except KeyError as e:
+            raise ConfigItemNotFoundError from e
         cfg.value = value
 
 
-class GlobalConfig(_Config, metaclass=Singleton):
+class GlobalConfig(_Config, metaclass=SingletonMeta):
     def create_dict(self, **overrides: Any) -> ConfigDictType:
         dict_: ConfigDictType = {}
         for key, cfg in self._cfg_dict.items():

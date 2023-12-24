@@ -23,14 +23,11 @@ class FileRegistry(object):
         super().__init__()
         self._id_to_file: Dict[str, File] = {}
 
-    def register_file(self, file: File, *, allow_overwrite: bool = False, check_type: bool = True) -> None:
+    def register_file(self, file: File, *, allow_overwrite: bool = False) -> None:
         file_id = file.id
         if file_id in self._id_to_file:
             if not allow_overwrite:
                 raise ValueError(f"File with ID {repr(file_id)} is already registered.")
-            else:
-                if check_type and type(file) is not type(self._id_to_file[file_id]):  # noqa: E721
-                    raise RuntimeError("Cannot register a file with a different type.")
         self._id_to_file[file_id] = file
 
     def unregister_file(self, file: File) -> None:

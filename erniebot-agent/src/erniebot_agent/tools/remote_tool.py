@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import dataclasses
 import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
@@ -59,7 +60,9 @@ class RemoteTool(BaseTool):
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
-            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+            self.tool_view = dataclasses.replace(
+                self.tool_view, name=f"{self.tool_name_prefix}/{self.tool_view.name}"
+            )
 
         self.response_prompt: Optional[str] = None
 

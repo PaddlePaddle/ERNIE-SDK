@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import json
 import logging
 import os
@@ -61,7 +60,7 @@ class RemoteToolkit:
         TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return [
             TOOL_CLASS(
-                copy.deepcopy(path),
+                path,
                 self.servers[0].url,
                 self.headers,
                 self.info.version,
@@ -131,7 +130,7 @@ class RemoteToolkit:
 
         TOOL_CLASS = tool_registor.get_tool_class(self.info.title)
         return TOOL_CLASS(
-            copy.deepcopy(paths[0]),
+            paths[0],
             self.servers[0].url,
             self.headers,
             self.info.version,
