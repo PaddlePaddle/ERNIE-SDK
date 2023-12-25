@@ -5,9 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE, NO_EXAMPLE_RESPONSE
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
-from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
-    FakeSimpleChatModel,
-)
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
