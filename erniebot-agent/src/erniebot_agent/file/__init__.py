@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
-File module is used to manage the file system by a global file_manager. 
+File module is used to manage the file system by a global file_manager.
 Including `local file` and `remote file`.
 
 A few notes about the current state of this submodule:
 - If you do not set environment variable `EB_ACCESS_TOKEN`, it will be under default setting.
 - Method `configure_global_file_manager` can only be called once at the beginning.
 - When you want to get a file manger, you can use method `get_global_file_manager`.
-- If you want to get the content of `File` object, you can use `read_contents` 
+- If you want to get the content of `File` object, you can use `read_contents`
   and use `write_contents_to` create the file to location you want.
 """
 

@@ -32,7 +32,8 @@ def create_local_file_from_path(
 
     Args:
         file_path (pathlib.Path): The path to the local file.
-        file_purpose (protocol.FilePurpose): The purpose or use case of the file.
+        file_purpose (protocol.FilePurpose): The purpose or use case of the file,
+                                             including "assistants" and "assistants_output".
         file_metadata (Dict[str, Any]): Additional metadata associated with the file.
 
     Returns:
@@ -65,12 +66,19 @@ class LocalFile(File):
     Represents a local file.
 
     Attributes:
+        id (str): Unique identifier for the file.
+        filename (str): File name.
+        byte_size (int): Size of the file in bytes.
+        created_at (str): Timestamp indicating the file creation time.
+        purpose (str): Purpose or use case of the file,
+                       including "assistants" and "assistants_output".
+        metadata (Dict[str, Any]): Additional metadata associated with the file.
         path (pathlib.Path): The path to the local file.
 
     Methods:
-        __init__: Initialize a LocalFile object.
         read_contents: Asynchronously read the contents of the local file.
-        _get_attrs_str: Helper method to get a string representation of object attributes.
+        write_contents_to: Asynchronously write the file contents to a local path.
+        get_file_repr: Return a string representation for use in specific contexts.
 
     """
 
@@ -86,6 +94,23 @@ class LocalFile(File):
         path: pathlib.Path,
         validate_file_id: bool = True,
     ) -> None:
+        """
+        Initialize a LocalFile object.
+
+        Args:
+            id (str): The unique identifier for the file.
+            filename (str): The name of the file.
+            byte_size (int): The size of the file in bytes.
+            created_at (str): The timestamp indicating the file creation time.
+            purpose (protocol.FilePurpose): The purpose or use case of the file.
+            metadata (Dict[str, Any]): Additional metadata associated with the file.
+            path (pathlib.Path): The path to the local file.
+            validate_file_id (bool): Flag to validate the file ID. Default is True.
+
+        Raises:
+            ValueError: If the file ID is invalid.
+
+        """
         if validate_file_id:
             if not protocol.is_local_file_id(id):
                 raise ValueError(f"Invalid file ID: {id}")

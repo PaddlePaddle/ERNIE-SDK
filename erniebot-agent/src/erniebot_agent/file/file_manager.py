@@ -48,8 +48,8 @@ logger = logging.getLogger(__name__)
 FilePath: TypeAlias = Union[str, os.PathLike]
 
 
-<<<<<<< HEAD
-class FileManager(Closeable):
+@final
+class FileManager(Closeable, Noncopyable):
     """
     Manages files, providing methods for creating, retrieving, and listing files.
 
@@ -68,10 +68,6 @@ class FileManager(Closeable):
 
     """
 
-=======
-@final
-class FileManager(Closeable, Noncopyable):
->>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
     _temp_dir: Optional[tempfile.TemporaryDirectory] = None
 
     def __init__(
@@ -110,26 +106,6 @@ class FileManager(Closeable, Noncopyable):
         self._closed = False
 
     @property
-<<<<<<< HEAD
-    def remote_file_client(self) -> RemoteFileClient:
-        """
-        Get the remote file client.
-
-        Returns:
-            RemoteFileClient: The remote file client.
-
-        Raises:
-            AttributeError: If no remote file client is set.
-
-        """
-        if self._remote_file_client is None:
-            raise AttributeError("No remote file client is set.")
-        else:
-            return self._remote_file_client
-
-    @property
-=======
->>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
     def closed(self):
         return self._closed
 
@@ -403,16 +379,12 @@ class FileManager(Closeable, Noncopyable):
         return self._file_registry.list_files()
 
     async def prune(self) -> None:
-<<<<<<< HEAD
         """Clean local cache of file manager."""
-        for file in self._fully_managed_files:
-=======
         while True:
             try:
                 file = self._fully_managed_files.pop()
             except IndexError:
                 break
->>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
             if isinstance(file, RemoteFile):
                 # FIXME: Currently this is not supported.
                 # await file.delete()
