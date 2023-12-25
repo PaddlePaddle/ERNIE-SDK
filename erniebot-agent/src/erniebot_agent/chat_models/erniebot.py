@@ -78,7 +78,7 @@ class ERNIEBot(ChatModel):
                 if "ak" and "sk" not in self.default_chat_kwargs:
                     ak, sk = C.get_global_aksk()
                     if not ak:
-                        raise RuntimeError("Please set at least one of ak+sk or AccessToken.")
+                        raise RuntimeError("Please set at least one of ak+sk or accesstoken.")
                     else:
                         self.ak = ak
                         self.sk = sk
