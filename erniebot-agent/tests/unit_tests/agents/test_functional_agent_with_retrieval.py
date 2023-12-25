@@ -3,6 +3,12 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from tests.unit_tests.agents.common_util import (
+    EXAMPLE_RESPONSE,
+    NO_EXAMPLE_RESPONSE,
+    identity_tool,
+    no_input_no_output_tool,
+)
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeChatModelWithPresetResponses,
@@ -10,12 +16,10 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 
-
 from erniebot_agent.agents import FunctionalAgentWithRetrieval
 from erniebot_agent.memory import AIMessage, HumanMessage
 from erniebot_agent.memory.messages import FunctionCall
 from erniebot_agent.retrieval import BaizhongSearch
-from common_util import identity_tool, no_input_no_output_tool, KNOWLEDGEBASE_RESPONESE, EXAMPLE_RESPONSE, SEARCH_RESULTS, NO_EXAMPLE_RESPONSE
 
 
 @pytest.mark.asyncio

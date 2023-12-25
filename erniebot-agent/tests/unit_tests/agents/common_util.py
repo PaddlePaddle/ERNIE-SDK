@@ -1,6 +1,7 @@
 import pytest
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
+
 @pytest.fixture(scope="module")
 def identity_tool():
     return FakeTool(
