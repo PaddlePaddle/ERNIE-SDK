@@ -2,7 +2,7 @@
 
 ## 1. File 简介
 
-文件管理模块提供了用于管理文件的一系列类，其中包括 `File` 及其子类、`FileManager` 、`GlobalFileManagerHandler`以及与远程文件服务器交互的  `RemoteFileClient`。
+文件管理模块提供了用于管理文件的一系列类方便用户与Agent进行交互，其中包括 `File` 及其子类、`FileManager` 、`GlobalFileManagerHandler`以及与远程文件服务器交互的  `RemoteFileClient`。推荐使用 `GlobalFileManagerHandler`在事件循环开始时初始化 `FileManager`以及获取全局的 `FileManager`，之后只需通过这个全局的 `FileManager`对文件进行增、删、查等操作，**不推荐**用户自行操作 `File`类以免造成资源泄露，同时从效率方面考虑，`FileManager`将作为此模块中生命周期最长的对象，请不要随意关闭它。
 
 ## 2. File 基类介绍
 
