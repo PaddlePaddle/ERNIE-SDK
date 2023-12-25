@@ -42,6 +42,7 @@ plugins:
         python:
           options:
             show_bases: false
+            show_root_heading: true
           paths: [erniebot-agent/src]
           selection:
             filters:

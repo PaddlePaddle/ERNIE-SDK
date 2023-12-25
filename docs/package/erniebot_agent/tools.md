@@ -25,6 +25,7 @@
 ::: erniebot_agent.tools.remote_tool
     options:
         summary: true
+        show_root_heading: true
         members:
         - RemoteTool
 
