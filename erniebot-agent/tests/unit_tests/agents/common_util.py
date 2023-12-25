@@ -74,7 +74,6 @@ EXAMPLE_RESPONSE = {
 }
 
 
-
 NO_EXAMPLE_RESPONSE = {
     "logId": "2dc5d9018f912bb4c62f2653bdf05424",
     "errorCode": 0,
