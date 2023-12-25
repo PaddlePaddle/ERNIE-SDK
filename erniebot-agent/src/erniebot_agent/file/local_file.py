@@ -125,6 +125,7 @@ class LocalFile(File):
         self.path = path
 
     async def read_contents(self) -> bytes:
+        """Asynchronously read the contents of the local file."""
         return await anyio.Path(self.path).read_bytes()
 
     def _get_attrs_str(self) -> str:

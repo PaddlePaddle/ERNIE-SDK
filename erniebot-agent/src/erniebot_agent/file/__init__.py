@@ -38,6 +38,10 @@ Examples:
     >>> from erniebot_agent.file import GlobalFileManagerHandler
     >>> async def demo_function():
     >>>     file_manager = await GlobalFileManagerHandler().get()
+    >>>     local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
+    
+    >>>     file = file_manager.look_up_file_by_id(file_id='your_file_id')
+    >>>     file_content = await file.read_contents()
 """
 
 from .global_file_manager_handler import GlobalFileManagerHandler
