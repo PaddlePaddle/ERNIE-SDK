@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -30,17 +29,16 @@ import erniebot
 from erniebot.response import EBResponse
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import (
+from erniebot_agent.memory.messages import (
     AIMessage,
     AIMessageChunk,
     FunctionCall,
     Message,
     SearchInfo,
 )
+from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
-
-logger = logging.getLogger(__name__)
 
 
 class ERNIEBot(ChatModel):
@@ -64,6 +62,8 @@ class ERNIEBot(ChatModel):
         super().__init__(model=model, **default_chat_kwargs)
 
         self.api_type = api_type
+        if access_token is None:
+            access_token = C.get_global_access_token()
         self.access_token = access_token
         self._maybe_validate_qianfan_auth()
 
@@ -149,7 +149,9 @@ class ERNIEBot(ChatModel):
             cfg_dict["_config_"]["api_type"] = self.api_type
         if self.access_token is not None:
             cfg_dict["_config_"]["access_token"] = self.access_token
-
+        if hasattr(self, "ak") and hasattr(self, "sk"):
+            cfg_dict["_config_"]["ak"] = self.ak
+            cfg_dict["_config_"]["sk"] = self.sk
         # TODO: process system message
         cfg_dict["messages"] = [m.to_dict() for m in messages]
         if functions is not None:
@@ -163,11 +165,9 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
-        cfg_dict["extra_params"] = {"extra_data": self.enable_multi_step_json}
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
         if cfg_dict.get("plugins", None):
-            # TODO: logger.debug here when cfg_dict is consolidated
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore
@@ -179,11 +179,13 @@ class ERNIEBot(ChatModel):
                 },
             )
         else:
-            cfg_dict["extra_params"] = {"extra_data": self.enable_multi_step_json}
-            cfg_dict["stream"] = stream
-            logger.debug(f"ERNIEBot Request: {cfg_dict}")
-            response = await erniebot.ChatCompletion.acreate(**cfg_dict)
-            logger.debug(f"ERNIEBot Response: {response}")
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+                **cfg_dict,
+            )
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
