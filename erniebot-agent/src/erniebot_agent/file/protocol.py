@@ -72,4 +72,7 @@ def extract_remote_file_ids(str_: str) -> List[str]:
 def generate_fake_remote_file_ids() -> Generator[str, None, None]:
     counter = 0
     while True:
-        yield _REMOTE_FILE_ID_PREFIX + f"{counter:015d}"
+        number = f"{counter:015d}"
+        if len(number) > 15:
+            break
+        yield _REMOTE_FILE_ID_PREFIX + number

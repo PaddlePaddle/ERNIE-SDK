@@ -118,10 +118,10 @@ class _ResourceCLIHelper(object):
     def register_api_to_parser(cls, parser, api_name):
         def _find_method(method_name):
             if not hasattr(cls, method_name):
-                raise RuntimeError(f"{cls.__name__}.{method_name} is not found.")
+                raise RuntimeError(f"`{cls.__name__}.{method_name}` does not exist.")
             method = getattr(cls, method_name)
             if not callable(method):
-                raise RuntimeError(f"{cls.__name__}.{method_name} is not callable.")
+                raise RuntimeError(f"`{cls.__name__}.{method_name}` is not callable.")
             return method
 
         cls.add_resource_arguments(parser)

@@ -203,7 +203,7 @@ class HumanMessage(Message):
             file_reprs = []
             for file in files:
                 if not isinstance(file, RemoteFile):
-                    raise RuntimeError("Only `RemoteFile` objects can have URLs in their representations.")
+                    raise TypeError("Only `RemoteFile` objects can have URLs in their representations.")
                 url = await file.create_temporary_url()
                 file_reprs.append(file.get_file_repr_with_url(url))
 

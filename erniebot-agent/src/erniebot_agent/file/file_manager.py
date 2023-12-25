@@ -17,8 +17,20 @@ import os
 import pathlib
 import tempfile
 import uuid
+from collections import deque
 from types import TracebackType
-from typing import Any, Dict, List, Literal, Optional, Type, Union, final, overload
+from typing import (
+    Any,
+    Deque,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Type,
+    Union,
+    final,
+    overload,
+)
 
 import anyio
 from typing_extensions import Self, TypeAlias
@@ -29,13 +41,14 @@ from erniebot_agent.file.file_registry import FileRegistry
 from erniebot_agent.file.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exceptions import FileError
-from erniebot_agent.utils.mixins import Closeable
+from erniebot_agent.utils.mixins import Closeable, Noncopyable
 
 logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
 
 
+<<<<<<< HEAD
 class FileManager(Closeable):
     """
     Manages files, providing methods for creating, retrieving, and listing files.
@@ -55,6 +68,10 @@ class FileManager(Closeable):
 
     """
 
+=======
+@final
+class FileManager(Closeable, Noncopyable):
+>>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
     _temp_dir: Optional[tempfile.TemporaryDirectory] = None
 
     def __init__(
@@ -62,7 +79,6 @@ class FileManager(Closeable):
         remote_file_client: Optional[RemoteFileClient] = None,
         save_dir: Optional[FilePath] = None,
         *,
-        default_file_type: Optional[Literal["local", "remote"]] = None,
         prune_on_close: bool = True,
     ) -> None:
         """
@@ -86,15 +102,15 @@ class FileManager(Closeable):
             # This can be done lazily, but we need to be careful about race conditions.
             self._temp_dir = self._create_temp_dir()
             self._save_dir = pathlib.Path(self._temp_dir.name)
-        self._default_file_type = default_file_type
         self._prune_on_close = prune_on_close
 
         self._file_registry = FileRegistry()
-        self._fully_managed_files: List[Union[LocalFile, RemoteFile]] = []
+        self._fully_managed_files: Deque[Union[LocalFile, RemoteFile]] = deque()
 
         self._closed = False
 
     @property
+<<<<<<< HEAD
     def remote_file_client(self) -> RemoteFileClient:
         """
         Get the remote file client.
@@ -112,6 +128,8 @@ class FileManager(Closeable):
             return self._remote_file_client
 
     @property
+=======
+>>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
     def closed(self):
         return self._closed
 
@@ -182,7 +200,7 @@ class FileManager(Closeable):
         elif file_type == "remote":
             file = await self.create_remote_file_from_path(file_path, file_purpose, file_metadata)
         else:
-            raise RuntimeError(f"Unsupported file type: {file_type}")
+            raise ValueError(f"Unsupported file type: {file_type}")
         return file
 
     async def create_local_file_from_path(
@@ -321,7 +339,7 @@ class FileManager(Closeable):
                     file_metadata,
                 )
             else:
-                raise RuntimeError(f"Unsupported file type: {file_type}")
+                raise ValueError(f"Unsupported file type: {file_type}")
         finally:
             if should_remove_file:
                 await async_file_path.unlink()
@@ -341,13 +359,13 @@ class FileManager(Closeable):
 
         """
         self.ensure_not_closed()
-        file = await self.remote_file_client.retrieve_file(file_id)
+        file = await self._get_remote_file_client().retrieve_file(file_id)
         self._file_registry.register_file(file)
         return file
 
     async def list_remote_files(self) -> List[RemoteFile]:
         self.ensure_not_closed()
-        files = await self.remote_file_client.list_files()
+        files = await self._get_remote_file_client().list_files()
         return files
 
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
@@ -385,19 +403,26 @@ class FileManager(Closeable):
         return self._file_registry.list_files()
 
     async def prune(self) -> None:
+<<<<<<< HEAD
         """Clean local cache of file manager."""
         for file in self._fully_managed_files:
+=======
+        while True:
+            try:
+                file = self._fully_managed_files.pop()
+            except IndexError:
+                break
+>>>>>>> 357a28c240ace535468171bb56d97ca2f454dc58
             if isinstance(file, RemoteFile):
                 # FIXME: Currently this is not supported.
                 # await file.delete()
                 pass
             elif isinstance(file, LocalFile):
-                assert self._save_dir in file.path.parents
+                assert self._save_dir.resolve() in file.path.resolve().parents
                 await anyio.Path(file.path).unlink()
             else:
                 raise AssertionError("Unexpected file type")
             self._file_registry.unregister_file(file)
-        self._fully_managed_files.clear()
 
     async def close(self) -> None:
         """Delete the file manager and clean up its cache"""
@@ -428,17 +453,20 @@ class FileManager(Closeable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
-        file = await self.remote_file_client.upload_file(file_path, file_purpose, file_metadata or {})
+        file = await self._get_remote_file_client().upload_file(file_path, file_purpose, file_metadata or {})
         return file
 
-    def _get_default_file_type(self) -> Literal["local", "remote"]:
-        if self._default_file_type is not None:
-            return self._default_file_type
+    def _get_remote_file_client(self) -> RemoteFileClient:
+        if self._remote_file_client is None:
+            raise AttributeError("No remote file client is set.")
         else:
-            if self._remote_file_client is not None:
-                return "remote"
-            else:
-                return "local"
+            return self._remote_file_client
+
+    def _get_default_file_type(self) -> Literal["local", "remote"]:
+        if self._remote_file_client is not None:
+            return "remote"
+        else:
+            return "local"
 
     def _get_unique_file_path(
         self, prefix: Optional[str] = None, suffix: Optional[str] = None

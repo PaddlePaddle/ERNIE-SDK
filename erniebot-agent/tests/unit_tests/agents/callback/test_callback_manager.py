@@ -71,9 +71,6 @@ async def test_callback_manager_add_remove_handlers():
 
     assert len(callback_manager.handlers) == 1
 
-    with pytest.raises(ValueError):
-        callback_manager.add_handler(handler1)
-
     callback_manager.remove_handler(handler1)
     assert len(callback_manager.handlers) == 0
 
@@ -81,6 +78,12 @@ async def test_callback_manager_add_remove_handlers():
     assert len(callback_manager.handlers) == 1
 
     callback_manager.add_handler(handler2)
+    assert len(callback_manager.handlers) == 2
+
+    callback_manager.add_handler(handler1)
+    assert len(callback_manager.handlers) == 3
+
+    callback_manager.remove_handler(handler1)
     assert len(callback_manager.handlers) == 2
 
     callback_manager.remove_all_handlers()

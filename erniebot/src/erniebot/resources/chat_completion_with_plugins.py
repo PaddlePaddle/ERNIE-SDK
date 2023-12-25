@@ -239,12 +239,12 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
 
         # messages
         if "messages" not in kwargs:
-            raise errors.ArgumentNotFoundError("`messages` is not found.")
+            raise errors.ArgumentNotFoundError("messages")
         messages = kwargs["messages"]
 
         # plugins
         if "plugins" not in kwargs:
-            raise errors.ArgumentNotFoundError("`plugins` is not found.")
+            raise errors.ArgumentNotFoundError("plugins")
         plugins = kwargs["plugins"]
 
         # path

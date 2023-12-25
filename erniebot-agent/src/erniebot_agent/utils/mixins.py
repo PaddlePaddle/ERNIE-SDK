@@ -17,7 +17,7 @@ from __future__ import annotations
 import base64
 import os
 import tempfile
-from typing import TYPE_CHECKING, Any, List, Optional, Protocol, cast
+from typing import TYPE_CHECKING, Any, List, NoReturn, Optional, Protocol, cast, final
 
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.exceptions import ObjectClosedError
@@ -242,9 +242,23 @@ class Closeable(Protocol):
     def closed(self) -> bool:
         ...
 
+    def __del__(self) -> None:
+        # TODO: Issue a `ResourceWarning` if the object is not closed.
+        return None
+
     async def close(self) -> None:
         ...
 
     def ensure_not_closed(self) -> None:
         if self.closed:
             raise ObjectClosedError(f"{repr(self)} is closed.")
+
+
+class Noncopyable(object):
+    @final
+    def __copy__(self) -> NoReturn:
+        raise TypeError("Cannot copy an instance of a non-copyable class.")
+
+    @final
+    def __deepcopy__(self) -> NoReturn:
+        raise TypeError("Cannot deep-copy an instance of a non-copyable class.")

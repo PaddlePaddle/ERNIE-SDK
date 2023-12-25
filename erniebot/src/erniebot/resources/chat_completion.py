@@ -447,7 +447,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # model
         if "model" not in kwargs:
-            raise errors.ArgumentNotFoundError("`model` is not found.")
+            raise errors.ArgumentNotFoundError("model")
         model = kwargs["model"]
         # For backward compatibility
         model = _update_model_name(
@@ -462,7 +462,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # messages
         if "messages" not in kwargs:
-            raise errors.ArgumentNotFoundError("`messages` is not found.")
+            raise errors.ArgumentNotFoundError("messages")
         messages = kwargs["messages"]
 
         # path

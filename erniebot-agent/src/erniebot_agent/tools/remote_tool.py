@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import dataclasses
 import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
@@ -59,7 +60,9 @@ class RemoteTool(BaseTool):
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
         if tool_name_prefix is not None and not self.tool_view.name.startswith(f"{self.tool_name_prefix}/"):
-            self.tool_view.name = f"{self.tool_name_prefix}/{self.tool_view.name}"
+            self.tool_view = dataclasses.replace(
+                self.tool_view, name=f"{self.tool_name_prefix}/{self.tool_view.name}"
+            )
 
         self.response_prompt: Optional[str] = None
 
@@ -271,6 +274,20 @@ class RemoteTool(BaseTool):
                     if "words" in result and "word" in result["words"]:
                         reformatted_result.append(result["words"]["word"])
                 tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("pic-translate") and self.tool_name.endswith("pic_translate"):
+            if "data" in tool_response:
+                if "content" in tool_response["data"]:
+                    tool_response["data"].pop("content")
+                if "sumSrc" in tool_response["data"]:
+                    tool_response["data"].pop("sumSrc")
+        elif self.tool_name.startswith("translation") and self.tool_name.endswith("translation"):
+            if "result" in tool_response and "trans_result" in tool_response["result"]:
+                if isinstance(tool_response["result"]["trans_result"], list):
+                    reformatted_result = []
+                    for result in tool_response["result"]["trans_result"]:
+                        if "dst" in result:
+                            reformatted_result.append({"dst": result["dst"]})
+                    tool_response["result"]["trans_result"] = reformatted_result
         elif self.tool_name.startswith("shopping-receipt") and self.tool_name.endswith("shopping_receip"):
             if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
                 keys = [
@@ -296,6 +313,9 @@ class RemoteTool(BaseTool):
                             and result[key][0]["word"] == ""
                         ):
                             result.pop(key)
+        # Remove log_id if in tool_response
+        if "log_id" in tool_response:
+            tool_response.pop("log_id")
         return tool_response
 
     async def _get_file_manager(self) -> FileManager:
