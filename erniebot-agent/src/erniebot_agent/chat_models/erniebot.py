@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import json
+import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -153,7 +153,7 @@ class ERNIEBot(ChatModel):
                 functions=functions,  # type: ignore
                 extra_params={
                     "extra_data": self.enable_multi_step_json,
-                }
+                },
             )
         else:
             cfg_dict["extra_params"] = {"extra_data": self.enable_multi_step_json}
