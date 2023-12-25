@@ -14,6 +14,4 @@
 
 from erniebot_agent.utils.logging import setup_logging
 
-__all__ = ["logger"]
-
 setup_logging()
