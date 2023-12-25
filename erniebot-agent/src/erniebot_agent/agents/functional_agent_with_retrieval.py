@@ -299,7 +299,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
