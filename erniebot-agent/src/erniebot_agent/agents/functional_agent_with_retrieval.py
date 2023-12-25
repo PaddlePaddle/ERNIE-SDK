@@ -146,7 +146,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
-            return await super()._async_run(prompt)
+            return await super()._async_run(prompt, files)
 
     def _enforce_token_limit(self, results):
         docs = []
