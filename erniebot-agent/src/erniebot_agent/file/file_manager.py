@@ -148,6 +148,16 @@ class FileManager(Closeable, Noncopyable):
         self,
         file_path: FilePath,
         *,
+        file_purpose: protocol.FilePurpose = ...,
+        file_metadata: Optional[Dict[str, Any]] = ...,
+        file_type: None = ...,
+    ) -> Union[LocalFile, RemoteFile]:
+        ...
+
+    async def create_file_from_path(
+        self,
+        file_path: FilePath,
+        *,
         file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
