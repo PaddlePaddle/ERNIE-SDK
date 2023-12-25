@@ -358,7 +358,7 @@ class FileManager(Closeable, Noncopyable):
         files = await self._get_remote_file_client().list_files()
         return files
 
-    def look_up_file_by_id(self, file_id: str) -> Optional[File]:
+    def look_up_file_by_id(self, file_id: str) -> File:
         """
         Look up a file by its ID.
 
@@ -366,7 +366,7 @@ class FileManager(Closeable, Noncopyable):
             file_id (str): The ID of the file.
 
         Returns:
-            Optional[Union[LocalFile, RemoteFile]]: The looked-up file, or None if not found.
+            file[File]: The looked-up file, or None if not found.
 
         Raises:
             FileError: If the file with the specified ID is not found.

@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import os
 import tempfile
+import warnings
 from typing import TYPE_CHECKING, Any, List, NoReturn, Optional, Protocol, cast, final
 
 from erniebot_agent.utils.common import get_file_type
@@ -242,9 +243,9 @@ class Closeable(Protocol):
     def closed(self) -> bool:
         ...
 
-    def __del__(self) -> None:
-        # TODO: Issue a `ResourceWarning` if the object is not closed.
-        return None
+    def __del__(self, _warn=warnings.warn) -> None:
+        if not self.closed:
+            _warn(f"Unclosed object: {repr(self)}", ResourceWarning, source=self)
 
     async def close(self) -> None:
         ...
@@ -260,5 +261,13 @@ class Noncopyable(object):
         raise TypeError("Cannot copy an instance of a non-copyable class.")
 
     @final
-    def __deepcopy__(self) -> NoReturn:
+    def __deepcopy__(self, memo: Any) -> NoReturn:
         raise TypeError("Cannot deep-copy an instance of a non-copyable class.")
+
+    @final
+    def __reduce__(self) -> NoReturn:
+        raise TypeError("Cannot pickle an instance of a non-copyable class.")
+
+    @final
+    def __reduce_ex__(self, protocol: Any) -> NoReturn:
+        raise TypeError("Cannot pickle an instance of a non-copyable class.")
