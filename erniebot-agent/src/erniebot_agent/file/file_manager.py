@@ -350,7 +350,6 @@ class FileManager(Closeable):
         files = await self.remote_file_client.list_files()
         return files
 
-<<<<<<< HEAD
     def look_up_file_by_id(self, file_id: str) -> Optional[File]:
         """
         Look up a file by its ID.
@@ -365,9 +364,6 @@ class FileManager(Closeable):
             FileError: If the file with the specified ID is not found.
 
         """
-=======
-    def look_up_file_by_id(self, file_id: str) -> File:
->>>>>>> d3723952ceac7d4a5ed206dc23b2b0196efa16ca
         self.ensure_not_closed()
         file = self._file_registry.look_up_file(file_id)
         if file is None:
@@ -389,6 +385,7 @@ class FileManager(Closeable):
         return self._file_registry.list_files()
 
     async def prune(self) -> None:
+        """Clean local cache of file manager."""
         for file in self._fully_managed_files:
             if isinstance(file, RemoteFile):
                 # FIXME: Currently this is not supported.
@@ -403,6 +400,7 @@ class FileManager(Closeable):
         self._fully_managed_files.clear()
 
     async def close(self) -> None:
+        """Delete the file manager and clean up its cache"""
         if not self._closed:
             if self._remote_file_client is not None:
                 await self._remote_file_client.close()

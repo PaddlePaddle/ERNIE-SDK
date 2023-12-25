@@ -27,6 +27,21 @@ def create_local_file_from_path(
     file_purpose: protocol.FilePurpose,
     file_metadata: Dict[str, Any],
 ) -> "LocalFile":
+    """
+    Create a LocalFile object from a local file path.
+
+    Args:
+        file_path (pathlib.Path): The path to the local file.
+        file_purpose (protocol.FilePurpose): The purpose or use case of the file.
+        file_metadata (Dict[str, Any]): Additional metadata associated with the file.
+
+    Returns:
+        LocalFile: The created LocalFile object.
+
+    Raises:
+        FileNotFoundError: If the specified file does not exist.
+
+    """
     if not file_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist.")
     file_id = _generate_local_file_id()
@@ -46,6 +61,19 @@ def create_local_file_from_path(
 
 
 class LocalFile(File):
+    """
+    Represents a local file.
+
+    Attributes:
+        path (pathlib.Path): The path to the local file.
+
+    Methods:
+        __init__: Initialize a LocalFile object.
+        read_contents: Asynchronously read the contents of the local file.
+        _get_attrs_str: Helper method to get a string representation of object attributes.
+
+    """
+
     def __init__(
         self,
         *,

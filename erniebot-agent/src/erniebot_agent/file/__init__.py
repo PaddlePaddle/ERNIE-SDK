@@ -18,7 +18,9 @@ Including `local file` and `remote file`.
 A few notes about the current state of this submodule:
 - If you do not set environment variable `EB_ACCESS_TOKEN`, it will be under default setting.
 - Method `configure_global_file_manager` can only be called once at the beginning.
-- When you want to get file_manger, you can use method `get_global_file_manager`.
+- When you want to get a file manger, you can use method `get_global_file_manager`.
+- If you want to get the content of `File` object, you can use `read_contents` 
+  and use `write_contents_to` create the file to location you want.
 """
 
 from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler

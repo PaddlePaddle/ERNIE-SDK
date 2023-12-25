@@ -86,6 +86,7 @@ class File(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     async def write_contents_to(self, local_path: Union[str, os.PathLike]) -> None:
+        """Create a file to the location you want. """
         contents = await self.read_contents()
         await anyio.Path(local_path).write_bytes(contents)
 
