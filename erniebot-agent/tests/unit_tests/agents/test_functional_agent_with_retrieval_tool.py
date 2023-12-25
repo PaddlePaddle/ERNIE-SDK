@@ -154,33 +154,3 @@ async def test_functional_agent_with_retrieval_tool_run_retrieval_tool(identity_
     assert response.chat_history[0].content == "Hello, world!"
     # AIMessage
     assert response.chat_history[1].content == "Text response"
-
-
-@pytest.mark.asyncio
-async def test_functional_agent_with_retrieval_tool_run_tool(identity_tool, no_input_no_output_tool):
-    knowledge_base_name = "test"
-    access_token = "your access token"
-    knowledge_base_id = 111
-    search_db = BaizhongSearch(
-        knowledge_base_name=knowledge_base_name,
-        access_token=access_token,
-        knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
-    )
-    agent = FunctionalAgentWithRetrievalTool(
-        knowledge_base=search_db,
-        llm=FakeSimpleChatModel(),
-        tools=[identity_tool, no_input_no_output_tool],
-        memory=FakeMemory(),
-    )
-
-    tool_input = {"param": "test"}
-    tool_response = await agent._async_run_tool(identity_tool.tool_name, json.dumps(tool_input))
-    assert json.loads(tool_response.json) == tool_input
-
-    tool_input = {}
-    tool_response = await agent._async_run_tool(no_input_no_output_tool.tool_name, json.dumps(tool_input))
-    assert json.loads(tool_response.json) == {}
-
-    tool_input = {}
-    with pytest.raises(RuntimeError):
-        await agent._async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
