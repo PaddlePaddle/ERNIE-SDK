@@ -91,7 +91,6 @@ class ERNIEBot(ChatModel):
                     self.default_chat_kwargs.pop("ak")
                     self.default_chat_kwargs.pop("sk")
 
-
     @overload
     async def async_chat(
         self,
