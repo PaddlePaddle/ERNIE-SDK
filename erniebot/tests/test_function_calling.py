@@ -21,7 +21,7 @@ import erniebot
 
 def test_function_calling():
     response = erniebot.ChatCompletion.create(
-        model="ernie-bot",
+        model="ernie-3.5",
         messages=[
             {
                 "role": "user",

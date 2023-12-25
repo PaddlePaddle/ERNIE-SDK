@@ -29,7 +29,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from requests.models import Response
 
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,

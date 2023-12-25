@@ -29,13 +29,13 @@ import erniebot
 from erniebot.response import EBResponse
 
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import (
+from erniebot_agent.memory.messages import (
     AIMessage,
     AIMessageChunk,
     FunctionCall,
     Message,
     PluginInfo,
-    SeachInfo,
+    SearchInfo,
 )
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
@@ -53,8 +53,8 @@ class ERNIEBot(ChatModel):
         """Initializes an instance of the `ERNIEBot` class.
 
         Args:
-            model (str): The model name. It should be "ernie-bot", "ernie-bot-turbo", "ernie-bot-8k", or
-                "ernie-bot-4".
+            model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
+                "ernie-longtext".
             api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
             access_token (Optional[str]): The access token for erniebot.
             close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
@@ -205,7 +205,7 @@ class ERNIEBot(ChatModel):
                 token_usage=response.usage,
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
-            search_info = SeachInfo(
+            search_info = SearchInfo(
                 results=response.search_info["search_results"],
             )
             return output_type(

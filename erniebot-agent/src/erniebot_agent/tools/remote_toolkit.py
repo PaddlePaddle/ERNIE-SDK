@@ -12,9 +12,14 @@ import requests
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
-from erniebot_agent.file_io import get_file_manager
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.messages import AIMessage, FunctionCall, HumanMessage, Message
+from erniebot_agent.file import get_file_manager
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.memory.messages import (
+    AIMessage,
+    FunctionCall,
+    HumanMessage,
+    Message,
+)
 from erniebot_agent.tools.remote_tool import RemoteTool, tool_registor
 from erniebot_agent.tools.schema import (
     Endpoint,
@@ -218,7 +223,9 @@ class RemoteToolkit:
             raise RemoteToolError(f"invalid openapi yaml file: {file}", stage="Loading")
 
         spec_dict, _ = read_from_filename(file)
-        return cls.from_openapi_dict(spec_dict, access_token=access_token, file_manager=file_manager)
+        return cls.from_openapi_dict(
+            spec_dict, access_token=access_token, file_manager=file_manager  # type: ignore
+        )
 
     @classmethod
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
@@ -361,7 +368,7 @@ class RemoteToolkit:
         Returns:
             List[Message]: the list of messages
         """
-        content: dict = read_from_filename(file)[0]
+        content: dict = read_from_filename(file)[0]  # type: ignore
         if len(content) == 0 or "examples" not in content:
             raise RemoteToolError("invalid examples configuration file", stage="Loading")
         return cls.load_examples_dict(content)

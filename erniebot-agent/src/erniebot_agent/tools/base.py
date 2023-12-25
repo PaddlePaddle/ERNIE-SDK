@@ -17,7 +17,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type
 
-from erniebot_agent.messages import Message
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.schema import ToolParameterView, scrub_dict
 
 

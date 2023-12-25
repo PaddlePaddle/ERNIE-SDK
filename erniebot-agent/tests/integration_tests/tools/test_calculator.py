@@ -19,7 +19,7 @@ class TestCalculator(unittest.TestCase):
 
     def run_query(self, query):
         response = erniebot.ChatCompletion.create(
-            model="ernie-bot",
+            model="ernie-3.5",
             messages=[
                 {
                     "role": "user",

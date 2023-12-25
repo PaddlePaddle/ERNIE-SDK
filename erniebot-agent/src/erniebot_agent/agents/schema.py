@@ -18,9 +18,9 @@ import functools
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.protocol import extract_file_ids
-from erniebot_agent.messages import AIMessage, Message, PluginInfo
+from erniebot_agent.file.base import File
+from erniebot_agent.file.protocol import extract_file_ids
+from erniebot_agent.memory.messages import AIMessage, Message, PluginInfo
 
 
 @dataclass

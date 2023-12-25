@@ -3,8 +3,8 @@ import os
 import tempfile
 from typing import Any, List
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML

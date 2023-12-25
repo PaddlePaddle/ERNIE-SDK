@@ -41,9 +41,9 @@ class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
 
     def get_agent(self, toolkit: RemoteToolkit):
         if "EB_BASE_URL" in os.environ:
-            llm = ERNIEBot(model="ernie-bot", api_type="custom")
+            llm = ERNIEBot(model="ernie-3.5", api_type="custom")
         else:
-            llm = ERNIEBot(model="ernie-bot")
+            llm = ERNIEBot(model="ernie-3.5")
 
         return FunctionalAgent(
             llm=llm,

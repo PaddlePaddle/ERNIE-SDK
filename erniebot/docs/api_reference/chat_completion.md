@@ -30,16 +30,16 @@ erniebot.ChatCompletion.create(
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :--- | :--- |
-| model | str | 是 | 模型名称。当前支持`"ernie-bot"`、`"ernie-bot-turbo"`、`"ernie-bot-4"`和`"ernie-bot-8k"`。 |
+| model | str | 是 | 模型名称。当前支持`"ernie-3.5"`、`"ernie-turbo"`、`"ernie-4.0"`和`"ernie-longtext"`。 |
 | messages | list[dict] | 是 | 对话上下文信息。列表中的元素个数须为奇数。详见[messages](#messages)。 |
-| functions | list[dict] | 否 | 可触发函数的描述列表。详见[functions](#functions)。ernie-bot-turbo模型暂不支持此参数。 |
+| functions | list[dict] | 否 | 可触发函数的描述列表。详见[functions](#functions)。ernie-turbo模型暂不支持此参数。 |
 | temperature | float | 否 | 用于调节模型输出概率分布，从而控制生成结果的随机性。<ul><li>较高的数值会使生成结果更加随机，而较低的数值会使结果更加集中和确定；</li><li>默认<code>0.95</code>，范围为<code>(0, 1.0]</code>，不能为<code>0</code>；</li><li>建议只设置此参数和<code>top_p</code>中的一个。</li></ul> |
 | top_p | float | 否 | 生成的token从概率和恰好达到或超过`top_p`的token集合中采样得到。<ul><li>影响生成文本的多样性，值越大，生成文本的多样性越强；</li><li>默认<code>0.8</code>，取值范围为<code>[0, 1.0]</code>；</li><li>建议只设置此参数和<code>temperature</code>中的一个。</li></ul> |
 | penalty_score | float | 否 | 通过对已生成的token增加惩罚，减少重复生成的现象。<ul><li>值越大表示惩罚越大；</li><li>默认<code>1.0</code>，取值范围：<code>[1.0, 2.0]</code>。</li></ul> |
 | system | str | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
-| stop | list[str] | 否 | 停止标识。在生成文本中第一次出现此参数包含的任一个字符串时，生成过程停止。ernie-bot-turbo模型暂不支持此参数。 |
-| disable_search | bool | 否 | 如果设置此参数为`True`，则禁用搜索引擎。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
-| enable_citation | bool | 否 | 如果设置此参数为`True`，则开启上角标返回。默认为`False`。ernie-bot-turbo模型暂不支持此参数。 |
+| stop | list[str] | 否 | 停止标识。在生成文本中第一次出现此参数包含的任一个字符串时，生成过程停止。ernie-turbo模型暂不支持此参数。 |
+| disable_search | bool | 否 | 如果设置此参数为`True`，则禁用搜索引擎。默认为`False`。ernie-turbo模型暂不支持此参数。 |
+| enable_citation | bool | 否 | 如果设置此参数为`True`，则开启上角标返回。默认为`False`。ernie-turbo模型暂不支持此参数。 |
 | system | bool | 否 | 提示模型行为的文本。如果设置了`functions`，则不支持设置此参数。 |
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 | stream | bool | 否 | 如果设置此参数为`True`，则流式返回数据。默认为`False`。 |
@@ -207,7 +207,7 @@ erniebot.access_token = "<access-token-for-aistudio>"
 
 stream = False
 response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
+    model="ernie-3.5",
     messages=[{
         "role": "user",
         "content": "周末深圳去哪里玩？"

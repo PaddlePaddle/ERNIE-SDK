@@ -1,6 +1,6 @@
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import AIMessage
+from erniebot_agent.memory import AIMessage
 
 
 class FakeSimpleChatModel(ChatModel):

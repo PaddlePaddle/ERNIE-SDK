@@ -58,7 +58,7 @@ class TestPPRemoteTool(RemoteToolTesting):
 
     @pytest.mark.asyncio
     async def test_pp_vehicle(self):
-        toolkit = RemoteToolkit.from_aistudio("vehicle-analysis")
+        toolkit = RemoteToolkit.from_aistudio("pp-vehicle")
 
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("vehicle.jpg"))
         agent = self.get_agent(toolkit)

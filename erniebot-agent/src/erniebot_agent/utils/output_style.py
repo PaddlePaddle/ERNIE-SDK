@@ -14,7 +14,7 @@
 
 from typing import List, Optional, Union
 
-from erniebot_agent.messages import Message
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.utils.json import to_pretty_json
 
 __all__ = ["ColoredContent"]

@@ -21,7 +21,7 @@ from erniebot_agent.agents.callback.event import EventType
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import Message
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 
 if TYPE_CHECKING:

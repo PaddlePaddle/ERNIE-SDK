@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from .base import Memory
-from .limit_token_memory import LimitTokensMemory
+from .limit_tokens_memory import LimitTokensMemory
+from .messages import AIMessage, FunctionMessage, HumanMessage, Message, SystemMessage, AIMessageChunk
 from .sliding_window_memory import SlidingWindowMemory
 from .whole_memory import WholeMemory

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import base64
+import json
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
 import requests
 
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.messages import Message
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
@@ -19,6 +20,22 @@ from erniebot_agent.tools.utils import (
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exception import RemoteToolError
 from erniebot_agent.utils.logging import logger
+
+
+def check_json_length(value: Dict[str, Any]):
+    """check the dict contains base64 string
+
+    Args:
+        value (Dict[str, Any]): the source of json data
+    """
+    json_string = json.dumps(value)
+    if len(json_string) > 4096:
+        raise RemoteToolError(
+            "The length of json response is greater than 4096, please "
+            "check whether `format:byte` is missing in openapi.yaml or "
+            "the tool returned too much information.",
+            stage="Output parsing",
+        )
 
 
 class RemoteTool(BaseTool):
@@ -111,14 +128,15 @@ class RemoteTool(BaseTool):
 
     async def __post_process__(self, tool_response: dict) -> dict:
         tool_response = self.__adhoc_post_process__(tool_response)
+        check_json_length(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:
             tool_response["prompt"] = self.tool_view.returns.__prompt__
         elif tool_response_contains_file(tool_response):
             tool_response["prompt"] = (
-                "参考工具说明中对各个结果字段的描述，提取工具调用结果中的信息，生成一段通顺的文本满足用户的需求。",
-                "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。",
+                "参考工具说明中对各个结果字段的描述，提取工具调用结果中的信息，生成一段通顺的文本满足用户的需求。"
+                "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。"
             )
 
         # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
@@ -249,6 +267,20 @@ class RemoteTool(BaseTool):
                     if "words" in result and "word" in result["words"]:
                         reformatted_result.append(result["words"]["word"])
                 tool_response["results"] = reformatted_result
+        elif self.tool_name.startswith("pic-translate") and self.tool_name.endswith("pic_translate"):
+            if "data" in tool_response:
+                if "content" in tool_response["data"]:
+                    tool_response["data"].pop("content")
+                if "sumSrc" in tool_response["data"]:
+                    tool_response["data"].pop("sumSrc")
+        elif self.tool_name.startswith("translation") and self.tool_name.endswith("translation"):
+            if "result" in tool_response and "trans_result" in tool_response["result"]:
+                if isinstance(tool_response["result"]["trans_result"], list):
+                    reformatted_result = []
+                    for result in tool_response["result"]["trans_result"]:
+                        if "dst" in result:
+                            reformatted_result.append({"dst": result["dst"]})
+                    tool_response["result"]["trans_result"] = reformatted_result
         elif self.tool_name.startswith("shopping-receipt") and self.tool_name.endswith("shopping_receip"):
             if "words_result" in tool_response and isinstance(tool_response["words_result"], list):
                 keys = [
@@ -274,6 +306,9 @@ class RemoteTool(BaseTool):
                             and result[key][0]["word"] == ""
                         ):
                             result.pop(key)
+        # Remove log_id if in tool_response
+        if "log_id" in tool_response:
+                tool_response.pop("log_id")
         return tool_response
 
 

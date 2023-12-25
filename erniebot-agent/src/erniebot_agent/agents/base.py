@@ -16,21 +16,17 @@ import abc
 import json
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from erniebot_agent import file_io
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import (
-    extract_file_ids,
-    is_local_file_id,
-    is_remote_file_id,
-)
-from erniebot_agent.memory.base import Memory
-from erniebot_agent.messages import Message, SystemMessage
+from erniebot_agent.file import get_file_manager
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id, extract_file_ids
+from erniebot_agent.memory import Memory
+from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.gradio_mixin import GradioMixin
@@ -75,7 +71,7 @@ class Agent(GradioMixin, BaseAgent):
         else:
             self._callback_manager = CallbackManager(callbacks)
         if file_manager is None:
-            file_manager = file_io.get_file_manager()
+            file_manager = get_file_manager()
         self.plugins = plugins
         self._file_manager = file_manager
         self._init_file_repr()

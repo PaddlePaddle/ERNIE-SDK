@@ -1,5 +1,6 @@
 import base64
 import inspect
+import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
 
@@ -7,9 +8,9 @@ from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
 
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.file_io.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file.base import File
+from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_args,
@@ -71,7 +72,7 @@ def get_file_info_from_param_view(
         model_field = param_view.model_fields[key]
 
         list_base_annotation = get_typing_list_type(model_field.annotation)
-        json_schema_extra = model_field.json_schema_extra
+        json_schema_extra: dict = typing.cast(dict, model_field.json_schema_extra)
 
         if list_base_annotation is not None:
             if list_base_annotation == "object":
@@ -82,16 +83,23 @@ def get_file_info_from_param_view(
                     file_infos[key] = sub_file_infos
                 continue
 
-            if "array_items_schema" in model_field.json_schema_extra:
-                json_schema_extra = model_field.json_schema_extra["array_items_schema"]
-        elif issubclass(model_field.annotation, ToolParameterView):
+            if "array_items_schema" in json_schema_extra:
+                json_schema_extra = json_schema_extra["array_items_schema"]
+                if not isinstance(json_schema_extra, dict):
+                    raise RemoteToolError(
+                        f"<array_items_schema> field must be dict type in model_field<{key}> "
+                        f"with the field_info<{model_field}>. Please check the format of yaml "
+                        "in current tool.",
+                        stage="Output parsing",
+                    )
+
+        elif model_field.annotation is not None and issubclass(model_field.annotation, ToolParameterView):
             sub_file_infos = get_file_info_from_param_view(model_field.annotation)
             if len(sub_file_infos) > 0:
                 file_infos[key] = sub_file_infos
             continue
 
-        json_schema_extra = model_field.json_schema_extra
-        if json_schema_extra and json_schema_extra.get("format", None) in [
+        if json_schema_extra and json_schema_extra.get("format", None) in [  # type: ignore
             "byte",
             "binary",
         ]:
@@ -139,13 +147,28 @@ async def parse_file_from_json_response(
                 file_infos[key] = sub_file_infos
         else:
             json_schema_extra = model_field.json_schema_extra
+            if not isinstance(json_schema_extra, dict):
+                raise RemoteToolError(
+                    f"<json_schema_extra> field must be dict type in model_field<{key}> "
+                    f"with the field_info<{model_field}>. Please check the format of yaml in current tool.",
+                    stage="Output parsing",
+                )
+
             format = json_schema_extra.get("format", None)
             if format in ["byte", "binary"]:
                 content = json_data[key]
                 if format == "byte":
                     content = base64.b64decode(content)
 
-                suffix = get_file_suffix(json_schema_extra.get("x-ebagent-file-mime-type", None))
+                mime_type = json_schema_extra.get("x-ebagent-file-mime-type", None)
+                if mime_type is not None and not isinstance(mime_type, str):
+                    raise RemoteToolError(
+                        f"x-ebagent-file-mime-type value must be None or string in key<{key}>, "
+                        f"but receive ({type(mime_type)})<{mime_type}>",
+                        stage="Output parsing",
+                    )
+
+                suffix = get_file_suffix(mime_type)
                 file = await file_manager.create_file_from_bytes(
                     content,
                     filename=f"test{suffix}",
