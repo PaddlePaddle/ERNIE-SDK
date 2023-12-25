@@ -1,3 +1,5 @@
+from erniebot.response import EBResponse
+
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory import AIMessage
@@ -24,8 +26,7 @@ class FakeERNIEBotWithPresetResponses(ERNIEBot):
         if self.fake_response is None:
             raise RuntimeError("You must provide a fake_response to the FakeERNIEBotWithPresetResponses constructor.")
 
-    
-    def _get_response(self, cfg_dict, stream):
+    async def _get_response(self, cfg_dict, stream, functions) -> EBResponse:
         return self.fake_response
 
 

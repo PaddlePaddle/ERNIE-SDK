@@ -95,10 +95,10 @@ class ERNIEBot(ChatModel):
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
     
-    async def _get_response(self, cfg_dict, stream) -> Dict:
+    async def _get_response(self, cfg_dict: dict, stream: bool, functions:Optional[List[dict]]) -> Union[EBResponse, List[EBResponse]]:
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if cfg_dict.get("plugins", None):
+        if "plugins" in cfg_dict:
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore
@@ -163,7 +163,7 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
-        response = self._get_response(cfg_dict, stream)
+        response = await self._get_response(cfg_dict, stream, functions)
 
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
@@ -190,16 +190,14 @@ class ERNIEBot(ChatModel):
             )
         elif hasattr(response, "plugin_info"):
             plugin_info = PluginInfo(
-                names=[
-                    response["plugin_info"]["plugins"][i]["name"]
-                    for i in range(len(response["plugin_info"]))
-                ],
-                finish_reason=response["plugin_info"]["finish_reason"],
+                names=[response['plugin_metas'][i]['pluginNameForModel'] 
+                for i in range(len(response['plugin_metas']))
+                ]
             )
 
             return output_type(
-                content="",
-                function_call=function_call,
+                content=response.result,
+                function_call=None,
                 plugin_info=plugin_info,
                 search_info=None,
                 token_usage=response.usage,
@@ -211,6 +209,7 @@ class ERNIEBot(ChatModel):
             return output_type(
                 content=response.result,
                 function_call=None,
+                plugin_info=None,
                 search_info=search_info,
                 token_usage=response.usage,
             )
