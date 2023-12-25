@@ -66,6 +66,7 @@ class ERNIEBot(ChatModel):
             access_token = C.get_global_access_token()
         self.access_token = access_token
         self._validate(**default_chat_kwargs)
+
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
@@ -86,8 +87,8 @@ class ERNIEBot(ChatModel):
                     self.ak = default_chat_kwargs['ak']
                     self.sk = default_chat_kwargs['sk']
                     self.access_token = None
-                    default_chat_kwargs.pop('ak')
-                    default_chat_kwargs.pop('sk')
+                    self.default_chat_kwargs.pop('ak')
+                    self.default_chat_kwargs.pop('sk')
 
 
     @overload
