@@ -94,6 +94,31 @@ class ERNIEBot(ChatModel):
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
+    
+    async def _get_response(self, cfg_dict, stream) -> Dict:
+        # TODO: Improve this when erniebot typing issue is fixed.
+        # Note: If plugins is not None, erniebot will not use Baidu_search.
+        if cfg_dict.get("plugins", None):
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],  # type: ignore
+                stream=stream,
+                _config_=cfg_dict["_config_"],
+                functions=functions,  # type: ignore
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+                **cfg_dict,
+            )
+        
+        return response
 
     async def async_chat(
         self,
@@ -138,27 +163,8 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
-        # TODO: Improve this when erniebot typing issue is fixed.
-        # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if cfg_dict.get("plugins", None):
-            response = await erniebot.ChatCompletionWithPlugins.acreate(
-                messages=cfg_dict["messages"],
-                plugins=cfg_dict["plugins"],  # type: ignore
-                stream=stream,
-                _config_=cfg_dict["_config_"],
-                functions=functions,  # type: ignore
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-            )
-        else:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=stream,
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-                **cfg_dict,
-            )
+        response = self._get_response(cfg_dict, stream)
+
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
