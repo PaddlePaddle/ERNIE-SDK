@@ -9,10 +9,12 @@ nav:
     - 介绍: 'tutorials/index.md' 
   - 核心模块:
     - memory: 'modules/memory.md'
+    - file: 'modules/file.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
       - memory: "package/erniebot_agent/memory.md"
+      - file: "package/erniebot_agent/file.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
 
 theme:
