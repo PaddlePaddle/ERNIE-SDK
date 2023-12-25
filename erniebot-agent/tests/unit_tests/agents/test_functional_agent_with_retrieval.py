@@ -116,7 +116,7 @@ async def test_functional_agent_with_retrieval_run_retrieval(identity_tool):
     # HumanMessage
     assert (
         response.chat_history[0].content
-        == "检索结果:\n\n    第1个段落: 住房和城乡建设部规章城市管理执法办法\n\n    第2个段落: 城市管理执法主管部门应当定期开展执法人员的培训和考核。\n\n" \
+        == "检索结果:\n\n    第1个段落: 住房和城乡建设部规章城市管理执法办法\n\n    第2个段落: 城市管理执法主管部门应当定期开展执法人员的培训和考核。\n\n"
         "检索语句: Hello, world!\n请根据以上检索结果回答检索语句的问题"
     )
     # AIMessage
