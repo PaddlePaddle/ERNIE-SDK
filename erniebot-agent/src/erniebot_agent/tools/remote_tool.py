@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import dataclasses
 import json
+import logging
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
@@ -21,7 +22,8 @@ from erniebot_agent.tools.utils import (
 )
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
-from erniebot_agent.utils.logging import logger
+
+logger = logging.getLogger(__name__)
 
 
 def check_json_length(value: Dict[str, Any]):

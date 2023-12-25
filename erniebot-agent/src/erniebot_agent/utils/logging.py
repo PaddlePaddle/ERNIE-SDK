@@ -21,9 +21,7 @@ from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
-__all__ = ["logger", "set_role_color", "setup_logging"]
-
-logger = logging.getLogger("erniebot_agent")
+__all__ = ["set_role_color", "setup_logging"]
 
 
 def _handle_color_pattern(s: str):
@@ -172,6 +170,8 @@ def setup_logging(
     Raises:
         ValueError: If the provided verbosity is not a valid logging level.
     """
+    logger = logging.getLogger("erniebot_agent")
+
     if verbosity is None:
         verbosity = C.get_logging_level()
 
