@@ -31,9 +31,10 @@ def get_logging_level() -> Optional[str]:
 def get_logging_file_path() -> Optional[Tuple[str]]:
     return _get_val_from_env_var("EB_AGENT_LOGGING_FILE")
 
+
 def get_global_aksk() -> Optional[str]:
     return (_get_val_from_env_var("EB_AK"), _get_val_from_env_var("EB_SK"))
 
+
 def _get_val_from_env_var(env_var: str) -> Optional[str]:
     return os.getenv(env_var)
-
