@@ -2,7 +2,6 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-import erniebot.utils
 from pydantic import Field
 
 from erniebot_agent.agents import FunctionalAgent
