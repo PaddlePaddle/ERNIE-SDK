@@ -6,8 +6,6 @@ import pytest
 from tests.unit_tests.agents.common_util import (
     EXAMPLE_RESPONSE,
     NO_EXAMPLE_RESPONSE,
-    identity_tool,
-    no_input_no_output_tool,
 )
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
@@ -15,11 +13,50 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeSimpleChatModel,
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
+from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
 from erniebot_agent.agents import FunctionalAgentWithRetrieval
 from erniebot_agent.memory import AIMessage, HumanMessage
 from erniebot_agent.memory.messages import FunctionCall
 from erniebot_agent.retrieval import BaizhongSearch
+
+
+@pytest.fixture(scope="module")
+def identity_tool():
+    return FakeTool(
+        name="identity_tool",
+        description="This tool simply forwards the input.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "description": "Input parameter.",
+                }
+            },
+        },
+        responses={
+            "type": "object",
+            "properties": {
+                "param": {
+                    "type": "string",
+                    "description": "Same as the input parameter.",
+                }
+            },
+        },
+        function=lambda param: {"param": param},
+    )
+
+
+@pytest.fixture(scope="module")
+def no_input_no_output_tool():
+    return FakeTool(
+        name="no_input_no_output_tool",
+        description="This tool takes no input parameters and returns no output parameters.",
+        parameters={"type": "object", "properties": {}},
+        responses={"type": "object", "properties": {}},
+        function=lambda: {},
+    )
 
 
 @pytest.mark.asyncio
