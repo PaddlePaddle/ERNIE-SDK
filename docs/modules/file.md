@@ -1,11 +1,3 @@
-<!--
- * @Author: Southpika 513923576@qq.com
- * @Date: 2023-12-25 12:13:05
- * @LastEditors: Southpika 513923576@qq.com
- * @LastEditTime: 2023-12-25 16:00:49
- * @FilePath: /ERINE/ERNIE-Bot-SDK/docs/modules/file.md
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 # File 模块介绍
 
 ## 1. File 简介
