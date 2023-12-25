@@ -21,7 +21,7 @@ from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 class MessageManager:
     """
     Messages Manager, manage the messages of a conversation.
-    
+
     Attributes:
         messages (List[Message]): the messages of a conversation.
         system_message (SystemMessage): the system message of a conversation.
@@ -73,10 +73,10 @@ class MessageManager:
 class Memory:
     """
     The base class of memory
-    
+
     Attributes:
         msg_manager (MessageManager): the message manager of a conversation.
-    
+
     Returns:
         A memory object.
     """

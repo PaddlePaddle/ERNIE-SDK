@@ -1,13 +1,8 @@
-import unittest
-import asyncio
-from unittest.mock import MagicMock, patch, AsyncMock
-from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.memory import WholeMemory
-from erniebot_agent.retrieval import BaizhongSearch
-import pytest
-from unittest import mock
 import json
+from unittest import mock
+from unittest.mock import MagicMock
 
+import pytest
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeChatModelWithPresetResponses,
@@ -16,10 +11,11 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
-from erniebot_agent.agents import FunctionalAgent, FunctionalAgentWithRetrieval
+from erniebot_agent.agents import FunctionalAgentWithRetrieval
 from erniebot_agent.memory import AIMessage, HumanMessage
-from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
 from erniebot_agent.memory.messages import FunctionCall
+from erniebot_agent.retrieval import BaizhongSearch
+
 
 @pytest.fixture(scope="module")
 def identity_tool():
@@ -57,6 +53,7 @@ def no_input_no_output_tool():
         responses={"type": "object", "properties": {}},
         function=lambda: {},
     )
+
 
 KNOWLEDGEBASE_RESPONESE = {
     "logId": "2dc5d9018f912bb4c62f2653bdf05424",
@@ -117,12 +114,13 @@ SEARCH_RESULTS = [
 ]
 
 NO_EXAMPLE_RESPONSE = {
-                        "logId": "2dc5d9018f912bb4c62f2653bdf05424",
-                        "errorCode": 0,
-                        "errorMsg": "Success",
-                        "timestamp": 1703208782306,
-                        "result": []
-                        }
+    "logId": "2dc5d9018f912bb4c62f2653bdf05424",
+    "errorCode": 0,
+    "errorMsg": "Success",
+    "timestamp": 1703208782306,
+    "result": [],
+}
+
 
 @pytest.mark.asyncio
 async def test_functional_agent_callbacks(identity_tool):
@@ -154,7 +152,7 @@ async def test_functional_agent_callbacks(identity_tool):
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
     with mock.patch("requests.post") as my_mock:
-        my_mock.return_value = mock_response = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         await agent.async_run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
@@ -168,13 +166,13 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
-    with mock.patch("requests.post", new=mock.AsyncMock(status_code=200, json=lambda: KNOWLEDGEBASE_RESPONESE)) as my_mock:
-        search_db = BaizhongSearch(
-            knowledge_base_name=knowledge_base_name,
-            access_token=access_token,
-            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
-        )
-    
+
+    search_db = BaizhongSearch(
+        knowledge_base_name=knowledge_base_name,
+        access_token=access_token,
+        knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+    )
+
     agent = FunctionalAgentWithRetrieval(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
@@ -198,12 +196,11 @@ async def test_functional_agent_run_llm(identity_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
-    with mock.patch("requests.post") as my_mock:
-        search_db = BaizhongSearch(
-            knowledge_base_name=knowledge_base_name,
-            access_token=access_token,
-            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
-        )
+    search_db = BaizhongSearch(
+        knowledge_base_name=knowledge_base_name,
+        access_token=access_token,
+        knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+    )
     agent = FunctionalAgentWithRetrieval(
         knowledge_base=search_db,
         llm=FakeChatModelWithPresetResponses(responses=[output_message]),
@@ -230,18 +227,17 @@ async def test_functional_agent_run_llm(identity_tool):
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
 
+
 @pytest.mark.asyncio
 async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool):
-
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
-    with mock.patch("requests.post") as my_mock:
-        search_db = BaizhongSearch(
-            knowledge_base_name=knowledge_base_name,
-            access_token=access_token,
-            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
-        )
+    search_db = BaizhongSearch(
+        knowledge_base_name=knowledge_base_name,
+        access_token=access_token,
+        knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+    )
     agent = FunctionalAgentWithRetrieval(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
@@ -296,9 +292,9 @@ async def test_functional_agent_memory(identity_tool):
         tools=[identity_tool],
         memory=FakeMemory(),
     )
-    
+
     with mock.patch("requests.post") as my_mock:
-        my_mock.return_value = mock_response = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
         await agent.async_run(input_text)
     messages_in_memory = agent.memory.get_messages()
     assert len(messages_in_memory) == 2
@@ -322,7 +318,7 @@ async def test_functional_agent_memory(identity_tool):
         memory=FakeMemory(),
     )
     with mock.patch("requests.post") as my_mock:
-        my_mock.return_value = mock_response = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
         await agent.async_run(input_text)
     messages_in_memory = agent.memory.get_messages()
     assert len(messages_in_memory) == 2
@@ -331,7 +327,7 @@ async def test_functional_agent_memory(identity_tool):
     assert isinstance(messages_in_memory[1], AIMessage)
     assert messages_in_memory[1].content == output_text
     with mock.patch("requests.post") as my_mock:
-        my_mock.return_value = mock_response = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
         await agent.async_run(input_text)
     assert len(agent.memory.get_messages()) == 2 + 2
     agent.reset_memory()
@@ -370,6 +366,6 @@ async def test_functional_agent_max_steps(identity_tool):
         max_steps=2,
     )
     with mock.patch("requests.post") as my_mock:
-        my_mock.return_value = mock_response = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: NO_EXAMPLE_RESPONSE)
         response = await agent.async_run("Run!")
     assert response.status == "STOPPED"
