@@ -20,6 +20,7 @@ nav:
 
 theme:
   name: material
+  favicon: img/favicon.png
 
 markdown_extensions:
   - pymdownx.highlight:
