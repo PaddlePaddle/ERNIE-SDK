@@ -50,7 +50,6 @@ from typing import (
     AsyncIterator,
     Callable,
     ClassVar,
-    Dict,
     Generator,
     Iterator,
     Mapping,
@@ -76,8 +75,6 @@ __all__ = ["EBClient"]
 class EBClient(object):
     """Provides low-level APIs to send HTTP requests and handle responses."""
 
-    MAX_CONNECTION_RETRIES: ClassVar[int] = constants.MAX_CONNECTION_RETRIES
-    MAX_SESSION_LIFETIME_SECS: ClassVar[float] = constants.MAX_SESSION_LIFETIME_SECS
     DEFAULT_REQUEST_TIMEOUT_SECS: ClassVar[float] = constants.DEFAULT_REQUEST_TIMEOUT_SECS
 
     _session: Optional[requests.Session]
@@ -297,7 +294,7 @@ class EBClient(object):
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
         if files is not None:
-            raise TypeError("`files` is currently not supported.")
+            raise ValueError("`files` is currently not supported.")
 
         timeout = aiohttp.ClientTimeout(
             total=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS
@@ -308,9 +305,6 @@ class EBClient(object):
             "data": data,
             "timeout": timeout,
         }
-        proxy = self._proxy
-        if proxy is not None:
-            request_kwargs["proxy"] = proxy
 
         try:
             result = await session.request(method=method, url=url, **request_kwargs)
@@ -478,14 +472,9 @@ class EBClient(object):
             session = requests.Session()
             should_close_session = True
         try:
-            proxies = self._get_proxies(self._proxy)
-            if proxies:
-                logging.debug("Use proxies: %r", proxies)
+            if self._proxy is not None:
+                proxies = {"http": self._proxy, "https": self._proxy}
                 session.proxies = proxies
-            session.mount(
-                "https://",
-                requests.adapters.HTTPAdapter(max_retries=self.MAX_CONNECTION_RETRIES),
-            )
             yield session
         finally:
             if should_close_session:
@@ -507,9 +496,3 @@ class EBClient(object):
         finally:
             if should_close_session:
                 await session.close()
-
-    def _get_proxies(self, proxy: Optional[str]) -> Optional[Dict[str, str]]:
-        if proxy is None:
-            return None
-        else:
-            return {"http": proxy, "https": proxy}

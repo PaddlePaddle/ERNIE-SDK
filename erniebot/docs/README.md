@@ -171,7 +171,7 @@ response = erniebot.ChatCompletion.create(
         "role": "user",
         "content": "深圳市今天气温多少摄氏度？",
     }, ],
-    functions = [
+    functions=[
         {
             "name": "get_current_temperature",
             "description": "获取指定城市的气温",

@@ -175,17 +175,17 @@ class ImageV1(_Image):
 
         # text
         if "text" not in kwargs:
-            raise errors.ArgumentNotFoundError("`text` is not found.")
+            raise errors.ArgumentNotFoundError("text")
         text = kwargs["text"]
 
         # resolution
         if "resolution" not in kwargs:
-            raise errors.ArgumentNotFoundError("`resolution` is not found.")
+            raise errors.ArgumentNotFoundError("resolution")
         resolution = kwargs["resolution"]
 
         # style
         if "style" not in kwargs:
-            raise errors.ArgumentNotFoundError("`style` is not found.")
+            raise errors.ArgumentNotFoundError("style")
         style = kwargs["style"]
 
         # path
@@ -369,22 +369,22 @@ class ImageV2(_Image):
 
         # model
         if "model" not in kwargs:
-            raise errors.ArgumentNotFoundError("`model` is not found.")
+            raise errors.ArgumentNotFoundError("model")
         model = kwargs["model"]
 
         # prompt
         if "prompt" not in kwargs:
-            raise errors.ArgumentNotFoundError("`prompt` is not found.")
+            raise errors.ArgumentNotFoundError("prompt")
         prompt = kwargs["prompt"]
 
         # width
         if "width" not in kwargs:
-            raise errors.ArgumentNotFoundError("`width` is not found.")
+            raise errors.ArgumentNotFoundError("width")
         width = kwargs["width"]
 
         # height
         if "height" not in kwargs:
-            raise errors.ArgumentNotFoundError("`height` is not found.")
+            raise errors.ArgumentNotFoundError("height")
         height = kwargs["height"]
 
         # path

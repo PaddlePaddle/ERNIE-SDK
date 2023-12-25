@@ -36,3 +36,7 @@ class FileError(Exception):
 
     def __str__(self):
         return self.message
+
+
+class ObjectClosedError(Exception):
+    pass

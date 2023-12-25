@@ -23,8 +23,9 @@ from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
-from erniebot_agent.utils.logging import logger as default_logger
 from erniebot_agent.utils.output_style import ColoredContent
+
+default_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from erniebot_agent.agents.base import Agent
