@@ -56,6 +56,7 @@ class FileManager(Closeable, Noncopyable):
     Attributes:
         remote_file_client(RemoteFileClient): The remote file client.
         save_dir (Optional[FilePath]): Directory for saving local files.
+        closed: Whether the file manager is closed.
 
     Methods:
         create_file_from_path: Create a file from a specified file path.
@@ -156,7 +157,8 @@ class FileManager(Closeable, Noncopyable):
 
         Args:
             file_path (FilePath): The path to the file.
-            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
             file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
             file_type (Optional[Literal["local", "remote"]]): The type of file ("local" or "remote").
 
@@ -190,7 +192,8 @@ class FileManager(Closeable, Noncopyable):
 
         Args:
             file_path (FilePath): The path to the file.
-            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
             file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
 
         Returns:
@@ -212,11 +215,12 @@ class FileManager(Closeable, Noncopyable):
         file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
         """
-        Create a remote file from a file path.
+        Create a remote file from a file path and upload it to the client.
 
         Args:
             file_path (FilePath): The path to the file.
-            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
             file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
 
         Returns:

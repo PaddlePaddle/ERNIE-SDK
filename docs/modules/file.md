@@ -1,19 +1,20 @@
+<!--
+ * @Author: Southpika 513923576@qq.com
+ * @Date: 2023-12-25 12:13:05
+ * @LastEditors: Southpika 513923576@qq.com
+ * @LastEditTime: 2023-12-25 16:00:49
+ * @FilePath: /ERINE/ERNIE-Bot-SDK/docs/modules/file.md
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 # File 模块介绍
 
 ## 1. File 简介
 
-在建立一个Agent应用的过程中，由于LLM本身是无状态的，因此很重要的一点就是赋予Agent记忆能力。Agent的记忆能力主要可以分为长期记忆和短期记忆。
-
-* 长期记忆通过文件/数据库的形式存储，是不会被遗忘的内容，每次判断需要相关知识就可以retrieval的方式，找到最相关的内容放入消息帮助LLM分析得到结果。
-* 短期记忆则是直接在消息中体现，是LLM接触的一手信息，但是也受限于上下文窗口，更容易被遗忘。
-
-这里我们简述在我们记录短期记忆的方式，即在Memory模块中存储消息，并通过消息裁剪，控制消息总条数不会超过上下文窗口。
-
-在使用层面，Memory将传入Agent类中，用于记录多轮的消息，即Agent会在每一轮对话中和Memory有一次交互：即在LLM产生最终结论之后，将第一条HumanMessage和最后一条AIMessage加入到Memory中。
+文件管理模块提供了用于管理文件的一系列类，其中包括 `File` 及其子类、`FileManager` 、`GlobalFileManagerHandler`以及与远程文件服务器交互的  `RemoteFileClient`。
 
 ## 2. File 基类介绍
 
-`File` 类是文件管理模块的基础类，用于表示通用的文件对象。它包含文件的基本属性，如文件ID、文件名、文件大小、创建时间、文件用途和文件元数据。此外，`File` 类还定义了一系列抽象方法，比较常用的有：异步读取文件内容的 `read_contents` 方法，以及将文件内容写入本地路径的 `write_contents_to` 方法以及一些辅助方法：生成文件的字符串表示形式、转换为字典形式等。在File类的内部，其主要有两个继承子类，一个是 `Local File`，一个是 `Remote File`。以下是 `File` 基类的属性以及方法介绍。
+`File` 类是文件管理模块的基础类，用于表示通用的文件对象（不建议自行创建 `File` 类以免无法被 `Agent`识别）。它包含文件的基本属性，如文件ID、文件名、文件大小、创建时间、文件用途和文件元数据。此外， `File `类还定义了一系列抽象方法，比较常用的有：异步读取文件内容的 `read_contents `方法，以及将文件内容写入本地路径的 `write_contents_to `方法以及一些辅助方法：生成文件的字符串表示形式、转换为字典形式等。在File类的内部，其主要有两个继承子类，一个是 `Local File `，一个是 `Remote File `。以下是 `File` 基类的属性以及方法介绍。
 
 | 属性       | 类型           | 描述                                                      |
 | ---------- | -------------- | --------------------------------------------------------- |
@@ -39,25 +40,66 @@
 
 #### 2.2.2 RemoteFile 类
 
-`RemoteFile` 也是 `File` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器交。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。它还添加了文件服务器属性 `client`，用于表示文件的服务器。
-
+`RemoteFile` 也是 `File` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器交。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。
 
 ## 3. FileManager 类介绍
 
-`FileManager` 类是一个高级文件管理工具，封装了文件的创建、上传、删除等高级操作。它可能依赖于 `FileRegistry` 来管理文件的一致性和唯一性。`FileManager` 还包含了与远程文件服务器交互的逻辑，通过 `RemoteFileClient` 完成上传、下载、删除等文件操作。
+`FileManager` 类是一个高级文件管理工具，封装了文件的创建、上传、删除等高级操作，以及与 `Agent`进行交互，无论是  `Local File `还是 `RemoteFIle `都可以使用它来统一管理。`FileManager `集成了与远程文件服务器交互的逻辑，通过 `RemoteFileClient `完成上传、下载、删除等文件操作以及与本地文件交互的逻辑，从本地地址创建 `Local File `。它依赖于 `FileRegistry` 来对文件进行用于在整个应用程序中管理文件的注册和查找。
+
+以下是相关的属性和方法
+
+| 属性               | 类型               | 描述                     |
+| ------------------ | ------------------ | ------------------------ |
+| remote_file_client | RemoteFileClient   | 远程文件客户端。         |
+| save_dir           | Optional[FilePath] | 用于保存本地文件的目录。 |
+| closed             | bool               | 文件管理器是否已关闭。   |
+
+| 方法                         | 描述                                 |
+| ---------------------------- | ------------------------------------ |
+| create_file_from_path        | 从指定文件路径创建文件               |
+| create_local_file_from_path  | 从文件路径创建本地文件               |
+| create_remote_file_from_path | 从文件路径创建远程文件并上传至服务器 |
+| create_file_from_bytes       | 从字节创建文件                       |
+| retrieve_remote_file_by_id   | 通过ID获取远程文件                   |
+| look_up_file_by_id           | 通过ID查找本地文件                   |
+| list_remote_files            | 列出远程文件                         |
+
+注：
+
+* `FileManager` 类不可被复制以免造成资源泄露。
+* 如果未指定 `save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。
+* 如果 `FileManager` 类有相关联的 `RemoteFileClient`，那么当 `FileManager`关闭时，相关联的 `RemoteFileClient`也会一起关闭。
 
 ## 4. RemoteFileClient 类介绍
 
-`RemoteFileClient` 是用于与远程文件服务器交互的类。它定义了文件上传、文件下载、文件删除等操作的方法。`AIStudioFileClient` 是 `RemoteFileClient` 的一个具体实现，用于与 AI Studio 文件服务交互。
+`RemoteFileClient` 是用于与远程文件服务器交互的类。它定义了文件上传、文件下载、文件删除等操作的方法。`AIStudioFileClient` 是 `RemoteFileClient` 的一个具体推荐实现，用于与文件服务交互，用户使用 `access token`作为参数用于身份验证，之后能够在AIStudio文件服务中上传、检索、列出文件，以及创建临时URL以访问文件。`RemoteFileClient`使用时被 `FileManager`持有，一旦 `FileManager`关闭，`RemoteFileClient`也会相应被关闭，其中的资源也会被相应释放。
 
-## 5. FileRegistry 类介绍
+## 5. 使用方法
 
-`FileRegistry` 是一个单例类，用于在整个应用程序中管理文件的注册和查找。它提供了方法来注册、注销、查找和列举已注册的文件。`FileRegistry` 通过全局唯一的实例 `_file_registry` 来跟踪应用程序中的所有文件。
+1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件，注：它的生命周期同整个事件循环。
 
-## 6. 使用方法
+```python
+from erniebot_agent.file import GlobalFileManagerHandler
+async def demo_function():
+    file_manager = await GlobalFileManagerHandler().get()  
+```
+   
+2. 通过 `GlobalFileManagerHandler`创建 `File`
 
-1. 创建 `File` 对象，可以选择使用 `LocalFile` 或 `RemoteFile` 的子类。
-2. 使用 `FileRegistry` 注册文件，确保文件的唯一性。
-3. 使用 `FileManager` 进行高级文件操作，如上传、下载、删除等。
+```python
+from erniebot_agent.file import GlobalFileManagerHandler
+async def demo_function():
+    file_manager = await GlobalFileManagerHandler().get()
+    # 从路径创建File, file_type可选择local或者remote file_purpose='assistant'代表用于给LLM输入使用
+    local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
+```
 
-通过这一系列的类，文件管理模块提供了灵活、高效的文件管理解决方案，适用于本地文件和远程文件的处理。
+3. 通过 `GlobalFileManagerHandler`搜索 `File`
+
+```python
+from erniebot_agent.file import GlobalFileManagerHandler
+async def demo_function():
+    file_manager = await GlobalFileManagerHandler().get()
+    file = file_manager.look_up_file_by_id(file_id='your_file_id')
+    file_content = await file.read_contents()
+```

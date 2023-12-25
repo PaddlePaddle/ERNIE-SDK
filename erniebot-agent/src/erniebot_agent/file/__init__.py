@@ -13,23 +13,32 @@
 # limitations under the License.
 
 """
-File module is used to manage the file system by a global file_manager.
-Including `local file` and `remote file`.
+File module is used to manage the file system by a global file manager: `GlobalFileManagerHandler`.
+
+We use it to manage `File` obeject, including `LocalFile` and `RemoteFile`.
 
 A few notes about the current state of this submodule:
 
 - If you do not set environment variable `AISTUDIO_ACCESS_TOKEN`, it will be under default setting.
 
-- Method `configure_global_file_manager` can only be called once at the beginning.
+- Method `GlobalFileManagerHandler().configure()` can only be called **once** at the beginning.
 
-- When you want to get a file manger, you can use method `get_global_file_manager`.
+- When you want to get a file manger, you can use method `GlobalFileManagerHandler().get()`.
+
+- The lifecycle of the `FileManager` class is synchronized with the event loop.
+
+- `FileManager` class is Noncopyable.
 
 - If you want to get the content of `File` object, you can use `read_contents`
   and use `write_contents_to` create the file to location you want.
+
+- We do **not** recommend you to create `File` object yourself.
+
+Examples:
+    >>> from erniebot_agent.file import GlobalFileManagerHandler
+    >>> async def demo_function():
+    >>>     file_manager = await GlobalFileManagerHandler().get()
 """
 
-from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler
-from erniebot_agent.file.base import File
-from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.local_file import LocalFile
-from erniebot_agent.file.remote_file import RemoteFile
+from .global_file_manager_handler import GlobalFileManagerHandler
+from .remote_file import AIStudioFileClient
