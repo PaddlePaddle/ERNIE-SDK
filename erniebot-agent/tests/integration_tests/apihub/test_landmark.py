@@ -10,7 +10,7 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_dish_classify(self):
-        toolkit = RemoteToolkit.from_aistudio("landmark-rec")
+        toolkit = RemoteToolkit.from_aistudio("landmark-rec", file_manager=self.file_manager)
 
         file = await self.file_manager.create_file_from_path(
             self.download_fixture_file("shanghai-dongfangmingzhu.png")

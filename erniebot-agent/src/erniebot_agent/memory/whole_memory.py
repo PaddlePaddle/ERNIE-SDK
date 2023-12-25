@@ -16,4 +16,12 @@ from erniebot_agent.memory.base import Memory
 
 
 class WholeMemory(Memory):
-    """"""
+    """
+    The type of memory that include all the messages.
+
+    Attributes:
+        msg_manager (MessageManager): the message manager of a conversation.
+    """
+
+    def __init__(self):
+        super().__init__()

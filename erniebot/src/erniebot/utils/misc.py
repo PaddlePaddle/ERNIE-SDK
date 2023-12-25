@@ -16,7 +16,7 @@ import threading
 from collections.abc import AsyncIterator, Iterator
 from typing import ClassVar
 
-__all__ = ["Constant", "Singleton", "NOT_GIVEN", "NotGiven", "filter_args", "transform"]
+__all__ = ["Constant", "SingletonMeta", "NOT_GIVEN", "NotGiven", "filter_args", "transform"]
 
 
 class Constant(object):
@@ -31,7 +31,7 @@ class Constant(object):
         raise AttributeError("The value of a constant cannot be modified.")
 
 
-class Singleton(type):
+class SingletonMeta(type):
     _insts: ClassVar[dict] = {}
     _lock: ClassVar[threading.Lock] = threading.Lock()
 
@@ -43,7 +43,7 @@ class Singleton(type):
         return cls._insts[cls]
 
 
-class _NotGivenSentinel(metaclass=Singleton):
+class _NotGivenSentinel(metaclass=SingletonMeta):
     def __bool__(self):
         return False
 

@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
+import os
 from typing import Optional
 
-from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.remote_file import AIStudioFileClient
+
+def get_global_access_token() -> Optional[str]:
+    return _get_val_from_env_var("EB_AGENT_ACCESS_TOKEN")
 
 
-@functools.lru_cache(maxsize=None)
-def get_file_manager(access_token: Optional[str] = None) -> FileManager:
-    if access_token is None:
-        # TODO: Use a default global access token.
-        return FileManager()
-    else:
-        remote_file_client = AIStudioFileClient(access_token=access_token)
-        return FileManager(remote_file_client)
+def get_global_save_dir() -> Optional[str]:
+    return _get_val_from_env_var("EB_AGENT_SAVE_DIR")
+
+
+def get_logging_level() -> Optional[str]:
+    return _get_val_from_env_var("EB_AGENT_LOGGING_LEVEL")
+
+
+def get_logging_file_path() -> Optional[str]:
+    return _get_val_from_env_var("EB_AGENT_LOGGING_FILE")
+
+
+def _get_val_from_env_var(env_var: str) -> Optional[str]:
+    return os.getenv(env_var)

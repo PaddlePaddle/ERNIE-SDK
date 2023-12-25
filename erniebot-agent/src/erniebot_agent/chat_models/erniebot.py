@@ -36,6 +36,7 @@ from erniebot_agent.memory.messages import (
     Message,
     SearchInfo,
 )
+from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -62,6 +63,8 @@ class ERNIEBot(ChatModel):
         super().__init__(model=model, **default_chat_kwargs)
 
         self.api_type = api_type
+        if access_token is None:
+            access_token = C.get_global_access_token()
         self.access_token = access_token
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
