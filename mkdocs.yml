@@ -7,16 +7,31 @@ nav:
   - 介绍: 'index.md'
   - 快速开始:
     - 介绍: 'tutorials/index.md' 
+    - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
     - memory: 'modules/memory.md'
+    - tools: 'modules/tools/create-tool.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
       - memory: "package/erniebot_agent/memory.md"
+      - tools: "package/erniebot_agent/tools.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
 
 theme:
   name: material
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+
 
 plugins:
   - search
@@ -25,9 +40,7 @@ plugins:
       handlers:
         python:
           options:
-            show_submodules: true
-            docstring_style: google
-            annotations_path: brief
+            show_bases: false
           paths: [erniebot-agent/src]
           selection:
             filters:
