@@ -66,7 +66,7 @@
 
 `RemoteFileClient` 是用于与远程文件服务器交互的类。它定义了文件上传、文件下载、文件删除等操作的方法。`AIStudioFileClient` 是 `RemoteFileClient` 的一个具体推荐实现，用于与文件服务交互，用户使用 `access token`作为参数用于身份验证，之后能够在AIStudio文件服务中上传、检索、列出文件，以及创建临时URL以访问文件。`RemoteFileClient`使用时被 `FileManager`持有，一旦 `FileManager`关闭，`RemoteFileClient`也会相应被关闭，其中的资源也会被相应释放。
 
-## 6. 使用方法
+## 5. 使用方法
 
 1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件，注：它的生命周期同整个事件循环。
 
