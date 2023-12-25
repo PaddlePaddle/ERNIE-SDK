@@ -8,10 +8,8 @@
 
     members:
 
-    - Memory
+    - FileManager
 
     - LocalFile
 
-    - LimitTokensMemory
-
-    - SlidingWindowMemory
+    - RemoteFile
