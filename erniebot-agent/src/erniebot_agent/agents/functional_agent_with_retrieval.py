@@ -2,7 +2,6 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-import erniebot.utils
 from pydantic import Field
 
 from erniebot_agent.agents import FunctionalAgent
@@ -152,7 +151,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         docs = []
         token_count = 0
         for doc in results["documents"]:
-            num_tokens = erniebot.utils.token_helper.approx_num_tokens(doc["content"])
+            num_tokens = len(doc["content"])
             if token_count + num_tokens > self.token_limit:
                 logger.warning(
                     "Retrieval results exceed token limit. Truncating retrieval results to "
