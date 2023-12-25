@@ -33,8 +33,8 @@ class GlobalFileManagerHandler(Singleton):
 
     Methods:
         get: Asynchronously retrieves the global FileManager instance.
-        configure: Asynchronously configures the global FileManager at beginning
-                   of event loop.
+        configure: Asynchronously configures the global FileManager 
+                   at the beginning of event loop.
         set: Asynchronously sets the global FileManager explicitly.
 
     """
@@ -79,7 +79,8 @@ class GlobalFileManagerHandler(Singleton):
         """
         Configure the global FileManager.
 
-        This method configures the global FileManager with the provided parameters.
+        This method configures the global FileManager with the provided parameters
+        at the beginning of event loop.
         If the global FileManager is already set, it raises an error.
 
         Args:
