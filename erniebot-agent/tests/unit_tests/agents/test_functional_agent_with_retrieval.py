@@ -23,7 +23,7 @@ from erniebot_agent.retrieval import BaizhongSearch
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_callbacks(identity_tool):
+async def test_functional_agent_with_retrieval_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
     knowledge_base_name = "test"
     access_token = "your access token"
@@ -59,7 +59,7 @@ async def test_functional_agent_callbacks(identity_tool):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_llm(identity_tool):
+async def test_functional_agent_with_retrieval_run_llm(identity_tool):
     output_message = AIMessage("Hello!", function_call=None)
 
     knowledge_base_name = "test"
@@ -98,7 +98,7 @@ async def test_functional_agent_run_llm(identity_tool):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool):
+async def test_functional_agent_with_retrieval_run_tool(identity_tool, no_input_no_output_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
@@ -128,7 +128,7 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_max_steps(identity_tool):
+async def test_functional_agent_with_retrieval_max_steps(identity_tool):
     function_call = FunctionCall(
         name=identity_tool.tool_name,
         thoughts="",
