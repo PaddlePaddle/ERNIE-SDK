@@ -308,7 +308,7 @@ class RemoteTool(BaseTool):
                             result.pop(key)
         # Remove log_id if in tool_response
         if "log_id" in tool_response:
-                tool_response.pop("log_id")
+            tool_response.pop("log_id")
         return tool_response
 
 
