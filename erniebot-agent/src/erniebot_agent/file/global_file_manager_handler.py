@@ -31,9 +31,11 @@ class GlobalFileManagerHandler(Singleton):
     and allows for its configuration and retrieval.
 
 
-    Attributes:
-        _file_manager (Optional[FileManager]): The global FileManager instance.
-        _lock (asyncio.Lock): A lock for ensuring thread-safe access to the FileManager.
+    Methods:
+        get: Asynchronously retrieves the global FileManager instance.
+        configure: Asynchronously configures the global FileManager at beginning
+                   of event loop.
+        set: Asynchronously sets the global FileManager explicitly.
 
     """
 
