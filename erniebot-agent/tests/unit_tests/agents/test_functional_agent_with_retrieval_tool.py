@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE, NO_EXAMPLE_RESPONSE
+from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeChatModelWithPresetResponses,
@@ -14,7 +14,6 @@ from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
 from erniebot_agent.agents import FunctionalAgentWithRetrievalTool
 from erniebot_agent.memory import AIMessage, HumanMessage
-from erniebot_agent.memory.messages import FunctionCall
 from erniebot_agent.retrieval import BaizhongSearch
 
 
@@ -155,8 +154,6 @@ async def test_functional_agent_with_retrieval_tool_run_retrieval_tool(identity_
     assert response.chat_history[0].content == "Hello, world!"
     # AIMessage
     assert response.chat_history[1].content == "Text response"
-
-ååå
 
 
 @pytest.mark.asyncio

@@ -13,8 +13,7 @@ from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
 from erniebot_agent.agents import FunctionalAgentWithRetrieval
-from erniebot_agent.memory import AIMessage, HumanMessage
-from erniebot_agent.memory.messages import FunctionCall
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.retrieval import BaizhongSearch
 
 
@@ -137,7 +136,6 @@ async def test_functional_agent_with_retrieval_run_retrieval(identity_tool):
     assert response.chat_history[0].content == "Hello, world!"
     # AIMessage
     assert response.chat_history[1].content == "Text response"
-
 
 
 @pytest.mark.asyncio
