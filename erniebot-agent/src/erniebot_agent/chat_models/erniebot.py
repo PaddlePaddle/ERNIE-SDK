@@ -77,7 +77,6 @@ class ERNIEBot(ChatModel):
                 # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
                 if "ak" and "sk" not in default_chat_kwargs:
                     ak, sk = C.get_global_aksk()
-                    # breakpoint()
                     if not ak:
                         raise RuntimeError("Please set at least one of ak+sk or AccessToken.")
                     else:
