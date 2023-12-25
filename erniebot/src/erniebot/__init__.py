@@ -15,6 +15,7 @@
 from . import errors
 from .config import GlobalConfig
 from .config import init_global_config as _init_global_config
+from .errors import ConfigItemNotFoundError as _ConfigItemNotFoundError
 from .intro import Model
 from .resources import (
     ChatCompletion,
@@ -65,5 +66,5 @@ def __getattr__(name):
     # erniebot/config.py.
     try:
         return GlobalConfig().get_value(name)
-    except KeyError:
+    except _ConfigItemNotFoundError:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'") from None

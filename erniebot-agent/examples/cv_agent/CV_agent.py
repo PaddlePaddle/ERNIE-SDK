@@ -2,7 +2,7 @@ import asyncio
 
 from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 
@@ -14,14 +14,15 @@ class CVToolkit:
         self.tools = self.toolkit.get_tools()
 
 
-llm = ERNIEBot(model="ernie-3.5", api_type="aistudio", access_token="<your-access-token>")
-toolkit = CVToolkit()
-memory = WholeMemory()
-file_manager = get_file_manager()
-agent = FunctionalAgent(llm=llm, tools=toolkit.tools, memory=memory, file_manager=file_manager)
-
-
 async def run_agent():
+    await GlobalFileManagerHandler().configure(access_token="<your-access-token>")
+
+    llm = ERNIEBot(model="ernie-bot", api_type="aistudio", access_token="<your-access-token>")
+    toolkit = CVToolkit()
+    memory = WholeMemory()
+    agent = FunctionalAgent(llm=llm, tools=toolkit.tools, memory=memory)
+
+    file_manager = await GlobalFileManagerHandler().get()
     seg_file = await file_manager.create_file_from_path(file_path="cityscapes_demo.png", file_type="local")
     clas_file = await file_manager.create_file_from_path(file_path="class_img.jpg", file_type="local")
     ocr_file = await file_manager.create_file_from_path(file_path="ch.png", file_type="local")

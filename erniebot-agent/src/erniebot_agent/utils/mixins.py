@@ -1,20 +1,46 @@
+# Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+
 import base64
 import os
 import tempfile
-from typing import Any, List
+import warnings
+from typing import TYPE_CHECKING, Any, List, NoReturn, Optional, Protocol, cast, final
 
-from erniebot_agent.file.base import File
-from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
+from erniebot_agent.utils.exceptions import ObjectClosedError
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
+
+if TYPE_CHECKING:
+    from erniebot_agent.file.base import File
+    from erniebot_agent.file.file_manager import FileManager
+    from erniebot_agent.tools.tool_manager import ToolManager
 
 
 class GradioMixin:
-    _file_manager: FileManager  # make mypy happy
+    _file_manager: Optional[FileManager]  # make mypy happy
     _tool_manager: ToolManager  # make mypy happy
 
+    # make mypy happy
+    async def _get_file_manager(self) -> FileManager:
+        return cast(FileManager, None)
+
     def launch_gradio_demo(self, **launch_kwargs: Any):
+        # XXX: The current implementation requires that the inheriting objects
+        # be constructed outside an event loop, which is probably not sensible.
         # TODO: Unified optional dependencies management
         try:
             import gradio as gr  # type: ignore
@@ -52,7 +78,8 @@ class GradioMixin:
             ):
                 # If there is a file output in the last round, then we need to show it
                 output_file_id = response.files[-1].file.id
-                output_file = self._file_manager.look_up_file_by_id(output_file_id)
+                file_manager = await self._get_file_manager()
+                output_file = file_manager.look_up_file_by_id(output_file_id)
                 file_content = await output_file.read_contents()
                 if get_file_type(response.files[-1].file.filename) == "image":
                     # If it is a image, we can display it in the same chat page
@@ -93,15 +120,16 @@ class GradioMixin:
             self.reset_memory()
             return None, None, None, None
 
-        async def _upload(file: List[gr.utils.NamedString], history: list):
+        async def _upload(file, history):
             nonlocal _uploaded_file_cache
+            file_manager = await self._get_file_manager()
             for single_file in file:
-                upload_file = await self._file_manager.create_file_from_path(single_file.name)
+                upload_file = await file_manager.create_file_from_path(single_file.name)
                 _uploaded_file_cache.append(upload_file)
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = self._file_manager.registry.list_files()
+            output_lis = file_manager.list_registered_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
@@ -146,8 +174,7 @@ class GradioMixin:
                         )
 
                 with gr.Accordion("Files", open=False):
-                    file_lis = self._file_manager.registry.list_files()
-                    all_files = gr.HTML(value=file_lis, label="All input files")
+                    all_files = gr.HTML(value=[], label="All input files")
                 with gr.Accordion("Tools", open=False):
                     attached_tools = self._tool_manager.get_tools()
                     tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
@@ -209,3 +236,38 @@ class GradioMixin:
             else:
                 allowed_paths = [td]
             demo.launch(allowed_paths=allowed_paths, **launch_kwargs)
+
+
+class Closeable(Protocol):
+    @property
+    def closed(self) -> bool:
+        ...
+
+    def __del__(self, _warn=warnings.warn) -> None:
+        if not self.closed:
+            _warn(f"Unclosed object: {repr(self)}", ResourceWarning, source=self)
+
+    async def close(self) -> None:
+        ...
+
+    def ensure_not_closed(self) -> None:
+        if self.closed:
+            raise ObjectClosedError(f"{repr(self)} is closed.")
+
+
+class Noncopyable(object):
+    @final
+    def __copy__(self) -> NoReturn:
+        raise TypeError("Cannot copy an instance of a non-copyable class.")
+
+    @final
+    def __deepcopy__(self, memo: Any) -> NoReturn:
+        raise TypeError("Cannot deep-copy an instance of a non-copyable class.")
+
+    @final
+    def __reduce__(self) -> NoReturn:
+        raise TypeError("Cannot pickle an instance of a non-copyable class.")
+
+    @final
+    def __reduce_ex__(self, protocol: Any) -> NoReturn:
+        raise TypeError("Cannot pickle an instance of a non-copyable class.")

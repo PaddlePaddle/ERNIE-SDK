@@ -17,7 +17,7 @@ class ErnieBot(LLM):
     """ERNIE Bot large language models.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
+    environment variable ``AISTUDIO_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
@@ -82,7 +82,7 @@ class ErnieBot(LLM):
         values["aistudio_access_token"] = get_from_dict_or_env(
             values,
             "aistudio_access_token",
-            "EB_ACCESS_TOKEN",
+            "AISTUDIO_ACCESS_TOKEN",
         )
 
         try:
@@ -149,7 +149,7 @@ class ErnieBot(LLM):
         **kwargs: Any,
     ) -> Iterator[GenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = [self._build_user_message_from_prompt(prompt)]

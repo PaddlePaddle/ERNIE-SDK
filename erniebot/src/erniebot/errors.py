@@ -39,6 +39,13 @@ class EBError(Exception):
 class ArgumentNotFoundError(EBError):
     """An argument was not found."""
 
+    def __init__(self, argument: str) -> None:
+        super().__init__(f"Argument `{argument}` not found")
+
+
+class ConfigItemNotFoundError(EBError):
+    """A configuration item was not found."""
+
 
 class InvalidArgumentError(EBError):
     """An argument is invalid."""

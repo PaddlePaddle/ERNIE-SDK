@@ -28,7 +28,7 @@ class ErnieBotChat(BaseChatModel):
     """ERNIE Bot Chat large language models API.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
+    environment variable ``AISTUDIO_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
@@ -96,7 +96,7 @@ class ErnieBotChat(BaseChatModel):
         values["aistudio_access_token"] = get_from_dict_or_env(
             values,
             "aistudio_access_token",
-            "EB_ACCESS_TOKEN",
+            "AISTUDIO_ACCESS_TOKEN",
         )
 
         try:
@@ -173,7 +173,7 @@ class ErnieBotChat(BaseChatModel):
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = self._convert_messages_to_dicts(messages)
@@ -195,7 +195,7 @@ class ErnieBotChat(BaseChatModel):
         **kwargs: Any,
     ) -> AsyncIterator[ChatGenerationChunk]:
         if stop is not None:
-            raise TypeError("Currently, `stop` is not supported when streaming is enabled.")
+            raise ValueError("Currently, `stop` is not supported when streaming is enabled.")
         params = self._invocation_params
         params.update(kwargs)
         params["messages"] = self._convert_messages_to_dicts(messages)

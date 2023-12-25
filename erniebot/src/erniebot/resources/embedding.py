@@ -145,12 +145,12 @@ class Embedding(EBResource, Creatable):
 
         # model
         if "model" not in kwargs:
-            raise errors.ArgumentNotFoundError("`model` is not found.")
+            raise errors.ArgumentNotFoundError("model")
         model = kwargs["model"]
 
         # input
         if "input" not in kwargs:
-            raise errors.ArgumentNotFoundError("`input` is not found.")
+            raise errors.ArgumentNotFoundError("input")
         input = kwargs["input"]
 
         # path
