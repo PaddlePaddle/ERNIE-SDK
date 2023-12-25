@@ -33,7 +33,7 @@ def get_logging_file_path() -> Optional[str]:
 
 
 def get_global_aksk() -> Tuple[Union[str, None], Union[str, None]]:
-    return (_get_val_from_env_var("EB_AK"), _get_val_from_env_var("EB_SK"))
+    return (_get_val_from_env_var("EB_AGENT_AK"), _get_val_from_env_var("EB_AGENT_SK"))
 
 
 def _get_val_from_env_var(env_var: str) -> Optional[str]:

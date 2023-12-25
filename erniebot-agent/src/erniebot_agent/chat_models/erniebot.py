@@ -85,6 +85,12 @@ class ERNIEBot(ChatModel):
                 else:
                     self.ak = self.default_chat_kwargs.pop("ak")
                     self.sk = self.default_chat_kwargs.pop("sk")
+            else:
+                # If set access_token, then remove ak and sk in default_chat_kwargs
+                if "ak" and "sk" in self.default_chat_kwargs:
+                    self.default_chat_kwargs.pop("ak")
+                    self.default_chat_kwargs.pop("sk")
+
 
     @overload
     async def async_chat(
