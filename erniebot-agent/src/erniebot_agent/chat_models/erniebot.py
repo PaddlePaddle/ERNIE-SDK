@@ -85,7 +85,6 @@ class ERNIEBot(ChatModel):
                 else:
                     self.ak = self.default_chat_kwargs.pop("ak")
                     self.sk = self.default_chat_kwargs.pop("sk")
-                    self.access_token = None
 
     @overload
     async def async_chat(
