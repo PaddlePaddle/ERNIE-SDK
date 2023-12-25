@@ -65,9 +65,30 @@ class ERNIEBot(ChatModel):
         if access_token is None:
             access_token = C.get_global_access_token()
         self.access_token = access_token
+        self._validate(**default_chat_kwargs)
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
+    
+    def _validate(self, **default_chat_kwargs: Any) -> None:
+        if self.api_type == 'qianfan':
+            if self.access_token is None:
+                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
+                if 'ak' and 'sk' not in default_chat_kwargs:
+                    ak, sk = C.get_global_aksk()
+                    # breakpoint()
+                    if not ak:
+                        raise RuntimeError('Please set at least one of ak+sk or AccessToken.')
+                    else:
+                        self.ak = ak
+                        self.sk = sk
+                else:
+                    self.ak = default_chat_kwargs['ak']
+                    self.sk = default_chat_kwargs['sk']
+                    self.access_token = None
+                    default_chat_kwargs.pop('ak')
+                    default_chat_kwargs.pop('sk')
+
 
     @overload
     async def async_chat(
@@ -126,7 +147,9 @@ class ERNIEBot(ChatModel):
             cfg_dict["_config_"]["api_type"] = self.api_type
         if self.access_token is not None:
             cfg_dict["_config_"]["access_token"] = self.access_token
-
+        if hasattr(self, "ak") and hasattr(self, "sk"):
+            cfg_dict["_config_"]["ak"] = self.ak
+            cfg_dict["_config_"]["sk"] = self.sk
         # TODO: process system message
         cfg_dict["messages"] = [m.to_dict() for m in messages]
         if functions is not None:
