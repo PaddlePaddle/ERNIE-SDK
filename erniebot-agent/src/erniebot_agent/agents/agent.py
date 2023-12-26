@@ -207,7 +207,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
 
     async def _run_llm(self, messages: List[Message], functions=None, **opts: Any) -> LLMResponse:
         """Run the LLM asynchronously without invoking callbacks.
-        
+
         This method is called in `run_llm`.
         """
         llm_ret = await self.llm.chat(messages, functions=functions, stream=False, **opts)
