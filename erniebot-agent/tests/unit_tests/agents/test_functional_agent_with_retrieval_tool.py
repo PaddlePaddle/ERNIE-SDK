@@ -83,14 +83,34 @@ async def test_functional_agent_with_retrieval_tool_tool_callbacks(identity_tool
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
+
+    # Add new callback
+    callback_handler = CountingCallbackHandler()
+    llm = FakeChatModelWithPresetResponses(
+        responses=[
+            AIMessage('{"is_relevant":true}', function_call=None),
+            AIMessage("Text response", function_call=None),
+        ]
+    )
+    agent = FunctionalAgentWithRetrievalTool(
+        knowledge_base=search_db,
+        llm=llm,
+        tools=[identity_tool],
+        memory=FakeMemory(),
+        callbacks=[callback_handler],
+    )
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         await agent.async_run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
-    # # call identity_tool, retrieval tool
-    assert callback_handler.tool_starts == 2
-    assert callback_handler.tool_ends == 2
+
+    # relevent judge
+    assert callback_handler.llm_starts == 1
+    assert callback_handler.llm_ends == 1
+    # call identity_tool, KnowledgeBaseTool tool
+    assert callback_handler.tool_starts == 1
+    assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
 
 

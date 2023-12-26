@@ -67,6 +67,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
     agent = FunctionalAgentWithRetrievalScoreTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
+        threshold=0.0,
         tools=[identity_tool],
         memory=FakeMemory(),
         callbacks=[callback_handler],
@@ -86,7 +87,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
         await agent.async_run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
-    # call identity_tool, retrieval tool
+    # call retrieval tool
     assert callback_handler.tool_starts == 2
     assert callback_handler.tool_ends == 2
     assert callback_handler.tool_errors == 0
