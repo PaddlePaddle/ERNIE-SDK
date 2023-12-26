@@ -257,6 +257,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
                     return response
                 num_steps_taken += 1
             response = self._create_stopped_response(chat_history, steps_taken)
+            return response
         else:
             logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"

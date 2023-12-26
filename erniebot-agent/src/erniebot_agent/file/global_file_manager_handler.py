@@ -23,7 +23,7 @@ from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
 
-_registry = weakref.WeakKeyDictionary()
+_registry = weakref.WeakKeyDictionary()  # type: ignore
 
 
 @final
