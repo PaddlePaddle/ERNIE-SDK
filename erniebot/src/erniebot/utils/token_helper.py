@@ -36,4 +36,4 @@ def approx_num_tokens(text: str) -> int:
     res_text = "".join(res)
     cnt_word = len(res_text.split())
 
-    return cnt_han + int(math.floor(cnt_word * 1.3))
+    return cnt_word + int(math.floor(cnt_han / 1.6))

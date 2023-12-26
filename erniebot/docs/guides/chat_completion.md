@@ -67,7 +67,7 @@
 
 ### 如何计算token数量？
 
-可以采用`汉字数 + 单词数 * 1.3`估算token总数。ERNIE Bot SDK提供了估计token数量的函数：
+可以采用`汉字数 / 1.6 + 单词数`估算token总数。ERNIE Bot SDK提供了估计token数量的函数：
 
 ```{.py .copy}
 import erniebot.utils
