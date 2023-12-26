@@ -19,7 +19,7 @@
 
 ### 示例1
 
-大家在使用`EB-SDK`调用文心一言进行多轮对话时，需要按照规范定义每轮对话的信息（如下），稍显复杂。
+大家在使用`ERNIE Bot SDK`调用文心一言进行多轮对话时，需要按照规范定义每轮对话的信息（如下），稍显复杂。
 
 ```python
 import erniebot
@@ -47,9 +47,12 @@ print(response.get_result())
 如果切换使用`EB-Agent`调用文心一言，大家使用`Message`模块，可以较好地简化代码。
 
 ```python
+import os
 import asyncio
 from erniebot_agent.memory import HumanMessage, AIMessage
 from erniebot_agent.chat_models import ERNIEBot
+
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")

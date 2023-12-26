@@ -9,4 +9,4 @@
         - SystemMessage
         - HumanMessage
         - AIMessage
-        - SlidingWindowMemory
+        - FunctionMessage
