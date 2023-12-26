@@ -1,5 +1,3 @@
-from erniebot.response import EBResponse
-
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import AIMessage

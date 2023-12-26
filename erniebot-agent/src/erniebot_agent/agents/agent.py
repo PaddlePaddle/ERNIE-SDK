@@ -1,18 +1,14 @@
 import abc
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union, final, NoReturn
+from typing import Any, Dict, List, NoReturn, Optional, Tuple, Union, final
 
 from erniebot_agent.agents.base import BaseAgent
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.mixins import GradioMixin
-from erniebot_agent.agents.schema import (
-    AgentResponse,
-    LLMResponse,
-    ToolResponse,
-)
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
@@ -103,7 +99,8 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         Returns:
             Response from the agent.
         """
-        await self._ensure_managed_files(files)
+        if files:
+            await self._ensure_managed_files(files)
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         agent_resp = await self._run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
@@ -204,9 +201,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
-    async def _run_llm(
-        self, messages: List[Message], functions=None, **opts: Any
-    ) -> LLMResponse:
+    async def _run_llm(self, messages: List[Message], functions=None, **opts: Any) -> LLMResponse:
         llm_ret = await self.llm.chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 

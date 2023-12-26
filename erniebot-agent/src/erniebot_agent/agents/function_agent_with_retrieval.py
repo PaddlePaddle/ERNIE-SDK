@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type
 
 from pydantic import Field
 
-from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.agents.schema import AgentAction, AgentResponse, File, ToolResponse
 from erniebot_agent.memory.messages import (
     AIMessage,

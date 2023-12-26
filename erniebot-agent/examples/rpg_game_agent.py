@@ -25,8 +25,8 @@ from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file.base import File
-from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.memory.messages import AIMessage, HumanMessage, SystemMessage
+from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.image_generation_tool import (
     ImageGenerationTool,  # 目前为remotetool，如做直接展示可以替换为yinian

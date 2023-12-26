@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union, NoReturn, Tuple
+from typing import List, Optional, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -38,7 +38,6 @@ from erniebot_agent.memory.messages import (
 )
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.exceptions import FileError
 
 _MAX_STEPS = 5
 
@@ -167,7 +166,9 @@ class FunctionAgent(Agent):
                 PluginStep(
                     info=output_message.plugin_info,
                     result=output_message.content,
-                    input_files=file_manager.sniff_and_extract_files_from_text(chat_history[-1].content),  # TODO: make sure this is correct.
+                    input_files=file_manager.sniff_and_extract_files_from_text(
+                        chat_history[-1].content
+                    ),  # TODO: make sure this is correct.
                     output_files=file_manager.sniff_and_extract_files_from_text(output_message.content),
                 ),
                 new_messages,
