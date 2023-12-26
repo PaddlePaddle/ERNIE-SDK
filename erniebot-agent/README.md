@@ -2,15 +2,17 @@
 
 <h1>ERNIE Bot Agent</h1>
 
-ERNIE Bot Agent 可以快速开发智能体。
+`ERNIE Bot Agent` 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型的编排能力，我们依托飞桨星河社区提供了丰富的预置平台化功能，并允许高度定制化的开发，旨在为开发者打造一站式的大模型Agent和应用搭建框架和平台。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-![python version](https://img.shields.io/badge/python-3.8+-orange.svg)
-![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
+![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+[![Downloads](https://pepy.tech/badge/erniebot-agent)](https://pepy.tech/project/erniebot-agent)
+[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK/branch/master/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK)
 
 </div>
 
-`ERNIE Bot Agent` 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型的编排能力，我们依托飞桨星河社区提供了丰富的预置平台化功能，并允许高度定制化的开发，旨在为开发者打造一站式的大模型Agent和应用搭建框架和平台。
 
 
 ![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
