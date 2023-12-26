@@ -38,8 +38,10 @@
 - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 
+## 快速安装
+
 <details>
-<summary>## 快速安装</summary>
+<summary>点击展开</summary>
 建议您可以使用pip快速安装 `ERNIE Bot Agent` 的最新稳定版。
 
 ```shell
@@ -59,15 +61,19 @@ pip install erniebot-agent
 
 ## 快速体验
 
+<details>
+<summary>点击展开</summary>
+
 ```python
 # Todo: 添加快速体验代码
 from erniebot_agent.chat_models import ERNIEBot
 ```
 
+</details>
 
 ## ERNIE Bot SDK
 
-ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
+`ERNIE Bot SDK` 作为 `ERNIE Bot Agent` 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个方面。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](.erniebot/README.md)
 
 ## License
 
