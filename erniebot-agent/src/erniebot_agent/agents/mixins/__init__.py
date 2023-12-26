@@ -12,16 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-from erniebot_agent.agents.callback.handlers.base import CallbackHandler
-from erniebot_agent.agents.callback.handlers.logging_handler import LoggingHandler
-
-
-def get_default_callbacks() -> List[CallbackHandler]:
-    """Get default callback handlers."""
-    return [LoggingHandler()]
-
-
-def get_no_ellipsis_callback() -> List[CallbackHandler]:
-    return [LoggingHandler()]
+from erniebot_agent.agents.mixins.gradio_mixin import GradioMixin
