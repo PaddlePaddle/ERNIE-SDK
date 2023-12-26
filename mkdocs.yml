@@ -6,7 +6,7 @@ copyright: '@PaddlePaddle community'
 nav:
   - 介绍: 'tutorials/introduction.md'
   - 快速开始:
-    - 准备: 'tutorials/preparation.md'
+    - 安装和鉴权: 'tutorials/preparation.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
     - messages: 'modules/messages.md'
