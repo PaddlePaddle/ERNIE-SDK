@@ -2,9 +2,17 @@
 # Agent Module
 
 
-::: erniebot_agent.agents.base
+::: erniebot_agent.agents
     options:
         summary: true
         members:
-        - BaseAgent
         - Agent
+        - FunctionAgent
+
+::: erniebot_agent.agents.callback
+    options:
+        summary: true
+        members:
+        - CallbackManager
+        - CallbackHandler
+        - LoggingHandler

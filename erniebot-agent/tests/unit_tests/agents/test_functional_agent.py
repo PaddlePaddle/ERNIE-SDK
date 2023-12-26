@@ -3,8 +3,7 @@ import json
 import pytest
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
-    FakeChatModelWithPresetResponses,
-    FakeSimpleChatModel,
+    FakeERNIEBotWithPresetResponses,
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
@@ -56,7 +55,7 @@ def no_input_no_output_tool():
 async def test_functional_agent_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
     agent = FunctionalAgent(
-        llm=FakeSimpleChatModel(),
+        llm=FakeERNIEBotWithPresetResponses([AIMessage("Hello!", function_call=None)] * 2),
         tools=[identity_tool],
         memory=FakeMemory(),
         callbacks=[callback_handler],
@@ -83,7 +82,7 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
     tool2 = no_input_no_output_tool
 
     agent = FunctionalAgent(
-        llm=FakeSimpleChatModel(),
+        llm=FakeERNIEBotWithPresetResponses([]),
         tools=[tool1],
         memory=FakeMemory(),
     )
@@ -101,7 +100,7 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
 async def test_functional_agent_run_llm_return_text():
     output_message = AIMessage("Hello!", function_call=None)
     agent = FunctionalAgent(
-        llm=FakeChatModelWithPresetResponses(responses=[output_message]),
+        llm=FakeERNIEBotWithPresetResponses(responses=[output_message]),
         tools=[],
         memory=FakeMemory(),
     )
@@ -121,7 +120,7 @@ async def test_functional_agent_run_llm_return_function_call(identity_tool):
         ),
     )
     agent = FunctionalAgent(
-        llm=FakeChatModelWithPresetResponses(responses=[output_message]),
+        llm=FakeERNIEBotWithPresetResponses(responses=[output_message]),
         tools=[identity_tool],
         memory=FakeMemory(),
     )
@@ -135,7 +134,7 @@ async def test_functional_agent_run_llm_return_function_call(identity_tool):
 @pytest.mark.asyncio
 async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool):
     agent = FunctionalAgent(
-        llm=FakeSimpleChatModel(),
+        llm=FakeERNIEBotWithPresetResponses([]),
         tools=[identity_tool, no_input_no_output_tool],
         memory=FakeMemory(),
     )
@@ -163,7 +162,7 @@ async def test_functional_agent_memory(identity_tool):
         thoughts="",
         arguments=json.dumps({"param": "test"}),
     )
-    llm = FakeChatModelWithPresetResponses(
+    llm = FakeERNIEBotWithPresetResponses(
         responses=[
             AIMessage("", function_call=function_call),
             AIMessage("", function_call=function_call),
@@ -201,7 +200,7 @@ async def test_functional_agent_max_steps(identity_tool):
         thoughts="",
         arguments=json.dumps({"param": "test"}),
     )
-    llm = FakeChatModelWithPresetResponses(
+    llm = FakeERNIEBotWithPresetResponses(
         responses=[
             AIMessage("", function_call=function_call),
             AIMessage("", function_call=function_call),

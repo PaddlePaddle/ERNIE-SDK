@@ -1,4 +1,5 @@
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import AIMessage
 
 
@@ -16,15 +17,16 @@ class FakeSimpleChatModel(ChatModel):
         return self.response
 
 
-class FakeChatModelWithPresetResponses(ChatModel):
+class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
     def __init__(self, responses):
-        super().__init__("chat_model_with_preset_responses")
+        super().__init__("erniebot_with_preset_responses")
         self.responses = responses
         self._counter = 0
 
-    async def async_chat(self, messages, *, stream=False, **kwargs):
+    async def async_chat(self, messages, *, stream=False, functions=None, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
+        # Ignore `messages`, `functions`, and `kwargs`
         response = self.responses[self._counter]
         self._counter += 1
         return response

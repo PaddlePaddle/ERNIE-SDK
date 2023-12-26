@@ -162,7 +162,7 @@ class GradioMixin:
                 with gr.Accordion("Files", open=False):
                     all_files = gr.HTML(value=[], label="All input files")
                 with gr.Accordion("Tools", open=False):
-                    attached_tools = self.tools
+                    attached_tools = self.get_tools()
                     tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
                     gr.JSON(value=tool_descriptions)
                 with gr.Accordion("Raw messages", open=False):

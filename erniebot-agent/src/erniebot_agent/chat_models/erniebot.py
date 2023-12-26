@@ -41,7 +41,47 @@ from erniebot_agent.utils import config_from_environ as C
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 
-class ERNIEBot(ChatModel):
+class BaseERNIEBot(ChatModel):
+    @overload
+    async def async_chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[False] = ...,
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> AIMessage:
+        ...
+
+    @overload
+    async def async_chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[True],
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> AsyncIterator[AIMessageChunk]:
+        ...
+
+    @overload
+    async def async_chat(
+        self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        ...
+
+    async def async_chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: bool = False,
+        functions: Optional[List[dict]] = None,
+        **kwargs: Any,
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        raise NotImplementedError
+
+
+class ERNIEBot(BaseERNIEBot):
     def __init__(
         self,
         model: str,
