@@ -43,6 +43,8 @@ class RemoteFile(File):
         if validate_file_id:
             if not protocol.is_remote_file_id(id):
                 raise FileError(f"Invalid file ID: {id}")
+        if not protocol.is_valid_file_purpose(purpose):
+            raise ValueError(f"Invalid file purpose: {purpose}")
         super().__init__(
             id=id,
             filename=filename,

@@ -22,10 +22,9 @@ from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
+from erniebot_agent.agents.base import BaseAgent
 
 default_logger = logging.getLogger(__name__)
-
-from erniebot_agent.agents.base import BaseAgent
 
 
 class LoggingHandler(CallbackHandler):
