@@ -83,7 +83,8 @@ class FileManager(Closeable, Noncopyable):
 
         Args:
             remote_file_client (Optional[RemoteFileClient]): The remote file client.
-            auto_register (bool): Automatically register files in the file registry.
+            prune_on_close (bool): Control whether to automatically clean up files 
+                                   that can be safely deleted when the object is closed.
             save_dir (Optional[FilePath]): Directory for saving local files.
 
         Returns:

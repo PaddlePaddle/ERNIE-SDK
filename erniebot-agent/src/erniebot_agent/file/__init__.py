@@ -17,7 +17,7 @@ File module is used to manage the file system by a global file manager: `GlobalF
 
 We use it to manage `File` obeject, including `LocalFile` and `RemoteFile`.
 
-A few notes about the current state of this submodule:
+A few notes about this submodule:
 
 - If you do not set environment variable `AISTUDIO_ACCESS_TOKEN`, it will be under default setting.
 

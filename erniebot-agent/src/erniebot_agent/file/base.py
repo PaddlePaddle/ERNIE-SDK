@@ -28,7 +28,7 @@ class File(metaclass=abc.ABCMeta):
         filename (str): File name.
         byte_size (int): Size of the file in bytes.
         created_at (str): Timestamp indicating the file creation time.
-        purpose (str): Purpose or use case of the file. []
+        purpose (str): Purpose or use case of the file. 
         metadata (Dict[str, Any]): Additional metadata associated with the file.
 
     Methods:
@@ -56,7 +56,7 @@ class File(metaclass=abc.ABCMeta):
             filename (str): File name.
             byte_size (int): Size of the file in bytes.
             created_at (str): Timestamp indicating the file creation time.
-            purpose (str): Purpose or use case of the file. []
+            purpose (str): Purpose or use case of the file. 
             metadata (Dict[str, Any]): Additional metadata associated with the file.
 
         Returns:
