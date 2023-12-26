@@ -9,11 +9,13 @@ nav:
     - 介绍: 'tutorials/index.md' 
   - 核心模块:
     - memory: 'modules/memory.md'
+    - retrieval: 'modules/retrieval.md'
   - API:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
       - memory: "package/erniebot_agent/memory.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
+      - retrieval: "package/erniebot_agent/retrieval.md"
 
 theme:
   name: material
