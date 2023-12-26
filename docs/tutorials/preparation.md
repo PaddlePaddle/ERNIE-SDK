@@ -28,7 +28,7 @@ cd ../erniebot-agent
 pip install .
 
 # 安装ERNIE Bot Agent的所有模块
-pip install .[all]
+pip install '.[all]'
 ```
 
 ## 鉴权

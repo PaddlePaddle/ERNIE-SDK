@@ -90,6 +90,7 @@ print(function_message)
 <role: 'function', name: 'get_current_temperature', content: '{"temperature": 25, "unit": "摄氏度"}'>
 ```
 
+
 ## 3.0 Message的API接口
 
 `Message`模块的API接口，请参考[文档](../../package/erniebot_agent/messages/)。

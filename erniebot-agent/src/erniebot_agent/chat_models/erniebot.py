@@ -37,11 +37,22 @@ from erniebot_agent.memory.messages import (
     SearchInfo,
 )
 from erniebot_agent.utils import config_from_environ as C
+from erniebot_agent.utils.common import split_system_message
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 
 class ERNIEBot(ChatModel):
+    """The implementation of the ERNIE Bot model.
+
+    Attributes:
+        model: The model name.
+        api_type: The backend of the ERNIE Bot model.
+        access_token: The access token corresponding to the backend.
+        default_chat_kwargs: A dict for setting default args for chat model,
+            the supported keys include `model`, `_config_`, `top_p`, etc.
+    """
+
     def __init__(
         self,
         model: str,
@@ -55,10 +66,13 @@ class ERNIEBot(ChatModel):
         Args:
             model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
                 "ernie-longtext".
-            api_type (Optional[str]): The backend of erniebot. It should be "aistudio" or "qianfan".
+            api_type (str): The backend of erniebot. It should be "aistudio" or "qianfan".
                 Default to "aistudio".
             access_token (Optional[str]): The access token for the backend of erniebot.
+                If access_token is None, the global access_token will be used.
             close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
+            **default_chat_kwargs: Keyword arguments, such as `_config_`, `top_p`, `temperature`,
+                `penalty_score`, and `system`.
         """
         super().__init__(model=model, **default_chat_kwargs)
 
@@ -153,8 +167,11 @@ class ERNIEBot(ChatModel):
         if hasattr(self, "ak") and hasattr(self, "sk"):
             cfg_dict["_config_"]["ak"] = self.ak
             cfg_dict["_config_"]["sk"] = self.sk
-        # TODO: process system message
-        cfg_dict["messages"] = [m.to_dict() for m in messages]
+
+        sys_message, other_messages = split_system_message(messages)
+        if sys_message is not None:
+            cfg_dict["system"] = sys_message.content
+        cfg_dict["messages"] = [m.to_dict() for m in other_messages]
         if functions is not None:
             cfg_dict["functions"] = functions
 

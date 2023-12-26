@@ -19,7 +19,13 @@ from erniebot_agent.memory.messages import AIMessage, AIMessageChunk, Message
 
 
 class ChatModel(metaclass=ABCMeta):
-    """The base class of chat-optimized LLM."""
+    """The base class of chat-optimized LLM.
+
+    Attributes:
+        model: The model name.
+        default_chat_kwargs: A dict for setting default args for chat model,
+            the supported keys include `model`, `_config_`, `top_p`, etc.
+    """
 
     def __init__(self, model: str, **default_chat_kwargs: Any):
         self.model = model
@@ -47,7 +53,7 @@ class ChatModel(metaclass=ABCMeta):
     async def async_chat(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
-        """Asynchronously chats with the LLM.
+        """The abstract method for asynchronously chatting with the LLM.
 
         Args:
             messages (List[Message]): A list of messages.

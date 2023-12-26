@@ -105,6 +105,38 @@ asyncio.run(demo())
 * 晚上可以选择在东部华侨城内度过。可以先去温泉浴场放松一下身心，然后再去主题公园欣赏各种表演和娱乐活动。
 ```
 
+### 2.3 命令行聊天应用
+
+下面示例实现了一个建议的命令行聊天应用。
+
+```python
+import os
+import asyncio
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.memory import HumanMessage, AIMessage
+
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+
+async def demo():
+    model = ERNIEBot(model='ernie-3.5')
+    messages = []
+
+    print('你好，有什么我可以帮助你的吗？')
+    while True:
+        prompt = input()
+        messages.append(HumanMessage(prompt))
+        ai_message = await model.async_chat(messages=messages, stream=True)
+
+        result = ''
+        async for chunk in ai_message:
+            result += chunk.content
+            print(chunk.content, end='')
+        print('')
+        messages.append(AIMessage(result))
+
+asyncio.run(demo())
+```
+
 ## 3.0 ChatModels的API接口
 
 `ChatModels`模块的API接口，请参考[文档](../../package/erniebot_agent/chat_models/)。
