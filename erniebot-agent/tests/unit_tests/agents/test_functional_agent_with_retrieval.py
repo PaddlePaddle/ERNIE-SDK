@@ -86,6 +86,11 @@ async def test_functional_agent_with_retrieval_callbacks(identity_tool):
         await agent.async_run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
+    assert callback_handler.tool_starts == 2
+    assert callback_handler.tool_ends==2
+    assert callback_handler.tool_errors == 0
+
+
 
 
 @pytest.mark.asyncio
