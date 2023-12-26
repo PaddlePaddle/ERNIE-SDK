@@ -14,23 +14,26 @@
 
 import abc
 import json
-from typing import Any, Dict, List, Literal, Optional, Union
+import logging
+from typing import Any, Dict, List, Literal, Optional, Union, final
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file import get_file_manager
+from erniebot_agent.file import GlobalFileManagerHandler, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id, extract_file_ids
+from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.gradio_mixin import GradioMixin
-from erniebot_agent.utils.logging import logger
+from erniebot_agent.utils.exceptions import FileError
+from erniebot_agent.utils.mixins import GradioMixin
+
+logger = logging.getLogger(__name__)
 
 
 class BaseAgent(metaclass=abc.ABCMeta):
@@ -70,18 +73,16 @@ class Agent(GradioMixin, BaseAgent):
             self._callback_manager = callbacks
         else:
             self._callback_manager = CallbackManager(callbacks)
-        if file_manager is None:
-            file_manager = get_file_manager()
-        self.plugins = plugins
         self._file_manager = file_manager
+        self._plugins = plugins
         self._init_file_repr()
 
     def _init_file_repr(self):
         self.file_needs_url = False
 
-        if self.plugins:
+        if self._plugins:
             PLUGIN_WO_FILE = ["eChart"]
-            for plugin in self.plugins:
+            for plugin in self._plugins:
                 if plugin not in PLUGIN_WO_FILE:
                     self.file_needs_url = True
 
@@ -89,6 +90,7 @@ class Agent(GradioMixin, BaseAgent):
     def tools(self) -> List[BaseTool]:
         return self._tool_manager.get_tools()
 
+    @final
     async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         agent_resp = await self._async_run(prompt, files)
@@ -108,6 +110,7 @@ class Agent(GradioMixin, BaseAgent):
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError
 
+    @final
     async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
         tool = self._tool_manager.get_tool(tool_name)
         await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
@@ -119,6 +122,7 @@ class Agent(GradioMixin, BaseAgent):
         await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
         return tool_resp
 
+    @final
     async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:
@@ -153,19 +157,19 @@ class Agent(GradioMixin, BaseAgent):
         try:
             args_dict = json.loads(tool_args)
         except json.JSONDecodeError:
-            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args` is {tool_args}")
+            raise ValueError(f"`tool_args` cannot be parsed as JSON. `tool_args`: {tool_args}")
 
         if not isinstance(args_dict, dict):
-            raise ValueError(f"`tool_args` cannot be interpreted as a dict. It loads as {args_dict} ")
+            raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
 
-    async def _sniff_and_extract_files_from_args(
+    async def _sniff_and_extract_files_from_args( # TODO(shiyutang): to be tested
         self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
     ) -> List[File]:
         agent_files: List[File] = []
         for val in args.values():
             if isinstance(val, str):
-                file = await self._get_file_from_file_id(val, tool)
+                file = await self._get_file_from_file_id(val, tool, file_type)
                 if file is None:
                     continue
                 else:
@@ -177,39 +181,36 @@ class Agent(GradioMixin, BaseAgent):
                     agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
         return agent_files
 
-    async def _sniff_and_extract_files_from_text(
+
+    async def _get_file_manager(self) -> FileManager:
+        if self._file_manager is None:
+            file_manager = await GlobalFileManagerHandler().get()
+        else:
+            file_manager = self._file_manager
+        return file_manager
+
+    async def _sniff_and_extract_files_from_text( # TODO(shiyutang): to be tested
         self, text: str, plugin_name, file_type: Literal["input", "output"]
     ) -> List[File]:
         files: List[File] = []
         file_ids = extract_file_ids(text)
         for file_id in file_ids:
-            file = await self._get_file_from_file_id(file_id, plugin_name)
+            file = await self._get_file_from_file_id(file_id, plugin_name, file_type)
             if file is None:
                 continue
             else:
                 files.append(file)
         return files
 
-    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool) -> Optional[File]:
-        if is_local_file_id(file_id):
-            if self._file_manager is None:
-                logger.warning(
-                    f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                )
-                return None
-            file = self._file_manager.look_up_file_by_id(file_id)
-            if file is None:
-                raise RuntimeError(f"Unregistered ID {repr(file_id)} is used by {repr(tool)}.")
-        elif is_remote_file_id(file_id):
-            if self._file_manager is None:
-                logger.warning(
-                    f"A file is used by {repr(tool)}, but the agent has no file manager to fetch it."
-                )
-                return None
-            file = self._file_manager.look_up_file_by_id(file_id)
-            if file is None:
-                file = await self._file_manager.retrieve_remote_file_by_id(file_id)
-        else:
-            return None
-
-        return file
+    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool, file_type: Literal["input", "output"]) -> Optional[File]:
+        if protocol.is_file_id(file_id):
+            file_manager = await self._get_file_manager()
+            try:
+                file = file_manager.look_up_file_by_id(file_id)
+            except FileError as e:
+                raise FileError(
+                    f"Unregistered file with ID {repr(file_id)} is used by {repr(tool)}."
+                    f" File type: {file_type}"
+                ) from e
+            
+            return file

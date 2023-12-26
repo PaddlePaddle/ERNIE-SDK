@@ -18,6 +18,7 @@ import functools
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
 
+from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import AIMessage, Message
@@ -148,7 +149,7 @@ class AgentResponse(object):
 
     def _get_annotations(self) -> Dict[str, List]:
         # 1. split the text into parts and add file id to each part
-        file_ids = extract_file_ids(self.text)
+        file_ids = protocol.extract_file_ids(self.text)
 
         places = []
         for file_id in file_ids:

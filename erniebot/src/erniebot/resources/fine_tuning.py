@@ -88,12 +88,12 @@ class FineTuningTask(EBResource, Creatable):
 
         # name
         if "name" not in kwargs:
-            raise errors.ArgumentNotFoundError("`name` is not found.")
+            raise errors.ArgumentNotFoundError("name")
         name = kwargs["name"]
 
         # description
         if "description" not in kwargs:
-            raise errors.ArgumentNotFoundError("`description` is not found.")
+            raise errors.ArgumentNotFoundError("description")
         description = kwargs["description"]
 
         # path
@@ -287,7 +287,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
     def _prepare_create(self, kwargs: Dict[str, Any]) -> Request:
         def _get_required_arg(key: str) -> Any:
             if key not in kwargs:
-                raise errors.ArgumentNotFoundError(f"`{key}` is not found.")
+                raise errors.ArgumentNotFoundError(key)
             return kwargs[key]
 
         valid_keys = {
@@ -369,12 +369,12 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
 
         # task_id
         if "task_id" not in kwargs:
-            raise errors.ArgumentNotFoundError("`task_id` is not found.")
+            raise errors.ArgumentNotFoundError("task_id")
         task_id = kwargs["task_id"]
 
         # job_id
         if "job_id" not in kwargs:
-            raise errors.ArgumentNotFoundError("`job_id` is not found.")
+            raise errors.ArgumentNotFoundError("job_id")
         job_id = kwargs["job_id"]
 
         # path
@@ -413,12 +413,12 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
 
         # task_id
         if "task_id" not in kwargs:
-            raise errors.ArgumentNotFoundError("`task_id` is not found.")
+            raise errors.ArgumentNotFoundError("task_id")
         task_id = kwargs["task_id"]
 
         # job_id
         if "job_id" not in kwargs:
-            raise errors.ArgumentNotFoundError("`job_id` is not found.")
+            raise errors.ArgumentNotFoundError("job_id")
         job_id = kwargs["job_id"]
 
         # path

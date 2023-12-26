@@ -25,7 +25,7 @@ import requests
 from . import errors
 from .api_types import APIType
 from .utils import logging
-from .utils.misc import Singleton
+from .utils.misc import SingletonMeta
 
 __all__ = ["build_auth_token_manager"]
 
@@ -37,7 +37,7 @@ def build_auth_token_manager(manager_type: str, api_type: APIType, **kwargs: Any
         raise ValueError(f"Unsupported manager type: {manager_type}")
 
 
-class _GlobalAuthTokenCache(metaclass=Singleton):
+class _GlobalAuthTokenCache(metaclass=SingletonMeta):
     _MIN_UPDATE_INTERVAL_SECS: ClassVar[float] = 3600
 
     @dataclass
@@ -116,7 +116,7 @@ class AuthTokenManager(object):
     def update_auth_token(self) -> str:
         new_token = self._update_cache(init=False)
         self._token = new_token
-        logging.info("Security token is updated.")
+        logging.info("Security token has been updated.")
         return self._token
 
     def _request_auth_token(self, init: bool) -> str:
@@ -147,7 +147,7 @@ class AuthTokenManager(object):
             functools.partial(self._request_auth_token, init=init),
         )
         if upserted:
-            logging.debug("Cache is updated.")
+            logging.debug("Cache updated")
         return token
 
 

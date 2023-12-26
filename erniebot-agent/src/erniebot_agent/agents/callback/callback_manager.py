@@ -32,37 +32,31 @@ if TYPE_CHECKING:
 class CallbackManager(object):
     def __init__(self, handlers: List[CallbackHandler]):
         super().__init__()
-        self._handlers = handlers
+        self._handlers: List[CallbackHandler] = []
+        self.set_handlers(handlers)
 
     @property
     def handlers(self) -> List[CallbackHandler]:
         return self._handlers
 
     def add_handler(self, handler: CallbackHandler):
-        if handler in self._handlers:
-            raise RuntimeError(f"The callback handler {handler} is already registered.")
         self._handlers.append(handler)
 
     def remove_handler(self, handler):
-        try:
-            self._handlers.remove(handler)
-        except ValueError as e:
-            raise RuntimeError(f"The callback handler {handler} is not registered.") from e
+        self._handlers.remove(handler)
 
     def set_handlers(self, handlers: List[CallbackHandler]):
-        self._handlers = []
-        for handler in handlers:
-            self.add_handler(handler)
+        self._handlers[:] = handlers
 
     def remove_all_handlers(self):
-        self._handlers = []
+        self._handlers.clear()
 
     async def handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
         callback_name = "on_" + event_type.value
         for handler in self._handlers:
             callback = getattr(handler, callback_name, None)
             if not inspect.iscoroutinefunction(callback):
-                raise TypeError("Callback must be a coroutine function.")
+                raise RuntimeError("Callback must be a coroutine function.")
             await callback(*args, **kwargs)
 
     async def on_run_start(self, agent: Agent, prompt: str) -> None:
