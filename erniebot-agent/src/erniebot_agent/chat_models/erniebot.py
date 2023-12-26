@@ -189,7 +189,7 @@ class ERNIEBot(BaseERNIEBot):
 
         response = await self._generate_response(cfg_dict, stream, functions)
 
-        if stream:
+        if not stream:
             assert isinstance(response, ChatCompletionResponse)
             return convert_response_to_output(response, AIMessage)
         else:
