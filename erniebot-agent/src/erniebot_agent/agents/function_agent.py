@@ -152,7 +152,7 @@ class FunctionAgent(Agent[BaseERNIEBot]):
     async def _plan(self, input_message: Message, chat_history: List[Message]) -> Optional[AgentAction]:
         chat_history.append(input_message)
 
-        messages = self._memory.get_messages() + chat_history
+        messages = self.memory.get_messages() + chat_history
         llm_resp = await self.run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),

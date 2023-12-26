@@ -138,13 +138,13 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         Returns:
             Response from the LLM.
         """
-        await self._callback_manager.on_llm_start(agent=self, llm=self._llm, messages=messages)
+        await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:
             llm_resp = await self._run_llm(messages, **opts)
         except (Exception, KeyboardInterrupt) as e:
-            await self._callback_manager.on_llm_error(agent=self, llm=self._llm, error=e)
+            await self._callback_manager.on_llm_error(agent=self, llm=self.llm, error=e)
             raise
-        await self._callback_manager.on_llm_end(agent=self, llm=self._llm, response=llm_resp)
+        await self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
         return llm_resp
 
     def load_tool(self, tool: BaseTool) -> None:
@@ -211,7 +211,7 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         """
         if opts.get("stream", False):
             raise ValueError("Streaming is not supported.")
-        llm_ret = await self._llm.chat(messages, stream=False, **opts)
+        llm_ret = await self.llm.chat(messages, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
     def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
