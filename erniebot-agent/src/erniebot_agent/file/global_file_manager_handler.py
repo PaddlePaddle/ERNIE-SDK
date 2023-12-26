@@ -20,11 +20,11 @@ import asyncio_atexit  # type: ignore
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
-from erniebot_agent.utils.misc import Singleton
+from erniebot_agent.utils.misc import SingletonMeta
 
 
 @final
-class GlobalFileManagerHandler(Singleton):
+class GlobalFileManagerHandler(metaclass=SingletonMeta):
     """Singleton handler for managing the global FileManager instance.
 
     This class provides a singleton instance for managing the global FileManager
@@ -38,7 +38,7 @@ class GlobalFileManagerHandler(Singleton):
         set: Asynchronously sets the global FileManager explicitly.
 
     """
-
+    
     _file_manager: Optional[FileManager]
 
     def __init__(self) -> None:
@@ -66,7 +66,7 @@ class GlobalFileManagerHandler(Singleton):
                     save_dir=None,
                     enable_remote_file=False,
                 )
-        return self._file_manager
+            return self._file_manager
 
     async def configure(
         self,
