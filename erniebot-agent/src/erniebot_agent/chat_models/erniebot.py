@@ -22,11 +22,12 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
 import erniebot
-from erniebot.response import EBResponse
+from erniebot import ChatCompletionResponse
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import (
@@ -121,31 +122,6 @@ class ERNIEBot(ChatModel):
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
-    
-    async def _get_response(self, cfg_dict: dict, stream: bool, functions:Optional[List[dict]]) -> Union[EBResponse, List[EBResponse]]:
-        # TODO: Improve this when erniebot typing issue is fixed.
-        # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if "plugins" in cfg_dict:
-            response = await erniebot.ChatCompletionWithPlugins.acreate(
-                messages=cfg_dict["messages"],
-                plugins=cfg_dict["plugins"],  # type: ignore
-                stream=stream,
-                _config_=cfg_dict["_config_"],
-                functions=functions,  # type: ignore
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-            )
-        else:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=stream,
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-                **cfg_dict,
-            )
-        
-        return response
 
     async def async_chat(
         self,
@@ -192,18 +168,49 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
-        response = await self._get_response(cfg_dict, stream, functions)
+        response = await self._generate_response(cfg_dict, stream, functions)
 
-        if isinstance(response, EBResponse):
+        if stream:
+            assert isinstance(response, ChatCompletionResponse)
             return self.convert_response_to_output(response, AIMessage)
         else:
+            assert isinstance(response, AsyncIterator)
+            # We have to do type casting here due to the known mypy issue:
+            # https://github.com/python/mypy/issues/16590
             return (
                 self.convert_response_to_output(resp, AIMessageChunk)
-                async for resp in response  # type: ignore
+                async for resp in cast(AsyncIterator[ChatCompletionResponse], response)
             )
 
+    async def _generate_response(
+        self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
+        # TODO: Improve this when erniebot typing issue is fixed.
+        # Note: If plugins is not None, erniebot will not use Baidu_search.
+        if "plugins" in cfg_dict:
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],  # type: ignore
+                stream=stream,
+                _config_=cfg_dict["_config_"],
+                functions=functions,  # type: ignore
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+                **cfg_dict,
+            )
+
+        return response
+
     @staticmethod
-    def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
+    def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
         if hasattr(response, "function_call"):
             function_call = FunctionCall(
                 name=response.function_call["name"],
@@ -219,8 +226,9 @@ class ERNIEBot(ChatModel):
             )
         elif hasattr(response, "plugin_info"):
             plugin_info = PluginInfo(
-                names=[response['plugin_metas'][i]['pluginNameForModel'] 
-                for i in range(len(response['plugin_metas']))
+                names=[
+                    response["plugin_metas"][i]["pluginNameForModel"]
+                    for i in range(len(response["plugin_metas"]))
                 ]
             )
 

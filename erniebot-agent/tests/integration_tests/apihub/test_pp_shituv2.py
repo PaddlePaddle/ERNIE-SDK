@@ -27,4 +27,3 @@ class TestRemoteTool(RemoteToolTesting):
             self.assertEqual(len(result.files), 2)
             self.assertEqual(len(result.actions), 1)
             self.assertIn("file-", result.text)
-

@@ -1,27 +1,21 @@
 import abc
 import json
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union, final
+from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.mixins import GradioMixin
-from erniebot_agent.agents.schema import (
-    AgentResponse,
-    LLMResponse,
-    ToolResponse,
-)
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.file import GlobalFileManagerHandler, protocol
+from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Tuple[str] = ("eChart",)
 
@@ -172,35 +166,18 @@ class Agent(GradioMixin, BaseAgent):
 
     async def _async_run_tool_without_hooks(self, tool: BaseTool, tool_args: str) -> ToolResponse:
         parsed_tool_args = self._parse_tool_args(tool_args)
+        file_manager = await self._get_file_manager()
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
+        input_files = file_manager.sniff_and_extract_files_from_list(list(parsed_tool_args.values()))
         tool_ret = await tool(**parsed_tool_args)
         if isinstance(tool_ret, dict):
-            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+            output_files = file_manager.sniff_and_extract_files_from_list(list(tool_ret.values()))
         else:
             output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
-
-    async def _sniff_and_extract_files_from_args( # TODO(shiyutang): to be tested
-        self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
-    ) -> List[File]:
-        agent_files: List[File] = []
-        for val in args.values():
-            if isinstance(val, str):
-                file = await self._get_file_from_file_id(val, tool, file_type)
-                if file is None:
-                    continue
-                else:
-                    agent_files.append(file)
-            elif isinstance(val, dict):
-                agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
-            elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
-                for item in val:
-                    agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
-        return agent_files
 
     async def _async_run_llm_without_hooks(
         self, messages: List[Message], functions=None, **opts: Any
@@ -232,29 +209,3 @@ class Agent(GradioMixin, BaseAgent):
         else:
             file_manager = self._file_manager
         return file_manager
-
-    async def _sniff_and_extract_files_from_text( # TODO(shiyutang): to be tested
-        self, text: str, plugin_name, file_type: Literal["input", "output"]
-    ) -> List[File]:
-        files: List[File] = []
-        file_ids = extract_file_ids(text)
-        for file_id in file_ids:
-            file = await self._get_file_from_file_id(file_id, plugin_name, file_type)
-            if file is None:
-                continue
-            else:
-                files.append(file)
-        return files
-
-    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool, file_type: Literal["input", "output"]) -> Optional[File]:
-        if protocol.is_file_id(file_id):
-            file_manager = await self._get_file_manager()
-            try:
-                file = file_manager.look_up_file_by_id(file_id)
-            except FileError as e:
-                raise FileError(
-                    f"Unregistered file with ID {repr(file_id)} is used by {repr(tool)}."
-                    f" File type: {file_type}"
-                ) from e
-            
-            return file

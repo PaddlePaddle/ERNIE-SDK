@@ -14,11 +14,10 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
+from typing import Any, Dict, Generic, List, Literal, Sequence, TypeVar, Union
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
-from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import AIMessage, Message
 from erniebot_agent.memory.messages import PluginInfo
 
@@ -61,7 +60,7 @@ PlanableAgentAction = Union[ToolAction, PluginAction]
 class AgentPlan(object):
     """A plan that contains a list of actions."""
 
-    actions: List[PlanableAgentAction]
+    actions: Sequence[PlanableAgentAction]
 
 
 @dataclass
@@ -76,8 +75,8 @@ class ToolResponse(object):
     """A response from a tool."""
 
     json: str
-    input_files: List[File]
-    output_files: List[File]
+    input_files: Sequence[File]
+    output_files: Sequence[File]
 
 
 _IT = TypeVar("_IT", bound=Dict)
@@ -96,12 +95,12 @@ class AgentStep(Generic[_IT, _RT]):
 class AgentStepWithFiles(AgentStep[_IT, _RT]):
     """A step taken by an agent involving file input and output."""
 
-    input_files: List[File]
-    output_files: List[File]
+    input_files: Sequence[File]
+    output_files: Sequence[File]
 
     @property
     def files(self) -> List[File]:
-        return self.input_files + self.output_files
+        return [*self.input_files, *self.output_files]
 
 
 @dataclass
@@ -135,8 +134,8 @@ class AgentResponse(object):
     """The final response from an agent."""
 
     text: str
-    chat_history: List[Message]
-    steps: List[AgentStep]
+    chat_history: Sequence[Message]
+    steps: Sequence[AgentStep]
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
     @functools.cached_property  # lazy and prevent extra fime from multiple calls

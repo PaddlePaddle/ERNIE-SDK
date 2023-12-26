@@ -157,17 +157,15 @@ class FunctionalAgent(Agent):
                 new_messages,
             )
         elif output_message.plugin_info is not None:
-            plugin_name = output_message.plugin_info["names"]
+            file_manager = await self._get_file_manager()
             return (
                 PluginStep(
                     info=output_message.plugin_info,
                     result=output_message.content,
-                    input_files=await self._sniff_and_extract_files_from_text(
-                        chat_history[-1].content, plugin_name, file_type="input"
+                    input_files=file_manager.sniff_and_extract_files_from_text(
+                        chat_history[-1].content
                     ),  # TODO: make sure this is correct.
-                    output_files=await self._sniff_and_extract_files_from_text(
-                        output_message.content, plugin_name, file_type="output"
-                    ),
+                    output_files=file_manager.sniff_and_extract_files_from_text(output_message.content),
                 ),
                 new_messages,
             )
