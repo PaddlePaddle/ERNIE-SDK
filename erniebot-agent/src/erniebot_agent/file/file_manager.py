@@ -366,7 +366,7 @@ class FileManager(Closeable, Noncopyable):
             file_id (str): The ID of the file.
 
         Returns:
-            file[File]: The looked-up file, or None if not found.
+            file[File]: The looked-up file.
 
         Raises:
             FileError: If the file with the specified ID is not found.
