@@ -269,7 +269,7 @@ class AIMessage(Message):
     def __init__(
         self,
         content: str,
-        function_call: Optional[FunctionCall],
+        function_call: Optional[FunctionCall] = None,
         token_usage: Optional[TokenUsage] = None,
         search_info: Optional[SearchInfo] = None,
     ):

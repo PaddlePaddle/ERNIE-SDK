@@ -18,7 +18,7 @@ from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentAction, AgentFile, AgentResponse
-from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Memory
@@ -35,7 +35,7 @@ from erniebot_agent.utils.exceptions import FileError
 _MAX_STEPS = 5
 
 
-class FunctionAgent(Agent):
+class FunctionAgent(Agent[BaseERNIEBot]):
     """An agent driven by function calling.
 
     The orchestration capabilities of a function agent are powered by the
@@ -53,7 +53,7 @@ class FunctionAgent(Agent):
 
     def __init__(
         self,
-        llm: ChatModel,
+        llm: BaseERNIEBot,
         tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
@@ -123,8 +123,8 @@ class FunctionAgent(Agent):
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
-                self._memory.add_message(chat_history[0])
-                self._memory.add_message(chat_history[-1])
+                self.memory.add_message(chat_history[0])
+                self.memory.add_message(chat_history[-1])
                 return response
             num_steps_taken += 1
             next_step_input = curr_step_output

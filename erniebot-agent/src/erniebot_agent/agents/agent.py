@@ -2,7 +2,7 @@ import abc
 import json
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union, final
 
-from erniebot_agent.agents.base import BaseAgent
+from erniebot_agent.agents.base import LLMT, BaseAgent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
@@ -13,7 +13,6 @@ from erniebot_agent.agents.schema import (
     LLMResponse,
     ToolResponse,
 )
-from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file import GlobalFileManagerHandler, protocol
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
@@ -26,17 +25,21 @@ from erniebot_agent.utils.exceptions import FileError
 _PLUGINS_WO_FILE_IO: Tuple[str] = ("eChart",)
 
 
-class Agent(GradioMixin, BaseAgent):
+class Agent(GradioMixin, BaseAgent[LLMT]):
     """The base class for agents.
 
     Typically, this is the class that a custom agent class should inherit from.
     A class inheriting from this class must implement how the agent orchestates
     the components to complete tasks.
+
+    Attributes:
+        llm: The LLM that the agent uses.
+        memory: The message storage that keeps the chat history.
     """
 
     def __init__(
         self,
-        llm: ChatModel,
+        llm: LLMT,
         tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
@@ -65,12 +68,12 @@ class Agent(GradioMixin, BaseAgent):
                 `plugins` to `[]` to disable the use of plugins.
         """
         super().__init__()
-        self._llm = llm
+        self.llm = llm
         if isinstance(tools, ToolManager):
             self._tool_manager = tools
         else:
             self._tool_manager = ToolManager(tools)
-        self._memory = memory
+        self.memory = memory
         if system_message:
             self.system_message = system_message
         else:
@@ -84,21 +87,6 @@ class Agent(GradioMixin, BaseAgent):
         self._file_manager = file_manager
         self._plugins = plugins
         self._init_file_needs_url()
-
-    @property
-    def llm(self) -> ChatModel:
-        """The LLM that the agent uses."""
-        return self._llm
-
-    @property
-    def memory(self) -> Memory:
-        """The message storage that keeps the chat history."""
-        return self._memory
-
-    @property
-    def tools(self) -> List[BaseTool]:
-        """The tools that the agent can choose from."""
-        return self._tool_manager.get_tools()
 
     @final
     async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
@@ -175,9 +163,13 @@ class Agent(GradioMixin, BaseAgent):
         """
         self._tool_manager.remove_tool(tool)
 
+    def get_tools(self) -> List[BaseTool]:
+        """Get the tools that the agent can choose from."""
+        return self._tool_manager.get_tools()
+
     def reset_memory(self) -> None:
         """Clear the chat history."""
-        self._memory.clear_chat_history()
+        self.memory.clear_chat_history()
 
     async def get_file_manager(self) -> FileManager:
         if self._file_manager is None:
