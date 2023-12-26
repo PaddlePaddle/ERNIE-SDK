@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class BaizhongSearch:
+    """
+    A class for interacting with the Baizhong Search API.
+    """
+
     _AISTUDIO_BASE_URL: ClassVar[str] = "https://aistudio.baidu.com"
 
     def __init__(
@@ -19,6 +23,18 @@ class BaizhongSearch:
         knowledge_base_name: Optional[str] = None,
         knowledge_base_id: Optional[int] = None,
     ) -> None:
+        """
+        Initialize a BaizhongSearch object.
+
+        Args:
+            access_token (str): The access token for authentication.
+            knowledge_base_name (Optional[str]): The name of the knowledge base to use (optional).
+            knowledge_base_id (Optional[int]): The ID of an existing knowledge base to use (optional).
+
+        Raises:
+            BaizhongError: If neither knowledge_base_name nor knowledge_base_id is provided.
+
+        """
         self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
         self.access_token = access_token
         if knowledge_base_id is not None:
@@ -31,6 +47,18 @@ class BaizhongSearch:
             raise BaizhongError("You must provide either a `knowledge_base_name` or a `knowledge_base_id`.")
 
     def create_knowledge_base(self, knowledge_base_name: str):
+        """
+        Create a JSON payload with the provided knowledge base name.
+
+        Args:
+            knowledge_base_name (str): The knowledge base name.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing knowledge base results.
+
+        Raises:
+            BaizhongError: If the API request fails, this exception is raised with details about the error.
+        """
         json_data = {"knowledgeBaseName": knowledge_base_name}
         res = requests.post(
             f"{self.base_url}/llm/knowledge/create",
@@ -46,6 +74,15 @@ class BaizhongSearch:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
 
     def _get_authorization_headers(self, access_token: Optional[str]) -> dict:
+        """
+        Initialize a dictionary for HTTP headers with Content-Type set to application/json.
+
+        Args:
+            access_token (str): The AIStudio access_token.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing HTTP headers information.
+        """
         headers = {"Content-Type": "application/json"}
         if access_token is None:
             logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
