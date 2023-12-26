@@ -7,6 +7,7 @@
 推荐使用  `GlobalFileManagerHandler`在事件循环开始时初始化 `FileManager`以及获取全局的 `FileManager`，之后只需通过这个全局的 `FileManager`对文件进行增、删、查等操作以及获取Agent产生的文件。
 
 !!! notes 注意
+
     - **不推荐**用户自行操作 `File`类以免造成资源泄露。
 
     - `FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
@@ -80,6 +81,7 @@
 | list_remote_files            | 列出远程文件                         |
 
 !!! notes 注意
+
     - `FileManager` 类不可被复制以免造成资源泄露。
 
     - 如果未指定 `save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。反之，都会被保存。
