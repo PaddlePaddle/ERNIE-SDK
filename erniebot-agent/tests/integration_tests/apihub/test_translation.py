@@ -10,7 +10,7 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_tool(self):
-        toolkit = RemoteToolkit.from_aistudio("translation")
+        toolkit = RemoteToolkit.from_aistudio("translation", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 

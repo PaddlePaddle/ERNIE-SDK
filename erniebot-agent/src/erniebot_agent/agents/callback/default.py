@@ -19,6 +19,7 @@ from erniebot_agent.agents.callback.handlers.logging_handler import LoggingHandl
 
 
 def get_default_callbacks() -> List[CallbackHandler]:
+    """Get default callback handlers."""
     return [LoggingHandler()]
 
 

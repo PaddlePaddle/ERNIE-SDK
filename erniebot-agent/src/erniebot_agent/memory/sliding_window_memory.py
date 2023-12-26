@@ -22,7 +22,7 @@ class SlidingWindowMemory(Memory):
     Each round contains a piece of human message and a piece of AI message.
 
     Attributes:
-        max_round(int): Max number of rounds. 
+        max_round(int): Max number of rounds.
         retained_round(int): The first number of rounds of memory will be preserverd. Default to 0.
 
     Raises:

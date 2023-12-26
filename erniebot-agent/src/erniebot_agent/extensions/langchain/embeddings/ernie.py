@@ -11,7 +11,7 @@ class ErnieEmbeddings(BaseModel, Embeddings):
     """ERNIE embedding models.
 
     To use, you should have the ``erniebot`` python package installed, and the
-    environment variable ``EB_ACCESS_TOKEN`` set with your AI Studio access token.
+    environment variable ``AISTUDIO_ACCESS_TOKEN`` set with your AI Studio access token.
 
     Example:
         .. code-block:: python
@@ -41,7 +41,7 @@ class ErnieEmbeddings(BaseModel, Embeddings):
         values["aistudio_access_token"] = get_from_dict_or_env(
             values,
             "aistudio_access_token",
-            "EB_ACCESS_TOKEN",
+            "AISTUDIO_ACCESS_TOKEN",
         )
 
         try:

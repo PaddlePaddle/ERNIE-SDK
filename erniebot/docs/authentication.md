@@ -14,7 +14,7 @@ ERNIE Bot SDK支持多个后端平台来调用文心大模型（如下表格）�
 
 ### 申请用户凭证
 
-在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，可以在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取用户凭证access token。
+在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，可以在个人中心的[访问令牌页面](https://aistudio.baidu.com/usercenter/token)获取access token。
 
 <div align="center">
 <img src="https://user-images.githubusercontent.com/52520497/268609784-8476269e-5cdb-4dfc-9841-983b5a766226.png" width="800" />  
@@ -145,9 +145,9 @@ AI Studio后端可以使用access token进行鉴权，支持如下三种方法�
 
 ### 设置鉴权参数
 
-为智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access toke或者API key+secret key。举例如下。
+为智能创作平台后端设置鉴权参数的方法，和千帆后端完全一致，都支持access token或者API key+secret key。举例如下。
 
-请注意设置后端参数为`"yinian"`，并且使用智能创作平台申请的access_token、API key、secret key。
+请注意设置后端参数为`"yinian"`，并且使用智能创作平台申请的access token、API key、secret key。
 
 1. 使用access token的例子：
 

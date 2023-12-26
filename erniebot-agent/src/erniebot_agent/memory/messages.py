@@ -38,6 +38,10 @@ class TokenUsage(TypedDict):
     completion_tokens: int
 
 
+class PluginInfo(Dict):
+    names: List[str]
+
+
 class Message:
     """
     Base class of the message.
@@ -46,12 +50,12 @@ class Message:
         role (str): character of the message.
         content (str): content of the message.
         token_count (Optional[int], optional): number of tokens of the message content. Defaults to None.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content.    
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
         >>> Message("user", "hello")
         <role: user, content: hello>
@@ -59,6 +63,7 @@ class Message:
         <role: user, content: hello, token_count: 5>
 
     """
+
     def __init__(self, role: str, content: str, token_count: Optional[int] = None):
         self._role = role
         self._content = content
@@ -117,12 +122,12 @@ class SystemMessage(Message):
 
     Args:
         content (str): the content of the message.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
 
         .. code-block:: python
@@ -138,6 +143,7 @@ class SystemMessage(Message):
         3
 
     """
+
     def __init__(self, content: str):
         super().__init__(role="system", content=content, token_count=len(content))
 
@@ -145,29 +151,28 @@ class SystemMessage(Message):
 class HumanMessage(Message):
     """
     The definition of the message created by a human.
-    
+
     Args:
         content (str): the content of the message.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
     .. code-block:: python
         >>> from erniebot_agent.messages import HumanMessage
         >>> HumanMessage("I want to order a pizza.")
         <role: user, content: I want to order a pizza.>
 
-        >>> from erniebot_agent.file_io.base import File
         >>> prompt = "What is the text in this image?"
         >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
         >>> message = await HumanMessage.create_with_files(
                 prompt, files, include_file_urls=True)
         >>> message
         <role: user, content: W h ha t.<file>File-local-xxxx</file><url>{url}</url>.>
-        
+
     """
 
     def __init__(self, content: str):
@@ -179,18 +184,19 @@ class HumanMessage(Message):
     ) -> Self:
         """
         create a Human Message with file input
-        
+
         Args:
             text: content of the message.
-            files (List[File]): The file that the message contains. 
+            files (List[File]): The file that the message contains.
             include_file_urls: Whehter to include file URLs in the content of message.
-        
+
         Returns:
             A HumanMessage object that contains file in the content.
-        
+
         Raises:
             RuntimeError: Only `RemoteFile` objects can set include_file_urls as True.
         """
+
         def _get_file_reprs(files: List[File]) -> List[str]:
             file_reprs = []
             for file in files:
@@ -201,7 +207,7 @@ class HumanMessage(Message):
             file_reprs = []
             for file in files:
                 if not isinstance(file, RemoteFile):
-                    raise RuntimeError("Only `RemoteFile` objects can have URLs in their representations.")
+                    raise TypeError("Only `RemoteFile` objects can have URLs in their representations.")
                 url = await file.create_temporary_url()
                 file_reprs.append(file.get_file_repr_with_url(url))
 
@@ -233,25 +239,25 @@ class AIMessage(Message):
         content (str): the content of the message.
         function_call (Optional[FunctionCall], optional): The function that agent calls. Defaults to None.
         token_usage (Optional[TokenUsage], optional): the token usage calculate by ERNIE. Defaults to None.
-        search_info (Optional[SearchInfo], optional): 
+        search_info (Optional[SearchInfo], optional):
                 The SearchInfo content of the chat model's response. Defaults to None.
-    
+
     Attributes:
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
         function_call (Optional[FunctionCall]): The function that agent calls.
         query_tokens_count (int): the number of tokens in the query.
         search_info (Optional[SearchInfo]): The SearchInfo in the chat model's response.
-    
+
     Examples:
-        
+
         .. code-block:: python
 
             >>> human_message = HumanMessage(content="What is the text in this image?")
             >>> ai_message = AIMessage(
-                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image, 
-                     I need to use the OCR tool", 
+                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image,
+                     I need to use the OCR tool",
                      "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
                 token_usage={"prompt_tokens": 10, "completion_tokens": 20},
                 search_info={}]}
@@ -267,8 +273,9 @@ class AIMessage(Message):
     def __init__(
         self,
         content: str,
-        function_call: Optional[FunctionCall],
+        function_call: Optional[FunctionCall] = None,
         token_usage: Optional[TokenUsage] = None,
+        plugin_info: Optional[PluginInfo] = None,
         search_info: Optional[SearchInfo] = None,
     ):
         if token_usage is None:
@@ -279,8 +286,9 @@ class AIMessage(Message):
         super().__init__(role="assistant", content=content, token_count=completion_tokens)
         self.function_call = function_call
         self.query_tokens_count = prompt_tokens
+        self.plugin_info = plugin_info
         self.search_info = search_info
-        self._param_names = ["role", "content", "function_call", "search_info"]
+        self._param_names = ["role", "content", "function_call", "plugin_info", "search_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token count information from LLM."""
@@ -290,17 +298,17 @@ class AIMessage(Message):
 class FunctionMessage(Message):
     """
     The definition of a message that calls tools, containing the result of a function call.
-    
+
     Args:
         name (str): the name of the function.
         content (str): the content of the message.
-    
+
     Attributes:
-        name (str): the name of the function. 
-        role (str): character of the message. 
-        content (str): content of the message. 
-        token_count (Optional[int]): number of tokens of the message content. 
-    
+        name (str): the name of the function.
+        role (str): character of the message.
+        content (str): content of the message.
+        token_count (Optional[int]): number of tokens of the message content.
+
     Examples:
 
         .. code-block:: python

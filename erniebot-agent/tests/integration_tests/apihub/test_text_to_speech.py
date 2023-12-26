@@ -10,7 +10,7 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_text_to_speech(self):
-        toolkit = RemoteToolkit.from_aistudio("texttospeech")
+        toolkit = RemoteToolkit.from_aistudio("texttospeech", file_manager=self.file_manager)
 
         agent = self.get_agent(toolkit)
 

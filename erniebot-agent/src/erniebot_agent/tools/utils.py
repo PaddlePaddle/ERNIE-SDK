@@ -1,5 +1,6 @@
 import base64
 import inspect
+import logging
 import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
@@ -17,8 +18,9 @@ from erniebot_agent.tools.schema import (
     get_typing_list_type,
 )
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
-from erniebot_agent.utils.exception import RemoteToolError
-from erniebot_agent.utils.logging import logger
+from erniebot_agent.utils.exceptions import RemoteToolError
+
+logger = logging.getLogger(__name__)
 
 
 def tool_response_contains_file(element: Any):

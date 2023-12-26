@@ -16,7 +16,6 @@
 
 import argparse
 import collections
-import copy
 import functools
 import inspect
 import json
@@ -530,7 +529,7 @@ def recall_message(state):
         raise gr.Error("请至少进行一轮对话")
     context = context[:-2]
     history = extract_history(context)
-    state["context"] = context
+    state["context"][:] = context
     return state, history, context[-MAX_CONTEXT_LINES_TO_SHOW:]
 
 
@@ -572,7 +571,7 @@ def generate_response(
     top_p,
     temperature,
 ):
-    context = copy.copy(state["context"])
+    context = state["context"].copy()
     context.append(message)
     name2function = state["name2function"]
     functions = [name2function[name].desc for name in candidates]
@@ -610,7 +609,7 @@ def generate_response(
             context[-1]["function_call"] = function_call
             assert history is None
             history = extract_history(context)
-            state["context"] = context
+            state["context"][:] = context
             yield (
                 state,
                 history,
@@ -643,7 +642,7 @@ def generate_response(
                 )
             assert history[-1][1] == context[-1]["content"]
     else:
-        state["context"] = context
+        state["context"][:] = context
         yield (
             state,
             history,

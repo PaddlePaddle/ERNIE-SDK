@@ -22,11 +22,9 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 import gradio as gr
 
 from erniebot_agent.agents.base import Agent
-from erniebot_agent.agents.schema import AgentFile, AgentResponse
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file.base import File
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
 from erniebot_agent.tools.base import BaseTool
@@ -87,7 +85,6 @@ class GameAgent(Agent):
             tools=tools,
             system_message=system_message,
         )
-        self.file_manager: FileManager = get_file_manager()
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
         tool_response = await self._async_run_tool(
@@ -95,8 +92,8 @@ class GameAgent(Agent):
             tool_args=tool_args,
         )
 
-        agent_file: AgentFile = tool_response.files[-1]
-        img_byte = await agent_file.file.read_contents()
+        file: File = tool_response.output_files[-1]
+        img_byte = await file.read_contents()
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
