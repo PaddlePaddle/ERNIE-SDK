@@ -1,17 +1,18 @@
 
 # 自定义 Tool
 
-此处的自定义 Tool 指本地 Tool，此处就拿 `CurrentTimeTool` 为示例来讲解。
+在此，我们所提及的“自定义 Tool”指的是本地 Tool。为了更具体地阐述这一概念，我们将以 CurrentTimeTool 为例进行详细讲解。
 
 ## Tool 剖析
 
-一个 Tool 如果想要 Agent 能够正常执行，需要配置：
-* 输入和输出参数：让 Agent 能够从历史对话信息中抽取出对应的字段信息。
-* Tool 的描述信息：让 Agent 知道什么时候该调用这个 Tool。
-* Tool 实现的具体逻辑：具体业务逻辑。
-* Tool 的对话示例：为了让 Agent 能够更精确的调用该 Tool。
+为了确保一个工具（Tool）能够被代理（Agent）正常执行，需要进行以下配置：
 
-以 `CurrentTimeTool` 为例，我们来看看如何实现一个 Tool，先看看整体代码：
+1. 输入和输出参数：通过配置输入和输出参数，Agent能够从历史对话信息中提取相应的字段信息，并与工具进行有效的交互。
+2. 工具的描述信息：这部分提供了关于工具用途和功能的详细说明。Agent根据这些描述信息来判断何时应该调用该工具。描述信息应包括工具的功能、适用场景以及任何特定的调用要求。
+3. 工具的具体逻辑：这是工具的核心部分，包含了实现特定业务逻辑的代码或指令。具体逻辑定义了工具在接收到代理的请求时应如何响应和执行相应的任务。
+4. 工具的对话示例：这些示例用于演示工具在实际对话中的用法。通过提供对话示例，代理可以更准确地理解如何调用该工具，并在适当的情境下应用它。对话示例还可以帮助开发者测试和验证工具的有效性和正确性。
+
+以 CurrentTimeTool 为例，下面我们将展示如何实现一个工具。首先，让我们查看整体代码结构...
 
 ```python
 class CurrentTimeToolOutputView(ToolParameterView):
@@ -63,7 +64,13 @@ class CurrentTimeTool(Tool):
 
 在此示例当中没有输入参数，只有输出参数。
 
-输入和输出参数必须继承 `ToolParameterView` 基类，并且通过 `Field` 装饰器来指定参数的描述信息。Agent 会在调用 Tool 之前根据此处配置的描述信息抽取处对应的字段信息，然后输入给 Tool 执行。
+输入和输出参数必须继承 `ToolParameterView` 基类，并且通过 `Field` 类来指定参数的详细信息，其中包含：
+
+* 类型注释：`current_time: str` 中的 str 就是指定此字段的类型信息。
+* 字段描述：`description`，主要用于从历史对话信息中提取出对应字段信息或者根据字典信息进行润色。
+* 字段默认值：如果在历史对话当中没有提取对应字段信息，可初始化默认值。
+
+Agent 在调用 Tool 之前，会通过 FunctionCall 抽取出对应字段信息，然后输入给 Tool 执行。
 
 !!! warn 注意
     每个 Tool 的返回结果都必须是字典类型数据。
@@ -87,7 +94,16 @@ class CurrentTimeTool(Tool):
 
 ```python
 
+class CourseToolCourseOutputView(ToolParameterView):
+    name: str = Field(description="课程名称")
+    time: str = Field(description="上课时间段")
+    room: str = Field(description="教室地点")
+
+class CourseToolOutputView(ToolParameterView):
+    courses: List[CourseToolCourseOutputView] = Field(description="课程信息")
+
 class CourseTool(Tool):
+    ouptut_type: Type[ToolParameterView] = CourseToolOutputView
 
     async def __call__(self, time: datetime):
         courses = await search_course(time) # call api
@@ -100,9 +116,9 @@ Agent 会根据输出参数来润色对应的结果，比如：
 
 ## Tool 的对话示例
 
-当 Tool 数量过多时，此时 Agent 只根据 description 来判断是否要调用 Tool 是不够的，所以需要编写对话示例来让 Agent 更精准的调用 Tool。
+当 Tool 数量过多时，此时 Agent 只根据 description 来判断是否要调用具体 Tool 是不够的， 此时可通过编写更多的对话示例来让 Agent 更精准的调用 Tool。
 
-只需要给派生 Tool 写一个 examples 属性即可：
+实现方式是只需要给派生 Tool 写一个 examples 属性即可：
 
 ```python
 class CurrentTimeTool(Tool):
