@@ -12,7 +12,8 @@ ERNIE Bot Agent 可以快速开发智能体。
 
 `ERNIE Bot Agent` 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型的编排能力，我们依托飞桨星河社区提供了丰富的预置平台化功能，并允许高度定制化的开发，旨在为开发者打造一站式的大模型Agent和应用搭建框架和平台。
 
-![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb
+
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
 
 ## 特性
 
