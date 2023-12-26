@@ -4,16 +4,19 @@ repo_name: ERNIE-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
-  - 介绍: 'index.md'
+  - 介绍: 'tutorials/introduction.md'
   - 快速开始:
-    - 介绍: 'tutorials/index.md' 
+    - 准备: 'tutorials/preparation.md'
   - 核心模块:
+    - messages: 'modules/messages.md'
+    - chat_modles: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
   - API:
     - erniebot-agent:
-      - agents: "package/erniebot_agent/agents.md"
+      - messages: "package/erniebot_agent/messages.md"
       - memory: "package/erniebot_agent/memory.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
+      - agents: "package/erniebot_agent/agents.md"
 
 theme:
   name: material

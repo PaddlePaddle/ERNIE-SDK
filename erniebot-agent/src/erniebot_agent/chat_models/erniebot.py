@@ -45,7 +45,7 @@ class ERNIEBot(ChatModel):
     def __init__(
         self,
         model: str,
-        api_type: Optional[str] = None,
+        api_type: str = "aistudio",
         access_token: Optional[str] = None,
         enable_multi_step_tool_call: bool = False,
         **default_chat_kwargs: Any,
@@ -55,8 +55,9 @@ class ERNIEBot(ChatModel):
         Args:
             model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
                 "ernie-longtext".
-            api_type (Optional[str]): The API type for erniebot. It should be "aistudio" or "qianfan".
-            access_token (Optional[str]): The access token for erniebot.
+            api_type (Optional[str]): The backend of erniebot. It should be "aistudio" or "qianfan".
+                Default to "aistudio".
+            access_token (Optional[str]): The access token for the backend of erniebot.
             close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
         """
         super().__init__(model=model, **default_chat_kwargs)
