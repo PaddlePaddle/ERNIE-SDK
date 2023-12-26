@@ -2,7 +2,7 @@
 
 <h1>ERNIE Bot Agent</h1>
 
-**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型的编排能力，我们依托飞桨星河社区提供了丰富的预置平台化功能，并允许高度定制化的开发，旨在为开发者打造一站式的大模型智能体和应用搭建框架和平台。
+**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
@@ -65,8 +65,41 @@ pip install erniebot-agent
 <summary>点击展开</summary>
 
 ```python
-# Todo: 添加快速体验代码
+import asyncio
+import os
+
+from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.memory.whole_memory import WholeMemory
+from erniebot_agent.tools import RemoteToolkit
+
+# 从 https://aistudio.baidu.com/index/accessToken 获取你的AI Studio access token
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "<aistudio-access-token>"
+
+# 实例化ERNIEBot模型，这里使用ernie-3.5, 通过aistudio鉴权
+llm = ERNIEBot(model="ernie-3.5", api_type="aistudio")
+# 实例化无截断的WholeMemory
+memory = WholeMemory()
+# 实例化agent, 不挂载任何工具
+agent = FunctionalAgent(llm=llm, memory=memory, tools=[])
+# 使用普通对话功能
+result = asyncio.run(agent.async_run("你好，请自我介绍一下"))
+print(result.text)
+# 模型返回类似如下结果：
+# 你好，我叫文心一言，是百度研发的知识增强大语言模型，能够与人对话互动，回答问题，协助创作，高效便捷地帮助人们获取信息、知识和灵感。
+
+# 从AI Studio加载texttospeech(语音合成)工具，并将挂载在agent上
+tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()[0]
+agent.load_tool(tts_tool)
+result = asyncio.run(agent.async_run("把上一轮的自我介绍转成语音"))
+print(result.text)
+# 模型返回类似如下结果：
+# 根据你的请求，我已经将自我介绍转换为语音文件，文件名为file-local-c70878b4-a3f6-11ee-95d0-506b4b225bd6。
+# 你可以使用任何支持播放音频文件的设备或软件来播放这个文件。如果你需要进一步操作或有其他问题，请随时告诉我。
+
+# 将agent输出的音频文件写入test.wav, 可以尝试播放
+audio_file = result.steps[-1].output_files[0]
+asyncio.run(audio_file.write_contents_to("./test.wav"))
 ```
 
 </details>
