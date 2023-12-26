@@ -16,7 +16,7 @@ class FakeSimpleChatModel(ChatModel):
         return self.response
 
 
-class FakeChatModelWithPresetResponses(ChatModel):
+class FakeERNIEBotWithPresetResponses(ChatModel):
     def __init__(self, responses):
         super().__init__("erniebot_with_preset_responses")
         self.responses = responses
