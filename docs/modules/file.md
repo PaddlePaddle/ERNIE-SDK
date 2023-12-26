@@ -105,7 +105,6 @@ from erniebot_agent.file import GlobalFileManagerHandler
 async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()  
 ```
-
 2. 通过 `GlobalFileManagerHandler`创建 `File`
 
 ```python
@@ -116,7 +115,6 @@ async def demo_function():
     # 从路径创建File, file_type可选择local或者remote file_purpose='assistant'代表用于给LLM输入使用
     local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
 ```
-
 3. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
 
 ```python
@@ -131,7 +129,6 @@ async def demo_function():
     # 写出到指定位置
     await local_file.write_contents_to('your_willing_path')
 ```
-
 4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件
    ```python
    from erniebot_agent.file import GlobalFileManagerHandler
