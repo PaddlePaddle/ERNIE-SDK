@@ -4,14 +4,8 @@ from typing import Any, Dict, List, Optional, Type
 
 from pydantic import Field
 
-from erniebot_agent.agents import FunctionAgent
-from erniebot_agent.agents.schema import (
-    AgentAction,
-    AgentFile,
-    AgentResponse,
-    ToolResponse,
-)
-from erniebot_agent.file.base import File
+from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.agents.schema import AgentAction, AgentResponse, File, ToolResponse
 from erniebot_agent.memory.messages import (
     AIMessage,
     FunctionMessage,
@@ -103,7 +97,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[AgentAction] = []
-                files_involved: List[AgentFile] = []
+                files_involved: List[File] = []
                 actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
@@ -189,7 +183,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -286,7 +280,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(

@@ -22,11 +22,12 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
 import erniebot
-from erniebot.response import EBResponse
+from erniebot import ChatCompletionResponse
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import (
@@ -34,6 +35,7 @@ from erniebot_agent.memory.messages import (
     AIMessageChunk,
     FunctionCall,
     Message,
+    PluginInfo,
     SearchInfo,
 )
 from erniebot_agent.utils import config_from_environ as C
@@ -206,9 +208,26 @@ class ERNIEBot(BaseERNIEBot):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
+        response = await self._generate_response(cfg_dict, stream, functions)
+
+        if stream:
+            assert isinstance(response, ChatCompletionResponse)
+            return self.convert_response_to_output(response, AIMessage)
+        else:
+            assert isinstance(response, AsyncIterator)
+            # We have to do type casting here due to the known mypy issue:
+            # https://github.com/python/mypy/issues/16590
+            return (
+                self.convert_response_to_output(resp, AIMessageChunk)
+                async for resp in cast(AsyncIterator[ChatCompletionResponse], response)
+            )
+
+    async def _generate_response(
+        self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if cfg_dict.get("plugins", None):
+        if "plugins" in cfg_dict:
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore
@@ -227,16 +246,11 @@ class ERNIEBot(BaseERNIEBot):
                 },
                 **cfg_dict,
             )
-        if isinstance(response, EBResponse):
-            return self.convert_response_to_output(response, AIMessage)
-        else:
-            return (
-                self.convert_response_to_output(resp, AIMessageChunk)
-                async for resp in response  # type: ignore
-            )
+
+        return response
 
     @staticmethod
-    def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
+    def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
         if hasattr(response, "function_call"):
             function_call = FunctionCall(
                 name=response.function_call["name"],
@@ -244,7 +258,26 @@ class ERNIEBot(BaseERNIEBot):
                 arguments=response.function_call["arguments"],
             )
             return output_type(
-                content="", function_call=function_call, search_info=None, token_usage=response.usage
+                content="",
+                function_call=function_call,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
+            )
+        elif hasattr(response, "plugin_info"):
+            plugin_info = PluginInfo(
+                names=[
+                    response["plugin_metas"][i]["pluginNameForModel"]
+                    for i in range(len(response["plugin_metas"]))
+                ]
+            )
+
+            return output_type(
+                content=response.result,
+                function_call=None,
+                plugin_info=plugin_info,
+                search_info=None,
+                token_usage=response.usage,
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
             search_info = SearchInfo(
@@ -253,10 +286,15 @@ class ERNIEBot(BaseERNIEBot):
             return output_type(
                 content=response.result,
                 function_call=None,
+                plugin_info=None,
                 search_info=search_info,
                 token_usage=response.usage,
             )
         else:
             return output_type(
-                content=response.result, function_call=None, search_info=None, token_usage=response.usage
+                content=response.result,
+                function_call=None,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
             )

@@ -14,26 +14,53 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, Generic, List, Literal, Sequence, TypeVar, Union
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
-from erniebot_agent.memory.messages import AIMessage, Message
+from erniebot_agent.memory import AIMessage, Message
+from erniebot_agent.memory.messages import PluginInfo
 
 
 @dataclass
-class AgentAction(object):
-    """An action for an agent to execute."""
+class ToolAction(object):
+    """A tool calling action for an agent to execute."""
 
     tool_name: str
     tool_args: str
 
 
 @dataclass
+class PluginAction(object):  # save for plugins that can be planned
+    """A plugin calling action for an agent to execute."""
+
+    plugin_name: str
+    finish_reason: str
+
+
+class ToolInfo(Dict):
+    tool_name: str
+    tool_args: str
+
+
+@dataclass
+class NullAction(object):
+    """This class indicates that no action shall be taken by the agent."""
+
+
+NULL_ACTION = NullAction()
+
+
+# Note: save for plugins that can be planned
+AgentAction = Union[ToolAction, PluginAction, NullAction]
+PlanableAgentAction = Union[ToolAction, PluginAction]
+
+
+@dataclass
 class AgentPlan(object):
     """A plan that contains a list of actions."""
 
-    actions: List[AgentAction]
+    actions: Sequence[PlanableAgentAction]
 
 
 @dataclass
@@ -48,7 +75,58 @@ class ToolResponse(object):
     """A response from a tool."""
 
     json: str
-    files: List["AgentFile"]
+    input_files: Sequence[File]
+    output_files: Sequence[File]
+
+
+_IT = TypeVar("_IT", bound=Dict)
+_RT = TypeVar("_RT")
+
+
+@dataclass
+class AgentStep(Generic[_IT, _RT]):
+    """A step taken by an agent."""
+
+    info: _IT
+    result: _RT
+
+
+@dataclass
+class AgentStepWithFiles(AgentStep[_IT, _RT]):
+    """A step taken by an agent involving file input and output."""
+
+    input_files: Sequence[File]
+    output_files: Sequence[File]
+
+    @property
+    def files(self) -> List[File]:
+        return [*self.input_files, *self.output_files]
+
+
+@dataclass
+class ToolStep(AgentStepWithFiles[ToolInfo, Any]):
+    """A step taken by an agent that calls a tool."""
+
+
+@dataclass
+class PluginStep(AgentStepWithFiles[PluginInfo, str]):
+    """A step taken by an agent that calls a plugin."""
+
+
+class _NullInfo(Dict):
+    pass
+
+
+class _NullResult(object):
+    pass
+
+
+@dataclass
+class NoActionStep(AgentStep[_NullInfo, _NullResult]):
+    """A step taken by an agent that performs no action and gives no result."""
+
+
+NO_ACTION_STEP = NoActionStep(info=_NullInfo(), result=_NullResult())
 
 
 @dataclass
@@ -56,43 +134,17 @@ class AgentResponse(object):
     """The final response from an agent."""
 
     text: str
-    chat_history: List[Message]
-    actions: List[AgentAction]
-    files: List["AgentFile"]
+    chat_history: Sequence[Message]
+    steps: Sequence[AgentStep]
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
     @functools.cached_property  # lazy and prevent extra fime from multiple calls
     def annotations(self) -> Dict[str, List]:
-        annotations = self.output_dict()
+        annotations = self._get_annotations()
 
         return annotations
 
-    def get_last_output_file(self) -> Optional[File]:
-        for agent_file in self.files[::-1]:
-            if agent_file.type == "output":
-                return agent_file.file
-        else:
-            return None
-
-    def get_output_files(self) -> List[File]:
-        return [agent_file.file for agent_file in self.files if agent_file.type == "output"]
-
-    def get_tool_input_output_files(self, tool_name: str) -> Tuple[List[File], List[File]]:
-        # XXX: If a tool is used mutliple times, all related files will be
-        # returned in flattened lists.
-        input_files: List[File] = []
-        output_files: List[File] = []
-        for agent_file in self.files:
-            if agent_file.used_by == tool_name:
-                if agent_file.type == "input":
-                    input_files.append(agent_file.file)
-                elif agent_file.type == "output":
-                    output_files.append(agent_file.file)
-                else:
-                    raise RuntimeError("File type is neither input nor output.")
-        return input_files, output_files
-
-    def output_dict(self) -> Dict[str, List]:
+    def _get_annotations(self) -> Dict[str, List]:
         # 1. split the text into parts and add file id to each part
         file_ids = protocol.extract_file_ids(self.text)
 
@@ -115,29 +167,17 @@ class AgentResponse(object):
             split_text_list.append(self.text[prev_idx:])
 
         # 2. parse text to dict
-        output_dict: Dict = {"content_parts": []}
+        annotations: Dict = {"content_parts": []}
 
-        for data in split_text_list:
-            if data in file_ids:
-                file_object = None
-                for agent_file in self.files:
-                    if data == agent_file.file.id:
-                        file_object = agent_file.file
-                        break
-
-                if file_object is not None:
-                    file_meta = file_object.to_dict()
-                    output_dict["content_parts"].append(file_meta)
+        for file_id in split_text_list:
+            if file_id in file_ids:
+                for step in self.steps:
+                    if isinstance(step, AgentStepWithFiles):
+                        for file in step.files:
+                            if file_id == file.id:
+                                file_meta = file.to_dict()
+                                annotations["content_parts"].append(file_meta)
             else:
-                output_dict["content_parts"].append({"text": data})
+                annotations["content_parts"].append({"text": file_id})
 
-        return output_dict
-
-
-@dataclass
-class AgentFile(object):
-    """A file that is used by an agent."""
-
-    file: File
-    type: Literal["input", "output"]
-    used_by: str
+        return annotations

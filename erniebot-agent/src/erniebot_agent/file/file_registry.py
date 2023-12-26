@@ -12,32 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Optional, final
+from typing import Dict, Generic, List, Optional, TypeVar, final
 
 from erniebot_agent.file.base import File
 
+_T = TypeVar("_T", bound=File)
+
 
 @final
-class FileRegistry(object):
+class FileRegistry(Generic[_T]):
     def __init__(self) -> None:
         super().__init__()
-        self._id_to_file: Dict[str, File] = {}
+        self._id_to_file: Dict[str, _T] = {}
 
-    def register_file(self, file: File, *, allow_overwrite: bool = False) -> None:
+    def register_file(self, file: _T, *, allow_overwrite: bool = False) -> None:
         file_id = file.id
         if file_id in self._id_to_file:
             if not allow_overwrite:
                 raise ValueError(f"File with ID {repr(file_id)} is already registered.")
         self._id_to_file[file_id] = file
 
-    def unregister_file(self, file: File) -> None:
+    def unregister_file(self, file: _T) -> None:
         file_id = file.id
         if file_id not in self._id_to_file:
             raise ValueError(f"File with ID {repr(file_id)} is not registered.")
         self._id_to_file.pop(file_id)
 
-    def look_up_file(self, file_id: str) -> Optional[File]:
+    def look_up_file(self, file_id: str) -> Optional[_T]:
         return self._id_to_file.get(file_id, None)
 
-    def list_files(self) -> List[File]:
+    def list_files(self) -> List[_T]:
         return list(self._id_to_file.values())

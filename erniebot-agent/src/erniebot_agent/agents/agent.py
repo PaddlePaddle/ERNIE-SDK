@@ -1,6 +1,6 @@
 import abc
 import json
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union, final
+from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from erniebot_agent.agents.base import LLMT, BaseAgent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -8,7 +8,6 @@ from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.mixins import GradioMixin
 from erniebot_agent.agents.schema import (
-    AgentFile,
     AgentResponse,
     LLMResponse,
     ToolResponse,
@@ -20,7 +19,6 @@ from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Tuple[str] = ("eChart",)
 
@@ -190,31 +188,24 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         raise NotImplementedError
 
     async def _run_tool(self, tool: BaseTool, tool_args: str) -> ToolResponse:
-        """Run the given tool asynchronously without invoking callbacks.
-
-        This method is called in `run_tool`.
-        """
         parsed_tool_args = self._parse_tool_args(tool_args)
+        file_manager = await self.get_file_manager()
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = await self._sniff_and_extract_files_from_args(parsed_tool_args, tool, "input")
+        input_files = file_manager.sniff_and_extract_files_from_list(list(parsed_tool_args.values()))
         tool_ret = await tool(**parsed_tool_args)
         if isinstance(tool_ret, dict):
-            output_files = await self._sniff_and_extract_files_from_args(tool_ret, tool, "output")
+            output_files = file_manager.sniff_and_extract_files_from_list(list(tool_ret.values()))
         else:
             output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
-        return ToolResponse(json=tool_ret_json, files=input_files + output_files)
+        return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
-    async def _run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
-        """Run the LLM asynchronously without invoking callbacks.
-
-        This method is called in `run_llm`.
-        """
-        if opts.get("stream", False):
-            raise ValueError("Streaming is not supported.")
-        llm_ret = await self.llm.chat(messages, stream=False, **opts)
+    async def _run_llm(
+        self, messages: List[Message], functions=None, **opts: Any
+    ) -> LLMResponse:
+        llm_ret = await self.llm.chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
     def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
@@ -226,29 +217,6 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         if not isinstance(args_dict, dict):
             raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
-
-    async def _sniff_and_extract_files_from_args(
-        self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
-    ) -> List[AgentFile]:
-        agent_files: List[AgentFile] = []
-        for val in args.values():
-            if isinstance(val, str):
-                if protocol.is_file_id(val):
-                    file_manager = await self.get_file_manager()
-                    try:
-                        file = file_manager.look_up_file_by_id(val)
-                    except FileError as e:
-                        raise FileError(
-                            f"Unregistered file with ID {repr(val)} is used by {repr(tool)}."
-                            f" File type: {file_type}"
-                        ) from e
-                    agent_files.append(AgentFile(file=file, type=file_type, used_by=tool.tool_name))
-            elif isinstance(val, dict):
-                agent_files.extend(await self._sniff_and_extract_files_from_args(val, tool, file_type))
-            elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
-                for item in val:
-                    agent_files.extend(await self._sniff_and_extract_files_from_args(item, tool, file_type))
-        return agent_files
 
     def _init_file_needs_url(self):
         self.file_needs_url = False

@@ -22,13 +22,13 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 import gradio as gr
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.agents.schema import AgentFile, AgentResponse
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file.base import File
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
-from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
+from erniebot_agent.memory.messages import AIMessage, HumanMessage, SystemMessage
 from erniebot_agent.tools.base import BaseTool
-from erniebot_agent.tools.ImageGenerateTool import (
+from erniebot_agent.tools.image_generation_tool import (
     ImageGenerationTool,  # 目前为remotetool，如做直接展示可以替换为yinian
 )
 from erniebot_agent.tools.tool_manager import ToolManager
@@ -92,8 +92,8 @@ class GameAgent(Agent):
             tool_args=tool_args,
         )
 
-        agent_file: AgentFile = tool_response.files[-1]
-        img_byte = await agent_file.file.read_contents()
+        file: File = tool_response.output_files[-1]
+        img_byte = await file.read_contents()
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
