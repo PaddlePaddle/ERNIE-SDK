@@ -187,6 +187,10 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         raise NotImplementedError
 
     async def _run_tool(self, tool: BaseTool, tool_args: str) -> ToolResponse:
+        """Run the given tool asynchronously without invoking callbacks.
+
+        This method is called in `run_tool`.
+        """
         parsed_tool_args = self._parse_tool_args(tool_args)
         file_manager = await self.get_file_manager()
         # XXX: Sniffing is less efficient and probably unnecessary.
@@ -202,6 +206,10 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
     async def _run_llm(self, messages: List[Message], functions=None, **opts: Any) -> LLMResponse:
+        """Run the LLM asynchronously without invoking callbacks.
+        
+        This method is called in `run_llm`.
+        """
         llm_ret = await self.llm.chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
