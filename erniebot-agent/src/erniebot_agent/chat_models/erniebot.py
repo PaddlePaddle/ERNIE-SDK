@@ -65,13 +65,13 @@ class ERNIEBot(ChatModel):
         if access_token is None:
             access_token = C.get_global_access_token()
         self.access_token = access_token
-        self._validate_auth()
+        self._maybe_validate_qianfan_auth()
 
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
 
-    def _validate_auth(self) -> None:
+    def _maybe_validate_qianfan_auth(self) -> None:
         if self.api_type == "qianfan":
             if self.access_token is None:
                 # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
