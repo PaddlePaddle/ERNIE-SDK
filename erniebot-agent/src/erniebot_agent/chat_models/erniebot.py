@@ -65,17 +65,12 @@ class ERNIEBot(ChatModel):
 
         self.api_type = api_type
         self.access_token = access_token
-<<<<<<< HEAD
-=======
         self._maybe_validate_qianfan_auth()
 
->>>>>>> 4e5c710 (Update erniebot.py)
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
 
-<<<<<<< HEAD
-=======
     def _maybe_validate_qianfan_auth(self) -> None:
         if self.api_type == "qianfan":
             if self.access_token is None:
@@ -97,7 +92,6 @@ class ERNIEBot(ChatModel):
                     self.ak = self.default_chat_kwargs.pop("ak")
                     self.sk = self.default_chat_kwargs.pop("sk")
 
->>>>>>> 4e5c710 (Update erniebot.py)
     @overload
     async def async_chat(
         self,
