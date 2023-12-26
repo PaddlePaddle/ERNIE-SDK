@@ -1,14 +1,16 @@
 import pytest
-from erniebot.response import EBResponse
+from erniebot import ChatCompletionResponse
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeERNIEBotWithPresetResponses,
 )
 
+from erniebot_agent.chat_models.erniebot import convert_response_to_output
 from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory.messages import AIMessage
 
 
 # 1. fake various output from erniebot
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fake_erniebot_with_search_info():
     rcode = (200,)
     rbody = {
@@ -34,11 +36,13 @@ def fake_erniebot_with_search_info():
         "X-Request-Id": "6efe63c60902b1459106b21cb6de566a",
         "Transfer-Encoding": "chunked",
     }
-    fake_response_with_search_info = EBResponse(rcode, rbody, rheaders)
-    return FakeERNIEBotWithPresetResponses(fake_response_with_search_info)
+    fake_response_with_search_info = ChatCompletionResponse(rcode, rbody, rheaders)
+    return FakeERNIEBotWithPresetResponses(
+        [convert_response_to_output(fake_response_with_search_info, AIMessage)]
+    )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fake_erniebot_with_plugin_info():  # withfile plugins
     rcode = (200,)
     rbody = {
@@ -157,12 +161,14 @@ def fake_erniebot_with_plugin_info():  # withfile plugins
         "Date": "Mon, 25 Dec 2023 09:24:49 GMT",
         "Transfer-Encoding": "chunked",
     }
-    fake_response_with_plugin_info = EBResponse(rcode, rbody, rheaders)
+    fake_response_with_plugin_info = ChatCompletionResponse(rcode, rbody, rheaders)
 
-    return FakeERNIEBotWithPresetResponses(fake_response_with_plugin_info)
+    return FakeERNIEBotWithPresetResponses(
+        [convert_response_to_output(fake_response_with_plugin_info, AIMessage)]
+    )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fake_erniebot_with_function_call():
     rcode = 200
     rbody = {
@@ -192,11 +198,13 @@ def fake_erniebot_with_function_call():
         "X-Request-Id": "6efe63c60902b1459106b21cb6de566a",
         "Transfer-Encoding": "chunked",
     }
-    fake_function_call_response = EBResponse(rcode, rbody, rheaders)
-    return FakeERNIEBotWithPresetResponses(fake_function_call_response)
+    fake_function_call_response = ChatCompletionResponse(rcode, rbody, rheaders)
+    return FakeERNIEBotWithPresetResponses(
+        [convert_response_to_output(fake_function_call_response, AIMessage)]
+    )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fake_erniebot_with_vanilla_output():
     rcode = 200
     rbody = {
@@ -221,8 +229,10 @@ def fake_erniebot_with_vanilla_output():
         "X-Request-Id": "6bd541acb2c64765c5094df7a8485b7a",
         "Transfer-Encoding": "chunked",
     }
-    fake_vanilla_message_response = EBResponse(rcode, rbody, rheaders)
-    return FakeERNIEBotWithPresetResponses(fake_vanilla_message_response)
+    fake_vanilla_message_response = ChatCompletionResponse(rcode, rbody, rheaders)
+    return FakeERNIEBotWithPresetResponses(
+        [convert_response_to_output(fake_vanilla_message_response, AIMessage)]
+    )
 
 
 # 2. tests each output independently
@@ -230,7 +240,7 @@ def fake_erniebot_with_vanilla_output():
 async def test_erniebot_with_search_info(fake_erniebot_with_search_info):
     fake_erniebot = fake_erniebot_with_search_info
     messages = [HumanMessage("今天深圳天气怎么样？")]
-    response = await fake_erniebot.async_chat(
+    response = await fake_erniebot.chat(
         messages,
     )
 
@@ -241,7 +251,7 @@ async def test_erniebot_with_search_info(fake_erniebot_with_search_info):
 async def test_erniebot_with_plugin_info(fake_erniebot_with_plugin_info):
     fake_erniebot = fake_erniebot_with_plugin_info
     messages = [HumanMessage("今天深圳天气怎么样？")]
-    response = await fake_erniebot.async_chat(
+    response = await fake_erniebot.chat(
         messages,
     )
 
@@ -252,7 +262,7 @@ async def test_erniebot_with_plugin_info(fake_erniebot_with_plugin_info):
 async def test_erniebot_with_function_call(fake_erniebot_with_function_call):
     fake_erniebot = fake_erniebot_with_function_call
     messages = [HumanMessage("今天深圳天气怎么样？")]
-    response = await fake_erniebot.async_chat(
+    response = await fake_erniebot.chat(
         messages,
     )
 
@@ -263,7 +273,7 @@ async def test_erniebot_with_function_call(fake_erniebot_with_function_call):
 async def test_erniebot_with_vanilla_output(fake_erniebot_with_vanilla_output):
     fake_erniebot = fake_erniebot_with_vanilla_output
     messages = [HumanMessage("今天深圳天气怎么样？")]
-    response = await fake_erniebot.async_chat(
+    response = await fake_erniebot.chat(
         messages,
     )
 

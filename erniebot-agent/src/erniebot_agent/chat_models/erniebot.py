@@ -45,7 +45,7 @@ _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 class BaseERNIEBot(ChatModel):
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -56,7 +56,7 @@ class BaseERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -67,12 +67,12 @@ class BaseERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -113,27 +113,6 @@ class ERNIEBot(BaseERNIEBot):
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
-
-    def _maybe_validate_qianfan_auth(self) -> None:
-        if self.api_type == "qianfan":
-            if self.access_token is None:
-                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
-                if "ak" and "sk" not in self.default_chat_kwargs:
-                    ak, sk = C.get_global_aksk()
-                    if ak is None or sk is None:
-                        raise RuntimeError("Please set at least one of ak+sk or access token.")
-                    else:
-                        self.ak = ak
-                        self.sk = sk
-                else:
-                    self.ak = self.default_chat_kwargs.pop("ak")
-                    self.sk = self.default_chat_kwargs.pop("sk")
-            else:
-                # If set access_token in environment and pass ak and sk in default_chat_kwargs,
-                # the access_token in default_chat_kwargs will be used.
-                if "ak" and "sk" in self.default_chat_kwargs:
-                    self.ak = self.default_chat_kwargs.pop("ak")
-                    self.sk = self.default_chat_kwargs.pop("sk")
 
     @overload
     async def chat(
@@ -212,15 +191,36 @@ class ERNIEBot(BaseERNIEBot):
 
         if stream:
             assert isinstance(response, ChatCompletionResponse)
-            return self.convert_response_to_output(response, AIMessage)
+            return convert_response_to_output(response, AIMessage)
         else:
             assert isinstance(response, AsyncIterator)
             # We have to do type casting here due to the known mypy issue:
             # https://github.com/python/mypy/issues/16590
             return (
-                self.convert_response_to_output(resp, AIMessageChunk)
+                convert_response_to_output(resp, AIMessageChunk)
                 async for resp in cast(AsyncIterator[ChatCompletionResponse], response)
             )
+
+    def _maybe_validate_qianfan_auth(self) -> None:
+        if self.api_type == "qianfan":
+            if self.access_token is None:
+                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
+                if "ak" and "sk" not in self.default_chat_kwargs:
+                    ak, sk = C.get_global_aksk()
+                    if ak is None or sk is None:
+                        raise RuntimeError("Please set at least one of ak+sk or access token.")
+                    else:
+                        self.ak = ak
+                        self.sk = sk
+                else:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
+            else:
+                # If set access_token in environment and pass ak and sk in default_chat_kwargs,
+                # the access_token in default_chat_kwargs will be used.
+                if "ak" and "sk" in self.default_chat_kwargs:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
 
     async def _generate_response(
         self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
@@ -249,52 +249,52 @@ class ERNIEBot(BaseERNIEBot):
 
         return response
 
-    @staticmethod
-    def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
-        if hasattr(response, "function_call"):
-            function_call = FunctionCall(
-                name=response.function_call["name"],
-                thoughts=response.function_call["thoughts"],
-                arguments=response.function_call["arguments"],
-            )
-            return output_type(
-                content="",
-                function_call=function_call,
-                plugin_info=None,
-                search_info=None,
-                token_usage=response.usage,
-            )
-        elif hasattr(response, "plugin_info"):
-            plugin_info = PluginInfo(
-                names=[
-                    response["plugin_metas"][i]["pluginNameForModel"]
-                    for i in range(len(response["plugin_metas"]))
-                ]
-            )
 
-            return output_type(
-                content=response.result,
-                function_call=None,
-                plugin_info=plugin_info,
-                search_info=None,
-                token_usage=response.usage,
-            )
-        elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
-            search_info = SearchInfo(
-                results=response.search_info["search_results"],
-            )
-            return output_type(
-                content=response.result,
-                function_call=None,
-                plugin_info=None,
-                search_info=search_info,
-                token_usage=response.usage,
-            )
-        else:
-            return output_type(
-                content=response.result,
-                function_call=None,
-                plugin_info=None,
-                search_info=None,
-                token_usage=response.usage,
-            )
+def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
+    if hasattr(response, "function_call"):
+        function_call = FunctionCall(
+            name=response.function_call["name"],
+            thoughts=response.function_call["thoughts"],
+            arguments=response.function_call["arguments"],
+        )
+        return output_type(
+            content="",
+            function_call=function_call,
+            plugin_info=None,
+            search_info=None,
+            token_usage=response.usage,
+        )
+    elif hasattr(response, "plugin_info"):
+        plugin_info = PluginInfo(
+            names=[
+                response["plugin_metas"][i]["pluginNameForModel"]
+                for i in range(len(response["plugin_metas"]))
+            ]
+        )
+
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=plugin_info,
+            search_info=None,
+            token_usage=response.usage,
+        )
+    elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
+        search_info = SearchInfo(
+            results=response.search_info["search_results"],
+        )
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=None,
+            search_info=search_info,
+            token_usage=response.usage,
+        )
+    else:
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=None,
+            search_info=None,
+            token_usage=response.usage,
+        )
