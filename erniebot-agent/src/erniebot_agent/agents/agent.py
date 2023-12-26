@@ -107,7 +107,7 @@ class Agent(GradioMixin, BaseAgent):
         Args:
             prompt: A natural language text describing the task that the agent
                 should perform.
-            files: The files that the agent can use to perform the task.
+            files: A list of files that the agent can use to perform the task.
 
         Returns:
             Response from the agent.
@@ -117,6 +117,47 @@ class Agent(GradioMixin, BaseAgent):
         agent_resp = await self._async_run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
+
+    @final
+    async def async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
+        """Run the specified tool asynchronously.
+
+        Args:
+            tool_name: The name of the tool to run.
+            tool_args: The tool arguments in JSON format.
+
+        Returns:
+            Response from the tool.
+        """
+        tool = self._tool_manager.get_tool(tool_name)
+        await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
+        try:
+            tool_resp = await self._async_run_tool(tool, tool_args)
+        except (Exception, KeyboardInterrupt) as e:
+            await self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
+            raise
+        await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
+        return tool_resp
+
+    @final
+    async def async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+        """Run the LLM asynchronously.
+
+        Args:
+            messages: The input messages.
+            **opts: Options to pass to the LLM.
+
+        Returns:
+            Response from the LLM.
+        """
+        await self._callback_manager.on_llm_start(agent=self, llm=self._llm, messages=messages)
+        try:
+            llm_resp = await self._async_run_llm(messages, **opts)
+        except (Exception, KeyboardInterrupt) as e:
+            await self._callback_manager.on_llm_error(agent=self, llm=self._llm, error=e)
+            raise
+        await self._callback_manager.on_llm_end(agent=self, llm=self._llm, response=llm_resp)
+        return llm_resp
 
     def load_tool(self, tool: BaseTool) -> None:
         """Load a tool into the agent.
@@ -138,39 +179,26 @@ class Agent(GradioMixin, BaseAgent):
         """Clear the chat history."""
         self._memory.clear_chat_history()
 
+    async def get_file_manager(self) -> FileManager:
+        if self._file_manager is None:
+            file_manager = await GlobalFileManagerHandler().get()
+        else:
+            file_manager = self._file_manager
+        return file_manager
+
     @abc.abstractmethod
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        """Run the agent asynchronously.
-
-        This method is the same as `async_run`, except that the callbacks are
-        not called.
+        """Run the agent asynchronously without invoking callbacks.
+        
+        This method is called in `async_run`.
         """
         raise NotImplementedError
 
-    @final
-    async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
-        tool = self._tool_manager.get_tool(tool_name)
-        await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
-        try:
-            tool_resp = await self._async_run_tool_without_hooks(tool, tool_args)
-        except (Exception, KeyboardInterrupt) as e:
-            await self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
-            raise
-        await self._callback_manager.on_tool_end(agent=self, tool=tool, response=tool_resp)
-        return tool_resp
+    async def _async_run_tool(self, tool: BaseTool, tool_args: str) -> ToolResponse:
+        """Run the given tool asynchronously without invoking callbacks.
 
-    @final
-    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
-        await self._callback_manager.on_llm_start(agent=self, llm=self._llm, messages=messages)
-        try:
-            llm_resp = await self._async_run_llm_without_hooks(messages, **opts)
-        except (Exception, KeyboardInterrupt) as e:
-            await self._callback_manager.on_llm_error(agent=self, llm=self._llm, error=e)
-            raise
-        await self._callback_manager.on_llm_end(agent=self, llm=self._llm, response=llm_resp)
-        return llm_resp
-
-    async def _async_run_tool_without_hooks(self, tool: BaseTool, tool_args: str) -> ToolResponse:
+        This method is called in `async_run_tool`.
+        """
         parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
@@ -184,10 +212,14 @@ class Agent(GradioMixin, BaseAgent):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
-    async def _async_run_llm_without_hooks(
-        self, messages: List[Message], functions=None, **opts: Any
-    ) -> LLMResponse:
-        llm_ret = await self._llm.async_chat(messages, functions=functions, stream=False, **opts)
+    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+        """Run the LLM asynchronously without invoking callbacks.
+        
+        This method is called in `async_run_llm`.
+        """
+        if opts.get("stream", False):
+            raise ValueError("Streaming is not supported.")
+        llm_ret = await self._llm.async_chat(messages, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
     def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
@@ -207,7 +239,7 @@ class Agent(GradioMixin, BaseAgent):
         for val in args.values():
             if isinstance(val, str):
                 if protocol.is_file_id(val):
-                    file_manager = await self._get_file_manager()
+                    file_manager = await self.get_file_manager()
                     try:
                         file = file_manager.look_up_file_by_id(val)
                     except FileError as e:
@@ -230,10 +262,3 @@ class Agent(GradioMixin, BaseAgent):
             for plugin in self._plugins:
                 if plugin not in _PLUGINS_WO_FILE_IO:
                     self.file_needs_url = True
-
-    async def _get_file_manager(self) -> FileManager:
-        if self._file_manager is None:
-            file_manager = await GlobalFileManagerHandler().get()
-        else:
-            file_manager = self._file_manager
-        return file_manager

@@ -109,7 +109,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, files=[])
-                llm_resp = await self._async_run_llm_without_hooks(
+                llm_resp = await self._async_run_llm(
                     messages=chat_history,
                     functions=None,
                     system=self.system_message.content if self.system_message is not None else None,
@@ -254,7 +254,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
-        response = await self._async_run_llm_without_hooks(messages)
+        response = await self._async_run_llm(messages)
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results

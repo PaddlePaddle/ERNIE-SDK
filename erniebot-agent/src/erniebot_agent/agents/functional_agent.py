@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union
+from typing import List, NoReturn, Optional, Union
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -30,6 +30,7 @@ from erniebot_agent.memory.messages import (
 )
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.exceptions import FileError
 
 _MAX_STEPS = 5
 
@@ -38,11 +39,11 @@ class FunctionalAgent(Agent):
     """An agent driven by function calling.
 
     The orchestration capabilities of a functional agent are powered by the
-    function calling ability of the integrated LLMs. Typically, a functional
-    agent asks the LLM to generate a response that can be parsed into an action
-    (e.g., calling a tool with given arguments), and then the agent takes that
-    action, which forms an agent step. The agent repeats this process until the
-    maximum number of steps is reached or the LLM considers the task finished.
+    function calling ability of LLMs. Typically, a functional agent asks the LLM
+    to generate a response that can be parsed into an action (e.g., calling a
+    tool with given arguments), and then the agent takes that action, which
+    forms an agent step. The agent repeats this process until the maximum number
+    of steps is reached or the LLM considers the task finished.
 
     Attributes:
         llm: The LLM that the agent uses.
@@ -100,6 +101,9 @@ class FunctionalAgent(Agent):
             self.max_steps = _MAX_STEPS
 
     async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+        if files:
+            await self._ensure_managed_files(files)
+
         chat_history: List[Message] = []
         actions_taken: List[AgentAction] = []
         files_involved: List[AgentFile] = []
@@ -138,7 +142,7 @@ class FunctionalAgent(Agent):
         maybe_action = await self._async_plan(step_input, chat_history)
         if isinstance(maybe_action, AgentAction):
             action: AgentAction = maybe_action
-            tool_resp = await self._async_run_tool(tool_name=action.tool_name, tool_args=action.tool_args)
+            tool_resp = await self.async_run_tool(tool_name=action.tool_name, tool_args=action.tool_args)
             actions.append(action)
             files.extend(tool_resp.files)
             return FunctionMessage(name=action.tool_name, content=tool_resp.json)
@@ -151,7 +155,7 @@ class FunctionalAgent(Agent):
         chat_history.append(input_message)
 
         messages = self._memory.get_messages() + chat_history
-        llm_resp = await self._async_run_llm(
+        llm_resp = await self.async_run_llm(
             messages=messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
@@ -195,3 +199,16 @@ class FunctionalAgent(Agent):
             files=files,
             status="STOPPED",
         )
+
+    async def _ensure_managed_files(self, files: List[File]) -> None:
+        def _raise_exception(file: File) -> NoReturn:
+            raise FileError(f"{repr(file)} is not managed by the file manager of the agent.")
+
+        file_manager = await self.get_file_manager()
+        for file in files:
+            try:
+                managed_file = file_manager.look_up_file_by_id(file.id)
+            except FileError:
+                _raise_exception(file)
+            if file is not managed_file:
+                _raise_exception(file)

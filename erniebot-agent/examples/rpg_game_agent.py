@@ -21,7 +21,7 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentFile, AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file.base import File
@@ -87,7 +87,7 @@ class GameAgent(Agent):
         )
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
-        tool_response = await self._async_run_tool(
+        tool_response = await self.async_run_tool(
             tool_name=tool_name,
             tool_args=tool_args,
         )

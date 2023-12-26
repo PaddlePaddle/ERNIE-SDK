@@ -62,12 +62,12 @@ async def test_functional_agent_callbacks(identity_tool):
         callbacks=[callback_handler],
     )
 
-    await agent._async_run_llm([HumanMessage("Hello, world!")])
+    await agent.async_run_llm([HumanMessage("Hello, world!")])
     assert callback_handler.llm_starts == 1
     assert callback_handler.llm_ends == 1
     assert callback_handler.llm_errors == 0
 
-    await agent._async_run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
+    await agent.async_run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
@@ -106,7 +106,7 @@ async def test_functional_agent_run_llm_return_text():
         memory=FakeMemory(),
     )
 
-    llm_response = await agent._async_run_llm(messages=[HumanMessage("Hello, world!")])
+    llm_response = await agent.async_run_llm(messages=[HumanMessage("Hello, world!")])
 
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
@@ -126,7 +126,7 @@ async def test_functional_agent_run_llm_return_function_call(identity_tool):
         memory=FakeMemory(),
     )
 
-    llm_response = await agent._async_run_llm(messages=[HumanMessage("Hello, world!")])
+    llm_response = await agent.async_run_llm(messages=[HumanMessage("Hello, world!")])
 
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
@@ -141,16 +141,16 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
     )
 
     tool_input = {"param": "test"}
-    tool_response = await agent._async_run_tool(identity_tool.tool_name, json.dumps(tool_input))
+    tool_response = await agent.async_run_tool(identity_tool.tool_name, json.dumps(tool_input))
     assert json.loads(tool_response.json) == tool_input
 
     tool_input = {}
-    tool_response = await agent._async_run_tool(no_input_no_output_tool.tool_name, json.dumps(tool_input))
+    tool_response = await agent.async_run_tool(no_input_no_output_tool.tool_name, json.dumps(tool_input))
     assert json.loads(tool_response.json) == {}
 
     tool_input = {}
     with pytest.raises(ValueError):
-        await agent._async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
+        await agent.async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
 
 
 @pytest.mark.asyncio
