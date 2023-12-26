@@ -1,6 +1,6 @@
 [tool.isort]
 profile = 'black'
-src_paths = ['src']
+src_paths = ['src', 'tests']
 
 [tool.black]
 line-length = 109

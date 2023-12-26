@@ -1,12 +1,12 @@
 import pytest
 from erniebot import ChatCompletionResponse
-from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
-    FakeERNIEBotWithPresetResponses,
-)
 
 from erniebot_agent.chat_models.erniebot import convert_response_to_output
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.memory.messages import AIMessage
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
+    FakeERNIEBotWithPresetResponses,
+)
 
 
 # 1. fake various output from erniebot
