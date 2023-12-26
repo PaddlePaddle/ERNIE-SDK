@@ -60,7 +60,7 @@
 
 ## 3. FileManager 类介绍
 
-`FileManager` 类是一个高级文件管理工具，封装了文件的创建、上传、删除等操作，以及与 `Agent`进行交互，无论是  `LocalFile`还是 `RemoteFile`都可以使用它来统一管理。`FileManage`集成了与远程文件服务器交互的逻辑（通过 `RemoteFileClient`完成上传、下载、删除等文件操作）以及与本地文件交互的逻辑（从本地路径创建 `LocalFile`）。它依赖于 `FileRegistry` 来对文件进行用于在整个应用程序中管理文件的注册和查找。
+`FileManager` 类是一个高级文件管理工具，封装了文件的创建、上传、删除等操作，以及与 `Agent`进行交互，无论是  `LocalFile`还是 `RemoteFile`都可以使用它来统一管理。`FileManager`集成了与远程文件服务器交互的逻辑（通过 `RemoteFileClient`完成上传、下载、删除等文件操作）以及与本地文件交互的逻辑（从本地路径创建 `LocalFile`）。它依赖于 `FileRegistry` 来对文件进行用于在整个应用程序中管理文件的注册和查找。
 
 以下是相关的属性和方法
 
