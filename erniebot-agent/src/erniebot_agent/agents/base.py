@@ -27,10 +27,6 @@ class BaseAgent(Protocol):
     @property
     def llm(self) -> ChatModel:
         ...
-class BaseAgent(Protocol):
-    @property
-    def llm(self) -> ChatModel:
-        ...
 
     @property
     def memory(self) -> Memory:
@@ -40,13 +36,13 @@ class BaseAgent(Protocol):
     def tools(self) -> List[BaseTool]:
         ...
 
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         ...
 
-    async def async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
+    async def run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
         ...
 
-    async def async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+    async def run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         ...
 
     def load_tool(self, tool: BaseTool) -> None:
@@ -64,5 +60,5 @@ class BaseAgent(Protocol):
 
 @runtime_checkable
 class AgentLike(Protocol):
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         raise NotImplementedError

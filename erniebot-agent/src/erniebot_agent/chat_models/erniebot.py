@@ -93,7 +93,7 @@ class ERNIEBot(ChatModel):
                     self.sk = self.default_chat_kwargs.pop("sk")
 
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -104,7 +104,7 @@ class ERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -115,12 +115,12 @@ class ERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,

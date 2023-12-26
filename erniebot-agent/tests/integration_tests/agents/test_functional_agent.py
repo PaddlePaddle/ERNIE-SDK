@@ -32,7 +32,7 @@ async def test_functional_agent_run_one_hit(llm, tool, memory):
     agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
     prompt = ONE_HIT_PROMPT
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 4
@@ -57,7 +57,7 @@ async def test_functional_agent_run_no_hit(llm, tool, memory):
     agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
     prompt = NO_HIT_PROMPT
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 2
@@ -74,7 +74,7 @@ async def test_functional_agent_run_no_hit(llm, tool, memory):
 async def test_functional_agent_run_no_tool(llm, memory, prompt):
     agent = FunctionalAgent(llm=llm, tools=[], memory=memory)
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 2

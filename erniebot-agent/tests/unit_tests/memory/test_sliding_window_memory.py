@@ -21,7 +21,7 @@ class TestSlidingWindowMemory(unittest.IsolatedAsyncioTestCase):
             memory.add_message(HumanMessage(content="What is the purpose of model regularization?"))
 
             # AI message
-            message = await self.llm.async_chat(memory.get_messages())
+            message = await self.llm.chat(memory.get_messages())
             memory.add_message(message)
 
         self.assertTrue(len(memory.get_messages()) <= 2 * k)

@@ -16,10 +16,10 @@ class TestWholeMemory(unittest.IsolatedAsyncioTestCase):
 
         memory = WholeMemory()
         memory.add_message(message)
-        message = await self.llm.async_chat([message])
+        message = await self.llm.chat([message])
         memory.add_message(message)
         memory.add_message(HumanMessage("OK, what else?"))
-        message = await self.llm.async_chat(memory.get_messages())
+        message = await self.llm.chat(memory.get_messages())
         self.assertTrue(message is not None)
 
     def test_list_message_print_msg(self):

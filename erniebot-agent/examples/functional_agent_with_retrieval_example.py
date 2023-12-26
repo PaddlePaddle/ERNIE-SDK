@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         try:
-            response = asyncio.run(agent.async_run(query))
+            response = asyncio.run(agent.run(query))
             print(f"query: {query}")
             print(f"agent response: {response}")
         except Exception as e:

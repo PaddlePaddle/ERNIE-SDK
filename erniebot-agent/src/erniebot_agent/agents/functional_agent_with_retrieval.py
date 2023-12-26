@@ -89,7 +89,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -108,7 +108,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, files=[])
-                llm_resp = await self._async_run_llm(
+                llm_resp = await self._run_llm(
                     messages=chat_history,
                     functions=None,
                     system=self.system_message.content if self.system_message is not None else None,
@@ -145,7 +145,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
-            return await super()._async_run(prompt, files)
+            return await super()._run(prompt, files)
 
     def _enforce_token_limit(self, results):
         docs = []
@@ -183,7 +183,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
@@ -230,7 +230,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step_output = await self._async_step(
+                curr_step_output = await self._step(
                     next_step_input, chat_history, actions_taken, files_involved
                 )
                 if curr_step_output is None:
@@ -245,7 +245,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
-            return await super()._async_run(prompt)
+            return await super()._run(prompt)
 
     async def _maybe_retrieval(
         self,
@@ -253,7 +253,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
     ):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
-        response = await self._async_run_llm(messages)
+        response = await self._run_llm(messages)
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results
@@ -280,7 +280,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
@@ -324,7 +324,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step_output = await self._async_step(
+                curr_step_output = await self._step(
                     next_step_input, chat_history, actions_taken, files_involved
                 )
                 if curr_step_output is None:
@@ -339,7 +339,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
-            return await super()._async_run(prompt)
+            return await super()._run(prompt)
 
     async def _maybe_retrieval(
         self,

@@ -61,7 +61,7 @@ class TestImageGenerationTool(unittest.TestCase):
         memory = WholeMemory()
         img_gen_tool = ImageGenerationTool(yinian_ak=yinian_ak, yinian_sk=yinian_sk)
         agent = FunctionalAgent(llm=eb, tools=[img_gen_tool], memory=memory)
-        result = await agent.async_run("画1张小狗的图片")
+        result = await agent.run("画1张小狗的图片")
 
         self.assertIn("image_path", result)
         for path in result["image_path"]:

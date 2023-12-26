@@ -121,5 +121,5 @@ if __name__ == "__main__":
     memory = WholeMemory()
     # Agent test
     agent = FunctionalAgent(llm=llm, tools=[aurora_search], memory=memory)
-    response = asyncio.run(agent.async_run(query))
+    response = asyncio.run(agent.run(query))
     print(response)

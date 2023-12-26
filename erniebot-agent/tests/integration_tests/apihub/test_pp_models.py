@@ -17,7 +17,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("trans.png"))
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请帮我对图片中的人像抠出来", files=[file])
+        result = await agent.run("请帮我对图片中的人像抠出来", files=[file])
 
         self.assertEqual(len(result.files), 2)
 
@@ -28,7 +28,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请帮我对图中的行人进行分析", files=[file])
+        result = await agent.run("请帮我对图中的行人进行分析", files=[file])
         self.assertEqual(result.files[-1].type, "output")
 
     @pytest.mark.asyncio
@@ -40,7 +40,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file_path = self.download_fixture_file("humanseg_input_img.jpg")
         file = await self.file_manager.create_file_from_path(file_path)
 
-        result = await agent.async_run("对这张图片进行人像分割，包含的文件为：", files=[file])
+        result = await agent.run("对这张图片进行人像分割，包含的文件为：", files=[file])
         self.assertEqual(len(result.files), 2)
         self.assertEqual(len(result.actions), 1)
 
@@ -52,7 +52,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file_path = self.download_fixture_file("pp_tinypose_input_img.jpg")
         file = await self.file_manager.create_file_from_path(file_path)
 
-        result = await agent.async_run("检测这张图片中的人体关键点，包含的文件为：", files=[file])
+        result = await agent.run("检测这张图片中的人体关键点，包含的文件为：", files=[file])
         self.assertEqual(len(result.files), 2)
         self.assertEqual(len(result.actions), 1)
 
@@ -63,7 +63,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("vehicle.jpg"))
         agent = self.get_agent(toolkit)
 
-        response = await agent.async_run("请帮我对这幅图进行交通场景分析", files=[file])
+        response = await agent.run("请帮我对这幅图进行交通场景分析", files=[file])
 
         expected_tool_name = toolkit.get_tool("analyzeVehicles").tool_name
         self.assertEqual(response.chat_history[2].name, expected_tool_name)
@@ -80,7 +80,7 @@ class TestPPRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("ocr_table.png"))
-        result = await agent.async_run("请帮我提取一下这个表格的内容", files=[file])
+        result = await agent.run("请帮我提取一下这个表格的内容", files=[file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("设备", result.text)
 
@@ -93,7 +93,7 @@ class TestPPRemoteTool(RemoteToolTesting):
         )
         agent = self.get_agent(toolkit)
 
-        response = await agent.async_run("请帮我识别出这幅图片中的文字", files=[file])
+        response = await agent.run("请帮我识别出这幅图片中的文字", files=[file])
 
         self.assertEqual(len(response.actions), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)

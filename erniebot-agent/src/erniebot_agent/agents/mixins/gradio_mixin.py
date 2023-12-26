@@ -52,10 +52,10 @@ class GradioMixin:
                 raise gr.Error("Prompt should not be empty.")
 
             if _uploaded_file_cache:
-                response = await self.async_run(prompt, files=_uploaded_file_cache)
+                response = await self.run(prompt, files=_uploaded_file_cache)
                 _uploaded_file_cache = []
             else:
-                response = await self.async_run(prompt)
+                response = await self.run(prompt)
 
             if (
                 response.files

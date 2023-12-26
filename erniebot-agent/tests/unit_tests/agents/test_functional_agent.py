@@ -62,17 +62,17 @@ async def test_functional_agent_callbacks(identity_tool):
         callbacks=[callback_handler],
     )
 
-    await agent.async_run_llm([HumanMessage("Hello, world!")])
+    await agent.run_llm([HumanMessage("Hello, world!")])
     assert callback_handler.llm_starts == 1
     assert callback_handler.llm_ends == 1
     assert callback_handler.llm_errors == 0
 
-    await agent.async_run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
+    await agent.run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
 
-    await agent.async_run("Hello, world!")
+    await agent.run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
 
@@ -106,7 +106,7 @@ async def test_functional_agent_run_llm_return_text():
         memory=FakeMemory(),
     )
 
-    llm_response = await agent.async_run_llm(messages=[HumanMessage("Hello, world!")])
+    llm_response = await agent.run_llm(messages=[HumanMessage("Hello, world!")])
 
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
@@ -126,7 +126,7 @@ async def test_functional_agent_run_llm_return_function_call(identity_tool):
         memory=FakeMemory(),
     )
 
-    llm_response = await agent.async_run_llm(messages=[HumanMessage("Hello, world!")])
+    llm_response = await agent.run_llm(messages=[HumanMessage("Hello, world!")])
 
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
@@ -141,16 +141,16 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
     )
 
     tool_input = {"param": "test"}
-    tool_response = await agent.async_run_tool(identity_tool.tool_name, json.dumps(tool_input))
+    tool_response = await agent.run_tool(identity_tool.tool_name, json.dumps(tool_input))
     assert json.loads(tool_response.json) == tool_input
 
     tool_input = {}
-    tool_response = await agent.async_run_tool(no_input_no_output_tool.tool_name, json.dumps(tool_input))
+    tool_response = await agent.run_tool(no_input_no_output_tool.tool_name, json.dumps(tool_input))
     assert json.loads(tool_response.json) == {}
 
     tool_input = {}
     with pytest.raises(ValueError):
-        await agent.async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
+        await agent.run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
 
 
 @pytest.mark.asyncio
@@ -180,7 +180,7 @@ async def test_functional_agent_memory(identity_tool):
         memory=FakeMemory(),
     )
 
-    await agent.async_run(input_text)
+    await agent.run(input_text)
     messages_in_memory = agent.memory.get_messages()
     assert len(messages_in_memory) == 2
     assert isinstance(messages_in_memory[0], HumanMessage)
@@ -188,7 +188,7 @@ async def test_functional_agent_memory(identity_tool):
     assert isinstance(messages_in_memory[1], AIMessage)
     assert messages_in_memory[1].content == output_text
 
-    await agent.async_run(input_text)
+    await agent.run(input_text)
     assert len(agent.memory.get_messages()) == 2 + 2
     agent.reset_memory()
     assert len(agent.memory.get_messages()) == 0
@@ -216,6 +216,6 @@ async def test_functional_agent_max_steps(identity_tool):
         max_steps=2,
     )
 
-    response = await agent.async_run("Run!")
+    response = await agent.run("Run!")
 
     assert response.status == "STOPPED"

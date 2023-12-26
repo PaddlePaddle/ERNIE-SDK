@@ -101,7 +101,7 @@ class Agent(GradioMixin, BaseAgent):
         return self._tool_manager.get_tools()
 
     @final
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         """Run the agent asynchronously.
 
         Args:
@@ -114,12 +114,12 @@ class Agent(GradioMixin, BaseAgent):
         """
 
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
-        agent_resp = await self._async_run(prompt, files)
+        agent_resp = await self._run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
     @final
-    async def async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
+    async def run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
         """Run the specified tool asynchronously.
 
         Args:
@@ -132,7 +132,7 @@ class Agent(GradioMixin, BaseAgent):
         tool = self._tool_manager.get_tool(tool_name)
         await self._callback_manager.on_tool_start(agent=self, tool=tool, input_args=tool_args)
         try:
-            tool_resp = await self._async_run_tool(tool, tool_args)
+            tool_resp = await self._run_tool(tool, tool_args)
         except (Exception, KeyboardInterrupt) as e:
             await self._callback_manager.on_tool_error(agent=self, tool=tool, error=e)
             raise
@@ -140,7 +140,7 @@ class Agent(GradioMixin, BaseAgent):
         return tool_resp
 
     @final
-    async def async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+    async def run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         """Run the LLM asynchronously.
 
         Args:
@@ -152,7 +152,7 @@ class Agent(GradioMixin, BaseAgent):
         """
         await self._callback_manager.on_llm_start(agent=self, llm=self._llm, messages=messages)
         try:
-            llm_resp = await self._async_run_llm(messages, **opts)
+            llm_resp = await self._run_llm(messages, **opts)
         except (Exception, KeyboardInterrupt) as e:
             await self._callback_manager.on_llm_error(agent=self, llm=self._llm, error=e)
             raise
@@ -187,17 +187,17 @@ class Agent(GradioMixin, BaseAgent):
         return file_manager
 
     @abc.abstractmethod
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         """Run the agent asynchronously without invoking callbacks.
-        
-        This method is called in `async_run`.
+
+        This method is called in `run`.
         """
         raise NotImplementedError
 
-    async def _async_run_tool(self, tool: BaseTool, tool_args: str) -> ToolResponse:
+    async def _run_tool(self, tool: BaseTool, tool_args: str) -> ToolResponse:
         """Run the given tool asynchronously without invoking callbacks.
 
-        This method is called in `async_run_tool`.
+        This method is called in `run_tool`.
         """
         parsed_tool_args = self._parse_tool_args(tool_args)
         # XXX: Sniffing is less efficient and probably unnecessary.
@@ -212,14 +212,14 @@ class Agent(GradioMixin, BaseAgent):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, files=input_files + output_files)
 
-    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
+    async def _run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         """Run the LLM asynchronously without invoking callbacks.
-        
-        This method is called in `async_run_llm`.
+
+        This method is called in `run_llm`.
         """
         if opts.get("stream", False):
             raise ValueError("Streaming is not supported.")
-        llm_ret = await self._llm.async_chat(messages, stream=False, **opts)
+        llm_ret = await self._llm.chat(messages, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
     def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:

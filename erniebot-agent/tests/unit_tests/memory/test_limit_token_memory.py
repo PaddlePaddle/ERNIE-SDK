@@ -16,10 +16,10 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
 
         memory = LimitTokensMemory(4000)
         memory.add_message(messages)
-        message = await self.llm.async_chat([messages])
+        message = await self.llm.chat([messages])
         memory.add_message(message)
         memory.add_message(HumanMessage("OK, what else?"))
-        message = await self.llm.async_chat(memory.get_messages())
+        message = await self.llm.chat(memory.get_messages())
         self.assertTrue(message is not None)
 
     @pytest.mark.asyncio
@@ -32,7 +32,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
             memory.add_message(HumanMessage(content="What is the purpose of model regularization?"))
 
             # AI message
-            message = await self.llm.async_chat(memory.get_messages())
+            message = await self.llm.chat(memory.get_messages())
             memory.add_message(message)
 
         self.assertTrue(memory.mem_token_count <= 20)
@@ -53,7 +53,7 @@ class Testlimit_tokenMemory(unittest.IsolatedAsyncioTestCase):
             memory.add_message(HumanMessage(content="这个图像中的内容是什么？"))
 
             # AI message
-            message = await self.llm.async_chat(memory.get_messages())
+            message = await self.llm.chat(memory.get_messages())
             memory.add_message(message)
 
         # Keypoint 2:没有传入token_count 的fallback情况，此时也能正确裁剪信息

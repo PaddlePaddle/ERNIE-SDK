@@ -10,7 +10,7 @@ class FakeSimpleChatModel(ChatModel):
     def response(self):
         return AIMessage(content="Text response", function_call=None, token_usage=None)
 
-    async def async_chat(self, messages, *, stream=False, **kwargs):
+    async def chat(self, messages, *, stream=False, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
         return self.response
@@ -22,7 +22,7 @@ class FakeChatModelWithPresetResponses(ChatModel):
         self.responses = responses
         self._counter = 0
 
-    async def async_chat(self, messages, *, stream=False, **kwargs):
+    async def chat(self, messages, *, stream=False, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
         response = self.responses[self._counter]
