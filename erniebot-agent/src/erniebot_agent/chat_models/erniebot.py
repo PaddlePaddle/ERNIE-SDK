@@ -34,6 +34,7 @@ from erniebot_agent.memory.messages import (
     AIMessageChunk,
     FunctionCall,
     Message,
+    PluginInfo,
     SearchInfo,
 )
 from erniebot_agent.utils import config_from_environ as C
@@ -96,6 +97,31 @@ class ERNIEBot(ChatModel):
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
+    
+    async def _get_response(self, cfg_dict: dict, stream: bool, functions:Optional[List[dict]]) -> Union[EBResponse, List[EBResponse]]:
+        # TODO: Improve this when erniebot typing issue is fixed.
+        # Note: If plugins is not None, erniebot will not use Baidu_search.
+        if "plugins" in cfg_dict:
+            response = await erniebot.ChatCompletionWithPlugins.acreate(
+                messages=cfg_dict["messages"],
+                plugins=cfg_dict["plugins"],  # type: ignore
+                stream=stream,
+                _config_=cfg_dict["_config_"],
+                functions=functions,  # type: ignore
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+            )
+        else:
+            response = await erniebot.ChatCompletion.acreate(
+                stream=stream,
+                extra_params={
+                    "extra_data": self.enable_multi_step_json,
+                },
+                **cfg_dict,
+            )
+        
+        return response
 
     async def async_chat(
         self,
@@ -140,27 +166,8 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
-        # TODO: Improve this when erniebot typing issue is fixed.
-        # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if cfg_dict.get("plugins", None):
-            response = await erniebot.ChatCompletionWithPlugins.acreate(
-                messages=cfg_dict["messages"],
-                plugins=cfg_dict["plugins"],  # type: ignore
-                stream=stream,
-                _config_=cfg_dict["_config_"],
-                functions=functions,  # type: ignore
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-            )
-        else:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=stream,
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-                **cfg_dict,
-            )
+        response = await self._get_response(cfg_dict, stream, functions)
+
         if isinstance(response, EBResponse):
             return self.convert_response_to_output(response, AIMessage)
         else:
@@ -178,7 +185,25 @@ class ERNIEBot(ChatModel):
                 arguments=response.function_call["arguments"],
             )
             return output_type(
-                content="", function_call=function_call, search_info=None, token_usage=response.usage
+                content="",
+                function_call=function_call,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
+            )
+        elif hasattr(response, "plugin_info"):
+            plugin_info = PluginInfo(
+                names=[response['plugin_metas'][i]['pluginNameForModel'] 
+                for i in range(len(response['plugin_metas']))
+                ]
+            )
+
+            return output_type(
+                content=response.result,
+                function_call=None,
+                plugin_info=plugin_info,
+                search_info=None,
+                token_usage=response.usage,
             )
         elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
             search_info = SearchInfo(
@@ -187,10 +212,15 @@ class ERNIEBot(ChatModel):
             return output_type(
                 content=response.result,
                 function_call=None,
+                plugin_info=None,
                 search_info=search_info,
                 token_usage=response.usage,
             )
         else:
             return output_type(
-                content=response.result, function_call=None, search_info=None, token_usage=response.usage
+                content=response.result,
+                function_call=None,
+                plugin_info=None,
+                search_info=None,
+                token_usage=response.usage,
             )
