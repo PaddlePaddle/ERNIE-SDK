@@ -197,14 +197,13 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             )
 
             chat_history.append(HumanMessage(content=prompt))
-
             outputs = []
             for item in results["documents"]:
                 outputs.append(
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
@@ -254,6 +253,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
         response = await self._async_run_llm_without_hooks(messages)
+
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results
@@ -299,7 +299,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
