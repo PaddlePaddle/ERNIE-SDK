@@ -6,9 +6,10 @@
 
 推荐使用  `GlobalFileManagerHandler`在事件循环开始时初始化 `FileManager`以及获取全局的 `FileManager`，之后只需通过这个全局的 `FileManager`对文件进行增、删、查等操作以及获取Agent产生的文件。
 
-* **不推荐**用户自行操作 `File`类以免造成资源泄露。
-* `FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
-* `FileManager`将作为此模块中生命周期最长的对象，它会在关闭时回收所有的持有对象（RemoteClient/temp local file），请不要随意关闭它。如果需要关闭已停止对其中所有注册文件的使用。
+!!! notes 注意
+    * **不推荐**用户自行操作 `File`类以免造成资源泄露。
+    * `FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
+    * `FileManager`将作为此模块中生命周期最长的对象，它会在关闭时回收所有的持有对象（RemoteClient/temp local file），请不要随意关闭它。如果需要关闭已停止对其中所有注册文件的使用。
 
 ## 2. File 基类及其子类介绍
 
@@ -76,29 +77,28 @@
 | look_up_file_by_id           | 通过ID查找本地文件                   |
 | list_remote_files            | 列出远程文件                         |
 
-* `FileManager` 类不可被复制以免造成资源泄露。
-* 如果未指定 `save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。反之，都会被保存。
-* 如果 `FileManager` 类有相关联的 `RemoteFileClient`，那么当 `FileManager`关闭时，相关联的 `RemoteFileClient`也会一起关闭。
+!!! notes 注意
+    * `FileManager` 类不可被复制以免造成资源泄露。
+    * 如果未指定 `save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。反之，都会被保存。
+    * 如果 `FileManager` 类有相关联的 `RemoteFileClient`，那么当 `FileManager`关闭时，相关联的 `RemoteFileClient`也会一起关闭。
 
 ## 4. RemoteFileClient 类介绍
 
 `RemoteFileClient` 是用于与远程文件服务器交互的类。它定义了文件上传、文件下载、文件删除等操作的方法。`AIStudioFileClient` 是 `RemoteFileClient` 的一个具体推荐实现，用于与文件服务交互，用户使用 `access token`作为参数用于身份验证，之后能够在AIStudio文件服务中上传、检索、列出文件，以及创建临时URL以访问文件。`RemoteFileClient`使用时被 `FileManager`持有，一旦 `FileManager`关闭，`RemoteFileClient`也会相应被关闭，其中的资源也会被相应释放。
 
-* 一般情况下无需使用 `RemoteFile`，默认所有文件都为 `LocalFile`，如需使用，将 `GlobalFileManagerHandler`的。
+!!! notes 注意
+    * 一般情况下无需使用 `RemoteFile`，默认所有文件都为 `LocalFile`，如需使用，将 `GlobalFileManagerHandler`的。
 
 ## 5. 使用方法
 
 1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件，注：它的生命周期同整个事件循环。
-
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()  
 ```
-
 2. 通过 `GlobalFileManagerHandler`创建 `File`
-
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
@@ -107,9 +107,7 @@ async def demo_function():
     # 从路径创建File, file_type可选择local或者remote file_purpose='assistant'代表用于给LLM输入使用
     local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
 ```
-
 3. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
-
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
@@ -122,7 +120,6 @@ async def demo_function():
     # 写出到指定位置
     await local_file.write_contents_to('your_willing_path')
 ```
-
 4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件
    ```python
    from erniebot_agent.file import GlobalFileManagerHandler
