@@ -27,6 +27,10 @@ class BaseAgent(Protocol):
     @property
     def llm(self) -> ChatModel:
         ...
+class BaseAgent(Protocol):
+    @property
+    def llm(self) -> ChatModel:
+        ...
 
     @property
     def memory(self) -> Memory:

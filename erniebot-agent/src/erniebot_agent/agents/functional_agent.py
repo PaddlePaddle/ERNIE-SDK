@@ -84,6 +84,27 @@ class FunctionalAgent(Agent):
             max_steps: The maximum number of steps in each agent run. If `None`,
                 use a default value.
         """
+        """Initialize a functional agent.
+
+        Args:
+            llm: An LLM for the agent to use.
+            tools: A list of tools for the agent to use.
+            memory: A memory object that equips the agent to remember chat
+                history.
+            system_message: A message that tells the LLM how to interpret the
+                conversations. If `None`, the system message contained in
+                `memory` will be used.
+            callbacks: A list of callback handlers for the agent to use. If
+                `None`, a default list of callbacks will be used.
+            file_manager: A file manager for the agent to interact with files.
+                If `None`, a global file manager that can be shared among
+                different components will be implicitly created and used.
+            plugins: A list of names of the plugins for the agent to use. If
+                `None`, the agent will use a default list of plugins. Set
+                `plugins` to `[]` to disable the use of plugins.
+            max_steps: The maximum number of steps in each agent run. If `None`,
+                use a default value.
+        """
         super().__init__(
             llm=llm,
             tools=tools,
@@ -123,8 +144,8 @@ class FunctionalAgent(Agent):
             )
             if curr_step_output is None:
                 response = self._create_finished_response(chat_history, actions_taken, files_involved)
-                self._memory.add_message(chat_history[0])
-                self._memory.add_message(chat_history[-1])
+                self.__memory.add_message(chat_history[0])
+                self.__memory.add_message(chat_history[-1])
                 return response
             num_steps_taken += 1
             next_step_input = curr_step_output

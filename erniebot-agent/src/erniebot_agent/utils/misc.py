@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ["Singleton"]
 
+class SingletonMeta(type):
+    _insts = {}  # type: ignore
 
-class Singleton(object):
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is not None:
-            cls._instance = super().__new__(*args, **kwargs)
-        return cls._instance
+    def __call__(cls, *args, **kwargs):
+        # XXX: We note that the instance created in this way can be actually
+        # copied by `copy.copy` or `copy.deepcopy`, which results in multiple
+        # instances. Perhaps we should forbid the copy operations by patching
+        # the created instance.
+        if cls not in cls._insts:
+            if cls not in cls._insts:
+                cls._insts[cls] = super().__call__(*args, **kwargs)
+        return cls._insts[cls]
