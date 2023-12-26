@@ -12,11 +12,13 @@ nav:
     - messages: 'modules/messages.md'
     - chat_modles: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
+    - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
   - API:
     - erniebot-agent:
       - messages: "package/erniebot_agent/messages.md"
       - memory: "package/erniebot_agent/memory.md"
+      - file: "package/erniebot_agent/file.md"
       - tools: "package/erniebot_agent/tools.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
       - agents: "package/erniebot_agent/agents.md"

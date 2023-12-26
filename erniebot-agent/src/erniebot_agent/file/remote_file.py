@@ -28,6 +28,28 @@ from erniebot_agent.utils.mixins import Closeable
 
 
 class RemoteFile(File):
+    """
+    Represents a remote file.
+
+    Attributes:
+        id (str): Unique identifier for the file.
+        filename (str): File name.
+        byte_size (int): Size of the file in bytes.
+        created_at (str): Timestamp indicating the file creation time.
+        purpose (str): Purpose or use case of the file,
+                       including "assistants" and "assistants_output".
+        metadata (Dict[str, Any]): Additional metadata associated with the file.
+        client (RemoteFileClient): The client of remote file.
+
+    Methods:
+        read_contents: Asynchronously read the contents of the local file.
+        write_contents_to: Asynchronously write the file contents to a local path.
+        get_file_repr: Return a string representation for use in specific contexts.
+        delete: Asynchronously delete the file from client.
+        create_temporary_url: Asynchronously create a temporary URL for the file.
+
+    """
+
     def __init__(
         self,
         *,
@@ -65,6 +87,7 @@ class RemoteFile(File):
         await self._client.delete_file(self.id)
 
     async def create_temporary_url(self, expire_after: float = 600) -> str:
+        """To create a temporary valid URL for the file."""
         return await self._client.create_temporary_url(self.id, expire_after)
 
     def get_file_repr_with_url(self, url: str) -> str:
@@ -100,6 +123,20 @@ class RemoteFileClient(Closeable, metaclass=abc.ABCMeta):
 
 
 class AIStudioFileClient(RemoteFileClient):
+    """
+    Recommended remote file client: AI Studio.
+
+    Methods:
+        upload_file: Upload a file to AI Studio client.
+        retrieve_file: Retrieve information about a file from AI Studio.
+        retrieve_file_contents: Retrieve the contents of a file from AI Studio.
+        list_files: List files available in AI Studio.
+        delete_file: Delete a file in AI Studio client(#TODO: not supported now).
+        create_temporary_url: Create a temporary URL for accessing a file in AI Studio.
+        close: Close the AIStudioFileClient.
+
+    """
+
     _BASE_URL: ClassVar[str] = "https://sandbox-aistudio.baidu.com"
     _UPLOAD_ENDPOINT: ClassVar[str] = "/llm/lmapp/files"
     _RETRIEVE_ENDPOINT: ClassVar[str] = "/llm/lmapp/files/{file_id}"
@@ -109,6 +146,14 @@ class AIStudioFileClient(RemoteFileClient):
     def __init__(
         self, access_token: str, *, aiohttp_session: Optional[aiohttp.ClientSession] = None
     ) -> None:
+        """
+        Initialize the AIStudioFileClient.
+
+        Args:
+            access_token (str): The access token for AI Studio.
+            aiohttp_session (Optional[aiohttp.ClientSession]): A custom aiohttp session (default is None).
+
+        """
         super().__init__()
         self._access_token = access_token
         if aiohttp_session is None:
@@ -123,6 +168,7 @@ class AIStudioFileClient(RemoteFileClient):
     async def upload_file(
         self, file_path: pathlib.Path, file_purpose: protocol.FilePurpose, file_metadata: Dict[str, Any]
     ) -> RemoteFile:
+        """Upload a file to AI Studio client."""
         self.ensure_not_closed()
         url = self._get_url(self._UPLOAD_ENDPOINT)
         headers: Dict[str, str] = {}
@@ -143,6 +189,7 @@ class AIStudioFileClient(RemoteFileClient):
         return self._create_file_obj_from_dict(result)
 
     async def retrieve_file(self, file_id: str) -> RemoteFile:
+        """Retrieve a file in AI Studio client by id."""
         self.ensure_not_closed()
         url = self._get_url(self._RETRIEVE_ENDPOINT).format(file_id=file_id)
         headers: Dict[str, str] = {}
@@ -157,6 +204,7 @@ class AIStudioFileClient(RemoteFileClient):
         return self._create_file_obj_from_dict(result)
 
     async def retrieve_file_contents(self, file_id: str) -> bytes:
+        """Retrieve file content in AI Studio client by id."""
         self.ensure_not_closed()
         url = self._get_url(self._RETRIEVE_CONTENTS_ENDPOINT).format(file_id=file_id)
         headers: Dict[str, str] = {}
@@ -170,6 +218,7 @@ class AIStudioFileClient(RemoteFileClient):
         return resp_bytes
 
     async def list_files(self) -> List[RemoteFile]:
+        """List files in AI Studio client."""
         self.ensure_not_closed()
         url = self._get_url(self._LIST_ENDPOINT)
         headers: Dict[str, str] = {}
