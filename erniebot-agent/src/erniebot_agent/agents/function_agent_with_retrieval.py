@@ -5,7 +5,17 @@ from typing import Any, Dict, List, Optional, Type
 from pydantic import Field
 
 from erniebot_agent.agents.function_agent import FunctionAgent
-from erniebot_agent.agents.schema import AgentAction, AgentResponse, File, ToolResponse
+from erniebot_agent.agents.schema import (
+    AgentResponse,
+    AgentStep,
+    File,
+    NoActionStep,
+    PluginStep,
+    ToolAction,
+    ToolInfo,
+    ToolResponse,
+    ToolStep,
+)
 from erniebot_agent.memory.messages import (
     AIMessage,
     FunctionMessage,
@@ -96,12 +106,18 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
-                actions_taken: List[AgentAction] = []
-                files_involved: List[File] = []
-                actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
+                steps_taken: List[AgentStep] = []
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
-                tool_resp = ToolResponse(json=tool_ret_json, files=[])
+                tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
+                steps_taken.append(
+                    ToolStep(
+                        info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
+                        result=tool_resp.json,
+                        input_files=tool_resp.input_files,
+                        output_files=tool_resp.output_files,
+                    )
+                )
                 llm_resp = await self._run_llm(
                     messages=chat_history,
                     functions=None,
@@ -131,7 +147,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
                 raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            response = self._create_finished_response(chat_history, actions_taken, files_involved)
+            response = self._create_finished_response(chat_history, steps_taken)
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
             return response
@@ -182,8 +198,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         if results["is_relevant"] is True:
             # RAG
             chat_history: List[Message] = []
-            actions_taken: List[AgentAction] = []
-            files_involved: List[File] = []
+            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -213,26 +228,35 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
-            actions_taken.append(action)
+            action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
-            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            chat_history.append(next_step_input)
+            tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
+            steps_taken.append(
+                ToolStep(
+                    info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
+                    result=tool_resp.json,
+                    input_files=tool_resp.input_files,
+                    output_files=tool_resp.output_files,
+                )
+            )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step_output = await self._step(
-                    next_step_input, chat_history, actions_taken, files_involved
-                )
-                if curr_step_output is None:
-                    response = self._create_finished_response(chat_history, actions_taken, files_involved)
+                curr_step, new_messages = await self._step(chat_history)
+                chat_history.extend(new_messages)
+                if not isinstance(curr_step, NoActionStep):
+                    steps_taken.append(curr_step)
+                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
+                    response = self._create_finished_response(chat_history, steps_taken)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
                 num_steps_taken += 1
-            response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+            response = self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
             logger.info(
@@ -278,8 +302,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         if len(results["documents"]) > 0:
             # RAG
             chat_history: List[Message] = []
-            actions_taken: List[AgentAction] = []
-            files_involved: List[File] = []
+            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -308,25 +331,46 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             )
 
             # Knowledge Retrieval Tool
-            action = AgentAction(tool_name="KnowledgeBaseTool", tool_args=tool_args)
-            actions_taken.append(action)
+            action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
-            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            chat_history.append(next_step_input)
+            tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
+            steps_taken.append(
+                ToolStep(
+                    info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
+                    result=tool_resp.json,
+                    input_files=tool_resp.input_files,
+                    output_files=tool_resp.output_files,
+                )
+            )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step_output = await self._step(
-                    next_step_input, chat_history, actions_taken, files_involved
-                )
-                if curr_step_output is None:
-                    response = self._create_finished_response(chat_history, actions_taken, files_involved)
+                curr_step, new_messages = await self._step(chat_history)
+                chat_history.extend(new_messages)
+                if not isinstance(curr_step, NoActionStep):
+                    steps_taken.append(curr_step)
+                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
+                    response = self._create_finished_response(chat_history, steps_taken)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
                 num_steps_taken += 1
-            response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+            response = self._create_stopped_response(chat_history, steps_taken)
+            # while num_steps_taken < self.max_steps:
+            #     curr_step_output = await self._step(
+            #         next_step_input, chat_history, actions_taken, files_involved
+            #     )
+            #     if curr_step_output is None:
+            #         response = self._create_finished_response(chat_history, actions_taken, files_involved)
+            #         self.memory.add_message(chat_history[0])
+            #         self.memory.add_message(chat_history[-1])
+            #         return response
+            #     num_steps_taken += 1
+            # # response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+            # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
             logger.info(
