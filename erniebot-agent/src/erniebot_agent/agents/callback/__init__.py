@@ -11,3 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
+from erniebot_agent.agents.callback.handlers import CallbackHandler, LoggingHandler

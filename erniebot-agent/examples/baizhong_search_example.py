@@ -7,7 +7,7 @@ from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import SpacyTextSplitter
 from tqdm import tqdm
 
-from erniebot_agent.agents.functional_agent import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory.whole_memory import WholeMemory
 from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
@@ -120,6 +120,6 @@ if __name__ == "__main__":
     llm = ERNIEBot(model="ernie-3.5", api_type="custom")
     memory = WholeMemory()
     # Agent test
-    agent = FunctionalAgent(llm=llm, tools=[aurora_search], memory=memory)
-    response = asyncio.run(agent.async_run(query))
+    agent = FunctionAgent(llm=llm, tools=[aurora_search], memory=memory)
+    response = asyncio.run(agent.run(query))
     print(response)

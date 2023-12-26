@@ -22,7 +22,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请帮我提取一下这个图片中的内容", files=[self.file])
+        result = await agent.run("请帮我提取一下这个图片中的内容", files=[self.file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("表格", result.text)
 
@@ -32,7 +32,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("请帮我提取一下这个表格的内容", files=[self.file])
+        result = await agent.run("请帮我提取一下这个表格的内容", files=[self.file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("设备", result.text)
 
@@ -45,7 +45,7 @@ class TestRemoteTool(RemoteToolTesting):
         )
         agent = self.get_agent(toolkit)
 
-        response = await agent.async_run("请帮我识别出这幅图片中的文字", files=[file])
+        response = await agent.run("请帮我识别出这幅图片中的文字", files=[file])
 
         self.assertEqual(len(response.steps), 1)
         decoded_tool_ret = json.loads(response.chat_history[2].content)
@@ -57,7 +57,7 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("xiaopiao.png"))
-        result = await agent.async_run("这张购物小票中有什么东西", files=[file])
+        result = await agent.run("这张购物小票中有什么东西", files=[file])
         self.assertEqual(len(result.files), 1)
         self.assertGreater(len(result.text), 5)
 
@@ -67,6 +67,6 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("fomula.png"))
-        result = await agent.async_run("请抽取一下这张图片里面的公式：", files=[file])
+        result = await agent.run("请抽取一下这张图片里面的公式：", files=[file])
         self.assertEqual(len(result.files), 1)
         self.assertGreater(len(result.text), 5)

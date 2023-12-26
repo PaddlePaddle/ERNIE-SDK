@@ -114,6 +114,8 @@ class LocalFile(File):
         if validate_file_id:
             if not protocol.is_local_file_id(id):
                 raise ValueError(f"Invalid file ID: {id}")
+        if not protocol.is_valid_file_purpose(purpose):
+            raise ValueError(f"Invalid file purpose: {purpose}")
         super().__init__(
             id=id,
             filename=filename,

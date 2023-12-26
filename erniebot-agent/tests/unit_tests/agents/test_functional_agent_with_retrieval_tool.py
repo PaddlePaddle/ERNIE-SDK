@@ -3,18 +3,18 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+
+from erniebot_agent.agents import FunctionAgentWithRetrievalTool
+from erniebot_agent.memory import AIMessage, HumanMessage
+from erniebot_agent.retrieval import BaizhongSearch
 from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
-    FakeChatModelWithPresetResponses,
+    FakeERNIEBotWithPresetResponses,
     FakeSimpleChatModel,
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
-
-from erniebot_agent.agents import FunctionalAgentWithRetrievalTool
-from erniebot_agent.memory import AIMessage, HumanMessage
-from erniebot_agent.retrieval import BaizhongSearch
 
 
 @pytest.fixture(scope="module")
@@ -66,7 +66,7 @@ async def test_functional_agent_with_retrieval_tool_tool_callbacks(identity_tool
         access_token=access_token,
         knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
     )
-    agent = FunctionalAgentWithRetrievalTool(
+    agent = FunctionAgentWithRetrievalTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
         tools=[identity_tool],
@@ -74,25 +74,25 @@ async def test_functional_agent_with_retrieval_tool_tool_callbacks(identity_tool
         callbacks=[callback_handler],
     )
 
-    await agent._async_run_llm([HumanMessage("Hello, world!")])
+    await agent.run_llm([HumanMessage("Hello, world!")])
     assert callback_handler.llm_starts == 1
     assert callback_handler.llm_ends == 1
     assert callback_handler.llm_errors == 0
 
-    await agent._async_run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
+    await agent.run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
 
     # Add new callback
     callback_handler = CountingCallbackHandler()
-    llm = FakeChatModelWithPresetResponses(
+    llm = FakeERNIEBotWithPresetResponses(
         responses=[
             AIMessage('{"is_relevant":true}', function_call=None),
             AIMessage("Text response", function_call=None),
         ]
     )
-    agent = FunctionalAgentWithRetrievalTool(
+    agent = FunctionAgentWithRetrievalTool(
         knowledge_base=search_db,
         llm=llm,
         tools=[identity_tool],
@@ -101,7 +101,7 @@ async def test_functional_agent_with_retrieval_tool_tool_callbacks(identity_tool
     )
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        await agent.async_run("Hello, world!")
+        await agent.run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
 
@@ -125,20 +125,20 @@ async def test_functional_agent_with_retrieval_tool_run_retrieval_tool(identity_
         access_token=access_token,
         knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
     )
-    llm = FakeChatModelWithPresetResponses(
+    llm = FakeERNIEBotWithPresetResponses(
         responses=[
             AIMessage('{"is_relevant":true}', function_call=None),
             AIMessage("Text response", function_call=None),
         ]
     )
-    agent = FunctionalAgentWithRetrievalTool(
+    agent = FunctionAgentWithRetrievalTool(
         knowledge_base=search_db, llm=llm, tools=[identity_tool], memory=FakeMemory()
     )
 
     # Test retrieval success
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        response = await agent.async_run("Hello, world!")
+        response = await agent.run("Hello, world!")
 
     assert response.text == "Text response"
     # HumanMessage
@@ -160,19 +160,19 @@ async def test_functional_agent_with_retrieval_tool_run_retrieval_tool(identity_
     # AIMessage
     assert response.chat_history[3].content == "Text response"
 
-    llm = FakeChatModelWithPresetResponses(
+    llm = FakeERNIEBotWithPresetResponses(
         responses=[
             AIMessage('{"is_relevant":false}', function_call=None),
             AIMessage("Text response", function_call=None),
         ]
     )
-    agent = FunctionalAgentWithRetrievalTool(
+    agent = FunctionAgentWithRetrievalTool(
         knowledge_base=search_db, llm=llm, tools=[identity_tool], memory=FakeMemory()
     )
     # Test retrieval failed
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        response = await agent.async_run("Hello, world!")
+        response = await agent.run("Hello, world!")
     assert response.text == "Text response"
     # HumanMessage
     assert response.chat_history[0].content == "Hello, world!"

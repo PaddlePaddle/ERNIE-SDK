@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from erniebot_agent.agents.functional_agent import FunctionalAgent
-from erniebot_agent.chat_models.erniebot import ERNIEBot
+from erniebot_agent.agents import FunctionAgent
+from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.memory.messages import AIMessage, FunctionMessage, HumanMessage
 from erniebot_agent.tools.calculator_tool import CalculatorTool
@@ -28,11 +28,11 @@ def memory():
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_one_hit(llm, tool, memory):
-    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
+async def test_function_agent_run_one_hit(llm, tool, memory):
+    agent = FunctionAgent(llm=llm, tools=[tool], memory=memory)
     prompt = ONE_HIT_PROMPT
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 4
@@ -53,11 +53,11 @@ async def test_functional_agent_run_one_hit(llm, tool, memory):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_no_hit(llm, tool, memory):
-    agent = FunctionalAgent(llm=llm, tools=[tool], memory=memory)
+async def test_function_agent_run_no_hit(llm, tool, memory):
+    agent = FunctionAgent(llm=llm, tools=[tool], memory=memory)
     prompt = NO_HIT_PROMPT
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 2
@@ -71,10 +71,10 @@ async def test_functional_agent_run_no_hit(llm, tool, memory):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("prompt", [ONE_HIT_PROMPT, NO_HIT_PROMPT])
-async def test_functional_agent_run_no_tool(llm, memory, prompt):
-    agent = FunctionalAgent(llm=llm, tools=[], memory=memory)
+async def test_function_agent_run_no_tool(llm, memory, prompt):
+    agent = FunctionAgent(llm=llm, tools=[], memory=memory)
 
-    response = await agent.async_run(prompt)
+    response = await agent.run(prompt)
 
     messages = response.chat_history
     assert len(messages) == 2
