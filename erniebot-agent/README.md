@@ -10,22 +10,34 @@ ERNIE Bot Agent 可以快速开发智能体。
 
 </div>
 
-`ERNIE Bot Agent` 旨在为开发者提供快速搭建大模型Agent和应用的框架。该项目还在积极研发中，敬请期待我们后续的正式发版。
+`ERNIE Bot Agent` 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型的编排能力，我们依托飞桨星河社区提供了丰富的预置平台化功能，并允许高度定制化的开发，旨在为开发者打造一站式的大模型Agent和应用搭建框架和平台。
 
-## 主要功能
+## 特性
 
-### 大模型 Agent 框架
+### 强大的编排能力
 
-`ERNIE Bot Agent` 将结合飞桨星河AI Studio社区，为开发者提供一站式的大模型Agent和应用搭建框架和平台。该项目还在积极研发中，敬请期待我们后续的正式发版。
+与目前业界主流的通过prompt和output parser实现agent的方式不同，`ERNIE Bot Agent` 基于文心大模型的function calling实现了多工具编排和自动调度能力，并且允许工具、插件、知识库等不同组件的混合编排。除了自动调度，我们未来还将支持更多的编排模式，例如手动编排、半自动编排，为开发者提供更大的灵活性。
 
-### 文心 LangChain 插件
+### 丰富的组件库
 
-为了让大家更加高效、便捷地结合文心大模型与LangChain进行开发，`ERNIE Bot Agent`对`LangChain`框架进行了功能扩展，提供了基于文心大模型的大语言模型（LLM）组件、聊天模型（ChatModel）组件以及文本嵌入模型（Text Embedding Model）组件。详情请参见[使用范例Notebook](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/blob/develop/erniebot-agent/examples/cookbook/how_to_use_langchain_extension.ipynb)。
+`ERNIE Bot Agent`为开发者提供了一个丰富的预置组件库：
+
+- **预置工具**：只需一行代码，即可加载使用星河社区工具中心的30+预置工具。这些工具当前主要来自百度AI开发平台和飞桨特色PP系列模型。后续，我们会持续接入更多预置工具，也欢迎社区贡献。此外，工具模块也支持用户灵活自定义本地和远程工具。
+- **知识库**：我们提供了开箱即用的基于文心百中的平台化知识库, 并允许开发者在二次开发的场景下使用LangChain、llama-index等主流开源库作为知识库。
+- **文心一言插件**：我们将会支持通过`ERNIE Bot Agent`调用文心一言插件商城中的插件（开发中）
+
+### 低开发门槛
+
+我们希望能够降低开发门槛，使更多的开发者能够轻松构建智能体应用：
+
+- **零代码界面**：依托星河社区，我们提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
+- **简洁的代码**：只需10行代码就可以快速开发一个智能体应用。
+- **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 
 ## 快速安装
 
-建议您可以使用pip快速安装 ERNIE Bot Agent 的最新稳定版。
+建议您可以使用pip快速安装 `ERNIE Bot Agent` 的最新稳定版。
 
 ```shell
 pip install --upgrade erniebot-agent
@@ -38,6 +50,10 @@ git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
 cd ERNIE-Bot-SDK/erniebot-agent
 pip install .
 ```
+
+## 快速体验
+
+
 
 ## License
 
