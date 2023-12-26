@@ -66,9 +66,9 @@
 
 | 属性               | 类型               | 描述                     |
 | ------------------ | ------------------ | ------------------------ |
-| remote_file_client | RemoteFileClient   | 远程文件客户端。         |
-| save_dir           | Optional[FilePath] | 用于保存本地文件的目录。 |
-| closed             | bool               | 文件管理器是否已关闭。   |
+| remote_file_client | RemoteFileClient   | 远程文件客户端         |
+| save_dir           | Optional[FilePath] | 用于保存本地文件的目录 |
+| closed             | bool               | 文件管理器是否已关闭   |
 
 | 方法                         | 描述                                 |
 | ---------------------------- | ------------------------------------ |
