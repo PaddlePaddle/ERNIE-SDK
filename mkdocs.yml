@@ -4,7 +4,6 @@ repo_name: ERNIE-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
-  - 介绍: 'tutorials/introduction.md'
   - 快速开始:
     - 安装和鉴权: 'tutorials/preparation.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
