@@ -83,7 +83,7 @@ class FileManager(Closeable, Noncopyable):
 
         Args:
             remote_file_client (Optional[RemoteFileClient]): The remote file client.
-            prune_on_close (bool): Control whether to automatically clean up files 
+            prune_on_close (bool): Control whether to automatically clean up files
                                    that can be safely deleted when the object is closed.
             save_dir (Optional[FilePath]): Directory for saving local files.
 

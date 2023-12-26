@@ -38,7 +38,7 @@ class GlobalFileManagerHandler(metaclass=SingletonMeta):
         set: Asynchronously sets the global FileManager explicitly.
 
     """
-    
+
     _file_manager: Optional[FileManager]
 
     def __init__(self) -> None:
@@ -84,9 +84,9 @@ class GlobalFileManagerHandler(metaclass=SingletonMeta):
         If the global FileManager is already set, it raises an error.
 
         Args:
-            access_token (Optional[str]): The access token for remote file management.
+            access_token (Optional[str]): The access token for remote file client.
             save_dir (Optional[str]): The directory for saving local files.
-            enable_remote_file (bool): Whether to enable remote file management.
+            enable_remote_file (bool): Whether to enable remote file.
             **opts (Any): Additional options for FileManager.
 
         Returns:
