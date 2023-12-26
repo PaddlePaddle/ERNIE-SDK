@@ -44,13 +44,13 @@
 | get_file_repr     | 返回用于特定上下文的字符串表示 |
 | to_dict           | 将File对象转换为字典           |
 
-### 2.2 File 子类
+### 2.1 File 子类
 
-#### 2.2.1 LocalFile 类
+#### 2.1.1 LocalFile 类
 
 `LocalFile` 是 `File` 的子类，表示本地文件。除了继承自基类的属性外，它还添加了文件路径属性 `path`，用于表示文件在本地文件系统中的路径。
 
-#### 2.2.2 RemoteFile 类
+#### 2.1.2 RemoteFile 类
 
 `RemoteFile` 也是 `File` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器交。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。
 
