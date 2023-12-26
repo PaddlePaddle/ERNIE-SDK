@@ -65,10 +65,39 @@ class ERNIEBot(ChatModel):
 
         self.api_type = api_type
         self.access_token = access_token
+<<<<<<< HEAD
+=======
+        self._maybe_validate_qianfan_auth()
+
+>>>>>>> 4e5c710 (Update erniebot.py)
         self.enable_multi_step_json = json.dumps(
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
 
+<<<<<<< HEAD
+=======
+    def _maybe_validate_qianfan_auth(self) -> None:
+        if self.api_type == "qianfan":
+            if self.access_token is None:
+                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
+                if "ak" and "sk" not in self.default_chat_kwargs:
+                    ak, sk = C.get_global_aksk()
+                    if ak is None or sk is None:
+                        raise RuntimeError("Please set at least one of ak+sk or access token.")
+                    else:
+                        self.ak = ak
+                        self.sk = sk
+                else:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
+            else:
+                # If set access_token in environment and pass ak and sk in default_chat_kwargs,
+                # the access_token in default_chat_kwargs will be used.
+                if "ak" and "sk" in self.default_chat_kwargs:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
+
+>>>>>>> 4e5c710 (Update erniebot.py)
     @overload
     async def async_chat(
         self,
