@@ -83,7 +83,7 @@
     - `FileManager` 类不可被复制以免造成资源泄露。
 
     - 如果未指定 `save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。反之，都会被保存。
-    
+
     - 如果 `FileManager` 类有相关联的 `RemoteFileClient`，那么当 `FileManager`关闭时，相关联的 `RemoteFileClient`也会一起关闭。
 
 ## 4. RemoteFileClient 类介绍
@@ -141,3 +141,6 @@ async def demo_function():
        # 您可以通过AgentResponse.files获取agent所有文件也可以在save_dir中找到生成的图片
        files = response.files
    ```
+
+## 6 File的API接口
+`File`模块的API接口，请参考[文档](../../package/erniebot_agent/file/)。
