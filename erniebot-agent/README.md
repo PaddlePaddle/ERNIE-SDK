@@ -53,7 +53,10 @@ pip install .
 
 ## 快速体验
 
-
+```python
+# Todo: 添加快速体验代码
+from erniebot_agent.chat_models import ERNIEBot
+```
 
 ## License
 
