@@ -12,18 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
-from typing import Optional
-
-from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.remote_file import AIStudioFileClient
-
-
-@functools.lru_cache(maxsize=None)
-def get_file_manager(access_token: Optional[str] = None) -> FileManager:
-    if access_token is None:
-        # TODO: Use a default global access token.
-        return FileManager()
-    else:
-        remote_file_client = AIStudioFileClient(access_token=access_token)
-        return FileManager(remote_file_client)
+from erniebot_agent.agents.mixins.gradio_mixin import GradioMixin

@@ -10,7 +10,7 @@ from .base import RemoteToolTesting
 class TestRemoteTool(RemoteToolTesting):
     @pytest.mark.asyncio
     async def test_tool(self):
-        toolkit = RemoteToolkit.from_aistudio("image-moderation")
+        toolkit = RemoteToolkit.from_aistudio("image-moderation", file_manager=self.file_manager)
 
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("shouxiezi.png"))
         agent = self.get_agent(toolkit)

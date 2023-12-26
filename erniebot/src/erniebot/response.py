@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import inspect
 import json
 from collections.abc import Mapping
@@ -137,7 +136,7 @@ class EBResponse(Mapping):
             raise AttributeError
 
     def __reduce__(self) -> tuple:
-        state = copy.copy(self._dict)
+        state = self._dict.copy()
         rcode = state.pop("rcode")
         rbody = state.pop("rbody")
         rheaders = state.pop("rheaders")
@@ -149,11 +148,8 @@ class EBResponse(Mapping):
     def get_result(self) -> Any:
         return self.rbody
 
-    def to_dict(self, deep_copy: bool = False) -> Dict[str, Any]:
-        if deep_copy:
-            return copy.deepcopy(self._dict)
-        else:
-            return copy.copy(self._dict)
+    def to_dict(self) -> Dict[str, Any]:
+        return self._dict.copy()
 
     def to_json(self) -> str:
         return json.dumps(self._dict)
@@ -162,6 +158,6 @@ class EBResponse(Mapping):
         member_names = set(pair[0] for pair in inspect.getmembers(self))
         for k, v in dict_.items():
             if k in self._RESERVED_KEYS or k in member_names:
-                raise KeyError(f"{repr(k)} is a reserved key.")
+                raise ValueError(f"{repr(k)} is a reserved key.")
             else:
                 self._dict[k] = v

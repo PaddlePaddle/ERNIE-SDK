@@ -74,8 +74,8 @@ class _BCELegacyBackend(EBBackend):
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
             logging.warning(
-                "The access token provided is invalid or has expired. "
-                "An automatic update will be performed before retrying."
+                "The access token provided is invalid or has expired."
+                " An automatic update will be performed before retrying."
             )
             access_token = self._auth_manager.update_auth_token()
             url_with_token = add_query_params(url, [("access_token", access_token)])
@@ -124,8 +124,8 @@ class _BCELegacyBackend(EBBackend):
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
             logging.warning(
-                "The access token provided is invalid or has expired. "
-                "An automatic update will be performed before retrying."
+                "The access token provided is invalid or has expired."
+                " An automatic update will be performed before retrying."
             )
             # XXX: The default executor is used.
             access_token = await loop.run_in_executor(None, self._auth_manager.update_auth_token)

@@ -89,26 +89,31 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
     )
 
     agent.load_tool(tool2)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         agent.load_tool(tool1)
 
     agent.unload_tool(tool1)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         agent.unload_tool(tool1)
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_llm(identity_tool):
+async def test_functional_agent_run_llm_return_text():
     output_message = AIMessage("Hello!", function_call=None)
     agent = FunctionalAgent(
         llm=FakeChatModelWithPresetResponses(responses=[output_message]),
         tools=[],
         memory=FakeMemory(),
     )
+
     llm_response = await agent._async_run_llm(messages=[HumanMessage("Hello, world!")])
+
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
 
+
+@pytest.mark.asyncio
+async def test_functional_agent_run_llm_return_function_call(identity_tool):
     output_message = AIMessage(
         "",
         function_call=FunctionCall(
@@ -120,7 +125,9 @@ async def test_functional_agent_run_llm(identity_tool):
         tools=[identity_tool],
         memory=FakeMemory(),
     )
+
     llm_response = await agent._async_run_llm(messages=[HumanMessage("Hello, world!")])
+
     assert isinstance(llm_response.message, AIMessage)
     assert llm_response.message == output_message
 
@@ -142,7 +149,7 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
     assert json.loads(tool_response.json) == {}
 
     tool_input = {}
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         await agent._async_run_tool("some_tool_name_that_does_not_exist", json.dumps(tool_input))
 
 
@@ -162,24 +169,6 @@ async def test_functional_agent_memory(identity_tool):
             AIMessage("", function_call=function_call),
             AIMessage("", function_call=function_call),
             AIMessage(output_text, function_call=None),
-        ]
-    )
-    agent = FunctionalAgent(
-        llm=llm,
-        tools=[identity_tool],
-        memory=FakeMemory(),
-    )
-    await agent.async_run(input_text)
-    messages_in_memory = agent.memory.get_messages()
-    assert len(messages_in_memory) == 2
-    assert isinstance(messages_in_memory[0], HumanMessage)
-    assert messages_in_memory[0].content == input_text
-    assert isinstance(messages_in_memory[1], AIMessage)
-    assert messages_in_memory[1].content == output_text
-
-    llm = FakeChatModelWithPresetResponses(
-        responses=[
-            AIMessage(output_text, function_call=None),
             AIMessage(output_text, function_call=None),
             AIMessage("This message should not be remembered.", function_call=None),
             AIMessage("This message should not be remembered, either.", function_call=None),
@@ -190,6 +179,7 @@ async def test_functional_agent_memory(identity_tool):
         tools=[identity_tool],
         memory=FakeMemory(),
     )
+
     await agent.async_run(input_text)
     messages_in_memory = agent.memory.get_messages()
     assert len(messages_in_memory) == 2
@@ -197,6 +187,7 @@ async def test_functional_agent_memory(identity_tool):
     assert messages_in_memory[0].content == input_text
     assert isinstance(messages_in_memory[1], AIMessage)
     assert messages_in_memory[1].content == output_text
+
     await agent.async_run(input_text)
     assert len(agent.memory.get_messages()) == 2 + 2
     agent.reset_memory()
@@ -224,5 +215,7 @@ async def test_functional_agent_max_steps(identity_tool):
         memory=FakeMemory(),
         max_steps=2,
     )
+
     response = await agent.async_run("Run!")
+
     assert response.status == "STOPPED"

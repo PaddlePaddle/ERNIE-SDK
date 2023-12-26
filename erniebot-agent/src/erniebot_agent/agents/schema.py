@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 import functools
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
+from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
-from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory.messages import AIMessage, Message
 
 
@@ -80,6 +78,8 @@ class AgentResponse(object):
         return [agent_file.file for agent_file in self.files if agent_file.type == "output"]
 
     def get_tool_input_output_files(self, tool_name: str) -> Tuple[List[File], List[File]]:
+        # XXX: If a tool is used mutliple times, all related files will be
+        # returned in flattened lists.
         input_files: List[File] = []
         output_files: List[File] = []
         for agent_file in self.files:
@@ -94,7 +94,7 @@ class AgentResponse(object):
 
     def output_dict(self) -> Dict[str, List]:
         # 1. split the text into parts and add file id to each part
-        file_ids = extract_file_ids(self.text)
+        file_ids = protocol.extract_file_ids(self.text)
 
         places = []
         for file_id in file_ids:

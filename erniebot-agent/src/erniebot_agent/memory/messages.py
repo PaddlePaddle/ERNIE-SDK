@@ -162,7 +162,6 @@ class HumanMessage(Message):
         >>> HumanMessage("I want to order a pizza.")
         <role: user, content: I want to order a pizza.>
 
-        >>> from erniebot_agent.file_io.base import File
         >>> prompt = "What is the text in this image?"
         >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
         >>> message = await HumanMessage.create_with_files(
@@ -204,7 +203,7 @@ class HumanMessage(Message):
             file_reprs = []
             for file in files:
                 if not isinstance(file, RemoteFile):
-                    raise RuntimeError("Only `RemoteFile` objects can have URLs in their representations.")
+                    raise TypeError("Only `RemoteFile` objects can have URLs in their representations.")
                 url = await file.create_temporary_url()
                 file_reprs.append(file.get_file_repr_with_url(url))
 
@@ -270,7 +269,7 @@ class AIMessage(Message):
     def __init__(
         self,
         content: str,
-        function_call: Optional[FunctionCall],
+        function_call: Optional[FunctionCall] = None,
         token_usage: Optional[TokenUsage] = None,
         search_info: Optional[SearchInfo] = None,
     ):
