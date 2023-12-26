@@ -7,11 +7,7 @@ from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.mixins import GradioMixin
-from erniebot_agent.agents.schema import (
-    AgentResponse,
-    LLMResponse,
-    ToolResponse,
-)
+from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file import GlobalFileManagerHandler, protocol
 from erniebot_agent.file.base import File
@@ -184,7 +180,7 @@ class Agent(GradioMixin, BaseAgent):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
-    async def _sniff_and_extract_files_from_args( # TODO(shiyutang): to be tested
+    async def _sniff_and_extract_files_from_args(  # TODO(shiyutang): to be tested
         self, args: Dict[str, Any], tool: BaseTool, file_type: Literal["input", "output"]
     ) -> List[File]:
         agent_files: List[File] = []
@@ -233,7 +229,7 @@ class Agent(GradioMixin, BaseAgent):
             file_manager = self._file_manager
         return file_manager
 
-    async def _sniff_and_extract_files_from_text( # TODO(shiyutang): to be tested
+    async def _sniff_and_extract_files_from_text(  # TODO(shiyutang): to be tested
         self, text: str, plugin_name, file_type: Literal["input", "output"]
     ) -> List[File]:
         files: List[File] = []
@@ -246,7 +242,9 @@ class Agent(GradioMixin, BaseAgent):
                 files.append(file)
         return files
 
-    async def _get_file_from_file_id(self, file_id: str, tool: BaseTool, file_type: Literal["input", "output"]) -> Optional[File]:
+    async def _get_file_from_file_id(
+        self, file_id: str, tool: BaseTool, file_type: Literal["input", "output"]
+    ) -> Optional[File]:
         if protocol.is_file_id(file_id):
             file_manager = await self._get_file_manager()
             try:
@@ -256,5 +254,5 @@ class Agent(GradioMixin, BaseAgent):
                     f"Unregistered file with ID {repr(file_id)} is used by {repr(tool)}."
                     f" File type: {file_type}"
                 ) from e
-            
+
             return file

@@ -135,8 +135,10 @@ class ERNIEBot(ChatModel):
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
-    
-    async def _get_response(self, cfg_dict: dict, stream: bool, functions:Optional[List[dict]]) -> Union[EBResponse, List[EBResponse]]:
+
+    async def _get_response(
+        self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
+    ) -> Union[EBResponse, List[EBResponse]]:
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
         if "plugins" in cfg_dict:
@@ -158,7 +160,7 @@ class ERNIEBot(ChatModel):
                 },
                 **cfg_dict,
             )
-        
+
         return response
 
     async def async_chat(
@@ -236,8 +238,9 @@ class ERNIEBot(ChatModel):
             )
         elif hasattr(response, "plugin_info"):
             plugin_info = PluginInfo(
-                names=[response['plugin_metas'][i]['pluginNameForModel'] 
-                for i in range(len(response['plugin_metas']))
+                names=[
+                    response["plugin_metas"][i]["pluginNameForModel"]
+                    for i in range(len(response["plugin_metas"]))
                 ]
             )
 

@@ -18,7 +18,6 @@ from typing import Any, Dict, Generic, List, Literal, TypeVar, Union
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File
-from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import AIMessage, Message
 from erniebot_agent.memory.messages import PluginInfo
 
