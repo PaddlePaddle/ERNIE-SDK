@@ -20,6 +20,6 @@ class TestRemoteTool(RemoteToolTesting):
 
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("这张照片中的手写字是什么？", files=[self.file])
+        result = await agent.run("这张照片中的手写字是什么？", files=[self.file])
         self.assertEqual(len(result.files), 1)
         self.assertIn("春天的梦", result.text)

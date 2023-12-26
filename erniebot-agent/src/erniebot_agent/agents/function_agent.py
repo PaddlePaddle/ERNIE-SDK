@@ -26,7 +26,7 @@ from erniebot_agent.agents.schema import (
     ToolInfo,
     ToolStep,
 )
-from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Memory
@@ -42,15 +42,15 @@ from erniebot_agent.tools.tool_manager import ToolManager
 _MAX_STEPS = 5
 
 
-class FunctionalAgent(Agent):
+class FunctionAgent(Agent):
     """An agent driven by function calling.
 
-    The orchestration capabilities of a functional agent are powered by the
-    function calling ability of the integrated LLMs. Typically, a functional
-    agent asks the LLM to generate a response that can be parsed into an action
-    (e.g., calling a tool with given arguments), and then the agent takes that
-    action, which forms an agent step. The agent repeats this process until the
-    maximum number of steps is reached or the LLM considers the task finished.
+    The orchestration capabilities of a function agent are powered by the
+    function calling ability of LLMs. Typically, a function agent asks the LLM
+    to generate a response that can be parsed into an action (e.g., calling a
+    tool with given arguments), and then the agent takes that action, which
+    forms an agent step. The agent repeats this process until the maximum number
+    of steps is reached or the LLM considers the task finished.
 
     Attributes:
         llm: The LLM that the agent uses.
@@ -58,9 +58,13 @@ class FunctionalAgent(Agent):
         max_steps: The maximum number of steps in each agent run.
     """
 
+    llm: BaseERNIEBot
+    memory: Memory
+    max_steps: int
+
     def __init__(
         self,
-        llm: ChatModel,
+        llm: BaseERNIEBot,
         tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
@@ -70,7 +74,7 @@ class FunctionalAgent(Agent):
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
     ) -> None:
-        """Initialize a functional agent.
+        """Initialize a function agent.
 
         Args:
             llm: An LLM for the agent to use.
@@ -107,7 +111,7 @@ class FunctionalAgent(Agent):
         else:
             self.max_steps = _MAX_STEPS
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         steps_taken: List[AgentStep] = []
 
@@ -134,7 +138,7 @@ class FunctionalAgent(Agent):
     async def _step(self, chat_history: List[Message]) -> Tuple[AgentStep, List[Message]]:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
-        llm_resp = await self._async_run_llm(
+        llm_resp = await self.run_llm(
             messages=input_messages,
             functions=self._tool_manager.get_tool_schemas(),
             system=self.system_message.content if self.system_message is not None else None,
@@ -145,7 +149,7 @@ class FunctionalAgent(Agent):
         if output_message.function_call is not None:
             tool_name = output_message.function_call["name"]
             tool_args = output_message.function_call["arguments"]
-            tool_resp = await self._async_run_tool(tool_name=tool_name, tool_args=tool_args)
+            tool_resp = await self.run_tool(tool_name=tool_name, tool_args=tool_args)
             new_messages.append(FunctionMessage(name=tool_name, content=tool_resp.json))
             return (
                 ToolStep(
@@ -157,17 +161,15 @@ class FunctionalAgent(Agent):
                 new_messages,
             )
         elif output_message.plugin_info is not None:
-            plugin_name = output_message.plugin_info["names"]
+            file_manager = await self.get_file_manager()
             return (
                 PluginStep(
                     info=output_message.plugin_info,
                     result=output_message.content,
-                    input_files=await self._sniff_and_extract_files_from_text(
-                        chat_history[-1].content, plugin_name, file_type="input"
+                    input_files=file_manager.sniff_and_extract_files_from_text(
+                        chat_history[-1].content
                     ),  # TODO: make sure this is correct.
-                    output_files=await self._sniff_and_extract_files_from_text(
-                        output_message.content, plugin_name, file_type="output"
-                    ),
+                    output_files=file_manager.sniff_and_extract_files_from_text(output_message.content),
                 ),
                 new_messages,
             )

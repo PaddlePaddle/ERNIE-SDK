@@ -13,18 +13,20 @@
 # limitations under the License.
 
 import asyncio
+import weakref
 from typing import Any, NoReturn, Optional, final
-
 import asyncio_atexit  # type: ignore
+from typing_extensions import Self
 
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.file.remote_file import AIStudioFileClient
 from erniebot_agent.utils import config_from_environ as C
-from erniebot_agent.utils.misc import SingletonMeta
+
+_registry = weakref.WeakKeyDictionary()
 
 
 @final
-class GlobalFileManagerHandler(metaclass=SingletonMeta):
+class GlobalFileManagerHandler(object):
     """Singleton handler for managing the global FileManager instance.
 
     This class provides a singleton instance for managing the global FileManager
@@ -39,12 +41,17 @@ class GlobalFileManagerHandler(metaclass=SingletonMeta):
 
     """
 
+    _lock: asyncio.Lock
     _file_manager: Optional[FileManager]
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._lock = asyncio.Lock()
-        self._file_manager = None
+    def __new__(cls) -> Self:
+        loop = asyncio.get_running_loop()
+        if loop not in _registry:
+            handler = super().__new__(cls)
+            handler._lock = asyncio.Lock()
+            handler._file_manager = None
+            _registry[loop] = handler
+        return _registry[loop]
 
     async def get(self) -> FileManager:
         """

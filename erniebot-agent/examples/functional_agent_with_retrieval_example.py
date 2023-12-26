@@ -7,9 +7,9 @@ from langchain.text_splitter import SpacyTextSplitter
 from tqdm import tqdm
 
 from erniebot_agent.agents import (
-    FunctionalAgentWithRetrieval,
-    FunctionalAgentWithRetrievalScoreTool,
-    FunctionalAgentWithRetrievalTool,
+    FunctionAgentWithRetrieval,
+    FunctionAgentWithRetrievalScoreTool,
+    FunctionAgentWithRetrievalTool,
 )
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         description="Use Baizhong Search to retrieve documents.", db=baizhong_db, threshold=0.1
     )
 
-    # agent = FunctionalAgentWithRetrievalTool(
+    # agent = FunctionAgentWithRetrievalTool(
     #     llm=llm, knowledge_base=baizhong_db, top_k=3, tools=[NotesTool(), retrieval_tool], memory=memory
     # )
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     for query in queries:
         memory = WholeMemory()
         if args.retrieval_type == "rag":
-            agent = FunctionalAgentWithRetrieval(
+            agent = FunctionAgentWithRetrieval(
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "rag_tool":
-            agent = FunctionalAgentWithRetrievalTool(  # type: ignore
+            agent = FunctionAgentWithRetrievalTool(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         elif args.retrieval_type == "rag_threshold":
-            agent = FunctionalAgentWithRetrievalScoreTool(  # type: ignore
+            agent = FunctionAgentWithRetrievalScoreTool(  # type: ignore
                 llm=llm,
                 knowledge_base=baizhong_db,
                 top_k=3,
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 memory=memory,
             )
         try:
-            response = asyncio.run(agent.async_run(query))
+            response = asyncio.run(agent.run(query))
             print(f"query: {query}")
             print(f"agent response: {response}")
         except Exception as e:

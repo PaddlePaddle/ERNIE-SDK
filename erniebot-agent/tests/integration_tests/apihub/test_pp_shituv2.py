@@ -23,8 +23,7 @@ class TestRemoteTool(RemoteToolTesting):
             )
             file = await file_manager.create_file_from_path(file_path)
 
-            result = await agent.async_run("对这张图片进行通用识别，包含的文件为：", files=[file])
+            result = await agent.run("对这张图片进行通用识别，包含的文件为：", files=[file])
             self.assertEqual(len(result.files), 2)
             self.assertEqual(len(result.actions), 1)
             self.assertIn("file-", result.text)
-
