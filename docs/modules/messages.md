@@ -11,9 +11,7 @@
 * `AIMessage`：模型返回的信息，比如聊天的回答、触发`Function call`的回答。
 * `FunctionMessage`：上一轮模型的输出是带有`Funciton call`的`AIMessage`，则用户需要首先调用`Function`，然后将`Function`的结果输入给大语言模型。
 
-`Message`模块的API接口，请参考[文档](../../package/erniebot_agent/messages/)。
-
-## 2. Message使用示例
+## 2. Message的使用示例
 
 为了直观展示，我们举例进行说明，请先确保完成`EB-Agent`的安装和鉴权步骤。
 
@@ -91,3 +89,7 @@ print(function_message)
 <role: 'system', content: '你是一个知识渊博的数学老师，使用浅显易懂的方法来回答问题', token_count: 28>
 <role: 'function', name: 'get_current_temperature', content: '{"temperature": 25, "unit": "摄氏度"}'>
 ```
+
+## 3.0 Message的API接口
+
+`Message`模块的API接口，请参考[文档](../../package/erniebot_agent/messages/)。
