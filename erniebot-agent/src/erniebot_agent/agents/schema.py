@@ -14,7 +14,9 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Literal, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, Sequence, TypeVar, Union
+
+from typing_extensions import Literal
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.base import File

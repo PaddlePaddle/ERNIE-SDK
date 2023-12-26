@@ -50,6 +50,25 @@ _File: TypeAlias = Union[LocalFile, RemoteFile]
 
 @final
 class FileManager(Closeable, Noncopyable):
+    """
+    Manages files, providing methods for creating, retrieving, and listing files.
+
+    Attributes:
+        remote_file_client(RemoteFileClient): The remote file client.
+        save_dir (Optional[FilePath]): Directory for saving local files.
+        closed: Whether the file manager is closed.
+
+    Methods:
+        create_file_from_path: Create a file from a specified file path.
+        create_local_file_from_path: Create a local file from a file path.
+        create_remote_file_from_path: Create a remote file from a file path.
+        create_file_from_bytes: Create a file from bytes.
+        retrieve_remote_file_by_id: Retrieve a remote file by its ID.
+        look_up_file_by_id: Look up a file by its ID.
+        list_remote_files: List remote files.
+
+    """
+
     _temp_dir: Optional[tempfile.TemporaryDirectory] = None
 
     def __init__(
@@ -59,6 +78,19 @@ class FileManager(Closeable, Noncopyable):
         *,
         prune_on_close: bool = True,
     ) -> None:
+        """
+        Initialize the FileManager object.
+
+        Args:
+            remote_file_client (Optional[RemoteFileClient]): The remote file client.
+            prune_on_close (bool): Control whether to automatically clean up files
+                                   that can be safely deleted when the object is closed.
+            save_dir (Optional[FilePath]): Directory for saving local files.
+
+        Returns:
+            None
+
+        """
         super().__init__()
 
         self._remote_file_client = remote_file_client
@@ -131,6 +163,23 @@ class FileManager(Closeable, Noncopyable):
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> _File:
+        """
+        Create a file from a specified file path.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+            file_type (Optional[Literal["local", "remote"]]): The type of file ("local" or "remote").
+
+        Returns:
+            Union[LocalFile, RemoteFile]: The created file.
+
+        Raises:
+            ValueError: If an unsupported file type is provided.
+
+        """
         self.ensure_not_closed()
         file: _File
         if file_type is None:
@@ -149,6 +198,19 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> LocalFile:
+        """
+        Create a local file from a local file path.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+
+        Returns:
+            LocalFile: The created local file.
+
+        """
         file = await self._create_local_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
@@ -163,6 +225,19 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose,
         file_metadata: Optional[Dict[str, Any]],
     ) -> RemoteFile:
+        """
+        Create a remote file from a file path and upload it to the client.
+
+        Args:
+            file_path (FilePath): The path to the file.
+            file_purpose (FilePurpose): The purpose or use case of the file,
+                    including `assistant`: used for llm and `assistant_output`: used for output.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+
+        Returns:
+            RemoteFile: The created remote file.
+
+        """
         file = await self._create_remote_file_from_path(
             pathlib.Path(file_path),
             file_purpose,
@@ -217,6 +292,20 @@ class FileManager(Closeable, Noncopyable):
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
     ) -> _File:
+        """
+        Create a file from bytes.
+
+        Args:
+            file_contents (bytes): The contents of the file.
+            filename (str): The name of the file.
+            file_purpose (FilePurpose): The purpose or use case of the file.
+            file_metadata (Optional[Dict[str, Any]]): Additional metadata associated with the file.
+            file_type (Optional[Literal["local", "remote"]]): The type of file ("local" or "remote").
+
+        Returns:
+            Union[LocalFile, RemoteFile]: The created file.
+
+        """
         self.ensure_not_closed()
         if file_type is None:
             file_type = self._get_default_file_type()
@@ -250,6 +339,16 @@ class FileManager(Closeable, Noncopyable):
         return file
 
     async def retrieve_remote_file_by_id(self, file_id: str) -> RemoteFile:
+        """
+        Retrieve a remote file by its ID.
+
+        Args:
+            file_id (str): The ID of the remote file.
+
+        Returns:
+            RemoteFile: The retrieved remote file.
+
+        """
         self.ensure_not_closed()
         file = await self._get_remote_file_client().retrieve_file(file_id)
         self._file_registry.register_file(file)
@@ -261,6 +360,19 @@ class FileManager(Closeable, Noncopyable):
         return files
 
     def look_up_file_by_id(self, file_id: str) -> _File:
+        """
+        Look up a file by its ID.
+
+        Args:
+            file_id (str): The ID of the file.
+
+        Returns:
+            file[File]: The looked-up file.
+
+        Raises:
+            FileError: If the file with the specified ID is not found.
+
+        """
         self.ensure_not_closed()
         file = self._file_registry.look_up_file(file_id)
         if file is None:
@@ -271,8 +383,44 @@ class FileManager(Closeable, Noncopyable):
         return file
 
     def list_registered_files(self) -> List[_File]:
+        """
+        List remote files.
+
+        Returns:
+            List[RemoteFile]: The list of remote files.
+
+        """
         self.ensure_not_closed()
         return self._file_registry.list_files()
+
+    async def prune(self) -> None:
+        """Clean local cache of file manager."""
+        while True:
+            try:
+                file = self._fully_managed_files.pop()
+            except IndexError:
+                break
+            if isinstance(file, RemoteFile):
+                # FIXME: Currently this is not supported.
+                # await file.delete()
+                pass
+            elif isinstance(file, LocalFile):
+                assert self._save_dir.resolve() in file.path.resolve().parents
+                await anyio.Path(file.path).unlink()
+            else:
+                raise AssertionError("Unexpected file type")
+            self._file_registry.unregister_file(file)
+
+    async def close(self) -> None:
+        """Delete the file manager and clean up its cache"""
+        if not self._closed:
+            if self._remote_file_client is not None:
+                await self._remote_file_client.close()
+            if self._prune_on_close:
+                await self.prune()
+            if self._temp_dir is not None:
+                self._clean_up_temp_dir(self._temp_dir)
+            self._closed = True
 
     def sniff_and_extract_files_from_list(self, list_: List[Any]) -> List[_File]:
         files: List[_File] = []
@@ -299,33 +447,6 @@ class FileManager(Closeable, Noncopyable):
                     raise FileError(f"An unregistered file with ID {repr(file_id)} was found.") from e
                 files.append(file)
         return files
-
-    async def prune(self) -> None:
-        while True:
-            try:
-                file = self._fully_managed_files.pop()
-            except IndexError:
-                break
-            if isinstance(file, RemoteFile):
-                # FIXME: Currently this is not supported.
-                # await file.delete()
-                pass
-            elif isinstance(file, LocalFile):
-                assert self._save_dir.resolve() in file.path.resolve().parents
-                await anyio.Path(file.path).unlink()
-            else:
-                raise AssertionError("Unexpected file type")
-            self._file_registry.unregister_file(file)
-
-    async def close(self) -> None:
-        if not self._closed:
-            if self._remote_file_client is not None:
-                await self._remote_file_client.close()
-            if self._prune_on_close:
-                await self.prune()
-            if self._temp_dir is not None:
-                self._clean_up_temp_dir(self._temp_dir)
-            self._closed = True
 
     async def _create_local_file_from_path(
         self,

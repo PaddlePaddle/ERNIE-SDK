@@ -31,6 +31,20 @@ _registry: WeakKeyDictionary[
 
 @final
 class GlobalFileManagerHandler(object):
+    """Singleton handler for managing the global FileManager instance.
+
+    This class provides a singleton instance for managing the global FileManager
+    and allows for its configuration and retrieval.
+
+
+    Methods:
+        get: Asynchronously retrieves the global FileManager instance.
+        configure: Asynchronously configures the global FileManager
+                   at the beginning of event loop.
+        set: Asynchronously sets the global FileManager explicitly.
+
+    """
+
     _lock: asyncio.Lock
     _file_manager: Optional[FileManager]
 
@@ -44,6 +58,18 @@ class GlobalFileManagerHandler(object):
         return _registry[loop]
 
     async def get(self) -> FileManager:
+        """
+        Retrieve the global FileManager instance.
+
+        This method returns the existing global FileManager instance,
+        creating one if it doesn't exist.
+
+
+        Returns:
+            FileManager: The global FileManager instance.
+
+        """
+
         async with self._lock:
             if self._file_manager is None:
                 self._file_manager = await self._create_default_file_manager(
@@ -61,6 +87,26 @@ class GlobalFileManagerHandler(object):
         enable_remote_file: bool = False,
         **opts: Any,
     ) -> None:
+        """
+        Configure the global FileManager.
+
+        This method configures the global FileManager with the provided parameters
+        at the beginning of event loop.
+        If the global FileManager is already set, it raises an error.
+
+        Args:
+            access_token (Optional[str]): The access token for remote file client.
+            save_dir (Optional[str]): The directory for saving local files.
+            enable_remote_file (bool): Whether to enable remote file.
+            **opts (Any): Additional options for FileManager.
+
+        Returns:
+            None
+
+        Raises:
+            RuntimeError: If the global FileManager is already set.
+
+        """
         async with self._lock:
             if self._file_manager is not None:
                 self._raise_file_manager_already_set_error()
@@ -72,6 +118,21 @@ class GlobalFileManagerHandler(object):
             )
 
     async def set(self, file_manager: FileManager) -> None:
+        """
+        Set the global FileManager explicitly.
+
+        This method sets the global FileManager instance explicitly.
+        If the global FileManager is already set, it raises an error.
+
+        Args:
+            file_manager (FileManager): The FileManager instance to set as global.
+
+        Returns:
+            None
+
+        Raises:
+            RuntimeError: If the global FileManager is already set.
+        """
         async with self._lock:
             if self._file_manager is not None:
                 self._raise_file_manager_already_set_error()
@@ -84,6 +145,8 @@ class GlobalFileManagerHandler(object):
         enable_remote_file: bool,
         **opts: Any,
     ) -> FileManager:
+        """Create the default FileManager instance."""
+
         async def _close_file_manager():
             await file_manager.close()
 

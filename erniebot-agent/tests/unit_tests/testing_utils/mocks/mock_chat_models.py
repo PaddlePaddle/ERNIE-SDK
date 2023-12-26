@@ -1,5 +1,4 @@
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import AIMessage
 
 
@@ -17,7 +16,7 @@ class FakeSimpleChatModel(ChatModel):
         return self.response
 
 
-class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
+class FakeChatModelWithPresetResponses(ChatModel):
     def __init__(self, responses):
         super().__init__("erniebot_with_preset_responses")
         self.responses = responses

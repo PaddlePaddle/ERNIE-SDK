@@ -191,14 +191,13 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             )
 
             chat_history.append(HumanMessage(content=prompt))
-
             outputs = []
             for item in results["documents"]:
                 outputs.append(
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
@@ -293,7 +292,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
