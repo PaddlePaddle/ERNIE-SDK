@@ -7,7 +7,7 @@ from pydantic import Field
 from erniebot_agent.agents import FunctionalAgent
 from erniebot_agent.agents.schema import (
     AgentAction,
-    AgentFile,
+    File,
     AgentResponse,
     ToolResponse,
 )
@@ -103,7 +103,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = [step_input]
                 actions_taken: List[AgentAction] = []
-                files_involved: List[AgentFile] = []
+                files_involved: List[File] = []
                 actions_taken.append(AgentAction(tool_name=self.search_tool.tool_name, tool_args=tool_args))
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
@@ -189,7 +189,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -197,14 +197,13 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             )
 
             chat_history.append(HumanMessage(content=prompt))
-
             outputs = []
             for item in results["documents"]:
                 outputs.append(
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
@@ -254,6 +253,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
         messages = [HumanMessage(content=self.intent_prompt.format(documents=documents, query=step_input))]
         response = await self._async_run_llm_without_hooks(messages)
+
         results = self._parse_results(response.message.content)
         results["documents"] = documents
         return results
@@ -286,7 +286,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             # RAG
             chat_history: List[Message] = []
             actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            files_involved: List[File] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -299,7 +299,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
                     {
                         "id": item["id"],
                         "title": item["title"],
-                        "document": item["content_se"],
+                        "document": item["content"],
                     }
                 )
 
