@@ -18,7 +18,6 @@ from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolRespons
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.file.protocol import extract_file_ids
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool

@@ -92,8 +92,8 @@ class GameAgent(Agent):
             tool_args=tool_args,
         )
 
-        agent_file: File = tool_response.output_files[-1]
-        img_byte = await agent_file.file.read_contents()
+        file: File = tool_response.output_files[-1]
+        img_byte = await file.read_contents()
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
