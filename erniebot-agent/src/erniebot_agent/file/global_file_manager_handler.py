@@ -15,6 +15,7 @@
 import asyncio
 import weakref
 from typing import Any, NoReturn, Optional, final
+
 import asyncio_atexit  # type: ignore
 from typing_extensions import Self
 
