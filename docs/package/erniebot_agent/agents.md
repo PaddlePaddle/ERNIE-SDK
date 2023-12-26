@@ -16,3 +16,11 @@
         - CallbackManager
         - CallbackHandler
         - LoggingHandler
+
+::: erniebot_agent.agents.schema
+    options:
+        summary: true
+        members:
+        - LLMResponse
+        - ToolResponse
+        - AgentResponse

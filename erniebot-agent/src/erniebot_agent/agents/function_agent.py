@@ -51,6 +51,10 @@ class FunctionAgent(Agent[BaseERNIEBot]):
         max_steps: The maximum number of steps in each agent run.
     """
 
+    llm: BaseERNIEBot
+    memory: Memory
+    max_steps: int
+
     def __init__(
         self,
         llm: BaseERNIEBot,

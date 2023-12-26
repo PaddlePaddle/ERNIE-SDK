@@ -37,6 +37,9 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         memory: The message storage that keeps the chat history.
     """
 
+    llm: LLMT
+    memory: Memory
+
     def __init__(
         self,
         llm: LLMT,
