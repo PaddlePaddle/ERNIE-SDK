@@ -56,7 +56,7 @@ async def test_callback_manager_hit():
     assert handler.tool_errors == 1
 
     await callback_manager.on_run_end(
-        agent, AgentResponse(text="", chat_history=[], actions=[], files=[], status="FINISHED")
+        agent, AgentResponse(text="", chat_history=[], steps=[], status="FINISHED")
     )
     assert handler.run_ends == 1
 
