@@ -1,8 +1,9 @@
 import abc
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union, final
+from typing import Any, Dict, List, Optional, Tuple, Union, final, NoReturn
 
-from erniebot_agent.agents.base import LLMT, BaseAgent
+from erniebot_agent.agents.base import BaseAgent
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.default import get_default_callbacks
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
@@ -12,18 +13,19 @@ from erniebot_agent.agents.schema import (
     LLMResponse,
     ToolResponse,
 )
-from erniebot_agent.file import GlobalFileManagerHandler, protocol
+from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
+from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Tuple[str] = ("eChart",)
 
 
-class Agent(GradioMixin, BaseAgent[LLMT]):
+class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     """The base class for agents.
 
     Typically, this is the class that a custom agent class should inherit from.
@@ -35,12 +37,12 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         memory: The message storage that keeps the chat history.
     """
 
-    llm: LLMT
+    llm: BaseERNIEBot
     memory: Memory
 
     def __init__(
         self,
-        llm: LLMT,
+        llm: BaseERNIEBot,
         tools: Union[ToolManager, List[BaseTool]],
         memory: Memory,
         *,
@@ -101,7 +103,7 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         Returns:
             Response from the agent.
         """
-
+        await self._ensure_managed_files(files)
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         agent_resp = await self._run(prompt, files)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
@@ -208,6 +210,14 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
         llm_ret = await self.llm.chat(messages, functions=functions, stream=False, **opts)
         return LLMResponse(message=llm_ret)
 
+    def _init_file_needs_url(self):
+        self.file_needs_url = False
+
+        if self._plugins:
+            for plugin in self._plugins:
+                if plugin not in _PLUGINS_WO_FILE_IO:
+                    self.file_needs_url = True
+
     def _parse_tool_args(self, tool_args: str) -> Dict[str, Any]:
         try:
             args_dict = json.loads(tool_args)
@@ -218,10 +228,15 @@ class Agent(GradioMixin, BaseAgent[LLMT]):
             raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
 
-    def _init_file_needs_url(self):
-        self.file_needs_url = False
+    async def _ensure_managed_files(self, files: List[File]) -> None:
+        def _raise_exception(file: File) -> NoReturn:
+            raise FileError(f"{repr(file)} is not managed by the file manager of the agent.")
 
-        if self._plugins:
-            for plugin in self._plugins:
-                if plugin not in _PLUGINS_WO_FILE_IO:
-                    self.file_needs_url = True
+        file_manager = await self.get_file_manager()
+        for file in files:
+            try:
+                managed_file = file_manager.look_up_file_by_id(file.id)
+            except FileError:
+                _raise_exception(file)
+            if file is not managed_file:
+                _raise_exception(file)
