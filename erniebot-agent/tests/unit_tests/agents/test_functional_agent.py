@@ -9,7 +9,7 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
-from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.memory import AIMessage, HumanMessage
 from erniebot_agent.memory.messages import FunctionCall
 
@@ -53,9 +53,9 @@ def no_input_no_output_tool():
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_callbacks(identity_tool):
+async def test_function_agent_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=FakeSimpleChatModel(),
         tools=[identity_tool],
         memory=FakeMemory(),
@@ -78,11 +78,11 @@ async def test_functional_agent_callbacks(identity_tool):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_output_tool):
+async def test_function_agent_load_unload_tools(identity_tool, no_input_no_output_tool):
     tool1 = identity_tool
     tool2 = no_input_no_output_tool
 
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=FakeSimpleChatModel(),
         tools=[tool1],
         memory=FakeMemory(),
@@ -98,9 +98,9 @@ async def test_functional_agent_load_unload_tools(identity_tool, no_input_no_out
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_llm_return_text():
+async def test_function_agent_run_llm_return_text():
     output_message = AIMessage("Hello!", function_call=None)
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=FakeChatModelWithPresetResponses(responses=[output_message]),
         tools=[],
         memory=FakeMemory(),
@@ -113,14 +113,14 @@ async def test_functional_agent_run_llm_return_text():
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_llm_return_function_call(identity_tool):
+async def test_function_agent_run_llm_return_function_call(identity_tool):
     output_message = AIMessage(
         "",
         function_call=FunctionCall(
             name=identity_tool.tool_name, thoughts="", arguments=json.dumps({"param": "test"})
         ),
     )
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=FakeChatModelWithPresetResponses(responses=[output_message]),
         tools=[identity_tool],
         memory=FakeMemory(),
@@ -133,8 +133,8 @@ async def test_functional_agent_run_llm_return_function_call(identity_tool):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool):
-    agent = FunctionalAgent(
+async def test_function_agent_run_tool(identity_tool, no_input_no_output_tool):
+    agent = FunctionAgent(
         llm=FakeSimpleChatModel(),
         tools=[identity_tool, no_input_no_output_tool],
         memory=FakeMemory(),
@@ -154,7 +154,7 @@ async def test_functional_agent_run_tool(identity_tool, no_input_no_output_tool)
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_memory(identity_tool):
+async def test_function_agent_memory(identity_tool):
     input_text = "Run!"
     output_text = "Done."
 
@@ -174,7 +174,7 @@ async def test_functional_agent_memory(identity_tool):
             AIMessage("This message should not be remembered, either.", function_call=None),
         ]
     )
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=llm,
         tools=[identity_tool],
         memory=FakeMemory(),
@@ -195,7 +195,7 @@ async def test_functional_agent_memory(identity_tool):
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_max_steps(identity_tool):
+async def test_function_agent_max_steps(identity_tool):
     function_call = FunctionCall(
         name=identity_tool.tool_name,
         thoughts="",
@@ -209,7 +209,7 @@ async def test_functional_agent_max_steps(identity_tool):
             AIMessage("Done.", function_call=None),
         ]
     )
-    agent = FunctionalAgent(
+    agent = FunctionAgent(
         llm=llm,
         tools=[identity_tool],
         memory=FakeMemory(),

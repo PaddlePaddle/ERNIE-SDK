@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Type
 
 from pydantic import Field
 
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.agents.callback.default import get_no_ellipsis_callback
-from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.memory import AIMessage, HumanMessage, Message
@@ -111,7 +111,7 @@ llm = ERNIEBot(model="ernie-3.5", api_type="custom")
 memory = SlidingWindowMemory(max_round=1)
 # plugins = ["ChatFile", "eChart"]
 plugins: List[str] = []
-agent = FunctionalAgent(
+agent = FunctionAgent(
     llm=llm,
     tools=[TextRepeaterTool(), TextRepeaterNoFileTool(), CalculatorTool()],
     memory=memory,

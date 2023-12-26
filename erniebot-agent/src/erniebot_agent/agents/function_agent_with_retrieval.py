@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type
 
 from pydantic import Field
 
-from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.agents.schema import (
     AgentAction,
     AgentFile,
@@ -72,7 +72,7 @@ class KnowledgeBaseTool(Tool):
         return {"documents": "This is the fake search tool."}
 
 
-class FunctionalAgentWithRetrieval(FunctionalAgent):
+class FunctionAgentWithRetrieval(FunctionAgent):
     def __init__(
         self,
         knowledge_base: BaizhongSearch,
@@ -143,7 +143,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
             return response
         else:
             logger.info(
-                f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
+                f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt, files)
 
@@ -174,7 +174,7 @@ class FunctionalAgentWithRetrieval(FunctionalAgent):
         return results
 
 
-class FunctionalAgentWithRetrievalTool(FunctionalAgent):
+class FunctionAgentWithRetrievalTool(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
@@ -243,7 +243,7 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
             return response
         else:
             logger.info(
-                f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
+                f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
 
@@ -262,16 +262,16 @@ class FunctionalAgentWithRetrievalTool(FunctionalAgent):
         left_index = results.find("{")
         right_index = results.rfind("}")
         if left_index == -1 or right_index == -1:
-            # if invalid json, use Functional Agent
+            # if invalid json, use FunctionAgent
             return {"is_relevant": False}
         try:
             return json.loads(results[left_index : right_index + 1])
         except Exception:
-            # if invalid json, use Functional Agent
+            # if invalid json, use FunctionAgent
             return {"is_relevant": False}
 
 
-class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
+class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
@@ -337,7 +337,7 @@ class FunctionalAgentWithRetrievalScoreTool(FunctionalAgent):
             return response
         else:
             logger.info(
-                f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
+                f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
 

@@ -35,11 +35,11 @@ from erniebot_agent.utils.exceptions import FileError
 _MAX_STEPS = 5
 
 
-class FunctionalAgent(Agent):
+class FunctionAgent(Agent):
     """An agent driven by function calling.
 
-    The orchestration capabilities of a functional agent are powered by the
-    function calling ability of LLMs. Typically, a functional agent asks the LLM
+    The orchestration capabilities of a function agent are powered by the
+    function calling ability of LLMs. Typically, a function agent asks the LLM
     to generate a response that can be parsed into an action (e.g., calling a
     tool with given arguments), and then the agent takes that action, which
     forms an agent step. The agent repeats this process until the maximum number
@@ -63,28 +63,7 @@ class FunctionalAgent(Agent):
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
     ) -> None:
-        """Initialize a functional agent.
-
-        Args:
-            llm: An LLM for the agent to use.
-            tools: A list of tools for the agent to use.
-            memory: A memory object that equips the agent to remember chat
-                history.
-            system_message: A message that tells the LLM how to interpret the
-                conversations. If `None`, the system message contained in
-                `memory` will be used.
-            callbacks: A list of callback handlers for the agent to use. If
-                `None`, a default list of callbacks will be used.
-            file_manager: A file manager for the agent to interact with files.
-                If `None`, a global file manager that can be shared among
-                different components will be implicitly created and used.
-            plugins: A list of names of the plugins for the agent to use. If
-                `None`, the agent will use a default list of plugins. Set
-                `plugins` to `[]` to disable the use of plugins.
-            max_steps: The maximum number of steps in each agent run. If `None`,
-                use a default value.
-        """
-        """Initialize a functional agent.
+        """Initialize a function agent.
 
         Args:
             llm: An LLM for the agent to use.
