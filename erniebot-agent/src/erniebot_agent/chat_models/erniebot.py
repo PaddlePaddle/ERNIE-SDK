@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import json
+import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -32,19 +32,20 @@ from erniebot import ChatCompletionResponse
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import (
-    SystemMessage,
     AIMessage,
     AIMessageChunk,
     FunctionCall,
     Message,
     PluginInfo,
     SearchInfo,
+    SystemMessage,
 )
 from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 logger = logging.getLogger(__name__)
+
 
 class BaseERNIEBot(ChatModel):
     @overload
@@ -96,6 +97,7 @@ class ERNIEBot(BaseERNIEBot):
         default_chat_kwargs (Any): A dict for setting default args for chat model,
             the supported keys include `model`, `_config_`, `top_p`, etc.
     """
+
     def __init__(
         self,
         model: str,
@@ -113,7 +115,8 @@ class ERNIEBot(BaseERNIEBot):
                 Default to "aistudio".
             access_token (Optional[str]): The access token for the backend of erniebot.
                 If access_token is None, the global access_token will be used.
-            enable_multi_step_tool_call (bool): Whether to enable the multi-step tool call. Defaults to False.
+            enable_multi_step_tool_call (bool): Whether to enable the multi-step tool call.
+                Defaults to False.
             **default_chat_kwargs: Keyword arguments, such as `_config_`, `top_p`, `temperature`,
                 `penalty_score`, and `system`.
         """
