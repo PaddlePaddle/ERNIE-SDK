@@ -50,10 +50,10 @@ pip install -e './erniebot-agent/.[all]'
 * 通过环境变量或者`Python`代码设置`Access Token`
 
 ```shell
-export EB_AGENT_ACCESS_TOKEN="your access token"
+export EB_AGENT_ACCESS_TOKEN="<your access token>"
 ```
 
 ```python
 import os
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "<your access token>"
 ```
