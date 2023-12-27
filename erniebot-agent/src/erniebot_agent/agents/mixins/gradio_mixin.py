@@ -56,18 +56,16 @@ class GradioMixin:
                 _uploaded_file_cache = []
             else:
                 response = await self.run(prompt)
-
+            breakpoint()
             if (
-                response.files
-                and response.files[-1].type == "output"
-                and response.files[-1].used_by == response.actions[-1].tool_name
+                response.steps
+                and response.steps[-1].output_files
             ):
                 # If there is a file output in the last round, then we need to show it.
-                output_file_id = response.files[-1].file.id
-                file_manager = await self.get_file_manager()
-                output_file = file_manager.look_up_file_by_id(output_file_id)
+                output_file = response.steps[-1].output_files[-1]
+                output_file_id = output_file.id
                 file_content = await output_file.read_contents()
-                if get_file_type(response.files[-1].file.filename) == "image":
+                if get_file_type(output_file.filename) == "image":
                     # If it is a image, we can display it in the same chat page.
                     base64_encoded = base64.b64encode(file_content).decode("utf-8")
                     if output_file_id in response.text:
@@ -79,7 +77,7 @@ class GradioMixin:
                         output_result = response.text + IMAGE_HTML.format(BASE64_ENCODED=base64_encoded)
                 else:
                     # TODO: Support multiple files, support audio now.
-                    temp_save_file_name = os.path.join(td, response.files[-1].file.filename)
+                    temp_save_file_name = os.path.join(td, output_file.filename)
                     with open(temp_save_file_name, "wb") as f:
                         f.write(file_content)
                     output_result = response.text
@@ -189,15 +187,15 @@ class GradioMixin:
                             )
 
                     with gr.Accordion("Files", open=False):
-                        file_lis = self._file_manager.registry.list_files()
-                        all_files = gr.HTML(value=file_lis, label="All input files")
+                        all_files = gr.HTML(value=[], label="All input files")
                     with gr.Accordion("Tools", open=False):
-                        attached_tools = self._tool_manager.get_tools()
+                        attached_tools = self.get_tools()
                         tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
                         uploaded_tool = gr.JSON(value=tool_descriptions)
                     with gr.Accordion("Raw messages", open=False):
                         all_messages_json = gr.JSON(label="All messages")
                         agent_memory_json = gr.JSON(label="Messges in memory")
+
                 with gr.Tab(label="Tool Load"):
                     tool_textbox = gr.Textbox(
                         label="Tool_ID",
