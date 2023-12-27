@@ -1,4 +1,4 @@
-# 准备
+# 安装和鉴权
 
 ## 安装
 
@@ -16,20 +16,30 @@ pip install --upgrade erniebot-agent[all]
 
 ### 源码安装
 
+执行如下命令，使用源码安装ERNIE Bot Agent（要求Python >= 3.8)。
+
 ```shell
 git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
+cd ERNIE-Bot-SDK
 
-# 安装Ernie Bot SDK
-cd ERNIE-Bot-SDK/erniebot
-pip install .
+# 切换到特定分支，默认是develop分支
+# git checkout -b xxx origin/xxx
 
-# 安装ERNIE Bot Agent的核心模块
-cd ../erniebot-agent
-pip install .
+# 首先安装Ernie Bot SDK
+pip install ./erniebot
 
-# 安装ERNIE Bot Agent的所有模块
-pip install .[all]
+# 然后安装ERNIE Bot Agent
+pip install ./erniebot-agent            # 安装核心模块
+pip install './erniebot-agent/.[all]'   # 安装所有模块，包括gradio等依赖库
 ```
+
+如果大家希望二次开发ERNIE Bot Agent，需要额外安装一些依赖库。
+
+```shell
+pip install -r erniebot-agent/dev-requirements.txt
+pip install -e './erniebot-agent/.[all]'
+```
+
 
 ## 鉴权
 

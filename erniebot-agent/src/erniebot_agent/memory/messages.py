@@ -68,7 +68,7 @@ class Message:
         self._role = role
         self._content = content
         self._token_count = token_count
-        self._param_names = ["role", "content"]
+        self._to_dict_keys = ["role", "content"]
 
     @property
     def role(self) -> str:
@@ -92,10 +92,10 @@ class Message:
 
     def to_dict(self) -> Dict[str, str]:
         """
-        Transfer the message to a dict, key is the params.
+        Transfer the message to a dict, which is used to chat with models by ERNIB Bot SDK.
         """
         res = {}
-        for name in self._param_names:
+        for name in self._to_dict_keys:
             res[name] = getattr(self, name)
         return res
 
@@ -107,7 +107,7 @@ class Message:
 
     def _get_attrs_str(self) -> str:
         parts: List[str] = []
-        for name in self._param_names:
+        for name in self._to_dict_keys:
             value = getattr(self, name)
             if value is not None and value != "":
                 parts.append(f"{name}: {repr(value)}")
@@ -129,8 +129,6 @@ class SystemMessage(Message):
         token_count (Optional[int]): number of tokens of the message content.
 
     Examples:
-
-        .. code-block:: python
         >>> from erniebot_agent.messages import SystemMessage
         >>> SystemMessage("you are an assistant useful for ocr.")
         <role: system, content: you are an assistant useful for ocr.>
@@ -161,11 +159,9 @@ class HumanMessage(Message):
         token_count (Optional[int]): number of tokens of the message content.
 
     Examples:
-    .. code-block:: python
         >>> from erniebot_agent.messages import HumanMessage
         >>> HumanMessage("I want to order a pizza.")
         <role: user, content: I want to order a pizza.>
-
         >>> prompt = "What is the text in this image?"
         >>> files = [await file_manager.create_file_from_path(file_path="ocr_img.jpg", file_type="remote")]
         >>> message = await HumanMessage.create_with_files(
@@ -251,23 +247,20 @@ class AIMessage(Message):
         search_info (Optional[SearchInfo]): The SearchInfo in the chat model's response.
 
     Examples:
-
-        .. code-block:: python
-
-            >>> human_message = HumanMessage(content="What is the text in this image?")
-            >>> ai_message = AIMessage(
-                function_call={"name": "OCR", "thoughts": "The user want to know the text in the image,
-                     I need to use the OCR tool",
-                     "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
-                token_usage={"prompt_tokens": 10, "completion_tokens": 20},
-                search_info={}]}
-                )
-            >>> human_message.content
-            "What is the text in this image?"
-            >>> ai_message.function_call
-            {"name": "OCR",
-                "thoughts": "The user want to know the text in the image, I need to use the OCR tool",
-                "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"}
+        >>> human_message = HumanMessage(content="What is the text in this image?")
+        >>> ai_message = AIMessage(
+            function_call={"name": "OCR", "thoughts": "The user want to know the text in the image,
+                    I need to use the OCR tool",
+                    "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"},
+            token_usage={"prompt_tokens": 10, "completion_tokens": 20},
+            search_info={}]}
+            )
+        >>> human_message.content
+        "What is the text in this image?"
+        >>> ai_message.function_call
+        {"name": "OCR",
+            "thoughts": "The user want to know the text in the image, I need to use the OCR tool",
+            "arguments": "{\"imgae_byte_str\": file-remote-xxxx, \"lang\": "en"}"}
     """
 
     def __init__(
@@ -288,7 +281,7 @@ class AIMessage(Message):
         self.query_tokens_count = prompt_tokens
         self.plugin_info = plugin_info
         self.search_info = search_info
-        self._param_names = ["role", "content", "function_call", "plugin_info", "search_info"]
+        self._to_dict_keys = ["role", "content", "function_call", "plugin_info", "search_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):
         """Parse the token count information from LLM."""
@@ -310,24 +303,21 @@ class FunctionMessage(Message):
         token_count (Optional[int]): number of tokens of the message content.
 
     Examples:
-
-        .. code-block:: python
-
-            >>> function_message = FunctionMessage(name="OCR", content="The text in the image is: 1234567")
-            >>> function_message.name
-            "OCR"
-            >>> function_message.content
-            "The text in the image is: 1234567"
-            >>> function_message.role
-            "function"
-            >>> function_message.token_count
-            0
+        >>> function_message = FunctionMessage(name="OCR", content="The text in the image is: 1234567")
+        >>> function_message.name
+        "OCR"
+        >>> function_message.content
+        "The text in the image is: 1234567"
+        >>> function_message.role
+        "function"
+        >>> function_message.token_count
+        0
     """
 
     def __init__(self, name: str, content: str):
         super().__init__(role="function", content=content)
         self.name = name
-        self._param_names = ["role", "name", "content"]
+        self._to_dict_keys = ["role", "name", "content"]
 
 
 class AIMessageChunk(AIMessage):

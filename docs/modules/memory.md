@@ -1,5 +1,5 @@
 # Memory 模块介绍
-## 1. Memory 简介
+## 1. 模块简介
 在建立一个Agent应用的过程中，由于LLM本身是无状态的，因此很重要的一点就是赋予Agent记忆能力。Agent的记忆能力主要可以分为长期记忆和短期记忆。
 
 * 长期记忆通过文件/数据库的形式存储，是不会被遗忘的内容，每次判断需要相关知识就可以retrieval的方式，找到最相关的内容放入消息帮助LLM分析得到结果。
@@ -10,8 +10,8 @@
 在使用层面，Memory将传入Agent类中，用于记录多轮的消息，即Agent会在每一轮对话中和Memory有一次交互：即在LLM产生最终结论之后，将第一条HumanMessage和最后一条AIMessage加入到Memory中。
 
 
-## 2. Memory 类介绍
-在Memory类的内部，我们将其主要分为两个部分，即存放对消息处理逻辑的Memory以及存放消息的数据集结构Msg_manager.
+## 2. 核心类
+在Memory类的内部，我们将其主要分为两个部分，即存放对消息处理逻辑的Memory以及存放消息的数据集结构Msg_manager。
 
 ### 2.1 类接口和关系介绍
 
@@ -41,18 +41,6 @@
 * 关系：
     * MessageManager类，传入到Memory类中。
     * 通过List存储Message类的对象。
-
-#### Message类：存储消息
-* 属性：
-    * role: 输出message的角色，包括：user, system, function, assistant。
-    * content: 消息内容。
-    * token_count: 消息占用的token的数量。
-* 方法：
-    * to_dict(self): 将message转化为字典。
-* 关系：
-    * 被MessageManager类存储。
-    * 传入到LLM中，获得下一轮结果。
-
 
 ## 3. 几种Memory的变体
 为了更好地适应上下文窗口，我们支持了几种memory变体，后续也将从存储更多的语义等角度出发，增加更多的Memory类型。目前我们支持的Memory和功能描述如下：
