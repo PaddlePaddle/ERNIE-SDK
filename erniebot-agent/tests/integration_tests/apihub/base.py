@@ -8,7 +8,7 @@ from typing import Optional
 
 import requests
 
-from erniebot_agent.agents.functional_agent import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import WholeMemory
@@ -46,7 +46,7 @@ class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
         else:
             llm = ERNIEBot(model="ernie-3.5", api_type="aistudio")
 
-        return FunctionalAgent(
+        return FunctionAgent(
             llm=llm,
             tools=ToolManager(tools=toolkit.get_tools()),
             memory=WholeMemory(),

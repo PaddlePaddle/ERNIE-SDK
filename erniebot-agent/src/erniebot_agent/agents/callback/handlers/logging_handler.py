@@ -15,6 +15,7 @@
 import logging
 from typing import List, Optional
 
+from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
@@ -24,8 +25,6 @@ from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
 default_logger = logging.getLogger(__name__)
-
-from erniebot_agent.agents.base import BaseAgent
 
 
 class LoggingHandler(CallbackHandler):

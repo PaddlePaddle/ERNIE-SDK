@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.agents.functional_agent import FunctionalAgent
-from erniebot_agent.agents.functional_agent_with_retrieval import (
-    FunctionalAgentWithRetrieval,
-    FunctionalAgentWithRetrievalScoreTool,
-    FunctionalAgentWithRetrievalTool,
+from erniebot_agent.agents.function_agent import FunctionAgent
+from erniebot_agent.agents.function_agent_with_retrieval import (
+    FunctionAgentWithRetrieval,
+    FunctionAgentWithRetrievalScoreTool,
+    FunctionAgentWithRetrievalTool,
 )
