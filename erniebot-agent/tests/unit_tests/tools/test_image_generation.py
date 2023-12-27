@@ -17,7 +17,7 @@ import unittest
 
 import pytest
 
-from erniebot_agent.agents import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools.image_generation_tool import ImageGenerationTool
@@ -60,8 +60,8 @@ class TestImageGenerationTool(unittest.TestCase):
         eb = ERNIEBot(model="ernie-3.5", api_type="aistudio", access_token=aistudio_access_token)
         memory = WholeMemory()
         img_gen_tool = ImageGenerationTool(yinian_ak=yinian_ak, yinian_sk=yinian_sk)
-        agent = FunctionalAgent(llm=eb, tools=[img_gen_tool], memory=memory)
-        result = await agent.async_run("画1张小狗的图片")
+        agent = FunctionAgent(llm=eb, tools=[img_gen_tool], memory=memory)
+        result = await agent.run("画1张小狗的图片")
 
         self.assertIn("image_path", result)
         for path in result["image_path"]:

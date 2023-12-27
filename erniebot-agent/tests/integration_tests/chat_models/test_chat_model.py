@@ -13,7 +13,7 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         messages = [
             HumanMessage(content="你好！"),
         ]
-        res = await eb.async_chat(messages, stream=False)
+        res = await eb.chat(messages, stream=False)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNotNone(res.content)
 
@@ -66,7 +66,7 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         messages = [
             HumanMessage(content="深圳市今天的气温是多少摄氏度？"),
         ]
-        res = await eb.async_chat(messages, functions=functions)
+        res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNone(res.content)
         self.assertIsNotNone(res.function_call)
@@ -76,6 +76,6 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         messages.append(
             FunctionMessage(name="get_current_temperature", content='{"temperature":25,"unit":"摄氏度"}')
         )
-        res = await eb.async_chat(messages, functions=functions)
+        res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNotNone(res.content)

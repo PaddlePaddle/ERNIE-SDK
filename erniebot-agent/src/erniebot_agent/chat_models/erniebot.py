@@ -22,11 +22,12 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
 import erniebot
-from erniebot.response import EBResponse
+from erniebot import ChatCompletionResponse
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import (
@@ -34,6 +35,7 @@ from erniebot_agent.memory.messages import (
     AIMessageChunk,
     FunctionCall,
     Message,
+    PluginInfo,
     SearchInfo,
 )
 from erniebot_agent.utils import config_from_environ as C
@@ -41,7 +43,47 @@ from erniebot_agent.utils import config_from_environ as C
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
 
-class ERNIEBot(ChatModel):
+class BaseERNIEBot(ChatModel):
+    @overload
+    async def chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[False] = ...,
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> AIMessage:
+        ...
+
+    @overload
+    async def chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: Literal[True],
+        functions: Optional[List[dict]] = ...,
+        **kwargs: Any,
+    ) -> AsyncIterator[AIMessageChunk]:
+        ...
+
+    @overload
+    async def chat(
+        self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        ...
+
+    async def chat(
+        self,
+        messages: List[Message],
+        *,
+        stream: bool = False,
+        functions: Optional[List[dict]] = None,
+        **kwargs: Any,
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        raise NotImplementedError
+
+
+class ERNIEBot(BaseERNIEBot):
     def __init__(
         self,
         model: str,
@@ -72,29 +114,8 @@ class ERNIEBot(ChatModel):
             {"multi_step_tool_call_close": not enable_multi_step_tool_call}
         )
 
-    def _maybe_validate_qianfan_auth(self) -> None:
-        if self.api_type == "qianfan":
-            if self.access_token is None:
-                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
-                if "ak" and "sk" not in self.default_chat_kwargs:
-                    ak, sk = C.get_global_aksk()
-                    if ak is None or sk is None:
-                        raise RuntimeError("Please set at least one of ak+sk or access token.")
-                    else:
-                        self.ak = ak
-                        self.sk = sk
-                else:
-                    self.ak = self.default_chat_kwargs.pop("ak")
-                    self.sk = self.default_chat_kwargs.pop("sk")
-            else:
-                # If set access_token in environment and pass ak and sk in default_chat_kwargs,
-                # the access_token in default_chat_kwargs will be used.
-                if "ak" and "sk" in self.default_chat_kwargs:
-                    self.ak = self.default_chat_kwargs.pop("ak")
-                    self.sk = self.default_chat_kwargs.pop("sk")
-
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -105,7 +126,7 @@ class ERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -116,12 +137,12 @@ class ERNIEBot(ChatModel):
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
-    async def async_chat(
+    async def chat(
         self,
         messages: List[Message],
         *,
@@ -166,9 +187,47 @@ class ERNIEBot(ChatModel):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
+        response = await self._generate_response(cfg_dict, stream, functions)
+
+        if not stream:
+            assert isinstance(response, ChatCompletionResponse)
+            return convert_response_to_output(response, AIMessage)
+        else:
+            assert isinstance(response, AsyncIterator)
+            # We have to do type casting here due to the known mypy issue:
+            # https://github.com/python/mypy/issues/16590
+            return (
+                convert_response_to_output(resp, AIMessageChunk)
+                async for resp in cast(AsyncIterator[ChatCompletionResponse], response)
+            )
+
+    def _maybe_validate_qianfan_auth(self) -> None:
+        if self.api_type == "qianfan":
+            if self.access_token is None:
+                # 默认选择千帆时，如果设置了access_token，这个access_token不是aistudio的
+                if "ak" and "sk" not in self.default_chat_kwargs:
+                    ak, sk = C.get_global_aksk()
+                    if ak is None or sk is None:
+                        raise RuntimeError("Please set at least one of ak+sk or access token.")
+                    else:
+                        self.ak = ak
+                        self.sk = sk
+                else:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
+            else:
+                # If set access_token in environment and pass ak and sk in default_chat_kwargs,
+                # the access_token in default_chat_kwargs will be used.
+                if "ak" and "sk" in self.default_chat_kwargs:
+                    self.ak = self.default_chat_kwargs.pop("ak")
+                    self.sk = self.default_chat_kwargs.pop("sk")
+
+    async def _generate_response(
+        self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if cfg_dict.get("plugins", None):
+        if "plugins" in cfg_dict:
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
                 plugins=cfg_dict["plugins"],  # type: ignore
@@ -187,36 +246,55 @@ class ERNIEBot(ChatModel):
                 },
                 **cfg_dict,
             )
-        if isinstance(response, EBResponse):
-            return self.convert_response_to_output(response, AIMessage)
-        else:
-            return (
-                self.convert_response_to_output(resp, AIMessageChunk)
-                async for resp in response  # type: ignore
-            )
 
-    @staticmethod
-    def convert_response_to_output(response: EBResponse, output_type: Type[_T]) -> _T:
-        if hasattr(response, "function_call"):
-            function_call = FunctionCall(
-                name=response.function_call["name"],
-                thoughts=response.function_call["thoughts"],
-                arguments=response.function_call["arguments"],
-            )
-            return output_type(
-                content="", function_call=function_call, search_info=None, token_usage=response.usage
-            )
-        elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
-            search_info = SearchInfo(
-                results=response.search_info["search_results"],
-            )
-            return output_type(
-                content=response.result,
-                function_call=None,
-                search_info=search_info,
-                token_usage=response.usage,
-            )
-        else:
-            return output_type(
-                content=response.result, function_call=None, search_info=None, token_usage=response.usage
-            )
+        return response
+
+
+def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
+    if hasattr(response, "function_call"):
+        function_call = FunctionCall(
+            name=response.function_call["name"],
+            thoughts=response.function_call["thoughts"],
+            arguments=response.function_call["arguments"],
+        )
+        return output_type(
+            content="",
+            function_call=function_call,
+            plugin_info=None,
+            search_info=None,
+            token_usage=response.usage,
+        )
+    elif hasattr(response, "plugin_info"):
+        plugin_info = PluginInfo(
+            names=[
+                response["plugin_metas"][i]["pluginNameForModel"]
+                for i in range(len(response["plugin_metas"]))
+            ]
+        )
+
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=plugin_info,
+            search_info=None,
+            token_usage=response.usage,
+        )
+    elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
+        search_info = SearchInfo(
+            results=response.search_info["search_results"],
+        )
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=None,
+            search_info=search_info,
+            token_usage=response.usage,
+        )
+    else:
+        return output_type(
+            content=response.result,
+            function_call=None,
+            plugin_info=None,
+            search_info=None,
+            token_usage=response.usage,
+        )

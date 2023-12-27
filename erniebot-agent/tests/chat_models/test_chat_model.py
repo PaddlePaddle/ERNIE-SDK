@@ -15,7 +15,7 @@ async def test_ernie_bot(model="ernie-bot-turbo", stream=False):
     messages = [
         HumanMessage(content="我在深圳，周末可以去哪里玩？"),
     ]
-    res = await eb.async_chat(messages, stream=stream)
+    res = await eb.chat(messages, stream=stream)
     if not stream:
         print(res)
     else:
@@ -32,7 +32,7 @@ async def test_ernie_bot_qianfan(model="ernie-turbo", stream=False, **auth_dict)
     messages = [
         HumanMessage(content="我在深圳，周末可以去哪里玩？"),
     ]
-    res = await eb.async_chat(messages, stream=stream)
+    res = await eb.chat(messages, stream=stream)
     assert isinstance(res, Message) and len(res.content) > 0
     if not stream:
         print(res)
