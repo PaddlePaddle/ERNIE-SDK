@@ -40,20 +40,34 @@
 - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 
-## 快速安装
+## 安装
 
-建议您可以使用pip快速安装 **ERNIE Bot Agent** 的最新稳定版。
+### 快速安装
+
+执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
+# 安装核心模块
 pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
 ```
 
-如需使用develop版本，可以下载源码后执行如下命令安装
+### 源码安装
+
+执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
 git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
-cd ERNIE-Bot-SDK/erniebot-agent
-pip install .
+cd ERNIE-Bot-SDK
+
+# 首先安装Ernie Bot SDK
+pip install ./erniebot
+
+# 然后安装ERNIE Bot Agent
+pip install ./erniebot-agent            # 安装核心模块
+# pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
 
 ## 快速体验
