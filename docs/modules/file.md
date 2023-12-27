@@ -1,6 +1,6 @@
 # File 模块
 
-## 1. File 模块简介
+## 1. 模块简介
 
 文件管理模块提供了用于管理文件的一系列类，方便用户与Agent进行交互，其中包括 `File` 基类及其子类、`FileManager` 、`GlobalFileManagerHandler`以及与远程文件服务器交互的  `RemoteFileClient`。
 
@@ -14,7 +14,11 @@
 
     - `FileManager`将作为此模块中生命周期最长的对象，它会在关闭时回收所有的持有对象（RemoteClient/temp local file），请不要随意关闭它。如果需要关闭已停止对其中所有注册文件的使用。
 
-## 2. File 基类及其子类介绍
+## 2. 核心类
+
+下面简单介绍 `File` 模块的核心类，详细接口请参考[API文档](../../package/erniebot_agent/file/)。
+
+### 2.1 File 基类
 
 `File` 类是文件管理模块的基础类，用于表示通用的文件对象（不建议自行创建 `File` 类以免无法被 `Agent`识别使用以及无法被回收）。它包含文件的基本属性，如文件ID、文件名、文件大小、创建时间、文件用途和文件元数据。
 
@@ -48,17 +52,17 @@
 | get_file_repr     | 返回用于特定上下文的字符串表示 |
 | to_dict           | 将File对象转换为字典           |
 
-### 2.1 File 子类
+### 2.2 File 子类
 
-#### 2.1.1 LocalFile 类
+#### 2.2.1 LocalFile 类
 
 `LocalFile` 是 `File` 的子类，表示本地文件。除了继承自基类的属性外，它还添加了文件路径属性 `path`，用于表示文件在本地文件系统中的路径。
 
-#### 2.1.2 RemoteFile 类
+#### 2.2.2 RemoteFile 类
 
 `RemoteFile` 也是 `File` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器交。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。
 
-## 3. FileManager 类介绍
+### 2.3 FileManager 类
 
 `FileManager` 类是一个高级文件管理工具，封装了文件的创建、上传、删除等操作，以及与 `Agent`进行交互，无论是  `LocalFile`还是 `RemoteFile`都可以使用它来统一管理。`FileManager`集成了与远程文件服务器交互的逻辑（通过 `RemoteFileClient`完成上传、下载、删除等文件操作）以及与本地文件交互的逻辑（从本地路径创建 `LocalFile`）。它依赖于 `FileRegistry` 来对文件进行用于在整个应用程序中管理文件的注册和查找。
 
@@ -88,14 +92,16 @@
 
     - 如果 `FileManager` 类有相关联的 `RemoteFileClient`，那么当 `FileManager`关闭时，相关联的 `RemoteFileClient`也会一起关闭。
 
-## 4. RemoteFileClient 类介绍
+## 2.4 RemoteFileClient 类
 
 `RemoteFileClient` 是用于与远程文件服务器交互的类。它定义了文件上传、文件下载、文件删除等操作的方法。`AIStudioFileClient` 是 `RemoteFileClient` 的一个具体推荐实现，用于与文件服务交互，用户使用 `access token`作为参数用于身份验证，之后能够在AIStudio文件服务中上传、检索、列出文件，以及创建临时URL以访问文件。`RemoteFileClient`使用时被 `FileManager`持有，一旦 `FileManager`关闭，`RemoteFileClient`也会相应被关闭，其中的资源也会被相应释放。
 
 !!! notes 注意
     * 一般情况下无需使用 `RemoteFile`，默认所有文件都为 `LocalFile`，如需使用，将 `GlobalFileManagerHandler`的`enable_remote_file`设置为True即可。
 
-## 5. 使用方法
+## 3. 使用示例
+
+为了直观展示，我们举例进行说明，请先确保完成`ERNIE Bot Agent`的安装和鉴权步骤。
 
 1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件，注：它的生命周期同整个事件循环。
 
@@ -139,8 +145,3 @@ async def demo_function():
        response = await agent.async_run('请帮我画一张北京市的图')
        # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件
        files = response.steps[-1].output_files
-   ```
-
-## 6 File的API接口
-
-`File`模块的API接口，请参考[文档](../../package/erniebot_agent/file/)。
