@@ -136,6 +136,12 @@ class ERNIEBot(BaseERNIEBot):
     ) -> AsyncIterator[AIMessageChunk]:
         ...
 
+    @overload
+    async def chat(
+        self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
+    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
+        ...
+
     async def chat(
         self,
         messages: List[Message],
