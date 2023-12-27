@@ -80,7 +80,7 @@ pip install ./erniebot-agent            # 安装核心模块
 <details>
 <summary>点击展开</summary>
 
-### 代码
+下面的`quick_start.py`示例展示了如何使用 ERNIE Bot Agent 快速构建智能体应用。
 
 ```python
 import asyncio
@@ -90,38 +90,37 @@ from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.tools import RemoteToolkit
 
-# 从 https://aistudio.baidu.com/index/accessToken 获取你的AI Studio access token
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "<aistudio-access-token>"
-
 async def main():
-    llm = ERNIEBot(model="ernie-3.5")
-    tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()
-    agent = FunctionAgent(llm=llm, tools=tts_tool)
-    # agent进行通用对话
+    llm = ERNIEBot(model="ernie-3.5")  # 初始化大语言模型
+    tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()  # 获取语音合成工具
+    agent = FunctionAgent(llm=llm, tools=tts_tool)  # 创建智能体，集成语言模型与工具
+
+    # 与智能体进行通用对话
     result = await agent.run("你好，请自我介绍一下")
     print(result.text)
     # 模型返回类似如下结果：
     # 你好，我叫文心一言，是百度研发的知识增强大语言模型，能够与人对话互动，回答问题，协助创作，高效便捷地帮助人们获取信息、知识和灵感。
 
-    # agent根据输入文本，自动调用tts工具
+    # 请求智能体根据输入文本，自动调用语音合成工具
     result = await agent.run("把上一轮的自我介绍转成语音")
     print(result.text)
     # 模型返回类似如下结果：
     # 根据你的请求，我已经将自我介绍转换为语音文件，文件名为file-local-c70878b4-a3f6-11ee-95d0-506b4b225bd6。
     # 你可以使用任何支持播放音频文件的设备或软件来播放这个文件。如果你需要进一步操作或有其他问题，请随时告诉我。
 
-    # 将agent输出的音频文件写入test.wav, 可以尝试播放
+    # 将智能体输出的音频文件写入test.wav, 可以尝试播放
     audio_file = result.steps[-1].output_files[0]
     await audio_file.write_contents_to("./test.wav")
 
 asyncio.run(main())
 ```
 
-### 快速启动 Gradio 体验
-
-```python
+在运行代码前，我们需要先从获取[AI Studio access token](https://aistudio.baidu.com/index/accessToken)，然后执行以下命令:
+```shell
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export EB_AGENT_LOGGING_LEVEL=info
+python quick_start.py
 ```
-
 </details>
 
 # ERNIE Bot SDK
