@@ -81,7 +81,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         if system_message:
             self.system_message = system_message
         else:
-            self.system_message = memory.get_system_message()
+            self.system_message = self.memory.get_system_message()
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
