@@ -7,7 +7,7 @@
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 [![Downloads](https://pepy.tech/badge/erniebot-agent)](https://pepy.tech/project/erniebot-agent)
-[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK/branch/master/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK)
+[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK)
 
 </div>
 
@@ -80,6 +80,8 @@ pip install ./erniebot-agent            # 安装核心模块
 <details>
 <summary>点击展开</summary>
 
+### 代码
+
 ```python
 import asyncio
 import os
@@ -113,6 +115,11 @@ async def main():
     await audio_file.write_contents_to("./test.wav")
 
 asyncio.run(main())
+```
+
+### 快速启动 Gradio 体验
+
+```python
 ```
 
 </details>
