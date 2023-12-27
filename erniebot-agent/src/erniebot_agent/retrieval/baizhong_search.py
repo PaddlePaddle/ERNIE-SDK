@@ -13,6 +13,20 @@ logger = logging.getLogger(__name__)
 class BaizhongSearch:
     """
     A class for interacting with the Baizhong Search API.
+
+    Args:
+        access_token (str): The access token for authentication.
+        knowledge_base_name (Optional[str]): The name of the knowledge base to use (optional).
+        knowledge_base_id (Optional[int]): The ID of an existing knowledge base to use (optional).
+
+    Attributes:
+        base_url (str): The base URL for the AIStudio service.
+        access_token (str): The access token for authentication.
+        knowledge_base_id (int): The ID of the knowledge base being used (if applicable).
+
+    Raises:
+        BaizhongError: If neither knowledge_base_name nor knowledge_base_id is provided.
+
     """
 
     _AISTUDIO_BASE_URL: ClassVar[str] = "https://aistudio.baidu.com"
@@ -42,7 +56,6 @@ class BaizhongSearch:
             self.knowledge_base_id = knowledge_base_id
         elif knowledge_base_name is not None:
             self.knowledge_base_id = self.create_knowledge_base(knowledge_base_name)
-
         else:
             raise BaizhongError("You must provide either a `knowledge_base_name` or a `knowledge_base_id`.")
 
