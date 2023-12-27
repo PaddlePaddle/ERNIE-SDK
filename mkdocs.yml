@@ -1,4 +1,4 @@
-site_name: Ernie Bot Agent
+site_name: ERNIE Bot Agent
 repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
 repo_name: ERNIE-Bot-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
@@ -8,6 +8,8 @@ nav:
   - 快速开始:
     - 准备: 'tutorials/preparation.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
+  - Tutorials:
+    - Local Tool: "./cache/erniebot-agent/cookbook/construction_assistant.ipynb"
   - 核心模块:
     - messages: 'modules/messages.md'
     - chat_modles: 'modules/chat_models.md'
@@ -28,7 +30,6 @@ nav:
 theme:
   name: material
   favicon: img/favicon.png
-  logo: img/logo.png
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -44,6 +45,8 @@ markdown_extensions:
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
   - mkdocstrings:
       default_handler: python
       handlers:
