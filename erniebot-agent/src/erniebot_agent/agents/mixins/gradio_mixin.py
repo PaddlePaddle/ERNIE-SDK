@@ -26,7 +26,6 @@ from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 
 
 class GradioMixin:
-
     def launch_gradio_demo(self: BaseAgent, **launch_kwargs: Any):
         # XXX: The current implementation requires that the inheriting objects
         # be constructed outside an event loop, which is probably not sensible.
