@@ -1,31 +1,127 @@
-# 简介
-ERNIE Bot Agent是文心一言Agent框架，旨在助力大家快速开发大模型应用。
+<div align="center">
 
-# 快速上手
+<h1>ERNIE Bot Agent & SDK</h1>
 
-## 安装
-执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
+</div>
+
+**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
+
+**ERNIE Bot Agent**为开发者提供便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
+
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
+
+## ERNIE Bot Agent
+
+### 特性
+
+#### 编排能力
+
+与目前业界主流的通过prompt和output parser实现agent的方式不同，**ERNIE Bot Agent** 基于文心大模型的**function calling**能力实现了多工具编排和自动调度功能，并且允许工具、插件、知识库等不同组件的混合编排。除了自动调度，我们未来还将支持更多的编排模式，例如手动编排、半自动编排，为开发者提供更大的灵活性。
+
+#### 组件库
+
+**ERNIE Bot Agent** 为开发者提供了一个丰富的预置组件库：
+
+- **预置工具**：只需一行代码，即可加载使用星河社区工具中心的30+预置工具。这些工具当前主要来自百度AI开发平台和飞桨特色PP系列模型。后续，我们会持续接入更多预置工具，也欢迎社区贡献。此外，工具模块也支持用户灵活自定义本地和远程工具。
+- **知识库**：我们提供了开箱即用的基于文心百中的平台化知识库, 并允许开发者在二次开发的场景下使用[langchain](https://github.com/langchain-ai/langchain)、[llama_index](https://github.com/run-llama/llama_index)等主流开源库作为知识库。
+- **文心一言插件**：我们将会支持通过 **ERNIE Bot Agent** 调用文心一言插件商城中的插件（开发中）
+
+#### 低开发门槛
+
+我们希望能够降低开发门槛，使更多的开发者能够轻松构建智能体应用：
+
+- **零代码界面**：依托星河社区，我们提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
+- **简洁的代码**：不到10行代码就可以快速开发一个智能体应用。
+- **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
+
+
+### 安装
+
+<details>
+<summary>点击展开</summary>
+
+#### 快速安装
+
+执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
+# 安装核心模块
 pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
 ```
 
-## 鉴权
-大家在使用ERNIE Bot Agent之前，需要进行鉴权步骤：
+#### 源码安装
 
-* 在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号
-* 在个人中心的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取用户凭证`Access Token`
-* 通过环境变量或者`Python`代码设置`Access Token`
+执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
-export EB_AGENT_ACCESS_TOKEN="your access token"
+git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
+cd ERNIE-Bot-SDK
+
+# 首先安装Ernie Bot SDK
+pip install ./erniebot
+
+# 然后安装ERNIE Bot Agent
+pip install ./erniebot-agent            # 安装核心模块
+# pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
+</details>
+
+
+### 快速体验
+
+<details>
+<summary>点击展开</summary>
+
+下面的`quick_start.py`示例展示了如何使用 ERNIE Bot Agent 快速构建智能体应用。
 
 ```python
+import asyncio
 import os
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+
+from erniebot_agent.agents import FunctionAgent
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.tools import RemoteToolkit
+
+async def main():
+    llm = ERNIEBot(model="ernie-3.5")  # 初始化大语言模型
+    tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()  # 获取语音合成工具
+    agent = FunctionAgent(llm=llm, tools=tts_tool)  # 创建智能体，集成语言模型与工具
+
+    # 与智能体进行通用对话
+    result = await agent.run("你好，请自我介绍一下")
+    print(result.text)
+    # 模型返回类似如下结果：
+    # 你好，我叫文心一言，是百度研发的知识增强大语言模型，能够与人对话互动，回答问题，协助创作，高效便捷地帮助人们获取信息、知识和灵感。
+
+    # 请求智能体根据输入文本，自动调用语音合成工具
+    result = await agent.run("把上一轮的自我介绍转成语音")
+    print(result.text)
+    # 模型返回类似如下结果：
+    # 根据你的请求，我已经将自我介绍转换为语音文件，文件名为file-local-c70878b4-a3f6-11ee-95d0-506b4b225bd6。
+    # 你可以使用任何支持播放音频文件的设备或软件来播放这个文件。如果你需要进一步操作或有其他问题，请随时告诉我。
+
+    # 将智能体输出的音频文件写入test.wav, 可以尝试播放
+    audio_file = result.steps[-1].output_files[0]
+    await audio_file.write_contents_to("./test.wav")
+
+asyncio.run(main())
 ```
 
-## 智能体Agent
+在运行代码前，我们需要先从获取[AI Studio access token](https://aistudio.baidu.com/index/accessToken)，然后执行以下命令:
+```shell
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export EB_AGENT_LOGGING_LEVEL=info
+python quick_start.py
+```
+</details>
 
-TODO
+## ERNIE Bot SDK
+
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+
+## License
+
+ERNIE Bot Agent 和 ERNIE Bot SDK 遵循Apache-2.0开源协议。
