@@ -137,9 +137,10 @@ async def demo_function():
        await GlobalFileManagerHandler().configure(save_dir='your_path') # 需要在事件循环最开始配置
        ... # 此处省略agent创建过程
        response = await agent.async_run('请帮我画一张北京市的图')
-       # 您可以通过AgentResponse.files获取agent所有文件也可以在save_dir中找到生成的图片
-       files = response.files
+       # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件
+       files = response.steps[-1].output_files
    ```
 
 ## 6 File的API接口
+
 `File`模块的API接口，请参考[文档](../../package/erniebot_agent/file/)。
