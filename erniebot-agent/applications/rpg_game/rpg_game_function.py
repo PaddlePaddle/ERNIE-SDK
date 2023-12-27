@@ -44,7 +44,7 @@ class ChatStoryTool(Tool):
 
 def creates_story_tool():
     memory = SlidingWindowMemory(max_round=2)
-    llm = ERNIEBot(model="ernie-3.5", api_type='aistudio', access_token='4ce50e3378f418d271c480c8ddfa818537071dbe')
+    llm = ERNIEBot(model="ernie-3.5", api_type='aistudio')
     agent = FunctionAgent(llm=llm, tools=[], system_message=SystemMessage(INSTRUCTION.format(SCRIPT="仙剑奇侠传"), memory=memory))
     tool = ChatStoryTool(agent)
     return tool
@@ -55,7 +55,7 @@ SYSTEM_MESSAGE =  "你是《{SCRIPT}》沉浸式图文RPG场景助手，能够�
                 请你先调用ChatStoryTool生成互动，然后调用ImageGenerateTool生成图片，\
                 最后将图片描述的部分替换为fileid，其他的内容不要改变。"
 # 创建一个ERNIEBot实例，使用"ernie-bot-8k"模型。
-llm = ERNIEBot(model="ernie-3.5", api_type='aistudio', access_token='4ce50e3378f418d271c480c8ddfa818537071dbe', enable_multi_step_tool_call=True)
+llm = ERNIEBot(model="ernie-3.5", api_type='aistudio', enable_multi_step_tool_call=True)
 memory = WholeMemory()
 agent = FunctionAgent(llm=llm, tools=[story_tool, img_tool], memory=memory, system_message=SystemMessage(SYSTEM_MESSAGE.format(SCRIPT="仙剑奇侠传")))
 os.environ['EB_AGENT_LOGGING_LEVEL'] = 'info'
