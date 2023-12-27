@@ -1,6 +1,4 @@
-from erniebot.response import EBResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory import AIMessage
 
 
@@ -16,6 +14,7 @@ class FakeSimpleChatModel(ChatModel):
         if stream:
             raise ValueError("Streaming is not supported.")
         return self.response
+
 
 class FakeERNIEBotWithPresetResponses(ChatModel):
     def __init__(self, responses):

@@ -136,42 +136,6 @@ class ERNIEBot(BaseERNIEBot):
     ) -> AsyncIterator[AIMessageChunk]:
         ...
 
-    @overload
-    async def chat(
-        self, messages: List[Message], *, stream: bool, functions: Optional[List[dict]] = ..., **kwargs: Any
-    ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
-        ...
-<<<<<<< HEAD
-
-    async def _get_response(
-        self, cfg_dict: dict, stream: bool, functions: Optional[List[dict]]
-    ) -> Union[EBResponse, List[EBResponse]]:
-        # TODO: Improve this when erniebot typing issue is fixed.
-        # Note: If plugins is not None, erniebot will not use Baidu_search.
-        if "plugins" in cfg_dict:
-            response = await erniebot.ChatCompletionWithPlugins.acreate(
-                messages=cfg_dict["messages"],
-                plugins=cfg_dict["plugins"],  # type: ignore
-                stream=stream,
-                _config_=cfg_dict["_config_"],
-                functions=functions,  # type: ignore
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-            )
-        else:
-            response = await erniebot.ChatCompletion.acreate(
-                stream=stream,
-                extra_params={
-                    "extra_data": self.enable_multi_step_json,
-                },
-                **cfg_dict,
-            )
-
-        return response
-=======
->>>>>>> 97b0cf0c7847da550832ab4cc0cc7efb13a61588
-
     async def chat(
         self,
         messages: List[Message],

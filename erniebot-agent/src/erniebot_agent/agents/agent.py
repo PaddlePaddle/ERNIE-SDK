@@ -205,7 +205,6 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
-
     async def _run_llm(self, messages: List[Message], functions=None, **opts: Any) -> LLMResponse:
         """Run the LLM asynchronously without invoking callbacks.
 
@@ -235,6 +234,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     async def _ensure_managed_files(self, files: List[File]) -> None:
         def _raise_exception(file: File) -> NoReturn:
             raise FileError(f"{repr(file)} is not managed by the file manager of the agent.")
+
         file_manager = await self.get_file_manager()
         for file in files:
             try:
