@@ -32,25 +32,25 @@ class ChatModel(metaclass=ABCMeta):
         self.default_chat_kwargs = default_chat_kwargs
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any
     ) -> AIMessage:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
     ) -> AsyncIterator[AIMessageChunk]:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
     @abstractmethod
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         """The abstract method for asynchronously chatting with the LLM.

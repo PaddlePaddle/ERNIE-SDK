@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Type
 
 from pydantic import Field
 
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.agents.callback.default import get_no_ellipsis_callback
-from erniebot_agent.agents.functional_agent import FunctionalAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.memory import AIMessage, HumanMessage, Message
@@ -111,7 +111,7 @@ llm = ERNIEBot(model="ernie-3.5", api_type="custom")
 memory = SlidingWindowMemory(max_round=1)
 # plugins = ["ChatFile", "eChart"]
 plugins: List[str] = []
-agent = FunctionalAgent(
+agent = FunctionAgent(
     llm=llm,
     tools=[TextRepeaterTool(), TextRepeaterNoFileTool(), CalculatorTool()],
     memory=memory,
@@ -129,28 +129,28 @@ async def run_agent():
     )
 
     print("=" * 10 + "echart返回结果" + "=" * 10 + "\n")  # ok
-    agent_resp = await agent.async_run("帮我画一个饼状图：8月的用户反馈中，BUG有100条，需求有100条，使用咨询100条，总共300条反馈")  # ok
+    agent_resp = await agent.run("帮我画一个饼状图：8月的用户反馈中，BUG有100条，需求有100条，使用咨询100条，总共300条反馈")  # ok
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "喝牛奶的好处" + "=" * 10 + "\n")
-    agent_resp = await agent.async_run("喝牛奶有什么好处", files=[docx_file])  # ok
+    agent_resp = await agent.run("喝牛奶有什么好处", files=[docx_file])  # ok
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "传入plugins，docx不使用chatFile、使用Tools的返回结果" + "=" * 10 + "\n")  # ok
-    agent_resp = await agent.async_run("请把文件中的前10个字复制三遍返回", files=[docx_file])
+    agent_resp = await agent.run("请把文件中的前10个字复制三遍返回", files=[docx_file])
     print(agent_resp.text)
     print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "混合编排" + "=" * 10 + "\n")
-    agent_resp = await agent.async_run("请把文件中的前10个字复制三遍，并将结果和文档一起创作一篇短文", files=[docx_file])  # 没有联排
+    agent_resp = await agent.run("请把文件中的前10个字复制三遍，并将结果和文档一起创作一篇短文", files=[docx_file])  # 没有联排
     print(agent_resp.text)
     print(agent_resp.annotations)
     print("\n" + "=" * 20 + "\n")
 
     print("=" * 10 + "echart不带File混合编排" + "=" * 10 + "\n")  # ok
-    agent_resp = await agent.async_run(
+    agent_resp = await agent.run(
         '请告诉我"今天是美好的一天"重复三遍是什么？然后画一个饼状图：8月的用户反馈中，BUG有100条，需求有100条，使用咨询100条，总共300条反馈'
     )
     print(agent_resp.text)

@@ -3,15 +3,15 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+
+from erniebot_agent.agents import FunctionAgentWithRetrievalScoreTool
+from erniebot_agent.memory import HumanMessage
+from erniebot_agent.retrieval import BaizhongSearch
 from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
-
-from erniebot_agent.agents import FunctionalAgentWithRetrievalScoreTool
-from erniebot_agent.memory import HumanMessage
-from erniebot_agent.retrieval import BaizhongSearch
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +64,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
             access_token=access_token,
             knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
         )
-    agent = FunctionalAgentWithRetrievalScoreTool(
+    agent = FunctionAgentWithRetrievalScoreTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
         threshold=0.0,
@@ -73,18 +73,18 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
         callbacks=[callback_handler],
     )
 
-    await agent._async_run_llm([HumanMessage("Hello, world!")])
+    await agent.run_llm([HumanMessage("Hello, world!")])
     assert callback_handler.llm_starts == 1
     assert callback_handler.llm_ends == 1
     assert callback_handler.llm_errors == 0
 
-    await agent._async_run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
+    await agent.run_tool(identity_tool.tool_name, json.dumps({"param": "test"}))
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        await agent.async_run("Hello, world!")
+        await agent.run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
     # call retrieval tool
@@ -104,7 +104,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
         access_token=access_token,
         knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
     )
-    agent = FunctionalAgentWithRetrievalScoreTool(
+    agent = FunctionAgentWithRetrievalScoreTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
         threshold=0.0,
@@ -115,7 +115,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
     # Test retrieval success
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        response = await agent.async_run("Hello, world!")
+        response = await agent.run("Hello, world!")
 
     assert response.text == "Text response"
     # HumanMessage
@@ -141,7 +141,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
 
     # Test retrieval failed
 
-    agent = FunctionalAgentWithRetrievalScoreTool(
+    agent = FunctionAgentWithRetrievalScoreTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
         threshold=0.1,
@@ -150,7 +150,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
     )
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
-        response = await agent.async_run("Hello, world!")
+        response = await agent.run("Hello, world!")
 
     assert response.text == "Text response"
     # HumanMessage

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, List, Optional, Protocol, runtime_checkable
+from typing import Any, List, Optional, Protocol, TypeVar, runtime_checkable
 
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
@@ -22,21 +22,20 @@ from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 
+LLMT = TypeVar("LLMT", bound=ChatModel)
 
-class BaseAgent(Protocol):
-    @property
-    def llm(self) -> ChatModel:
+
+class BaseAgent(Protocol[LLMT]):
+    llm: LLMT
+    memory: Memory
+
+    async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         ...
 
-    @property
-    def memory(self) -> Memory:
+    async def run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
         ...
 
-    @property
-    def tools(self) -> List[BaseTool]:
-        ...
-
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
         ...
 
     def load_tool(self, tool: BaseTool) -> None:
@@ -45,20 +44,17 @@ class BaseAgent(Protocol):
     def unload_tool(self, tool: BaseTool) -> None:
         ...
 
+    def get_tools(self) -> List[BaseTool]:
+        ...
+
     def reset_memory(self) -> None:
         ...
 
-    async def _async_run_tool(self, tool_name: str, tool_args: str) -> ToolResponse:
-        ...
-
-    async def _async_run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
-        ...
-
-    async def _get_file_manager(self) -> FileManager:
+    async def get_file_manager(self) -> FileManager:
         ...
 
 
 @runtime_checkable
 class AgentLike(Protocol):
-    async def async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        raise NotImplementedError
+    async def run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+        ...

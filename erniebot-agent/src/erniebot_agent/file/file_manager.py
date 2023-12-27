@@ -36,7 +36,6 @@ import anyio
 from typing_extensions import Self, TypeAlias
 
 from erniebot_agent.file import protocol
-from erniebot_agent.file.base import File
 from erniebot_agent.file.file_registry import FileRegistry
 from erniebot_agent.file.local_file import LocalFile, create_local_file_from_path
 from erniebot_agent.file.remote_file import RemoteFile, RemoteFileClient
@@ -46,6 +45,7 @@ from erniebot_agent.utils.mixins import Closeable, Noncopyable
 logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
+_File: TypeAlias = Union[LocalFile, RemoteFile]
 
 
 @final
@@ -102,8 +102,8 @@ class FileManager(Closeable, Noncopyable):
             self._save_dir = pathlib.Path(self._temp_dir.name)
         self._prune_on_close = prune_on_close
 
-        self._file_registry = FileRegistry()
-        self._fully_managed_files: Deque[Union[LocalFile, RemoteFile]] = deque()
+        self._file_registry: FileRegistry[_File] = FileRegistry()
+        self._fully_managed_files: Deque[_File] = deque()
 
         self._closed = False
 
@@ -152,7 +152,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
-    ) -> Union[LocalFile, RemoteFile]:
+    ) -> _File:
         ...
 
     async def create_file_from_path(
@@ -162,7 +162,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
-    ) -> Union[LocalFile, RemoteFile]:
+    ) -> _File:
         """
         Create a file from a specified file path.
 
@@ -181,7 +181,7 @@ class FileManager(Closeable, Noncopyable):
 
         """
         self.ensure_not_closed()
-        file: Union[LocalFile, RemoteFile]
+        file: _File
         if file_type is None:
             file_type = self._get_default_file_type()
         if file_type == "local":
@@ -280,7 +280,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
-    ) -> Union[LocalFile, RemoteFile]:
+    ) -> _File:
         ...
 
     async def create_file_from_bytes(
@@ -291,7 +291,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
-    ) -> Union[LocalFile, RemoteFile]:
+    ) -> _File:
         """
         Create a file from bytes.
 
@@ -319,7 +319,7 @@ class FileManager(Closeable, Noncopyable):
         try:
             async with await async_file_path.open("wb") as f:
                 await f.write(file_contents)
-            file: Union[LocalFile, RemoteFile]
+            file: _File
             if file_type == "local":
                 file = await self._create_local_file_from_path(file_path, file_purpose, file_metadata)
                 should_remove_file = False
@@ -359,7 +359,7 @@ class FileManager(Closeable, Noncopyable):
         files = await self._get_remote_file_client().list_files()
         return files
 
-    def look_up_file_by_id(self, file_id: str) -> File:
+    def look_up_file_by_id(self, file_id: str) -> _File:
         """
         Look up a file by its ID.
 
@@ -382,7 +382,7 @@ class FileManager(Closeable, Noncopyable):
             )
         return file
 
-    def list_registered_files(self) -> List[File]:
+    def list_registered_files(self) -> List[_File]:
         """
         List remote files.
 
@@ -421,6 +421,32 @@ class FileManager(Closeable, Noncopyable):
             if self._temp_dir is not None:
                 self._clean_up_temp_dir(self._temp_dir)
             self._closed = True
+
+    def sniff_and_extract_files_from_list(self, list_: List[Any]) -> List[_File]:
+        files: List[_File] = []
+        for item in list_:
+            if not isinstance(item, str):
+                continue
+            if protocol.is_file_id(item):
+                file_id = item
+                try:
+                    file = self.look_up_file_by_id(file_id)
+                except FileError as e:
+                    raise FileError(f"An unregistered file with ID {repr(file_id)} was found.") from e
+                files.append(file)
+        return files
+
+    def sniff_and_extract_files_from_text(self, text: str) -> List[_File]:
+        file_ids = protocol.extract_file_ids(text)
+        files: List[_File] = []
+        for file_id in file_ids:
+            if protocol.is_file_id(file_id):
+                try:
+                    file = self.look_up_file_by_id(file_id)
+                except FileError as e:
+                    raise FileError(f"An unregistered file with ID {repr(file_id)} was found.") from e
+                files.append(file)
+        return files
 
     async def _create_local_file_from_path(
         self,
