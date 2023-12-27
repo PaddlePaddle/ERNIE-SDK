@@ -8,6 +8,9 @@ nav:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
+  - 教程:
+    - Local Tool: "cookbooks/agent/local_tool.ipynb"
+    - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
   - 核心模块:
     - message: 'modules/message.md'
     - chat_models: 'modules/chat_models.md'
@@ -15,27 +18,46 @@ nav:
     - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
-  - API:
+  - API Referene:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
-      - chat_models: "package/erniebot_agent/chat_models.md"
-      - file: "package/erniebot_agent/file.md"
-      - message: "package/erniebot_agent/message.md"
-      - memory: "package/erniebot_agent/memory.md"
-      - retrieval: "package/erniebot_agent/retrieval.md"
-      - tools: "package/erniebot_agent/tools.md"
+  - ERNIE-Bot-SDK:
+    - 使用文档:
+      - 预备步骤:
+        - sdk/README.md
+        - sdk/installation.md
+        - sdk/authentication.md
+        - sdk/configuration.md
+        - sdk/models.md
+      - 使用指南:
+        - sdk/guides/chat_completion.md
+        - sdk/guides/embedding.md
+        - sdk/guides/image.md
+        - sdk/guides/function_calling.md
+    - API文档:
+      - sdk/api_reference/chat_completion.md
+      - sdk/api_reference/embedding.md
+      - sdk/api_reference/image.md
 
 theme:
   name: material
   favicon: img/favicon.png
+  features:
+    - navigation.tabs.sticky
+    - toc.integrate
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
   palette:
     primary: black
     accent: pink
   font:
     text: Noto Serif Simplified Chinese
     code: Noto Serif Simplified Chinese
-  features:
-    - navigation.footer
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -43,14 +65,21 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - admonition
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
 
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
   - mkdocstrings:
       default_handler: python
       handlers:
