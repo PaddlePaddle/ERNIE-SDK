@@ -4,27 +4,22 @@ repo_name: ERNIE-Bot-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
-  - 介绍: 'tutorials/introduction.md'
   - 快速开始:
-    - 准备: 'tutorials/preparation.md'
+    - 安装和鉴权: 'modules/preparation.md'
+    - 构建一个简单智能体: 'modules/quickstart.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
   - 教程:
-    - Local Tool: "cookbooks/agent/construction_assistant.ipynb"
+    - Local Tool: "cookbooks/agent/local_tool.ipynb"
+    - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
   - 核心模块:
-    - messages: 'modules/messages.md'
-    - chat_modles: 'modules/chat_models.md'
-    - tools: 'modules/tools/create-tool.md'
+    - message: 'modules/message.md'
+    - chat_models: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
     - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
+    - tools: 'modules/tools/create-tool.md'
   - API Referene:
     - erniebot-agent:
-      - messages: "package/erniebot_agent/messages.md"
-      - memory: "package/erniebot_agent/memory.md"
-      - file: "package/erniebot_agent/file.md"
-      - tools: "package/erniebot_agent/tools.md"
-      - chat_models: "package/erniebot_agent/chat_models.md"
-      - retrieval: "package/erniebot_agent/retrieval.md"
       - agents: "package/erniebot_agent/agents.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
