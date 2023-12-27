@@ -26,7 +26,7 @@
 
 ## ERNIE Bot SDK
 
-**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./sdk/README.md)。
 
 ## License
 

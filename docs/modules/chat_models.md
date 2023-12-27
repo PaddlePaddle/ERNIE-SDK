@@ -19,7 +19,7 @@
 
 ## 2. 核心类
 
-下面简单介绍`ChatModels`模块的核心类，详细接口请参考[API文档](../../package/erniebot_agent/chat_models/)。
+下面简单介绍`ChatModels`模块的核心类，详细接口请参考[API文档](../package/erniebot_agent/chat_models.md)。
 
 `ChatModel`类是基类，以下是主要的属性和方法。
 

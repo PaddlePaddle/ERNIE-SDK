@@ -45,11 +45,11 @@
 ## 3. 几种Memory的变体
 为了更好地适应上下文窗口，我们支持了几种memory变体，后续也将从存储更多的语义等角度出发，增加更多的Memory类型。目前我们支持的Memory和功能描述如下：
 
-| 支持的Memory名称 | 功能描述 | 代码链接
+| 支持的Memory名称 | 功能描述 | API文档
 | :--: | :--: | :--: |
-| WholeMemory| 支持存储所有的消息| [whole_memory.py](../../erniebot-agent/src/erniebot_agent/memory/whole_memory.py) |
-| LimitTokensMemory| 根据消息中所占用token的数量，删除最前面的一些message| [limit_token_memory.py](../../erniebot-agent/src/erniebot_agent/memory/limit_token_memory.py) |
-| SlidingWindowMemory| 通过滑窗的方式，限制消息的轮数，并支持保留前k轮messages| [sliding_window_memory.py](../../erniebot-agent/src/erniebot_agent/memory/sliding_window_memory.py)|
+| WholeMemory| 支持存储所有的消息| [whole_memory.py](../package/erniebot_agent/memory.md#erniebot_agent.memory.WholeMemory) |
+| LimitTokensMemory| 根据消息中所占用token的数量，删除最前面的一些message| [limit_token_memory.py](../package/erniebot_agent/memory.md#erniebot_agent.memory.LimitTokensMemory) |
+| SlidingWindowMemory| 通过滑窗的方式，限制消息的轮数，并支持保留前k轮messages| [sliding_window_memory.py](../package/erniebot_agent/memory.md#erniebot_agent.memory.SlidingWindowMemory)|
 
 ## 4. 使用方法
 我们分别阐述不同的memory的用法。

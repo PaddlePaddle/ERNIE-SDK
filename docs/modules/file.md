@@ -16,7 +16,7 @@
 
 ## 2. 核心类
 
-下面简单介绍 `File` 模块的核心类，详细接口请参考[API文档](../../package/erniebot_agent/file/)。
+下面简单介绍 `File` 模块的核心类，详细接口请参考[API文档](../package/erniebot_agent/file.md)。
 
 ### 2.1 File 基类
 

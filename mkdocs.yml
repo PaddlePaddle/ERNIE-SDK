@@ -11,6 +11,10 @@ nav:
   - 教程:
     - Local Tool: "cookbooks/agent/local_tool.ipynb"
     - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
+    - Memory: "cookbooks/agent/memory.ipynb"
+    - 在FunctionAgentWithRetrieval中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
+    - 在FunctionAgentWithRetrieval中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
+    - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
   - 核心模块:
     - message: 'modules/message.md'
     - chat_models: 'modules/chat_models.md'
@@ -21,6 +25,11 @@ nav:
   - API Referene:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
+      - chat_models: "package/erniebot_agent/chat_models.md"
+      - file: "package/erniebot_agent/file.md"
+      - memory: "package/erniebot_agent/memory.md"
+      - retrieval: "package/erniebot_agent/retrieval.md"
+      - tools: "package/erniebot_agent/tools.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
       - 预备步骤:

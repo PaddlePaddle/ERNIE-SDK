@@ -9,7 +9,4 @@ retrieval也是Agents应用的一个重要基础组件，提供了一个检索�
 
 | retrieval 组件名称 | 功能描述 | 代码链接
 | :--: | :--: | :--: |
-| BaizhongSearch| 支持百度自研的文心百中搜索| [baizhong_search.py](../../erniebot-agent/src/erniebot_agent/retrieval/baizhong_search.py) |
-
-
-
+| BaizhongSearch| 支持百度自研的文心百中搜索| [baizhong_search.py](../package/erniebot_agent/retrieval.md#erniebot_agent.retrieval.BaizhongSearch) |
