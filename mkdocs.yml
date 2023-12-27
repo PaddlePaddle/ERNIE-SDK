@@ -12,6 +12,7 @@ nav:
     - messages: 'modules/messages.md'
     - chat_modles: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
+    - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
   - API:
@@ -21,6 +22,7 @@ nav:
       - file: "package/erniebot_agent/file.md"
       - tools: "package/erniebot_agent/tools.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
+      - retrieval: "package/erniebot_agent/retrieval.md"
       - agents: "package/erniebot_agent/agents.md"
 
 theme:
