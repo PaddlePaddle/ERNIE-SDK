@@ -53,5 +53,10 @@ class SlidingWindowMemory(Memory):
         """Prune memory to max_round if necessary."""
         while len(self.get_messages()) > self.max_round * 2:
             self.msg_manager.pop_message(self.retained_round * 2)
-            if len(self.get_messages()) % 2 == 0:
-                self.msg_manager.pop_message()
+
+            num_message = len(self.get_messages())
+            if num_message % 2 == 0:
+                if len(self.get_messages()) > self.retained_round * 2:
+                    self.msg_manager.pop_message(self.retained_round * 2)
+                else:
+                    self.msg_manager.pop_message(num_message-1)
