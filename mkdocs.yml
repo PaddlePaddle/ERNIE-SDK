@@ -28,6 +28,14 @@ nav:
 theme:
   name: material
   favicon: img/favicon.png
+  palette:
+    primary: black
+    accent: pink
+  font:
+    text: Noto Serif Simplified Chinese
+    code: Syne
+  features:
+    - navigation.footer
 
 markdown_extensions:
   - pymdownx.highlight:
