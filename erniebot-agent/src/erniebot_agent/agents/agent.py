@@ -12,7 +12,7 @@ from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
-from erniebot_agent.memory import Memory
+from erniebot_agent.memory import Memory, WholeMemory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
@@ -40,8 +40,8 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         self,
         llm: BaseERNIEBot,
         tools: Union[ToolManager, List[BaseTool]],
-        memory: Memory,
         *,
+        memory: Optional[Memory] = None,
         system_message: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
@@ -53,7 +53,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             llm: An LLM for the agent to use.
             tools: A list of tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
-                history.
+                history. If not specified, a new WholeMemory object will be instantiated.
             system_message: A message that tells the LLM how to interpret the
                 conversations. If `None`, the system message contained in
                 `memory` will be used.
@@ -72,7 +72,12 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             self._tool_manager = tools
         else:
             self._tool_manager = ToolManager(tools)
-        self.memory = memory
+        
+        if memory is None:
+            self.memory = WholeMemory()
+        else:
+            self.memory = memory
+
         if system_message:
             self.system_message = system_message
         else:
