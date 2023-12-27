@@ -19,11 +19,14 @@ from typing import Any, List
 
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.file.base import File
+from erniebot_agent.tools import RemoteToolkit
+from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
-from erniebot_agent.tools import RemoteToolkit
+
 
 class GradioMixin:
+
     def launch_gradio_demo(self: BaseAgent, **launch_kwargs: Any):
         # XXX: The current implementation requires that the inheriting objects
         # be constructed outside an event loop, which is probably not sensible.
@@ -56,11 +59,8 @@ class GradioMixin:
                 _uploaded_file_cache = []
             else:
                 response = await self.run(prompt)
-            breakpoint()
-            if (
-                response.steps
-                and response.steps[-1].output_files
-            ):
+
+            if response.steps and response.steps[-1].output_files:
                 # If there is a file output in the last round, then we need to show it.
                 output_file = response.steps[-1].output_files[-1]
                 output_file_id = output_file.id
@@ -108,18 +108,18 @@ class GradioMixin:
                     # If the tool is already loaded, raise the error message
                     raise gr.Error(str(e))
             cur_tool_schema = [tool.function_call_schema() for tool in tools]
-            attached_tools = self._tool_manager.get_tools()
+            attached_tools = self.get_tools()
             new_tool_schema = [tool.function_call_schema() for tool in attached_tools]
             return cur_tool_schema, new_tool_schema
 
         def _unload_tool(tool_name: str):
             try:
-                self.unload_tool(self._tool_manager.get_tool(tool_name))
+                self.unload_tool(self.get_tool(tool_name))
             except RuntimeError as e:
                 # If the tool do not exist, raise the error message
                 raise gr.Error(str(e))
 
-            attached_tools = self._tool_manager.get_tools()
+            attached_tools = self.get_tools()
 
             new_tool_schema = (
                 [tool.function_call_schema() for tool in attached_tools] if attached_tools else []
