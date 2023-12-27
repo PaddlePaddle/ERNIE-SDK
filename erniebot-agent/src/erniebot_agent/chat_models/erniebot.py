@@ -112,7 +112,7 @@ class ERNIEBot(BaseERNIEBot):
             model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
                 "ernie-longtext".
             api_type (str): The backend of erniebot. It should be "aistudio" or "qianfan".
-                Default to "aistudio".
+                Defaults to "aistudio".
             access_token (Optional[str]): The access token for the backend of erniebot.
                 If access_token is None, the global access_token will be used.
             enable_multi_step_tool_call (bool): Whether to enable the multi-step tool call.
