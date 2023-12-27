@@ -21,16 +21,14 @@ from typing import Any, AsyncGenerator, List, Optional, Tuple, Union
 
 import gradio as gr
 
-from erniebot_agent.agents.base import Agent
-from erniebot_agent.agents.schema import AgentFile, AgentResponse
+from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
+from erniebot_agent.file.base import File
+from erniebot_agent.memory.messages import AIMessage, HumanMessage, SystemMessage
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
-from erniebot_agent.messages import AIMessage, HumanMessage, SystemMessage
 from erniebot_agent.tools.base import BaseTool
-from erniebot_agent.tools.ImageGenerateTool import (
+from erniebot_agent.tools.image_generation_tool import (
     ImageGenerationTool,  # 目前为remotetool，如做直接展示可以替换为yinian
 )
 from erniebot_agent.tools.tool_manager import ToolManager
@@ -87,24 +85,23 @@ class GameAgent(Agent):
             tools=tools,
             system_message=system_message,
         )
-        self.file_manager: FileManager = get_file_manager()
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
-        tool_response = await self._async_run_tool(
+        tool_response = await self.run_tool(
             tool_name=tool_name,
             tool_args=tool_args,
         )
 
-        agent_file: AgentFile = tool_response.files[-1]
-        img_byte = await agent_file.file.read_contents()
+        file: File = tool_response.output_files[-1]
+        img_byte = await file.read_contents()
 
         base64_encoded = base64.b64encode(img_byte).decode("utf-8")
         return base64_encoded
 
-    async def _async_run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        raise RuntimeError(("Only support for stream mode, please use _async_run_stream instead."))
+    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+        raise RuntimeError(("Only support for stream mode, please use _run_stream instead."))
 
-    async def _async_run_stream(self, prompt: str) -> AsyncGenerator:
+    async def _run_stream(self, prompt: str) -> AsyncGenerator:
         """default to use stream chat mode for tool call in this case
 
         Args:
@@ -113,7 +110,7 @@ class GameAgent(Agent):
 
         actual_query = prompt + "根据我的选择继续生成一轮仅含包括<场景描述>、<场景图片>和<选择>的互动。"
         messages = self.memory.get_messages() + [HumanMessage(actual_query)]
-        response = await self.llm.async_chat(messages, stream=True, system=self.system_message.content)
+        response = await self.llm.chat(messages, stream=True, system=self.system_message.content)
 
         apply = False
         res = ""
@@ -167,7 +164,7 @@ class GameAgent(Agent):
 
     async def _handle_gradio_stream(self, history) -> AsyncGenerator:
         """Handle stream response and alter history"""
-        bot_response = self._async_run_stream(history[-1][0])
+        bot_response = self._run_stream(history[-1][0])
         history[-1][1] = ""
         async for temp_response in bot_response:
             function_part = temp_response[1]

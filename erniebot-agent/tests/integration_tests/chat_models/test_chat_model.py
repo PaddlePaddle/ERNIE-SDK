@@ -1,22 +1,19 @@
-import os
 import unittest
 
 import pytest
 
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.message import AIMessage, FunctionMessage, HumanMessage
+from erniebot_agent.memory import AIMessage, FunctionMessage, HumanMessage
 
 
 class TestChatModel(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.asyncio
     async def test_chat(self):
-        eb = ERNIEBot(
-            model="ernie-turbo", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
-        )
+        eb = ERNIEBot(model="ernie-turbo", api_type="aistudio")
         messages = [
             HumanMessage(content="你好！"),
         ]
-        res = await eb.async_chat(messages, stream=False)
+        res = await eb.chat(messages, stream=False)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNotNone(res.content)
 
@@ -64,14 +61,12 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
                 },
             }
         ]
-        # use ernie-3.5 here since ernie-turbo doesn't support function call
-        eb = ERNIEBot(
-            model="ernie-3.5", api_type="aistudio", access_token=os.environ["AISTUDIO_ACCESS_TOKEN"]
-        )
+        # NOTE：use ernie-3.5 here since ernie-turbo doesn't support function call
+        eb = ERNIEBot(model="ernie-3.5", api_type="aistudio")
         messages = [
             HumanMessage(content="深圳市今天的气温是多少摄氏度？"),
         ]
-        res = await eb.async_chat(messages, functions=functions)
+        res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNone(res.content)
         self.assertIsNotNone(res.function_call)
@@ -81,6 +76,6 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         messages.append(
             FunctionMessage(name="get_current_temperature", content='{"temperature":25,"unit":"摄氏度"}')
         )
-        res = await eb.async_chat(messages, functions=functions)
+        res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
         self.assertIsNotNone(res.content)

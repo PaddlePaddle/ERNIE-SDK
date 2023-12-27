@@ -8,21 +8,22 @@ from typing import Optional
 
 import requests
 
-from erniebot_agent.agents.functional_agent import FunctionalAgent
+from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.file_io import get_file_manager
+from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager
 
 
 class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
+    async def asyncSetUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
-        self.file_manager = get_file_manager()
+        self.file_manager = FileManager()
 
-    def tearDown(self) -> None:
+    async def asyncTearDown(self) -> None:
         shutil.rmtree(self.temp_dir)
+        await self.file_manager.close()
 
     def download_file(self, url, file_name: Optional[str] = None):
         image_response = requests.get(url)
@@ -43,10 +44,11 @@ class RemoteToolTesting(unittest.IsolatedAsyncioTestCase):
         if "EB_BASE_URL" in os.environ:
             llm = ERNIEBot(model="ernie-3.5", api_type="custom")
         else:
-            llm = ERNIEBot(model="ernie-3.5")
+            llm = ERNIEBot(model="ernie-3.5", api_type="aistudio")
 
-        return FunctionalAgent(
+        return FunctionAgent(
             llm=llm,
             tools=ToolManager(tools=toolkit.get_tools()),
             memory=WholeMemory(),
+            file_manager=self.file_manager,
         )

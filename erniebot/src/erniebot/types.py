@@ -15,19 +15,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import (
-    IO,
-    TYPE_CHECKING,
-    Any,
-    AsyncIterator,
-    Dict,
-    Iterator,
-    Optional,
-    TypeVar,
-)
+from typing import IO, Any, AsyncIterator, Dict, Iterator, Optional, TypeVar
 
-if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+from typing_extensions import TypeAlias
 
 from .response import EBResponse
 

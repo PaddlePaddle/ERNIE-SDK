@@ -13,18 +13,15 @@
 # limitations under the License.
 
 import logging
-import os
 import re
 from typing import Dict, List, Optional, Union
 
-from erniebot_agent import messages
-from erniebot_agent.messages import FunctionMessage, Message
+from erniebot_agent.memory.messages import FunctionMessage, Message
+from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
-__all__ = ["logger", "set_role_color", "setup_logging"]
-
-logger = logging.getLogger("erniebot_agent")
+__all__ = ["set_role_color", "setup_logging"]
 
 
 def _handle_color_pattern(s: str):
@@ -108,7 +105,7 @@ class FileFormatter(logging.Formatter):
             chat_lis = []
             func_lis = []
             for i in range(len(text)):
-                if isinstance(text[i], messages.Message):
+                if isinstance(text[i], Message):
                     chat_res, func_res = self.handle_message(text[i])
                     chat_lis.append(chat_res)
                     if func_res:
@@ -173,10 +170,10 @@ def setup_logging(
     Raises:
         ValueError: If the provided verbosity is not a valid logging level.
     """
-    global logger
+    logger = logging.getLogger("erniebot_agent")
 
     if verbosity is None:
-        verbosity = os.environ.get("EB_LOGGING_LEVEL", None)
+        verbosity = C.get_logging_level()
 
     if verbosity is not None:
         numeric_level = getattr(logging, verbosity.upper(), None)
@@ -192,14 +189,11 @@ def setup_logging(
             logger.addHandler(console_handler)
             set_role_color()
 
-        if use_file_handler or os.getenv("EB_LOGGING_FILE"):
-            log_file_path = os.getenv("EB_LOGGING_FILE")
-            if log_file_path is not None:
-                file_name = os.path.join(log_file_path, "erniebot-agent.log")
-                file_handler = logging.FileHandler(file_name)
-                print(log_file_path)
-            else:
-                file_handler = logging.FileHandler("erniebot-agent.log")
+        log_file_path = C.get_logging_file_path()
+        if log_file_path is None:
+            log_file_path = "erniebot-agent.log"
+        if use_file_handler or log_file_path:
+            file_handler = logging.FileHandler(log_file_path)
             file_handler.setFormatter(FileFormatter("%(message)s"))
             logger.addHandler(file_handler)
 

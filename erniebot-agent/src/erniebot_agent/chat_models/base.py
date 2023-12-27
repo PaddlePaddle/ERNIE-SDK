@@ -15,7 +15,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any, AsyncIterator, List, Literal, Union, overload
 
-from erniebot_agent.messages import AIMessage, AIMessageChunk, Message
+from erniebot_agent.memory.messages import AIMessage, AIMessageChunk, Message
 
 
 class ChatModel(metaclass=ABCMeta):
@@ -26,25 +26,25 @@ class ChatModel(metaclass=ABCMeta):
         self.default_chat_kwargs = default_chat_kwargs
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any
     ) -> AIMessage:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
     ) -> AsyncIterator[AIMessageChunk]:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
     @abstractmethod
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         """Asynchronously chats with the LLM.

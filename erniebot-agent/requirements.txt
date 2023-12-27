@@ -1,5 +1,6 @@
 aiohttp
 anyio
+asyncio-atexit
 # erniebot
 jinja2
 langchain

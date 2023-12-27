@@ -12,19 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
-from typing import ClassVar
 
-__all__ = ["Singleton"]
-
-
-class Singleton(type):
-    _insts: ClassVar[dict] = {}
-    _lock = threading.Lock()
+class SingletonMeta(type):
+    _insts = {}  # type: ignore
 
     def __call__(cls, *args, **kwargs):
+        # XXX: We note that the instance created in this way can be actually
+        # copied by `copy.copy` or `copy.deepcopy`, which results in multiple
+        # instances. Perhaps we should forbid the copy operations by patching
+        # the created instance.
         if cls not in cls._insts:
-            with cls._lock:
-                if cls not in cls._insts:
-                    cls._insts[cls] = super().__call__(*args, **kwargs)
+            if cls not in cls._insts:
+                cls._insts[cls] = super().__call__(*args, **kwargs)
         return cls._insts[cls]

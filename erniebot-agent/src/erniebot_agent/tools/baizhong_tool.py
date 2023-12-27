@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type
 
 from pydantic import Field
 
-from erniebot_agent.messages import AIMessage, HumanMessage
+from erniebot_agent.memory.messages import AIMessage, HumanMessage
 from erniebot_agent.tools.schema import ToolParameterView
 
 from .base import Tool

@@ -1,4 +1,4 @@
-from erniebot_agent.messages import SystemMessage
+from erniebot_agent.memory import SystemMessage
 
 
 class FakeMemory(object):

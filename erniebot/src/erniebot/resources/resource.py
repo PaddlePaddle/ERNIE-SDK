@@ -368,14 +368,11 @@ class EBResource(object):
         )
         if stream:
             if not isinstance(resp, Iterator):
-                raise TypeError("Expected an iterator of response objects")
-            else:
-                return resp
+                raise RuntimeError("Expected an iterator of response objects")
         else:
             if not isinstance(resp, EBResponse):
-                raise TypeError("Expected a response object")
-            else:
-                return resp
+                raise RuntimeError("Expected a response object")
+        return resp
 
     @overload
     async def _arequest(
@@ -438,20 +435,17 @@ class EBResource(object):
         )
         if stream:
             if not isinstance(resp, AsyncIterator):
-                raise TypeError("Expected an iterator of response objects")
-            else:
-                return resp
+                raise RuntimeError("Expected an iterator of response objects")
         else:
             if not isinstance(resp, EBResponse):
-                raise TypeError("Expected a response object")
-            else:
-                return resp
+                raise RuntimeError("Expected a response object")
+        return resp
 
     def _create_config_dict(self, overrides: Any) -> ConfigDictType:
         cfg_dict = GlobalConfig().create_dict(**overrides)
         api_type_str = cfg_dict["api_type"]
         if not isinstance(api_type_str, str):
-            raise TypeError
+            raise RuntimeError("Expected a string")
         api_type = convert_str_to_api_type(api_type_str)
         cfg_dict["api_type"] = api_type
         return cfg_dict

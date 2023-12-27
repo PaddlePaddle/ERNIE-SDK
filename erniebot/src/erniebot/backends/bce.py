@@ -46,15 +46,15 @@ class _BCELegacyBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
@@ -71,12 +71,11 @@ class _BCELegacyBackend(EBBackend):
                 headers=headers,
                 files=files,
                 request_timeout=request_timeout,
-                base_url=self.base_url,
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
             logging.warning(
-                "The access token provided is invalid or has expired. "
-                "An automatic update will be performed before retrying."
+                "The access token provided is invalid or has expired."
+                " An automatic update will be performed before retrying."
             )
             access_token = self._auth_manager.update_auth_token()
             url_with_token = add_query_params(url, [("access_token", access_token)])
@@ -88,7 +87,6 @@ class _BCELegacyBackend(EBBackend):
                 headers=headers,
                 files=files,
                 request_timeout=request_timeout,
-                base_url=self.base_url,
             )
 
     async def arequest(
@@ -96,15 +94,15 @@ class _BCELegacyBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
@@ -126,8 +124,8 @@ class _BCELegacyBackend(EBBackend):
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
             logging.warning(
-                "The access token provided is invalid or has expired. "
-                "An automatic update will be performed before retrying."
+                "The access token provided is invalid or has expired."
+                " An automatic update will be performed before retrying."
             )
             # XXX: The default executor is used.
             access_token = await loop.run_in_executor(None, self._auth_manager.update_auth_token)
@@ -160,15 +158,15 @@ class _BCEBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,
@@ -189,15 +187,15 @@ class _BCEBackend(EBBackend):
         method: str,
         path: str,
         stream: bool,
+        *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
         files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url = self._get_url(path)
         url, headers, data = self._client.prepare_request(
             method,
-            url,
+            path,
             supplied_headers=headers,
             params=params,
             files=files,

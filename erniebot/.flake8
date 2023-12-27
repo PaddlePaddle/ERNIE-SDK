@@ -13,4 +13,4 @@ per-file-ignores =
     # Ignore unused imports for __init__.py files.
     __init__.py:F401,
     # Allow long lines for CLI due to argparse.
-    src/erniebot/cli.py:E501,
+    src/erniebot/cli.py:E501

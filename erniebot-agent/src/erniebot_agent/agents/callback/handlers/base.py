@@ -12,44 +12,88 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
+from typing import List, Union
 
-from typing import TYPE_CHECKING, List, Union
-
+from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.messages import Message
+from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
-
-if TYPE_CHECKING:
-    from erniebot_agent.agents.base import Agent
 
 
 class CallbackHandler(object):
-    async def on_run_start(self, agent: Agent, prompt: str) -> None:
-        """"""
+    """The base class for callback handlers."""
 
-    async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
-        """"""
+    async def on_run_start(self, agent: BaseAgent, prompt: str) -> None:
+        """Called when the agent starts running.
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
-        """"""
+        Args:
+            agent: The agent that is running.
+            prompt: The prompt that the agent uses as input.
+        """
+
+    async def on_llm_start(self, agent: BaseAgent, llm: ChatModel, messages: List[Message]) -> None:
+        """Called when the LLM starts running.
+
+        Args:
+            agent: The agent that is running.
+            llm: The LLM that is running.
+            messages: The messages that the LLM uses as input.
+        """
+
+    async def on_llm_end(self, agent: BaseAgent, llm: ChatModel, response: LLMResponse) -> None:
+        """Called when the LLM ends running.
+
+        Args:
+            agent: The agent that is running.
+            llm: The LLM that is running.
+            response: The response that the LLM returns.
+        """
 
     async def on_llm_error(
-        self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
+        self, agent: BaseAgent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        """"""
+        """Called when the LLM errors.
 
-    async def on_tool_start(self, agent: Agent, tool: BaseTool, input_args: str) -> None:
-        """"""
+        Args:
+            agent: The agent that is running.
+            llm: The LLM that is running.
+            error: The error that occured.
+        """
 
-    async def on_tool_end(self, agent: Agent, tool: BaseTool, response: ToolResponse) -> None:
-        """"""
+    async def on_tool_start(self, agent: BaseAgent, tool: BaseTool, input_args: str) -> None:
+        """Called when a tool starts running.
+
+        Args:
+            agent: The agent that is running.
+            tool: The tool that is running.
+            input_args: The input arguments that the tool uses.
+        """
+
+    async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
+        """Called when a tool ends running.
+
+        Args:
+            agent: The agent that is running.
+            tool: The tool that is running.
+            response: The response that the tool returns.
+        """
 
     async def on_tool_error(
-        self, agent: Agent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
+        self, agent: BaseAgent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
     ) -> None:
-        """"""
+        """Called when a tool errors.
 
-    async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
-        """"""
+        Args:
+            agent: The agent that is running.
+            tool: The tool that is running.
+            error: The error that occured.
+        """
+
+    async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
+        """Called when the agent ends running.
+
+        Args:
+            agent: The agent that is running.
+            response: The response that the agent returns.
+        """
