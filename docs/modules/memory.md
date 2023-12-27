@@ -50,3 +50,107 @@
 | WholeMemory| 支持存储所有的消息| [whole_memory.py](../../erniebot-agent/src/erniebot_agent/memory/whole_memory.py) |
 | LimitTokensMemory| 根据消息中所占用token的数量，删除最前面的一些message| [limit_token_memory.py](../../erniebot-agent/src/erniebot_agent/memory/limit_token_memory.py) |
 | SlidingWindowMemory| 通过滑窗的方式，限制消息的轮数，并支持保留前k轮messages| [sliding_window_memory.py](../../erniebot-agent/src/erniebot_agent/memory/sliding_window_memory.py)|
+
+## 4. 使用方法
+我们分别阐述不同的memory的用法。
+
+### 4.1 WholeMemory
+WholeMemory是全量记忆，存储所有消息。我们首先实例化了WholeMemory，然后通过`memory.add_message(msg)`方法将消息添加到memory中，并通过`memory.get_messages()`方法获取所有消息。
+
+```python
+from erniebot_agent.memory import AIMessage, HumanMessage, WholeMemory
+
+memory = WholeMemory()
+humanmessage = HumanMessage('请将这个图片中的单词识别出来')
+aimessage = AIMessage('好，这个图片中的单词为meticulous') # Fake AIMessage
+memory.add_message(humanmessage)
+memory.add_message(aimessage)
+humanmessage = HumanMessage('这个单词meticulous是什么意思呢？')
+aimessage = AIMessage('这个单词的意思是挑剔的，关注细节的') # Fake AIMessage
+memory.add_message(humanmessage)
+memory.add_message(aimessage)
+print(memory.get_messages())
+
+>>> [<HumanMessage role: 'user', content: '请将这个图片中的单词识别出来', token_count: 14>, <AIMessage role: 'assistant', content: '好，这个图片中的单词为meticulous', token_count: 11>, <HumanMessage role: 'user', content: '这个单词meticulous是什么意思呢？', token_count: 21>, <AIMessage role: 'assistant', content: '这个单词的意思是挑剔的，关注细节的', token_count: 16>]
+```
+除了使用`memory.add_message(msg)`方法添加消息外，我们也可以通过`memory.add_messages(msgs)`方法批量添加消息。
+
+```python
+messages = [
+    HumanMessage('请帮我把这个单词meticulous存储到单词本中'),
+    AIMessage('好的，单词meticulous已经存储到单词本中'),
+    HumanMessage('请问现在我的单词本中都有什么单词呢？'),
+    AIMessage('单词中目前有单词：meticulous'),
+]
+
+memory.add_messages(messages)
+print(memory.get_messages())
+
+>>> [<HumanMessage role: 'user', content: '请将这个图片中的单词识别出来', token_count: 14>, <AIMessage role: 'assistant', content: '好，这个图片中的单词为meticulous', token_count: 11>, <HumanMessage role: 'user', content: '这个单词meticulous是什么意思呢？', token_count: 21>, <AIMessage role: 'assistant', content: '这个单词的意思是挑剔的，关注细节的', token_count: 16>, <HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>]
+```
+
+如果在对话结束想要删除所有的消息记录，我们可以使用`memory.clear_chat_history()`方法。
+
+```python
+memory.clear_chat_history()
+print(memory.get_messages())
+```
+
+### 4.2 LimitTokensMemory   
+`LimitTokensMemory(max_token_limit)`是token数量限制截断记忆，在memory中存储固定数量的token。其中`max_token_limit`表示memory中最多存储的消息的token数量，超过这个限制后，从头开始对消息进行删除。
+
+```python
+from erniebot_agent.memory import  LimitTokensMemory
+memory = LimitTokensMemory(max_token_limit=60)
+memory.add_messages(messages)
+print("裁剪前的消息为：", messages)
+print("裁剪后的消息为：", memory.get_messages())
+
+>>> 裁剪前的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+裁剪后的消息为： [<AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+```
+
+### 4.3 SlidingWindowMemory   
+`SlidingWindowMemory(max_round, retained_round)`是滑动窗口截断记忆，在memory中存储固定轮数的消息。其中`max_round`表示memory中消息最多存储的轮数，`retained_round`表示在memory中会保留的初始消息的轮数，用于初始消息比较重要的场景。下面两个例子我们分别展示SlidingWindowMemory保留一轮消息，和同时保留首轮消息的效果。
+
+```python
+from erniebot_agent.memory import SlidingWindowMemory
+
+messages = [
+    HumanMessage('请帮我把这个单词meticulous存储到单词本中'),
+    AIMessage('好的，单词meticulous已经存储到单词本中'),
+    HumanMessage('请问现在我的单词本中都有什么单词呢？'),
+    AIMessage('单词中目前有单词：meticulous'),
+    HumanMessage('我想对单词本中的单词全部打印出对应的中文含义用于记忆'),
+    AIMessage('好的，单词本中包括：meticulous的意思是挑剔的，关注细节的'),
+]
+
+memory = SlidingWindowMemory(max_round=2, retained_round=0)
+memory.add_messages(messages)
+print("裁剪前的消息为：", messages)
+print("裁剪后的消息为：", memory.get_messages())
+
+>>> 裁剪前的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+裁剪后的消息为： [<HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+```
+
+```python
+from erniebot_agent.memory import SlidingWindowMemory
+
+messages = [
+    HumanMessage('请帮我把这个单词meticulous存储到单词本中'),
+    AIMessage('好的，单词meticulous已经存储到单词本中'),
+    HumanMessage('请问现在我的单词本中都有什么单词呢？'),
+    AIMessage('单词中目前有单词：meticulous'),
+    HumanMessage('我想对单词本中的单词全部打印出对应的中文含义用于记忆'),
+    AIMessage('好的，单词本中包括：meticulous的意思是挑剔的，关注细节的'),
+]
+
+memory = SlidingWindowMemory(max_round=2, retained_round=1)
+memory.add_messages(messages)
+print("裁剪前的消息为：", messages)
+print("裁剪后的消息为：", memory.get_messages())
+
+>>>裁剪前的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+裁剪后的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
+```

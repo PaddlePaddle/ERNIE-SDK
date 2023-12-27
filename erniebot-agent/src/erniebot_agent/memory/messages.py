@@ -87,7 +87,7 @@ class Message:
     @token_count.setter
     def token_count(self, token_count: int):
         if self._token_count is not None:
-            raise AttributeError("The token count of the message can only be set once.")
+            logger.warning("The token count of the message has been set before")
         self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
