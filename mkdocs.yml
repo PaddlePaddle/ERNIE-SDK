@@ -33,7 +33,7 @@ theme:
     accent: pink
   font:
     text: Noto Serif Simplified Chinese
-    code: Syne
+    code: Noto Serif Simplified Chinese
   features:
     - navigation.footer
 
