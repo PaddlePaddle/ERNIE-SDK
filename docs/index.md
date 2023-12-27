@@ -1,17 +1,31 @@
-# Welcome to MkDocs
+# 简介
+ERNIE Bot Agent是文心一言Agent框架，旨在助力大家快速开发大模型应用。
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+# 快速上手
 
-## Commands
+## 安装
+执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+```shell
+pip install --upgrade erniebot-agent
+```
 
-## Project layout
+## 鉴权
+大家在使用ERNIE Bot Agent之前，需要进行鉴权步骤：
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+* 在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号
+* 在个人中心的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取用户凭证`Access Token`
+* 通过环境变量或者`Python`代码设置`Access Token`
+
+```shell
+export EB_AGENT_ACCESS_TOKEN="your access token"
+```
+
+```python
+import os
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+```
+
+## 智能体Agent
+
+TODO
