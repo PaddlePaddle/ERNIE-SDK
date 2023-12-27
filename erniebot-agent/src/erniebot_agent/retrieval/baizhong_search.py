@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class BaizhongSearch:
     """
     A class for interacting with the Baizhong Search API.
-    
-    
+
+
     Attributes:
         base_url (str): The base URL for the AIStudio service.
         access_token (str): The access token for authentication.
