@@ -2,7 +2,7 @@
 
 ## 介绍
 
-RPGGameAgent是一个基于Agent完成的文字类角色扮演的游戏，用户可以通过指定游戏脚本以及角色与Agent进行交互游戏，Agent将通过互动式的方式为玩家提供一个基于游戏剧情的在线RPG游戏体验。在互动过程中，Agent主要采用文心模型生成对话，并结合文生图工具生成场景图片，以丰富游戏体验。
+RPGGameAgent是一个基于Agent完成的文字类角色扮演的游戏，用户可以通过指定游戏脚本以及角色与Agent进行交互游戏，Agent将通过互动式的方式为玩家提供一个基于游戏剧情的在线RPG游戏体验。在互动过程中，Agent主要采用文心模型生成场景以及游戏发展的选择，并结合文生图工具生成场景图片，以丰富游戏体验。
 
 目前该Agent提供两种方式进行
 
@@ -15,6 +15,18 @@ RPGGameAgent是一个基于Agent完成的文字类角色扮演的游戏，用户
 
 ```bash
 python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传 --model ernie-4.0
+```
+
+## 通过FunctionAgent+Instruction实现
+
+通过以下instruction指示Agent来达到触发
+
+```markdown
+你是《{SCRIPT}》沉浸式图文RPG场景助手，能够生成图文剧情。\
+每次用户发送query互动开始时，\
+请你第一步调用ChatStoryTool生成互动，\
+然后第二步调用ImageGenerateTool生成图片，\
+最后输出的时候回答'已完成'即可
 ```
 
 ## 通过ToolFormat实现手动编排Agent
