@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import json
 from typing import (
     Any,
@@ -31,6 +32,7 @@ from erniebot import ChatCompletionResponse
 
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory.messages import (
+    SystemMessage,
     AIMessage,
     AIMessageChunk,
     FunctionCall,
@@ -42,6 +44,7 @@ from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
+logger = logging.getLogger(__name__)
 
 class BaseERNIEBot(ChatModel):
     @overload
@@ -84,6 +87,15 @@ class BaseERNIEBot(ChatModel):
 
 
 class ERNIEBot(BaseERNIEBot):
+    """The implementation of the ERNIE Bot model.
+
+    Attributes:
+        model: The model name.
+        api_type: The backend of the ERNIE Bot model.
+        access_token: The access token corresponding to the backend.
+        default_chat_kwargs: A dict for setting default args for chat model,
+            the supported keys include `model`, `_config_`, `top_p`, etc.
+    """
     def __init__(
         self,
         model: str,
@@ -97,10 +109,13 @@ class ERNIEBot(BaseERNIEBot):
         Args:
             model (str): The model name. It should be "ernie-3.5", "ernie-turbo", "ernie-4.0", or
                 "ernie-longtext".
-            api_type (Optional[str]): The backend of erniebot. It should be "aistudio" or "qianfan".
+            api_type (str): The backend of erniebot. It should be "aistudio" or "qianfan".
                 Default to "aistudio".
             access_token (Optional[str]): The access token for the backend of erniebot.
+                If access_token is None, the global access_token will be used.
             close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
+            **default_chat_kwargs: Keyword arguments, such as `_config_`, `top_p`, `temperature`,
+                `penalty_score`, and `system`.
         """
         super().__init__(model=model, **default_chat_kwargs)
 
@@ -174,7 +189,9 @@ class ERNIEBot(BaseERNIEBot):
         if hasattr(self, "ak") and hasattr(self, "sk"):
             cfg_dict["_config_"]["ak"] = self.ak
             cfg_dict["_config_"]["sk"] = self.sk
-        # TODO: process system message
+
+        if any(isinstance(m, SystemMessage) for m in messages):
+            raise ValueError("The input messages should not contain SystemMessage.")
         cfg_dict["messages"] = [m.to_dict() for m in messages]
         if functions is not None:
             cfg_dict["functions"] = functions

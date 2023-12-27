@@ -20,8 +20,6 @@ from typing import List, Optional, Union
 
 import requests
 
-from erniebot_agent.memory import SystemMessage
-
 
 def get_cache_dir():
     """Use ~/.cache/erniebot_agent as the cache directory"""
@@ -69,22 +67,3 @@ def get_file_type(file_name: str) -> str:
         return guess_type.split("/")[0]
     else:
         raise ValueError(f"Invalid file name: {file_name}")
-
-
-def split_system_message(messages):
-    """Split the messages to system message and other messages"""
-    sys_msgs = []
-    other_msgs = []
-    for m in messages:
-        if m.role == "system":
-            sys_msgs.append(m)
-        else:
-            other_msgs.append(m)
-
-    if len(sys_msgs) == 0:
-        return None, other_msgs
-    else:
-        sys_str = [m.content for m in sys_msgs]
-        sys_str = " ".join(sys_str)
-        sys_msg = SystemMessage(sys_str)
-        return sys_msg, other_msgs
