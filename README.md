@@ -11,19 +11,22 @@
 
 </div>
 
-![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
-
-# ERNIE Bot Agent
-
 **ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
-## 特性
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
 
-### 强大的编排能力
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
+
+## ERNIE Bot Agent
+
+
+### 特性
+
+#### 强大的编排能力
 
 与目前业界主流的通过prompt和output parser实现agent的方式不同，**ERNIE Bot Agent** 基于文心大模型的**function calling**能力实现了多工具编排和自动调度功能，并且允许工具、插件、知识库等不同组件的混合编排。除了自动调度，我们未来还将支持更多的编排模式，例如手动编排、半自动编排，为开发者提供更大的灵活性。
 
-### 丰富的组件库
+#### 丰富的组件库
 
 **ERNIE Bot Agent** 为开发者提供了一个丰富的预置组件库：
 
@@ -31,7 +34,7 @@
 - **知识库**：我们提供了开箱即用的基于文心百中的平台化知识库, 并允许开发者在二次开发的场景下使用[langchain](https://github.com/langchain-ai/langchain)、[llama_index](https://github.com/run-llama/llama_index)等主流开源库作为知识库。
 - **文心一言插件**：我们将会支持通过 **ERNIE Bot Agent** 调用文心一言插件商城中的插件（开发中）
 
-### 低开发门槛
+#### 低开发门槛
 
 我们希望能够降低开发门槛，使更多的开发者能够轻松构建智能体应用：
 
@@ -40,12 +43,12 @@
 - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 
-## 安装
+### 安装
 
 <details>
 <summary>点击展开</summary>
 
-### 快速安装
+#### 快速安装
 
 执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
@@ -57,7 +60,7 @@ pip install --upgrade erniebot-agent
 pip install --upgrade erniebot-agent[all]
 ```
 
-### 源码安装
+#### 源码安装
 
 执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
 
@@ -75,7 +78,7 @@ pip install ./erniebot-agent            # 安装核心模块
 </details>
 
 
-## 快速体验
+### 快速体验
 
 <details>
 <summary>点击展开</summary>
@@ -123,9 +126,9 @@ python quick_start.py
 ```
 </details>
 
-# ERNIE Bot SDK
+## ERNIE Bot SDK
 
-**ERNIE Bot SDK** 作为 **ERNIE Bot Agen** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
 
 ## License
 
