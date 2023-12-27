@@ -59,4 +59,4 @@ class SlidingWindowMemory(Memory):
                 if len(self.get_messages()) > self.retained_round * 2:
                     self.msg_manager.pop_message(self.retained_round * 2)
                 else:
-                    self.msg_manager.pop_message(num_message-1)
+                    self.msg_manager.pop_message(num_message - 1)

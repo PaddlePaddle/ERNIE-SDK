@@ -19,6 +19,7 @@ from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 
 logger = logging.getLogger(__name__)
 
+
 class MessageManager:
     """
     Messages Manager, manage the messages of a conversation.
