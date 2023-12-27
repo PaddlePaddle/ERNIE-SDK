@@ -15,7 +15,7 @@
 
 **ERNIE Bot Agent**为开发者提供便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
 
-![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/65fcd038-b374-49d3-a91c-5565ef0a80ab)
 
 ## ERNIE Bot Agent
 
