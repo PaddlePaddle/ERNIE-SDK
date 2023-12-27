@@ -41,7 +41,7 @@ export EB_AGENT_LOGGING_LEVEL=info
 python quick_start.py
 ```
 
-执行完毕后，您将在当前目录下生成一个名为test.wav的音频文件，该文件为智能体的语音自我介绍。您可以尝试使用任何支持播放音频文件的设备或软件来播放该文件。
+执行完毕后，您将在当前目录下生成一个名为test.wav的音频文件，该文件中包含智能体的语音自我介绍。您可以使用任何支持音频文件播放的设备或软件来播放该文件，以便更好地了解智能体的语音特征。此外，我们还可以从智能体打印的日志中获取更详细的执行信息，从而更好地了解整个执行过程。
 
 ```shell
 INFO - [Run][Start] FunctionAgent is about to start running with input:
@@ -106,3 +106,7 @@ INFO - [LLM][End] ERNIEBot finished running with output:
 INFO - [Run][End] FunctionAgent finished running.
 Agent输出：根据你的请求，我已经将自我介绍转成了语音文件，并保存在了本地，文件名为file-local-2dd726b2-a492-11ee-8c08-506b4b225bd6。你可以使用任何支持该格式的播放器进行播放。如果你需要进一步操作或有其他问题，请随时告诉我。
 ```
+
+从日志中，我们可以清晰地看到智能体在处理两个不同请求时的运作流程。在第一个请求中，智能体直接利用大语言模型ERNIEBot进行了自我介绍。而在面对第二个请求，即需要将自我介绍转化为语音时，智能体的操作则复杂一些。
+
+首先，ERNIEBot判断出需要使用语音合成工具来实现这一需求，并自动填充了必要的请求参数。接着，ERNIE Bot Agent 框架便开始自动调度和运行语音合成工具。这一切都在后台顺利进行，无需人工干预。当语音合成工具运行完毕后，它将生成的结果交给了ERNIEBot进行最后的润色和处理。ERNIEBot结合之前的对话内容和工具的输出，生成了一段既符合语境又满足用户需求的回答。
