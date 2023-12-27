@@ -68,8 +68,6 @@ pip install ./erniebot-agent            # 安装核心模块
 
 ## 快速体验
 
-### 代码体验
-
 下面的`quick_start.py`示例展示了如何使用 ERNIE Bot Agent 快速构建智能体应用。
 
 ```python
@@ -110,31 +108,6 @@ asyncio.run(main())
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=info
 python quick_start.py
-```
-
-### Gradio 体验
-
-为了方便开发者快速上手，我们还提供了一个基于ERNIE Bot Agent搭建的Gradio界面。下面的gradio_demo.py示例定义了一个简单的智能体，并使用launch_gradio_demo方法启动Gradio可视化交互界面，开发者可以通过浏览器进行访问互动。
-
-```python
-
-from erniebot_agent.agents import FunctionAgent
-from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.tools import RemoteToolkit
-
-llm = ERNIEBot(model="ernie-3.5")  # 初始化大语言模型
-# 这里以语音合成工具为例子，更多的预置工具可参考 https://aistudio.baidu.com/application/center/tool
-tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()  # 获取语音合成工具
-agent = FunctionAgent(llm=llm, tools=tts_tool)  # 创建智能体，集成语言模型与工具
-agent.launch_gradio_demo(debug=True)  # 启动Gradio可视化交互界面，debug模式便于开发调试
-```
-
-然后执行以下命令：
-
-```shell
-export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
-export EB_AGENT_LOGGING_LEVEL=info
-python gradio_demo.py
 ```
 
 ## License
