@@ -11,13 +11,10 @@ nav:
   - 核心模块:
     - messages: 'modules/messages.md'
     - chat_modles: 'modules/chat_models.md'
-    - memory: 'modules/memory.md'
-    - tools:
-      - 创建 Tool: 'modules/tools/create-tool.md'
-      - LocalTool: 'tutorials/local-tool.md'
-      - RemoteTool: 'tutorials/remote-tool.md'
-    - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
+    - memory: 'modules/memory.md'
+    - retrieval: 'modules/retrieval.md'
+    - file: 'modules/file.md'
   - API:
     - erniebot-agent:
       - messages: "package/erniebot_agent/messages.md"
@@ -25,6 +22,7 @@ nav:
       - file: "package/erniebot_agent/file.md"
       - tools: "package/erniebot_agent/tools.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
+      - retrieval: "package/erniebot_agent/retrieval.md"
       - agents: "package/erniebot_agent/agents.md"
 
 theme:
