@@ -20,7 +20,6 @@ from typing import Any, List
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.file.base import File
 from erniebot_agent.tools import RemoteToolkit
-from erniebot_agent.tools.tool_manager import ToolManager
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
 
