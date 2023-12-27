@@ -1,4 +1,3 @@
-
 # 自定义 Tool
 
 在此，我们所提及的“自定义 Tool”指的是本地 Tool。为了更具体地阐述这一概念，我们将以 CurrentTimeTool 为例进行详细讲解。
@@ -24,7 +23,7 @@ class CurrentTimeTool(Tool):
     ouptut_type: Type[ToolParameterView] = CurrentTimeToolOutputView
 
     async def __call__(self) -> Dict[str, str]:
-        return {"current_time": datetime.strftime(datetime.now(), "%Y年%m月%d号 %点:%分:%秒")}
+        return {"current_time": datetime.strftime(datetime.now(), "%Y年%m月%d日 %H时%M分%S秒)}
 
     @property
     def examples(self) -> List[Message]:
@@ -67,7 +66,9 @@ class CurrentTimeTool(Tool):
 输入和输出参数必须继承 `ToolParameterView` 基类，并且通过 `Field` 类来指定参数的详细信息，其中包含：
 
 * 类型注释：`current_time: str` 中的 str 就是指定此字段的类型信息。
+
 * 字段描述：`description`，主要用于从历史对话信息中提取出对应字段信息或者根据字典信息进行润色。
+
 * 字段默认值：如果在历史对话当中没有提取对应字段信息，可初始化默认值。
 
 Agent 在调用 Tool 之前，会通过 FunctionCall 抽取出对应字段信息，然后输入给 Tool 执行。
@@ -111,6 +112,7 @@ class CourseTool(Tool):
 ```
 
 Agent 会根据输出参数来润色对应的结果，比如：
+
 * 当有课的时候，Agent 可能会润色成：查询到今天下午有一节：`高等数学`，时间是从下午两点到四点，地点在 `教室 102`，请注意提前进教室。
 * 当没有课的时候，Agent 可能会润色成：今天没有课，你可以去做一些自己喜欢的事情了。
 
