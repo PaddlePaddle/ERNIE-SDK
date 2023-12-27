@@ -7,7 +7,7 @@
 在`EB-Agent`中，主要有如下4类`Message`：
 
 * `HumanMessage`：用户输入给模型的普通信息，比如聊天的问题。
-* `SystemMessage`：用户输入给模型的全局信息，比如角色扮演的指令、输出格式设置的指令，通常一个`Message`数组中只有一条`SystemMessage`。
+* `SystemMessage`：用户输入给模型的全局信息，比如角色扮演的指令、输出格式设置的指令。
 * `AIMessage`：模型返回的信息，比如聊天的回答、触发`Function call`的回答。
 * `FunctionMessage`：上一轮模型的输出是带有`Funciton call`的`AIMessage`，则用户需要首先调用`Function`，然后将`Function`的结果输入给大语言模型。
 
@@ -54,10 +54,11 @@ os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
+    # 使用Message模块
     messages = [HumanMessage("我在深圳，周末可以去哪里玩"),
                 AIMessage("深圳有许多著名的景点，以下是三个推荐景点：1. 深圳世界之窗，2. 深圳欢乐谷，3. 深圳东部华侨城。"),
                 HumanMessage("从你推荐的三个景点中，选出最值得去的景点是什么，直接给出景点名字即可")]
-    ai_message = await model.async_chat(messages=messages)
+    ai_message = await model.chat(messages=messages)
     print(ai_message.content)
 
 asyncio.run(demo())
@@ -65,7 +66,7 @@ asyncio.run(demo())
 
 ### 示例2
 
-创建`Message`的示例代码：
+创建各种`Message`的示例代码如下：
 
 ```python
 import json
@@ -73,7 +74,7 @@ from erniebot_agent.memory import HumanMessage, SystemMessage, FunctionMessage
 
 human_message = HumanMessage(content='你好，你是谁？')
 
-system_message = SystemMessage(content='你是一个知识渊博的数学老师，使用浅显易懂的方法来回答问题')
+system_message = SystemMessage(content='你是一名数学老师，使用浅显易懂的方法来回答问题')
 
 result = {"temperature": 25, "unit": "摄氏度"}
 function_message = FunctionMessage(name='get_current_temperature', content=json.dumps(result, ensure_ascii=False))
@@ -90,6 +91,28 @@ print(function_message)
 <role: 'function', name: 'get_current_temperature', content: '{"temperature": 25, "unit": "摄氏度"}'>
 ```
 
+
+### 示例3
+
+使用`SystemMessage`的示例代码如下：
+
+```python
+import os
+import asyncio
+from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.chat_models import ERNIEBot
+
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+
+async def demo():
+    model = ERNIEBot(model="ernie-3.5")
+    system_message = SystemMessage(content="你是一名数学老师，尽量使用浅显易懂的方法来解答问题")
+    messages = [HumanMessage("勾股定理是什么")]
+    ai_message = await model.chat(messages=messages, system=system_message.content)
+    print(ai_message.content)
+
+asyncio.run(demo())
+```
 
 ## 3.0 Message的API接口
 

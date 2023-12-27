@@ -21,25 +21,26 @@
 
 出于使用场景和性能的考虑，`ERNIE Bot Agent`只提供异步接口来使用文心一言模型。
 
-在执行下面代码前，请先确保完成`ERNIE Bot Agent`的安装和鉴权步骤。
-
 ### 2.1 进行文本补全
 
-这个示例中，首先创建文心一言`ernie-3.5`模型，然后两次调用`async_chat`接口传入只有单条`HumanMessage`的数组，文心一言模型会对单条`HumanMessage`做出回答，返回一条`AIMessage`。
+这个示例中，首先创建文心一言`ernie-3.5`模型，然后两次调用`chat`接口传入只有单条`HumanMessage`的数组，文心一言模型会对单条`HumanMessage`做出回答，返回一条`AIMessage`。
 
 ```python
+import os
 import asyncio
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import HumanMessage
 
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
     human_message = HumanMessage(content='你好，你是谁')
-    ai_message = await model.async_chat(messages=[human_message])
+    ai_message = await model.chat(messages=[human_message])
     print(ai_message.content, '\n')
 
     human_message = HumanMessage(content='推荐三个深圳有名的景点')
-    ai_message = await model.async_chat(messages=[human_message],
+    ai_message = await model.chat(messages=[human_message],
                                         stream=True)  # 流式返回
     async for chunk in ai_message:
         print(chunk.content, end='')
@@ -62,21 +63,24 @@ asyncio.run(demo())
 如果希望进行多轮对话，而且让文心一言模型能够根据上下文进行回答，可以执行如下代码。其中前一轮对话的输入输出`Message`会被带入第二轮对话。
 
 ```python
+import os
 import asyncio
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import HumanMessage
+
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
     messages = []
 
     messages.append(HumanMessage(content='推荐三个深圳有名的景点'))
-    ai_message = await model.async_chat(messages=messages)
+    ai_message = await model.chat(messages=messages)
     messages.append(ai_message)
     print(ai_message.content, '\n')
 
     messages.append(HumanMessage(content='根据你推荐的景点，帮我做一份一日游的攻略'))
-    ai_message = await model.async_chat(messages=messages)
+    ai_message = await model.chat(messages=messages)
     messages.append(ai_message)
     print(ai_message.content, '\n')
 
@@ -125,7 +129,7 @@ async def demo():
     while True:
         prompt = input()
         messages.append(HumanMessage(prompt))
-        ai_message = await model.async_chat(messages=messages, stream=True)
+        ai_message = await model.chat(messages=messages, stream=True)
 
         result = ''
         async for chunk in ai_message:

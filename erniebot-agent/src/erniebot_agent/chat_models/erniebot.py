@@ -191,7 +191,7 @@ class ERNIEBot(BaseERNIEBot):
             cfg_dict["_config_"]["sk"] = self.sk
 
         if any(isinstance(m, SystemMessage) for m in messages):
-            raise ValueError("The input messages should not contain SystemMessage.")
+            raise ValueError(f"The input messages should not contain SystemMessage: {messages}")
         cfg_dict["messages"] = [m.to_dict() for m in messages]
         if functions is not None:
             cfg_dict["functions"] = functions
