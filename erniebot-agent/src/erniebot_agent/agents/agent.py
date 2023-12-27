@@ -72,7 +72,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             self._tool_manager = tools
         else:
             self._tool_manager = ToolManager(tools)
-        
+
         if memory is None:
             self.memory = WholeMemory()
         else:
