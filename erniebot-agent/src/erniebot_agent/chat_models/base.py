@@ -22,8 +22,8 @@ class ChatModel(metaclass=ABCMeta):
     """The base class of chat-optimized LLM.
 
     Attributes:
-        model: The model name.
-        default_chat_kwargs: A dict for setting default args for chat model,
+        model (str): The model name.
+        default_chat_kwargs (Any): A dict for setting default args for chat model,
             the supported keys include `model`, `_config_`, `top_p`, etc.
     """
 
@@ -58,7 +58,7 @@ class ChatModel(metaclass=ABCMeta):
         Args:
             messages (List[Message]): A list of messages.
             stream (bool): Whether to use streaming generation. Defaults to False.
-            **kwargs: Arbitrary keyword arguments.
+            **kwargs: Keyword arguments, such as `top_p`, `temperature`, `penalty_score`, and `system`.
 
         Returns:
             If stream is False, returns a single message.

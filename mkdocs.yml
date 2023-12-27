@@ -8,14 +8,14 @@ nav:
     - 安装和鉴权: 'tutorials/preparation.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
-    - messages: 'modules/messages.md'
-    - chat_modles: 'modules/chat_models.md'
+    - message: 'modules/message.md'
+    - chat_models: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
     - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
   - API:
     - erniebot-agent:
-      - messages: "package/erniebot_agent/messages.md"
+      - message: "package/erniebot_agent/message.md"
       - memory: "package/erniebot_agent/memory.md"
       - file: "package/erniebot_agent/file.md"
       - tools: "package/erniebot_agent/tools.md"

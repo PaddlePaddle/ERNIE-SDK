@@ -90,10 +90,10 @@ class ERNIEBot(BaseERNIEBot):
     """The implementation of the ERNIE Bot model.
 
     Attributes:
-        model: The model name.
-        api_type: The backend of the ERNIE Bot model.
-        access_token: The access token corresponding to the backend.
-        default_chat_kwargs: A dict for setting default args for chat model,
+        model (str): The model name.
+        api_type (str): The backend of the ERNIE Bot model.
+        access_token (Optional[str]): The access token corresponding to the backend.
+        default_chat_kwargs (Any): A dict for setting default args for chat model,
             the supported keys include `model`, `_config_`, `top_p`, etc.
     """
     def __init__(
@@ -113,7 +113,7 @@ class ERNIEBot(BaseERNIEBot):
                 Default to "aistudio".
             access_token (Optional[str]): The access token for the backend of erniebot.
                 If access_token is None, the global access_token will be used.
-            close_multi_step_tool_call (bool): Whether to close the multi-step tool call. Defaults to False.
+            enable_multi_step_tool_call (bool): Whether to enable the multi-step tool call. Defaults to False.
             **default_chat_kwargs: Keyword arguments, such as `_config_`, `top_p`, `temperature`,
                 `penalty_score`, and `system`.
         """
