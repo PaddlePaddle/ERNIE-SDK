@@ -52,6 +52,12 @@ theme:
     # - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
+  palette:
+    primary: black
+    accent: pink
+  font:
+    text: Noto Serif Simplified Chinese
+    code: Noto Serif Simplified Chinese
 
 markdown_extensions:
   - pymdownx.highlight:
