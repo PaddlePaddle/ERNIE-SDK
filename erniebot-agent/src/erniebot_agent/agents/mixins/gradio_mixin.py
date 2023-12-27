@@ -17,18 +17,11 @@ import os
 import tempfile
 from typing import Any, List
 
-<<<<<<< HEAD:erniebot-agent/src/erniebot_agent/utils/gradio_mixin.py
-from erniebot_agent.file_io.base import File
-from erniebot_agent.file_io.file_manager import FileManager
-from erniebot_agent.tools import RemoteToolkit
-from erniebot_agent.tools.tool_manager import ToolManager
-=======
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.file.base import File
->>>>>>> upstream/develop:erniebot-agent/src/erniebot_agent/agents/mixins/gradio_mixin.py
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
-
+from erniebot_agent.tools import RemoteToolkit
 
 class GradioMixin:
     def launch_gradio_demo(self: BaseAgent, **launch_kwargs: Any):
@@ -181,7 +174,6 @@ class GradioMixin:
                         height=700,
                     )
 
-<<<<<<< HEAD:erniebot-agent/src/erniebot_agent/utils/gradio_mixin.py
                     with gr.Row():
                         prompt_textbox = gr.Textbox(
                             label="Prompt", placeholder="Write a prompt here...", scale=15
@@ -226,17 +218,6 @@ class GradioMixin:
                 inputs=[tool_textbox],
                 outputs=[yaml_info, uploaded_tool],
             )
-=======
-                with gr.Accordion("Files", open=False):
-                    all_files = gr.HTML(value=[], label="All input files")
-                with gr.Accordion("Tools", open=False):
-                    attached_tools = self.get_tools()
-                    tool_descriptions = [tool.function_call_schema() for tool in attached_tools]
-                    gr.JSON(value=tool_descriptions)
-                with gr.Accordion("Raw messages", open=False):
-                    all_messages_json = gr.JSON(label="All messages")
-                    agent_memory_json = gr.JSON(label="Messges in memory")
->>>>>>> upstream/develop:erniebot-agent/src/erniebot_agent/agents/mixins/gradio_mixin.py
             prompt_textbox.submit(
                 _pre_chat,
                 inputs=[prompt_textbox, chatbot],
