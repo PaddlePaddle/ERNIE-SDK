@@ -2,10 +2,6 @@
 
 <h1>ERNIE Bot Agent & SDK</h1>
 
-**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
-
-**ERNIE Bot SDK** 作为 **ERNIE Bot Agen** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个方面。
-
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
@@ -18,6 +14,8 @@
 ![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
 
 # ERNIE Bot Agent
+
+**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
 ## 特性
 
@@ -107,7 +105,7 @@ asyncio.run(main())
 
 # ERNIE Bot SDK
 
-**ERNIE Bot SDK** 作为 **ERNIE Bot Agen** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个方面。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agen** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
 
 ## License
 
