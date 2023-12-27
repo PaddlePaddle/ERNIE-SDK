@@ -47,6 +47,9 @@ class BaseAgent(Protocol[LLMT]):
     def get_tools(self) -> List[BaseTool]:
         ...
 
+    def get_tool(self, tool_name: str) -> BaseTool:
+        ...
+
     def reset_memory(self) -> None:
         ...
 
