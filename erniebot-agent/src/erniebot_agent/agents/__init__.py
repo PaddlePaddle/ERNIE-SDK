@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Agent
-from .functional_agent import FunctionalAgent
-from .functional_agent_with_retrieval import (
-    FunctionalAgentWithRetrieval,
-    FunctionalAgentWithRetrievalScoreTool,
-    FunctionalAgentWithRetrievalTool,
+from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.function_agent import FunctionAgent
+from erniebot_agent.agents.function_agent_with_retrieval import (
+    FunctionAgentWithRetrieval,
+    FunctionAgentWithRetrievalScoreTool,
+    FunctionAgentWithRetrievalTool,
 )

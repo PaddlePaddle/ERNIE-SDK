@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 
 def get_global_access_token() -> Optional[str]:
@@ -30,6 +30,10 @@ def get_logging_level() -> Optional[str]:
 
 def get_logging_file_path() -> Optional[str]:
     return _get_val_from_env_var("EB_AGENT_LOGGING_FILE")
+
+
+def get_global_aksk() -> Tuple[Union[str, None], Union[str, None]]:
+    return (_get_val_from_env_var("EB_AGENT_AK"), _get_val_from_env_var("EB_AGENT_SK"))
 
 
 def _get_val_from_env_var(env_var: str) -> Optional[str]:

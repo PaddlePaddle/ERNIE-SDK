@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 
 from erniebot_agent.agents import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -9,6 +8,7 @@ from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.base import ChatModel
 from erniebot_agent.memory import AIMessage
 from erniebot_agent.tools import Tool
+from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 
 
 @pytest.mark.asyncio
@@ -56,7 +56,7 @@ async def test_callback_manager_hit():
     assert handler.tool_errors == 1
 
     await callback_manager.on_run_end(
-        agent, AgentResponse(text="", chat_history=[], actions=[], files=[], status="FINISHED")
+        agent, AgentResponse(text="", chat_history=[], steps=[], status="FINISHED")
     )
     assert handler.run_ends == 1
 

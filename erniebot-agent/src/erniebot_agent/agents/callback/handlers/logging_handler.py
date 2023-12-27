@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import List, Optional
 
+from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
 from erniebot_agent.chat_models.base import ChatModel
@@ -27,17 +26,21 @@ from erniebot_agent.utils.output_style import ColoredContent
 
 default_logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from erniebot_agent.agents.base import Agent
-
 
 class LoggingHandler(CallbackHandler):
+    """A callback handler for logging."""
+
     logger: logging.Logger
 
     def __init__(
         self,
         logger: Optional[logging.Logger] = None,
     ) -> None:
+        """Initialize a logging handler.
+
+        Args:
+            logger: The logger to use. If `None`, a default logger will be used.
+        """
         super().__init__()
 
         if logger is None:
@@ -45,8 +48,9 @@ class LoggingHandler(CallbackHandler):
         else:
             self.logger = logger
 
-    async def on_run_start(self, agent: Agent, prompt: str) -> None:
-        self.agent_info(
+    async def on_run_start(self, agent: BaseAgent, prompt: str) -> None:
+        """Called to log when the agent starts running."""
+        self._agent_info(
             "%s is about to start running with input:\n%s",
             agent.__class__.__name__,
             ColoredContent(prompt, role="user"),
@@ -54,9 +58,10 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_llm_start(self, agent: Agent, llm: ChatModel, messages: List[Message]) -> None:
+    async def on_llm_start(self, agent: BaseAgent, llm: ChatModel, messages: List[Message]) -> None:
+        """Called to log when the LLM starts running."""
         # TODO: Prettier messages
-        self.agent_info(
+        self._agent_info(
             "%s is about to start running with input:\n%s",
             llm.__class__.__name__,
             ColoredContent(messages),
@@ -64,8 +69,9 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_llm_end(self, agent: Agent, llm: ChatModel, response: LLMResponse) -> None:
-        self.agent_info(
+    async def on_llm_end(self, agent: BaseAgent, llm: ChatModel, response: LLMResponse) -> None:
+        """Called to log when the LLM ends running."""
+        self._agent_info(
             "%s finished running with output:\n%s",
             llm.__class__.__name__,
             ColoredContent(response.message),
@@ -73,14 +79,10 @@ class LoggingHandler(CallbackHandler):
             state="End",
         )
 
-    async def on_llm_error(
-        self, agent: Agent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
-        pass
-
-    async def on_tool_start(self, agent: Agent, tool: BaseTool, input_args: str) -> None:
+    async def on_tool_start(self, agent: BaseAgent, tool: BaseTool, input_args: str) -> None:
+        """Called to log when a tool starts running."""
         js_inputs = to_pretty_json(input_args, from_json=True)
-        self.agent_info(
+        self._agent_info(
             "%s is about to start running with input:\n%s",
             ColoredContent(tool.__class__.__name__, role="function"),
             ColoredContent(js_inputs, role="function"),
@@ -88,9 +90,10 @@ class LoggingHandler(CallbackHandler):
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Agent, tool: BaseTool, response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
+        """Called to log when a tool ends running."""
         js_inputs = to_pretty_json(response.json, from_json=True)
-        self.agent_info(
+        self._agent_info(
             "%s finished running with output:\n%s",
             ColoredContent(tool.__class__.__name__, role="function"),
             ColoredContent(js_inputs, role="function"),
@@ -98,30 +101,10 @@ class LoggingHandler(CallbackHandler):
             state="End",
         )
 
-    async def on_tool_error(
-        self, agent: Agent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
-        pass
+    async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
+        """Called to log when the agent ends running."""
+        self._agent_info("%s finished running.", agent.__class__.__name__, subject="Run", state="End")
 
-    async def on_run_end(self, agent: Agent, response: AgentResponse) -> None:
-        self.agent_info("%s finished running.", agent.__class__.__name__, subject="Run", state="End")
-
-    def agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
+    def _agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
         msg = f"[{subject}][{state}] {msg}"
         self.logger.info(msg, *args, **kwargs)
-
-    def agent_error(self, error: Union[Exception, KeyboardInterrupt], *args, subject, **kwargs) -> None:
-        error_msg = f"[{subject}][ERROR] {error}"
-        self.logger.error(error_msg, *args, **kwargs)
-
-    def open_role_color(self, open: bool = True):
-        """
-        Open or close color role in log, if open, different role will have different color.
-
-        Args:
-            open (bool, optional): whether or not to open. Defaults to True.
-        """
-        if open:
-            self.role_color = {"user": "Blue", "function": "Purple", "assistant": "Yellow"}
-        else:
-            self.role_color = {}

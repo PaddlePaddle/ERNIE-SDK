@@ -1,5 +1,5 @@
 .DEFAULT_GOAL = dev
-files_to_format_and_lint = src examples tests
+files_to_format_and_lint = src applications cookbook tests
 
 .PHONY: dev
 dev: format lint type-check

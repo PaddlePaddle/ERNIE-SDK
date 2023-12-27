@@ -27,5 +27,5 @@ class ChatWithEB(Tool):
         self.llm = llm
 
     async def __call__(self, query: str) -> Dict[str, str]:
-        response = await self.llm.async_chat([HumanMessage(query)])
+        response = await self.llm.chat([HumanMessage(query)])
         return {"response": response.content}

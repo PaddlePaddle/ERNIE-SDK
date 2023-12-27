@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from erniebot_agent.utils.logging import logger, setup_logging
-
-__all__ = ["logger"]
+from erniebot_agent.utils.logging import setup_logging
 
 setup_logging()

@@ -4,19 +4,40 @@ repo_name: ERNIE-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
-  - 介绍: 'index.md'
+  - 介绍: 'tutorials/introduction.md'
   - 快速开始:
-    - 介绍: 'tutorials/index.md' 
+    - 准备: 'tutorials/preparation.md'
+    - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
+    - messages: 'modules/messages.md'
+    - chat_modles: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
+    - file: 'modules/file.md'
+    - tools: 'modules/tools/create-tool.md'
   - API:
     - erniebot-agent:
-      - agents: "package/erniebot_agent/agents.md"
+      - messages: "package/erniebot_agent/messages.md"
       - memory: "package/erniebot_agent/memory.md"
+      - file: "package/erniebot_agent/file.md"
+      - tools: "package/erniebot_agent/tools.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
+      - agents: "package/erniebot_agent/agents.md"
 
 theme:
   name: material
+  favicon: img/favicon.png
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+
 
 plugins:
   - search
@@ -25,9 +46,8 @@ plugins:
       handlers:
         python:
           options:
-            show_submodules: true
-            docstring_style: google
-            annotations_path: brief
+            show_bases: false
+            show_root_heading: true
           paths: [erniebot-agent/src]
           selection:
             filters:
