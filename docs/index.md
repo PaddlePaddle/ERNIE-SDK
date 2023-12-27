@@ -1,31 +1,43 @@
-# 简介
-ERNIE Bot Agent是文心一言Agent框架，旨在助力大家快速开发大模型应用。
+<div align="center">
 
-# 快速上手
+<h1>ERNIE Bot Agent & SDK</h1>
 
-## 安装
-执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
+</div>
 
-```shell
-pip install --upgrade erniebot-agent
-```
+**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
-## 鉴权
-大家在使用ERNIE Bot Agent之前，需要进行鉴权步骤：
+**ERNIE Bot Agent**为开发者提供便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
 
-* 在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号
-* 在个人中心的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取用户凭证`Access Token`
-* 通过环境变量或者`Python`代码设置`Access Token`
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/6f62f191-fc7e-44ed-85f8-f7bcc210bcbb)
 
-```shell
-export EB_AGENT_ACCESS_TOKEN="your access token"
-```
+## ERNIE Bot Agent
 
-```python
-import os
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
-```
+### 特性
 
-## 智能体Agent
+#### 编排能力
 
-TODO
+与目前业界主流的通过prompt和output parser实现agent的方式不同，**ERNIE Bot Agent** 基于文心大模型的**function calling**能力实现了多工具编排和自动调度功能，并且允许工具、插件、知识库等不同组件的混合编排。除了自动调度，我们未来还将支持更多的编排模式，例如手动编排、半自动编排，为开发者提供更大的灵活性。
+
+#### 组件库
+
+**ERNIE Bot Agent** 为开发者提供了一个丰富的预置组件库：
+
+- **预置工具**：只需一行代码，即可加载使用星河社区工具中心的30+预置工具。这些工具当前主要来自百度AI开发平台和飞桨特色PP系列模型。后续，我们会持续接入更多预置工具，也欢迎社区贡献。此外，工具模块也支持用户灵活自定义本地和远程工具。
+- **知识库**：我们提供了开箱即用的基于文心百中的平台化知识库, 并允许开发者在二次开发的场景下使用[langchain](https://github.com/langchain-ai/langchain)、[llama_index](https://github.com/run-llama/llama_index)等主流开源库作为知识库。
+- **文心一言插件**：我们将会支持通过 **ERNIE Bot Agent** 调用文心一言插件商城中的插件（开发中）
+
+#### 低开发门槛
+
+我们希望能够降低开发门槛，使更多的开发者能够轻松构建智能体应用：
+
+- **零代码界面**：依托星河社区，我们提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
+- **简洁的代码**：不到10行代码就可以快速开发一个智能体应用。
+- **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
+
+## ERNIE Bot SDK
+
+**ERNIE Bot SDK** 作为 **ERNIE Bot Agent** 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+
+## License
+
+ERNIE Bot Agent 和 ERNIE Bot SDK 遵循Apache-2.0开源协议。
