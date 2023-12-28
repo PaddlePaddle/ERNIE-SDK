@@ -23,5 +23,5 @@ class EventType(enum.Enum):
     TOOL_START = "tool_start"
     TOOL_END = "tool_end"
     TOOL_ERROR = "tool_error"
-    RUN_ERROR = "run_error"
     RUN_END = "run_end"
+    RUN_ERROR = "run_error"

@@ -86,18 +86,18 @@ class CallbackHandler(object):
             error: The error that occured.
         """
 
-    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
-        """Called when the agent errors.
-
-        Args:
-            agent: The agent that is running.
-            error: The error that occured.
-        """
-
     async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
         """Called when the agent successfully ends running.
 
         Args:
             agent: The agent that is running.
             response: The response that the agent returns.
+        """
+
+    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
+        """Called when the agent errors.
+
+        Args:
+            agent: The agent that is running.
+            error: The error that occured.
         """

@@ -80,12 +80,12 @@ class CallbackManager(object):
     async def on_tool_error(self, agent: BaseAgent, tool: BaseTool, error: BaseException) -> None:
         await self._handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 
-    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
-        await self._handle_event(EventType.RUN_ERROR, agent=agent, error=error)
-
     async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
         await self._handle_event(EventType.RUN_END, agent=agent, response=response)
 
+    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
+        await self._handle_event(EventType.RUN_ERROR, agent=agent, error=error)
+        
     async def _handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
         callback_name = "on_" + event_type.value
         for handler in self._handlers:
