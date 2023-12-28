@@ -49,7 +49,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](./docs/authentication.md)。
+使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
 
 ### Python接口
 
