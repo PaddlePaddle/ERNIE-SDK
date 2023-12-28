@@ -6,6 +6,7 @@ from typing import (
     Final,
     Iterable,
     List,
+    Mapping,
     NoReturn,
     Optional,
     Sequence,
@@ -134,7 +135,11 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
 
     @final
     async def run_llm(
-        self, messages: List[Message], *, use_memory: bool = False, llm_opts: Optional[Dict[str, Any]] = None
+        self,
+        messages: List[Message],
+        *,
+        use_memory: bool = False,
+        llm_opts: Optional[Mapping[str, Any]] = None,
     ) -> LLMResponse:
         """Run the LLM asynchronously.
 

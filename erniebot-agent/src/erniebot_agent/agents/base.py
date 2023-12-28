@@ -14,8 +14,8 @@
 
 from typing import (
     Any,
-    Dict,
     List,
+    Mapping,
     Optional,
     Protocol,
     Sequence,
@@ -41,7 +41,11 @@ class BaseAgent(Protocol[LLMT]):
         ...
 
     async def run_llm(
-        self, messages: List[Message], *, use_memory: bool = False, llm_opts: Optional[Dict[str, Any]] = None
+        self,
+        messages: List[Message],
+        *,
+        use_memory: bool = False,
+        llm_opts: Optional[Mapping[str, Any]] = None,
     ) -> LLMResponse:
         ...
 
