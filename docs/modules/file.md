@@ -145,3 +145,4 @@ async def demo_function():
        response = await agent.async_run('请帮我画一张北京市的图')
        # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件
        files = response.steps[-1].output_files
+    ```
