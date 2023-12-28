@@ -48,7 +48,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             "path": "/erniebot/plugins_v3",
         },
     }
-    
+
     supported_api_types: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.CUSTOM,

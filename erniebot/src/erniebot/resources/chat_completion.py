@@ -88,7 +88,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             },
         },
     }
-    
+
     supported_api_types: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.AISTUDIO,

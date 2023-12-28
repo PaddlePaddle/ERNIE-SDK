@@ -46,6 +46,7 @@ RAG_PROMPT = """检索结果:
 
 _logger = logging.getLogger(__name__)
 
+
 class KnowledgeBaseToolInputView(ToolParameterView):
     query: str = Field(description="查询语句")
     top_k: int = Field(description="返回结果数量")

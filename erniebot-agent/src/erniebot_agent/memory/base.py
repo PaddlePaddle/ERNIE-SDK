@@ -17,8 +17,8 @@ from typing import List, Optional, Union
 
 from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 
-
 _logger = logging.getLogger(__name__)
+
 
 class MessageManager:
     """

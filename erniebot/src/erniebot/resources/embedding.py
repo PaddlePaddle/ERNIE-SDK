@@ -45,7 +45,7 @@ class Embedding(EBResource, Creatable):
             },
         },
     }
-    
+
     supported_api_types: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.AISTUDIO,
