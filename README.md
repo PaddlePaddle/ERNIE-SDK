@@ -36,18 +36,6 @@
 <details>
 <summary>点击展开</summary>
 
-#### 快速安装
-
-执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
-
-```shell
-# 安装核心模块
-pip install --upgrade erniebot-agent
-
-# 安装所有模块
-pip install --upgrade erniebot-agent[all]
-```
-
 #### 源码安装
 
 执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
@@ -65,6 +53,17 @@ pip install ./erniebot-agent            # 安装核心模块
 ```
 </details>
 
+#### 快速安装（暂不支持）
+
+执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
+
+```shell
+# 安装核心模块
+pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
+```
 
 ### 快速体验
 
@@ -114,9 +113,15 @@ python quick_start.py
 ```
 </details>
 
+### 详细教程
+
+详细教程的[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
+
 ## ERNIE Bot SDK
 
-ERNIE Bot SDK 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。有关更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+ERNIE Bot SDK 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
+
+更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
 
 ## License
 

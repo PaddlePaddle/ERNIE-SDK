@@ -27,18 +27,6 @@
 
 ## 安装
 
-### 快速安装
-
-执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
-
-```shell
-# 安装核心模块
-pip install --upgrade erniebot-agent
-
-# 安装所有模块
-pip install --upgrade erniebot-agent[all]
-```
-
 ### 源码安装
 
 执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
@@ -53,6 +41,18 @@ pip install ./erniebot
 # 然后安装ERNIE Bot Agent
 pip install ./erniebot-agent            # 安装核心模块
 # pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
+```
+
+### 快速安装（暂不支持）
+
+执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
+
+```shell
+# 安装核心模块
+pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
 ```
 
 ## 快速体验
@@ -98,6 +98,11 @@ export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=info
 python quick_start.py
 ```
+
+## 详细教程
+
+详细教程的[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
+
 
 ## License
 
