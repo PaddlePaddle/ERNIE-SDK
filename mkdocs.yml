@@ -8,15 +8,17 @@ nav:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
   - 核心模块:
-    - agents: 'modules/agents.md'
-    - chat_models: 'modules/chat_models.md'
-    - file: 'modules/file.md'
-    - memory: 'modules/memory.md'
-    - message: 'modules/message.md'
-    - retrieval: 'modules/retrieval.md'
-    - tools: 'modules/tools/create-tool.md'
+    - Agents: 'modules/agents.md'
+    - Chat Models: 'modules/chat_models.md'
+    - Tools: 'modules/tools/create-tool.md'
+    - File: 'modules/file.md'
+    - Memory: 'modules/memory.md'
+    - Message: 'modules/message.md'
+    - Retrieval: 'modules/retrieval.md'
   - 教程:
-    - 工具(Tools)入门: "cookbooks/agent/tools_intro.ipynb"
+    - 信息(Message): "cookbooks/agent/message.ipynb"
+    - 模型(Chat Models): "cookbooks/agent/chat_models.ipynb"
+    - 工具(Tools): "cookbooks/agent/tools_intro.ipynb"
     - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
     - 自定义远程工具(Remote Tool): "cookbooks/agent/remote_tool.ipynb"
     - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
@@ -25,12 +27,13 @@ nav:
     - 在智能体中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
   - API 文档:
-    - agents: "package/erniebot_agent/agents.md"
-    - chat_models: "package/erniebot_agent/chat_models.md"
-    - file: "package/erniebot_agent/file.md"
-    - memory: "package/erniebot_agent/memory.md"
-    - retrieval: "package/erniebot_agent/retrieval.md"
-    - tools: "package/erniebot_agent/tools.md"
+    - Agents: "package/erniebot_agent/agents.md"
+    - Chat Models: "package/erniebot_agent/chat_models.md"
+    - Tools: "package/erniebot_agent/tools.md"
+    - File: "package/erniebot_agent/file.md"
+    - Memory: "package/erniebot_agent/memory.md"
+    - Message: "package/erniebot_agent/message.md"
+    - Retrieval: "package/erniebot_agent/retrieval.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
       - 预备步骤:
