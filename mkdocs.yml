@@ -9,13 +9,15 @@ nav:
     - 构建一个简单智能体: 'modules/quickstart.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
-    - message: 'modules/message.md'
-    - chat_models: 'modules/chat_models.md'
-    - tools: 'modules/tools/create-tool.md'
-    - memory: 'modules/memory.md'
-    - retrieval: 'modules/retrieval.md'
-    - file: 'modules/file.md'
+    - Message: 'modules/message.md'
+    - Chat Models: 'modules/chat_models.md'
+    - Tools: 'modules/tools/create-tool.md'
+    - Memory: 'modules/memory.md'
+    - Retrieval: 'modules/retrieval.md'
+    - File: 'modules/file.md'
   - 教程:
+    - Message: "cookbooks/agent/message.ipynb"
+    - Chat Models: "cookbooks/agent/chat_models.ipynb"
     - Local Tool: "cookbooks/agent/local_tool.ipynb"
     - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
     - Memory: "cookbooks/agent/memory.ipynb"
