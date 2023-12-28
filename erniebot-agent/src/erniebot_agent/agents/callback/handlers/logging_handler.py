@@ -64,7 +64,7 @@ class LoggingHandler(CallbackHandler):
         self._agent_info(
             "%s is about to start running with input:\n%s",
             llm.__class__.__name__,
-            ColoredContent(messages),
+            ColoredContent(messages[-1]),
             subject="LLM",
             state="Start",
         )
