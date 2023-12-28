@@ -7,7 +7,7 @@ from erniebot_agent.tools.base import Tool, ToolParameterView
 
 
 class ImageGenerateToolInputView(ToolParameterView):
-    query: str = Field(description="场景图片的描述")
+    query: str = Field(description="当前场景图片的描述")
 
 
 class ImageGenerateToolOutputView(ToolParameterView):
@@ -15,7 +15,7 @@ class ImageGenerateToolOutputView(ToolParameterView):
 
 
 class ImageGenerateTool(Tool):
-    description: str = "根据当前的互动内容，按照场景图片部分的内容生成图片。"
+    description: str = "根据用户的选择以及当前的互动内容，按照场景图片部分的内容生成图片。"
     input_type: Type[ToolParameterView] = ImageGenerateToolInputView
     otuput_story: Type[ToolParameterView] = ImageGenerateToolOutputView
 
