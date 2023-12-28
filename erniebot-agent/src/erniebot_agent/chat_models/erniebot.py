@@ -181,31 +181,7 @@ class ERNIEBot(BaseERNIEBot):
             If `stream` is False, returns a single message.
             If `stream` is True, returns an asynchronous iterator of message chunks.
         """
-        cfg_dict = self.default_chat_kwargs.copy()
-        cfg_dict["model"] = self.model
-        cfg_dict.setdefault("_config_", {})
-
-        if self.api_type is not None:
-            cfg_dict["_config_"]["api_type"] = self.api_type
-        if self.access_token is not None:
-            cfg_dict["_config_"]["access_token"] = self.access_token
-        if hasattr(self, "ak") and hasattr(self, "sk"):
-            cfg_dict["_config_"]["ak"] = self.ak
-            cfg_dict["_config_"]["sk"] = self.sk
-
-        if any(isinstance(m, SystemMessage) for m in messages):
-            raise ValueError(f"The input messages should not contain SystemMessage: {messages}")
-        cfg_dict["messages"] = [m.to_dict() for m in messages]
-        if functions is not None:
-            cfg_dict["functions"] = functions
-
-        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
-        for name in name_list:
-            if name in kwargs:
-                cfg_dict[name] = kwargs[name]
-
-        if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
-            cfg_dict.pop("plugins")
+        cfg_dict = self._generate_config(messages, functions=functions, **kwargs)
 
         response = await self._generate_response(cfg_dict, stream, functions)
 
@@ -220,6 +196,34 @@ class ERNIEBot(BaseERNIEBot):
                 convert_response_to_output(resp, AIMessageChunk)
                 async for resp in cast(AsyncIterator[ChatCompletionResponse], response)
             )
+
+    def _generate_config(self, messages: List[Message], functions, **kwargs) -> dict:
+        if any(isinstance(m, SystemMessage) for m in messages):
+            raise ValueError(f"The input messages should not contain SystemMessage: {messages}")
+        cfg_dict = self.default_chat_kwargs.copy()
+
+        cfg_dict.setdefault("_config_", {})
+        if self.api_type is not None:
+            cfg_dict["_config_"]["api_type"] = self.api_type
+        if hasattr(self, "ak") and hasattr(self, "sk"):
+            cfg_dict["_config_"]["ak"] = self.ak
+            cfg_dict["_config_"]["sk"] = self.sk
+        cfg_dict["_config_"]["access_token"] = self.access_token
+
+        cfg_dict["messages"] = [m.to_dict() for m in messages]
+        cfg_dict["model"] = self.model
+        if functions is not None:
+            cfg_dict["functions"] = functions
+
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
+        for name in name_list:
+            if name in kwargs:
+                cfg_dict[name] = kwargs[name]
+
+        if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
+            cfg_dict.pop("plugins")
+
+        return cfg_dict
 
     def _maybe_validate_qianfan_auth(self) -> None:
         if self.api_type == "qianfan":

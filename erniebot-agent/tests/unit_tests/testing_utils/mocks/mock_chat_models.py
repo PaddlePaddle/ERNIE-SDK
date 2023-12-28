@@ -1,5 +1,5 @@
 from erniebot_agent.chat_models.base import ChatModel
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot, ERNIEBot
 from erniebot_agent.memory import AIMessage
 
 
@@ -30,3 +30,8 @@ class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
         response = self.responses[self._counter]
         self._counter += 1
         return response
+
+
+class FakeERNIEBotWithAllInput(ERNIEBot):
+    def __init__(self, model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs):
+        super().__init__(model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs)
