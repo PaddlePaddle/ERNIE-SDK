@@ -7,30 +7,31 @@ nav:
   - 快速开始:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
-    - 使用 Tool: 'modules/tools/getting-started.md' 
   - 核心模块:
-    - message: 'modules/message.md'
     - chat_models: 'modules/chat_models.md'
+    - message: 'modules/message.md'
+    - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
     - memory: 'modules/memory.md'
     - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
     - agents: 'modules/agents.md'
   - 教程:
-    - Local Tool: "cookbooks/agent/local_tool.ipynb"
-    - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
-    - Memory: "cookbooks/agent/memory.ipynb"
-    - 在FunctionAgentWithRetrieval中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
-    - 在FunctionAgentWithRetrieval中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
+    - 工具(Tools)入门: "cookbooks/agent/tools_intro.ipynb"
+    - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
+    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote_tool.ipynb"
+    - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
+    - 智能体(Agent)运行流程详解: "cookbooks/agent/function_agent.ipynb"
+    - 在智能体中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
+    - 在智能体中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
-  - API Referene:
-    - erniebot-agent:
-      - agents: "package/erniebot_agent/agents.md"
-      - chat_models: "package/erniebot_agent/chat_models.md"
-      - file: "package/erniebot_agent/file.md"
-      - memory: "package/erniebot_agent/memory.md"
-      - retrieval: "package/erniebot_agent/retrieval.md"
-      - tools: "package/erniebot_agent/tools.md"
+  - API 文档:
+    - agents: "package/erniebot_agent/agents.md"
+    - chat_models: "package/erniebot_agent/chat_models.md"
+    - file: "package/erniebot_agent/file.md"
+    - memory: "package/erniebot_agent/memory.md"
+    - retrieval: "package/erniebot_agent/retrieval.md"
+    - tools: "package/erniebot_agent/tools.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
       - 预备步骤:
