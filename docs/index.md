@@ -1,3 +1,9 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 <div align="center">
 
 <h1>ERNIE Bot Agent & SDK</h1>
