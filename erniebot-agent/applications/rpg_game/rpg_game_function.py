@@ -192,7 +192,7 @@ def creates_story_tool():
 def main():
     img_tool = ImageGenerateTool()
     story_tool = creates_story_tool()
-    SYSTEM_MESSAGE =  "你是《{SCRIPT}》沉浸式图文RPG场景助手，能够生成图文剧情。\
+    SYSTEM_MESSAGE = "你是《{SCRIPT}》沉浸式图文RPG场景助手，能够生成图文剧情。\
                     每次用户发送query或者输入数字开始互动时，\
                     请你先调用ChatStoryTool生成互动，然后调用ImageGenerateTool生成图片，\
                     最后输出的时候回答'已完成'即可。"
