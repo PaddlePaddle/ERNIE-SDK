@@ -35,7 +35,7 @@ class GlobalFileManagerHandler(object):
 
 
     Methods:
-        get:Retrieves the global FileManager instance.
+        get: Retrieves the global FileManager instance.
         configure: Configures the global FileManager
                    at the beginning of event loop.
         set: Sets the global FileManager explicitly.
