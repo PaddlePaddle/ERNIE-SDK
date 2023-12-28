@@ -2,18 +2,6 @@
 
 ## 安装
 
-### 快速安装
-
-执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
-
-```shell
-# 安装核心模块
-pip install --upgrade erniebot-agent
-
-# 安装所有模块
-pip install --upgrade erniebot-agent[all]
-```
-
 ### 源码安装
 
 执行如下命令，使用源码安装ERNIE Bot Agent（要求Python >= 3.8)。
@@ -30,7 +18,7 @@ pip install ./erniebot
 
 # 然后安装ERNIE Bot Agent
 pip install ./erniebot-agent            # 安装核心模块
-pip install './erniebot-agent/.[all]'   # 安装所有模块，包括gradio等依赖库
+#pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
 
 如果大家希望二次开发ERNIE Bot Agent，需要额外安装一些依赖库。
@@ -38,6 +26,18 @@ pip install './erniebot-agent/.[all]'   # 安装所有模块，包括gradio等�
 ```shell
 pip install -r erniebot-agent/dev-requirements.txt
 pip install -e './erniebot-agent/.[all]'
+```
+
+### 快速安装
+
+执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
+
+```shell
+# 安装核心模块
+pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
 ```
 
 

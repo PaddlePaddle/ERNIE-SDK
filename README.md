@@ -51,7 +51,6 @@ pip install ./erniebot
 pip install ./erniebot-agent            # 安装核心模块
 # pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
-</details>
 
 #### 快速安装（暂不支持）
 
@@ -64,6 +63,7 @@ pip install --upgrade erniebot-agent
 # 安装所有模块
 pip install --upgrade erniebot-agent[all]
 ```
+</details>
 
 ### 快速体验
 
