@@ -15,16 +15,11 @@ nav:
     - memory: 'modules/memory.md'
     - retrieval: 'modules/retrieval.md'
   - 教程:
-    - Local Tool: "cookbooks/agent/local_tool.ipynb"
-    - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
-    - Memory: "cookbooks/agent/memory.ipynb"
-    - Agent: "cookbooks/agent/FunctionAgent.ipynb"
-    - 在FunctionAgentWithRetrieval中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
-    - 在FunctionAgentWithRetrieval中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 工具(Tools)入门: "cookbooks/agent/tools_intro.ipynb"
     - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
     - 自定义远程工具(Remote Tool): "cookbooks/agent/remote_tool.ipynb"
     - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
+    - 智能体(Agent)流程详解: "cookbooks/agent/function_agent.ipynb"
     - 在智能体中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
     - 在智能体中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
