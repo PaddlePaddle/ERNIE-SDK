@@ -2,6 +2,8 @@
 
 <h1>ERNIE Bot Agent & SDK</h1>
 
+[文档](http://ernie-bot-agent.readthedocs.io/) | [智能体应用体验](https://aistudio.baidu.com/application/center?tag=agent)
+
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
