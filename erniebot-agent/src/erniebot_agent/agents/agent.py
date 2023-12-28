@@ -214,14 +214,6 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         """Get the tools that the agent can choose from."""
         return self._tool_manager.get_tools()
 
-    def get_tool(self, tool_name: str) -> BaseTool:
-        """Get the tool by its name.
-
-        Args:
-            tool_name: the tool name of the tool to get.
-        """
-        return self._tool_manager.get_tool(tool_name)
-
     def reset_memory(self) -> None:
         """Clear the chat history."""
         self.memory.clear_chat_history()
