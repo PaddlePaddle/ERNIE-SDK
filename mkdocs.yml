@@ -8,12 +8,13 @@ nav:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
   - 核心模块:
-    - Message: 'modules/message.md'
+    - Agents: 'modules/agents.md'
     - Chat Models: 'modules/chat_models.md'
     - Tools: 'modules/tools/create-tool.md'
-    - Memory: 'modules/memory.md'
-    - Retrieval: 'modules/retrieval.md'
     - File: 'modules/file.md'
+    - Memory: 'modules/memory.md'
+    - Message: 'modules/message.md'
+    - Retrieval: 'modules/retrieval.md'
   - 教程:
     - 信息(Message): "cookbooks/agent/message.ipynb"
     - 模型(Chat Models): "cookbooks/agent/chat_models.ipynb"
@@ -26,13 +27,13 @@ nav:
     - 在智能体中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
   - API 文档:
-    - agents: "package/erniebot_agent/agents.md"
-    - message: "package/erniebot_agent/message.md"
-    - chat_models: "package/erniebot_agent/chat_models.md"
-    - file: "package/erniebot_agent/file.md"
-    - tools: "package/erniebot_agent/tools.md"
-    - memory: "package/erniebot_agent/memory.md"
-    - retrieval: "package/erniebot_agent/retrieval.md"
+    - Agents: "package/erniebot_agent/agents.md"
+    - Chat Models: "package/erniebot_agent/chat_models.md"
+    - Tools: "package/erniebot_agent/tools.md"
+    - File: "package/erniebot_agent/file.md"
+    - Memory: "package/erniebot_agent/memory.md"
+    - Message: "package/erniebot_agent/message.md"
+    - Retrieval: "package/erniebot_agent/retrieval.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
       - 预备步骤:
