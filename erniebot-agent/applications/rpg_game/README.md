@@ -14,6 +14,7 @@ RPGGameAgent是一个基于Agent完成的文字类角色扮演的游戏，用户
 通过bash运行：通过执行脚本启动RPGGameAgent，并指定模型、剧情和访问令牌等参数。
 
 ```bash
+export EB_AGENT_LOGGING_LEVEL='info'
 python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传 --model ernie-3.5
 ```
 
