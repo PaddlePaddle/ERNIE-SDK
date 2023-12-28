@@ -6,12 +6,12 @@ RPGGameAgent是一个基于Agent完成的文字类角色扮演的游戏，用户
 
 目前该Agent提供两种方式进行
 
-* 基于FunctionAgent，通过instruction来进行触发工具(TODO，待tool choice上线))
+* 基于FunctionAgent，通过instruction来进行触发工具(暂不稳定，待tool choice上线))
 * 基于Prompt通过ToolFormat语句运行工具实现Agent
 
 ## 如何开始
 
-通过bash运行代理：通过执行脚本启动RPGGameAgent，并指定模型、剧情和访问令牌等参数。
+通过bash运行：通过执行脚本启动RPGGameAgent，并指定模型、剧情和访问令牌等参数。
 
 ```bash
 python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传 --model ernie-4.0
@@ -19,7 +19,9 @@ python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传
 
 ## 通过FunctionAgent+Instruction实现
 
-通过以下instruction指示Agent来达到触发
+1. 工具准备：
+   需要一个ChatStory工具用来生成故事情节以及一个ImageGenerateTool工具生成场景图片
+2. 通过以下instruction指示Agent来达到触发
 
 ```markdown
 你是《{SCRIPT}》沉浸式图文RPG场景助手，能够生成图文剧情。\
@@ -28,10 +30,13 @@ python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传
 然后第二步调用ImageGenerateTool生成图片，\
 最后输出的时候回答'已完成'即可
 ```
+3. 直接调用Agent，获得包括<场景描述>、<场景图片>和<选择>的互动结果。
 
 ## 通过ToolFormat实现手动编排Agent
 
-除了支持FunctionAgent以外（TODO），同时我们也支持通过ToolFormat以手动编排的方式通过Prompt激活Agent：通过事先定义Agent想要操作的步骤，然后通过指定的tool识别范式来运行tool。
+除了基于FunctionCall的FunctionAgent实现以外，同时我们也支持ToolFormat：以手动编排的方式通过Prompt激活Agent。
+
+即：通过事先定义Agent想要操作的步骤，然后通过指定的tool识别范式来运行tool。
 
 ### 关键步骤
 
@@ -62,5 +67,15 @@ python rpg_game_agent.py --access-token YOUR_ACCESS_TOKEN --game 射雕英雄传
    当我说游戏开始的时候，开始游戏。每次只要输出【一组】互动，【不要自己生成互动】。"""
 ```
 
-2. Execute Tool：通过在流式输出的过程中遇到ToolFormat的部分（在此例子中为 \```json\```），开始异步执行相应的工具（需要在INSTRUCTION中讲述清楚具体的相关参数）。
-3. 等待工具执行完成，获得包括<场景描述>、<场景图片>和<选择>的互动结果。
+2. Execute Tool：通过在流式输出的过程中遇到ToolFormat的部分（在此例子中为 \```json\```），开始异步执行相应的工具。
+
+需要在INSTRUCTION中讲述清楚具体的相关参数，格式为json，tool_name为调用工具名称，tool_args为工具所有入参（json）。
+
+```
+   {
+       'tool_name':'ImageGenerationTool',
+       'tool_args':'{{"prompt":query}}'
+   }
+```
+
+3. 等待工具执行完成，获得包括<场景描述>、<场景图片>和<选择>的互动结果，以及文生图工具生成结果。

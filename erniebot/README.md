@@ -15,7 +15,7 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 
 * 支持文心一言ernie-bot-8k模型，输入token数量上限提升至7000。
 * 支持基于文心大模型4.0版本的文心一言ernie-bot-4，用于对话补全任务。
-* 增加`EBResponse.get_result`方法，支持从响应中取出关键信息。
+* 增加 `EBResponse.get_result`方法，支持从响应中取出关键信息。
 
 ## 教程与文档
 
@@ -23,19 +23,19 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 <summary>详情</summary>
 
 * **预备步骤**
-  * [安装](./docs/installation.md)
-  * [认证鉴权](./docs/authentication.md)
-  * [参数配置](./docs/configuration.md)
-  * [模型总览](./docs/models.md)
+  * [安装](../docs/sdk/installation.md)
+  * [认证鉴权](../docs/sdk/authentication.md)
+  * [参数配置](../docs/sdk/configuration.md)
+  * [模型总览](../docs/sdk/models.md)
 * **使用指南**
-  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
-  * [语义向量（Embedding）](./docs/guides/embedding.md)
-  * [文生图（Image Generation）](./docs/guides/image.md)
-  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
+  * [对话补全（Chat Completion）](../docs/sdk/guides/chat_completion.md)
+  * [语义向量（Embedding）](../docs/sdk/guides/embedding.md)
+  * [文生图（Image Generation）](../docs/sdk/guides/image.md)
+  * [函数调用（Function Calling）](../docs/sdk/guides/function_calling.md)
 * **API文档**
-  * [ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [Embedding](./docs/api_reference/embedding.md)
-  * [Image](./docs/api_reference/image.md)
+  * [ChatCompletion](../docs/sdk/api_reference/chat_completion.md)
+  * [Embedding](../docs/sdk/api_reference/embedding.md)
+  * [Image](../docs/sdk/api_reference/image.md)
 
 </details>
 
@@ -49,7 +49,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](./docs/authentication.md)。
+使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
 
 ### Python接口
 
