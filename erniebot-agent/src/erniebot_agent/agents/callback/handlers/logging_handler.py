@@ -24,7 +24,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
-default_logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class LoggingHandler(CallbackHandler):
@@ -44,7 +44,7 @@ class LoggingHandler(CallbackHandler):
         super().__init__()
 
         if logger is None:
-            self.logger = default_logger
+            self.logger = _logger
         else:
             self.logger = logger
 

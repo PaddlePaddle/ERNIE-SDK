@@ -26,7 +26,7 @@ from erniebot_agent.tools.utils import (
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def check_json_length(value: Dict[str, Any]):
@@ -201,7 +201,7 @@ class RemoteTool(BaseTool):
             raise RemoteToolError(f"method<{self.tool_view.method}> is invalid", stage="Executing")
 
         if response.status_code != 200:
-            logger.debug(f"The resource requested returned the following headers: {response.headers}")
+            _logger.debug(f"The resource requested returned the following headers: {response.headers}")
             raise RemoteToolError(
                 f"The resource requested by `{self.tool_name}` "
                 f"returned {response.status_code}: {response.text}",

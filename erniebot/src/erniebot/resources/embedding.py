@@ -27,10 +27,6 @@ __all__ = ["Embedding", "EmbeddingResponse"]
 
 
 class Embedding(EBResource, Creatable):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
-        APIType.QIANFAN,
-        APIType.AISTUDIO,
-    )
     _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "embeddings",
@@ -49,6 +45,11 @@ class Embedding(EBResource, Creatable):
             },
         },
     }
+    
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.AISTUDIO,
+    )
 
     @classmethod
     def create(

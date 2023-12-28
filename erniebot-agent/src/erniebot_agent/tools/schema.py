@@ -28,7 +28,7 @@ from erniebot_agent.utils.exceptions import RemoteToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def is_optional_type(type: Optional[Type]):
@@ -260,10 +260,10 @@ class ToolParameterView(BaseModel):
             # TODO(wj-Mcat): remove supporting for `summary` field
             if "summary" in field_dict:
                 description = field_dict["summary"]
-                logger.info("`summary` field will be deprecated, please use `description`")
+                _logger.info("`summary` field will be deprecated, please use `description`")
 
                 if "description" in field_dict:
-                    logger.info("`description` field will be used instead of `summary`")
+                    _logger.info("`description` field will be used instead of `summary`")
                     description = field_dict["description"]
             else:
                 description = field_dict.get("description", None)

@@ -44,11 +44,6 @@ __all__ = ["ChatCompletion", "ChatCompletionResponse"]
 
 
 class ChatCompletion(EBResource, CreatableWithStreaming):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
-        APIType.QIANFAN,
-        APIType.AISTUDIO,
-        APIType.CUSTOM,
-    )
     _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "chat",
@@ -93,6 +88,12 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             },
         },
     }
+    
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.AISTUDIO,
+        APIType.CUSTOM,
+    )
 
     @overload
     @classmethod

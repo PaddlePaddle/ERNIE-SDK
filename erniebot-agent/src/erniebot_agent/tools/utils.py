@@ -19,7 +19,7 @@ from erniebot_agent.tools.schema import (
 from erniebot_agent.utils.common import get_file_suffix, is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def tool_response_contains_file(element: Any):
@@ -50,7 +50,7 @@ def validate_openapi_yaml(yaml_file: str) -> bool:
         validate(yaml_dict)
         return True
     except Exception as e:  # type: ignore
-        logger.error(e)
+        _logger.error(e)
         return False
 
 

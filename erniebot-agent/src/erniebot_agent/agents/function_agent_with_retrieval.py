@@ -28,8 +28,6 @@ from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-logger = logging.getLogger(__name__)
-
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content']}}
@@ -45,6 +43,8 @@ RAG_PROMPT = """检索结果:
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
 
+
+_logger = logging.getLogger(__name__)
 
 class KnowledgeBaseToolInputView(ToolParameterView):
     query: str = Field(description="查询语句")
@@ -150,7 +150,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
             self.memory.add_message(chat_history[-1])
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt, files)
@@ -161,7 +161,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         for doc in results["documents"]:
             num_tokens = len(doc["content"])
             if token_count + num_tokens > self.token_limit:
-                logger.warning(
+                _logger.warning(
                     "Retrieval results exceed token limit. Truncating retrieval results to "
                     f"under {self.token_limit} tokens"
                 )
@@ -257,7 +257,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             response = self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
@@ -371,7 +371,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)

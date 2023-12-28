@@ -19,7 +19,7 @@ from typing_extensions import Self
 from erniebot_agent.file import File, protocol
 from erniebot_agent.file.remote_file import RemoteFile
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class FunctionCall(TypedDict):
@@ -86,7 +86,7 @@ class Message:
     @token_count.setter
     def token_count(self, token_count: int):
         if self._token_count is not None:
-            logger.warning("The token count of the message has been set before")
+            _logger.warning("The token count of the message has been set before")
         self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
@@ -213,7 +213,7 @@ class HumanMessage(Message):
 
         if len(files) > 0:
             if len(protocol.extract_file_ids(text)) > 0:
-                logger.warning("File IDs were found in the text. The provided files will be ignored.")
+                _logger.warning("File IDs were found in the text. The provided files will be ignored.")
             else:
                 if include_file_urls:
                     file_reprs = await _create_file_reprs_with_urls(files)

@@ -40,10 +40,6 @@ __all__ = ["ChatCompletionWithPlugins"]
 
 
 class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
-        APIType.QIANFAN,
-        APIType.CUSTOM,
-    )
     _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "path": "/erniebot/plugins",
@@ -52,6 +48,11 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             "path": "/erniebot/plugins_v3",
         },
     }
+    
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.CUSTOM,
+    )
 
     @overload
     @classmethod

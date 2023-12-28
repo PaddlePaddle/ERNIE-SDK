@@ -44,8 +44,6 @@ from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
-logger = logging.getLogger(__name__)
-
 
 class BaseERNIEBot(ChatModel):
     @overload

@@ -59,6 +59,7 @@ class EBResource(object):
 
     POLLING_TIMEOUT_SECS: Final[float] = constants.POLLING_TIMEOUT_SECS
     POLLING_INTERVAL_SECS: Final[float] = constants.POLLING_INTERVAL_SECS
+    
     supported_api_types: ClassVar[Tuple[APIType, ...]] = ()
     _build_backend_opts_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {}
 

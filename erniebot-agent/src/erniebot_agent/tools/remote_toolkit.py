@@ -31,7 +31,7 @@ from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -234,7 +234,7 @@ class RemoteToolkit:
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         headers = {"Content-Type": "application/json"}
         if access_token is None:
-            logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
+            _logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers
@@ -279,7 +279,7 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                _logger.debug(f"The resource requested returned the following headers: {response.headers}")
                 raise RemoteToolError(
                     f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}", stage="Loading"
                 )
@@ -322,7 +322,7 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                _logger.debug(f"The resource requested returned the following headers: {response.headers}")
                 raise RemoteToolError(
                     f"`{examples_yaml_url}` returned {response.status_code}: {response.text}",
                     stage="Loading",

@@ -7,7 +7,7 @@ import requests
 
 from erniebot_agent.utils.exceptions import BaizhongError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class BaizhongSearch:
@@ -44,7 +44,7 @@ class BaizhongSearch:
         self._base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
         self.access_token = access_token
         if knowledge_base_id is not None:
-            logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
+            _logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
             self.knowledge_base_id = knowledge_base_id
         elif knowledge_base_name is not None:
             self.knowledge_base_id = self.create_knowledge_base(knowledge_base_name)
@@ -90,7 +90,7 @@ class BaizhongSearch:
         """
         headers = {"Content-Type": "application/json"}
         if access_token is None:
-            logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
+            _logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers

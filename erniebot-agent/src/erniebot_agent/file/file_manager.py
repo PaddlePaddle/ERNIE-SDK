@@ -45,10 +45,10 @@ from erniebot_agent.file.remote_file import RemoteFile, RemoteFileClient
 from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import Closeable, Noncopyable
 
-logger = logging.getLogger(__name__)
-
 FilePath: TypeAlias = Union[str, os.PathLike]
 File: TypeAlias = Union[LocalFile, RemoteFile]
+
+_logger = logging.getLogger(__name__)
 
 _default_file_manager_var: contextvars.ContextVar[Optional["FileManager"]] = contextvars.ContextVar(
     "_default_file_manager_var", default=None
@@ -517,4 +517,4 @@ class FileManager(Closeable, Noncopyable):
         try:
             temp_dir.cleanup()
         except Exception as e:
-            logger.warning("Failed to clean up temporary directory: %s", temp_dir.name, exc_info=e)
+            _logger.warning("Failed to clean up temporary directory: %s", temp_dir.name, exc_info=e)
