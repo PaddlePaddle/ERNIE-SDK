@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from typing import Dict, List, final
+from typing import Dict, Iterable, List, final
 
 from erniebot_agent.tools.base import BaseTool
 
@@ -26,7 +26,7 @@ class ToolManager(object):
     https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
     """
 
-    def __init__(self, tools: List[BaseTool]) -> None:
+    def __init__(self, tools: Iterable[BaseTool]) -> None:
         super().__init__()
         self._tools: Dict[str, BaseTool] = {}
         for tool in tools:

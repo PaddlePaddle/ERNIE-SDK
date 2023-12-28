@@ -98,7 +98,7 @@ class _Image(EBResource):
 
 
 class ImageV1(_Image):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
     @classmethod
     def create(
@@ -189,7 +189,7 @@ class ImageV1(_Image):
         style = kwargs["style"]
 
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
+        assert self.supported_api_types == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/txt2img"
         else:
@@ -219,7 +219,7 @@ class ImageV1(_Image):
 
     def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
+        assert self.supported_api_types == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/getImg"
         else:
@@ -250,7 +250,7 @@ class ImageV1(_Image):
 
 
 class ImageV2(_Image):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
     @classmethod
     def create(
@@ -388,7 +388,7 @@ class ImageV2(_Image):
         height = kwargs["height"]
 
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
+        assert self.supported_api_types == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/txt2imgv2"
             if model != "ernie-vilg-v2":
@@ -421,7 +421,7 @@ class ImageV2(_Image):
 
     def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
+        assert self.supported_api_types == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/getImgv2"
         else:

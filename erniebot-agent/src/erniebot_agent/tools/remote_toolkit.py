@@ -11,7 +11,7 @@ import requests
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import FileManager
 from erniebot_agent.memory.messages import (
     AIMessage,
     FunctionCall,

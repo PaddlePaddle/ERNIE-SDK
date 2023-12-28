@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
+import contextvars
 import logging
 import os
 import pathlib
@@ -23,6 +25,7 @@ from typing import (
     Any,
     Deque,
     Dict,
+    Generator,
     List,
     Literal,
     Optional,
@@ -33,7 +36,7 @@ from typing import (
 )
 
 import anyio
-from typing_extensions import Self, TypeAlias
+from typing_extensions import Self, TypeAlias, assert_never
 
 from erniebot_agent.file import protocol
 from erniebot_agent.file.file_registry import FileRegistry
@@ -45,7 +48,15 @@ from erniebot_agent.utils.mixins import Closeable, Noncopyable
 logger = logging.getLogger(__name__)
 
 FilePath: TypeAlias = Union[str, os.PathLike]
-_File: TypeAlias = Union[LocalFile, RemoteFile]
+File: TypeAlias = Union[LocalFile, RemoteFile]
+
+_default_file_manager_var: contextvars.ContextVar[Optional["FileManager"]] = contextvars.ContextVar(
+    "_default_file_manager_var", default=None
+)
+
+
+def get_default_file_manager() -> Optional["FileManager"]:
+    return _default_file_manager_var.get()
 
 
 @final
@@ -102,8 +113,8 @@ class FileManager(Closeable, Noncopyable):
             self._save_dir = pathlib.Path(self._temp_dir.name)
         self._prune_on_close = prune_on_close
 
-        self._file_registry: FileRegistry[_File] = FileRegistry()
-        self._fully_managed_files: Deque[_File] = deque()
+        self._file_registry: FileRegistry[File] = FileRegistry()
+        self._fully_managed_files: Deque[File] = deque()
 
         self._closed = False
 
@@ -152,7 +163,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
-    ) -> _File:
+    ) -> File:
         ...
 
     async def create_file_from_path(
@@ -162,7 +173,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
-    ) -> _File:
+    ) -> File:
         """
         Create a file from a specified file path.
 
@@ -181,7 +192,7 @@ class FileManager(Closeable, Noncopyable):
 
         """
         self.ensure_not_closed()
-        file: _File
+        file: File
         if file_type is None:
             file_type = self._get_default_file_type()
         if file_type == "local":
@@ -280,7 +291,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = ...,
         file_metadata: Optional[Dict[str, Any]] = ...,
         file_type: None = ...,
-    ) -> _File:
+    ) -> File:
         ...
 
     async def create_file_from_bytes(
@@ -291,7 +302,7 @@ class FileManager(Closeable, Noncopyable):
         file_purpose: protocol.FilePurpose = "assistants",
         file_metadata: Optional[Dict[str, Any]] = None,
         file_type: Optional[Literal["local", "remote"]] = None,
-    ) -> _File:
+    ) -> File:
         """
         Create a file from bytes.
 
@@ -319,7 +330,7 @@ class FileManager(Closeable, Noncopyable):
         try:
             async with await async_file_path.open("wb") as f:
                 await f.write(file_contents)
-            file: _File
+            file: File
             if file_type == "local":
                 file = await self._create_local_file_from_path(file_path, file_purpose, file_metadata)
                 should_remove_file = False
@@ -359,7 +370,7 @@ class FileManager(Closeable, Noncopyable):
         files = await self._get_remote_file_client().list_files()
         return files
 
-    def look_up_file_by_id(self, file_id: str) -> _File:
+    def look_up_file_by_id(self, file_id: str) -> File:
         """
         Look up a file by its ID.
 
@@ -382,7 +393,7 @@ class FileManager(Closeable, Noncopyable):
             )
         return file
 
-    def list_registered_files(self) -> List[_File]:
+    def list_registered_files(self) -> List[File]:
         """
         List remote files.
 
@@ -408,7 +419,7 @@ class FileManager(Closeable, Noncopyable):
                 assert self._save_dir.resolve() in file.path.resolve().parents
                 await anyio.Path(file.path).unlink()
             else:
-                raise AssertionError("Unexpected file type")
+                assert_never()
             self._file_registry.unregister_file(file)
 
     async def close(self) -> None:
@@ -422,8 +433,16 @@ class FileManager(Closeable, Noncopyable):
                 self._clean_up_temp_dir(self._temp_dir)
             self._closed = True
 
-    def sniff_and_extract_files_from_list(self, list_: List[Any]) -> List[_File]:
-        files: List[_File] = []
+    @contextlib.contextmanager
+    def as_default_file_manager(self) -> Generator[None, None, None]:
+        token = _default_file_manager_var.set(self)
+        try:
+            yield
+        finally:
+            _default_file_manager_var.reset(token)
+
+    def sniff_and_extract_files_from_list(self, list_: List[Any]) -> List[File]:
+        files: List[File] = []
         for item in list_:
             if not isinstance(item, str):
                 continue
@@ -436,9 +455,9 @@ class FileManager(Closeable, Noncopyable):
                 files.append(file)
         return files
 
-    def sniff_and_extract_files_from_text(self, text: str) -> List[_File]:
+    def sniff_and_extract_files_from_text(self, text: str) -> List[File]:
         file_ids = protocol.extract_file_ids(text)
-        files: List[_File] = []
+        files: List[File] = []
         for file_id in file_ids:
             if protocol.is_file_id(file_id):
                 try:

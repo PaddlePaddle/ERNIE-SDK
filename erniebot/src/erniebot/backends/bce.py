@@ -17,7 +17,17 @@ import datetime
 import hashlib
 import hmac
 import urllib.parse
-from typing import AsyncIterator, ClassVar, Dict, Iterator, List, Optional, Tuple, Union
+from typing import (
+    AsyncIterator,
+    ClassVar,
+    Dict,
+    Final,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import erniebot.errors as errors
 import erniebot.utils.logging as logging
@@ -142,7 +152,7 @@ class _BCELegacyBackend(EBBackend):
 
 
 class _BCEBackend(EBBackend):
-    _SIG_EXPIRATION_IN_SECS: ClassVar[int] = 1800
+    _SIG_EXPIRATION_IN_SECS: Final[float] = 1800
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
@@ -318,8 +328,8 @@ class _BCEBackend(EBBackend):
 
 
 class QianfanLegacyBackend(_BCELegacyBackend):
-    API_TYPE: ClassVar[APIType] = APIType.QIANFAN
-    BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    api_type: ClassVar[APIType] = APIType.QIANFAN
+    base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
@@ -344,8 +354,8 @@ class QianfanLegacyBackend(_BCELegacyBackend):
 
 
 class YinianBackend(_BCELegacyBackend):
-    API_TYPE: ClassVar[APIType] = APIType.YINIAN
-    BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
+    api_type: ClassVar[APIType] = APIType.YINIAN
+    base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
@@ -369,8 +379,8 @@ class YinianBackend(_BCELegacyBackend):
 
 
 class QianfanBackend(_BCEBackend):
-    API_TYPE: ClassVar[APIType] = APIType.QIANFAN
-    BASE_URL: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
+    api_type: ClassVar[APIType] = APIType.QIANFAN
+    base_url: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
 
     def handle_response(self, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:

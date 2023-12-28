@@ -27,7 +27,7 @@ class CustomBackend(EBBackend):
     Custom backend for debugging purposes.
     """
 
-    API_TYPE: ClassVar[APIType] = APIType.CUSTOM
+    api_type: ClassVar[APIType] = APIType.CUSTOM
 
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)

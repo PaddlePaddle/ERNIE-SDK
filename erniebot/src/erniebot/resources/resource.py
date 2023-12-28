@@ -21,6 +21,7 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -56,10 +57,10 @@ class EBResource(object):
     facilitate reuse of concrete implementations.
     """
 
-    POLLING_TIMEOUT_SECS: ClassVar[float] = constants.POLLING_TIMEOUT_SECS
-    POLLING_INTERVAL_SECS: ClassVar[float] = constants.POLLING_INTERVAL_SECS
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = ()
-    _BUILD_BACKEND_OPTS_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {}
+    POLLING_TIMEOUT_SECS: Final[float] = constants.POLLING_TIMEOUT_SECS
+    POLLING_INTERVAL_SECS: Final[float] = constants.POLLING_INTERVAL_SECS
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = ()
+    _build_backend_opts_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {}
 
     def __init__(self, **config: Any) -> None:
         object.__init__(self)
@@ -76,12 +77,12 @@ class EBResource(object):
         self._backend = build_backend(
             self.api_type,
             self._cfg,
-            **self._BUILD_BACKEND_OPTS_DICT.get(self.api_type, {}),
+            **self._build_backend_opts_dict.get(self.api_type, {}),
         )
 
     @classmethod
     def get_supported_api_type_names(cls) -> List[str]:
-        return list(map(operator.attrgetter("name"), cls.SUPPORTED_API_TYPES))
+        return list(map(operator.attrgetter("name"), cls.supported_api_types))
 
     @overload
     def request(

@@ -18,7 +18,7 @@ import json
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Dict, Hashable, Optional, Tuple
+from typing import Any, Callable, Dict, Final, Hashable, Optional, Tuple
 
 import requests
 
@@ -38,7 +38,7 @@ def build_auth_token_manager(manager_type: str, api_type: APIType, **kwargs: Any
 
 
 class _GlobalAuthTokenCache(metaclass=SingletonMeta):
-    _MIN_UPDATE_INTERVAL_SECS: ClassVar[float] = 3600
+    _MIN_UPDATE_INTERVAL_SECS: Final[float] = 3600
 
     @dataclass
     class _Record(object):

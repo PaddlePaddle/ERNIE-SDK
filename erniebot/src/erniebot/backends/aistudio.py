@@ -25,8 +25,8 @@ from .base import EBBackend
 
 
 class AIStudioBackend(EBBackend):
-    API_TYPE: ClassVar[APIType] = APIType.AISTUDIO
-    BASE_URL: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
+    api_type: ClassVar[APIType] = APIType.AISTUDIO
+    base_url: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)

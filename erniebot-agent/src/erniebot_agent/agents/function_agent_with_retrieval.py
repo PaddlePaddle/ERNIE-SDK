@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Sequence, Type
 
 from pydantic import Field
 
@@ -93,7 +93,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -120,8 +120,6 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 )
                 llm_resp = await self._run_llm(
                     messages=chat_history,
-                    functions=None,
-                    system=self.system_message.content if self.system_message is not None else None,
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:
@@ -193,7 +191,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
@@ -297,7 +295,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG

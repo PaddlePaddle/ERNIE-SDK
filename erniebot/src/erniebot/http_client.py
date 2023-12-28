@@ -49,7 +49,7 @@ from typing import (
     AsyncGenerator,
     AsyncIterator,
     Callable,
-    ClassVar,
+    Final,
     Generator,
     Iterator,
     Mapping,
@@ -75,7 +75,7 @@ __all__ = ["EBClient"]
 class EBClient(object):
     """Provides low-level APIs to send HTTP requests and handle responses."""
 
-    DEFAULT_REQUEST_TIMEOUT_SECS: ClassVar[float] = constants.DEFAULT_REQUEST_TIMEOUT_SECS
+    DEFAULT_REQUEST_TIMEOUT_SECS: Final[float] = constants.DEFAULT_REQUEST_TIMEOUT_SECS
 
     _session: Optional[requests.Session]
     _asession: Optional[aiohttp.ClientSession]

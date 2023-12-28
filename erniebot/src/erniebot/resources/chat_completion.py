@@ -17,6 +17,7 @@ from typing import (
     AsyncIterator,
     ClassVar,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -43,12 +44,12 @@ __all__ = ["ChatCompletion", "ChatCompletionResponse"]
 
 
 class ChatCompletion(EBResource, CreatableWithStreaming):
-    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.AISTUDIO,
         APIType.CUSTOM,
     )
-    _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
+    _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "chat",
             "models": {
@@ -466,7 +467,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         messages = kwargs["messages"]
 
         # path
-        if self.api_type in self.SUPPORTED_API_TYPES:
+        if self.api_type in self.supported_api_types:
             api_info = self._API_INFO_DICT[self.api_type]
             if model not in api_info["models"]:
                 raise errors.InvalidArgumentError(f"{repr(model)} is not a supported model.")

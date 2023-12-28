@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List
 
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.schema import AgentResponse, LLMResponse, ToolResponse
@@ -42,7 +42,7 @@ class CallbackHandler(object):
         """
 
     async def on_llm_end(self, agent: BaseAgent, llm: ChatModel, response: LLMResponse) -> None:
-        """Called when the LLM ends running.
+        """Called when the LLM successfully ends running.
 
         Args:
             agent: The agent that is running.
@@ -50,9 +50,7 @@ class CallbackHandler(object):
             response: The response that the LLM returns.
         """
 
-    async def on_llm_error(
-        self, agent: BaseAgent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
+    async def on_llm_error(self, agent: BaseAgent, llm: ChatModel, error: BaseException) -> None:
         """Called when the LLM errors.
 
         Args:
@@ -71,7 +69,7 @@ class CallbackHandler(object):
         """
 
     async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
-        """Called when a tool ends running.
+        """Called when a tool successfully ends running.
 
         Args:
             agent: The agent that is running.
@@ -79,9 +77,7 @@ class CallbackHandler(object):
             response: The response that the tool returns.
         """
 
-    async def on_tool_error(
-        self, agent: BaseAgent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
+    async def on_tool_error(self, agent: BaseAgent, tool: BaseTool, error: BaseException) -> None:
         """Called when a tool errors.
 
         Args:
@@ -90,8 +86,16 @@ class CallbackHandler(object):
             error: The error that occured.
         """
 
+    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
+        """Called when the agent errors.
+
+        Args:
+            agent: The agent that is running.
+            error: The error that occured.
+        """
+
     async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
-        """Called when the agent ends running.
+        """Called when the agent successfully ends running.
 
         Args:
             agent: The agent that is running.

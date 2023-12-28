@@ -10,7 +10,7 @@ import requests
 
 from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import FileManager
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager
