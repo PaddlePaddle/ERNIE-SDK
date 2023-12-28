@@ -92,7 +92,7 @@ async def main():
 asyncio.run(main())
 ```
 
-在运行代码前，大家需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，在[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，然后执行以下命令:
+运行上述代码，大家首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后执行以下命令:
 ```shell
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=info
