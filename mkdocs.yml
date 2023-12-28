@@ -8,6 +8,13 @@ nav:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
+  - 核心模块:
+    - message: 'modules/message.md'
+    - chat_models: 'modules/chat_models.md'
+    - tools: 'modules/tools/create-tool.md'
+    - memory: 'modules/memory.md'
+    - retrieval: 'modules/retrieval.md'
+    - file: 'modules/file.md'
   - 教程:
     - Local Tool: "cookbooks/agent/local_tool.ipynb"
     - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
@@ -15,13 +22,6 @@ nav:
     - 在FunctionAgentWithRetrieval中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
     - 在FunctionAgentWithRetrieval中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
     - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
-  - 核心模块:
-    - message: 'modules/message.md'
-    - chat_models: 'modules/chat_models.md'
-    - memory: 'modules/memory.md'
-    - retrieval: 'modules/retrieval.md'
-    - file: 'modules/file.md'
-    - tools: 'modules/tools/create-tool.md'
   - API Referene:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"

@@ -28,7 +28,7 @@
     - **文心一言插件**：未来将支持通过调用文心一言插件商城中的插件（开发中）
 - **低开发门槛**
     - **零代码界面**：依托星河社区提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
-    - **简洁的代码**：不到10行代码就可以快速开发一个智能体应用。
+    - **简洁的代码**：10行代码就可以快速开发一个智能体应用。
     - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 ### 安装
@@ -105,7 +105,7 @@ async def main():
 asyncio.run(main())
 ```
 
-在运行代码前，我们需要先从获取[AI Studio access token](https://aistudio.baidu.com/index/accessToken)，然后执行以下命令:
+在运行代码前，大家需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，在[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，然后执行以下命令:
 ```shell
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=info
@@ -115,7 +115,7 @@ python quick_start.py
 
 ### 详细教程
 
-详细教程的[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
+教程[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
 
 ## ERNIE Bot SDK
 
