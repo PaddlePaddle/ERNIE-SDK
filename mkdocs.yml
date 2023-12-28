@@ -5,8 +5,8 @@ site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
   - 快速开始:
-    - 安装和鉴权: 'modules/preparation.md'
-    - 构建一个简单智能体: 'modules/quickstart.md'
+    - 安装和鉴权: 'quickstart/preparation.md'
+    - 构建一个简单智能体: 'quickstart/agent.md'
   - 核心模块:
     - chat_models: 'modules/chat_models.md'
     - message: 'modules/message.md'

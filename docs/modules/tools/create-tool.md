@@ -139,7 +139,6 @@ class CurrentTimeTool(Tool):
                 },
                 token_usage={"prompt_tokens": 5, "completion_tokens": 7},
             ),
-            AIMessage("现在是下午两点三十五分。"),
             HumanMessage("现在是什么时候？"),
             AIMessage(
                 "",
