@@ -85,7 +85,7 @@ class CallbackManager(object):
 
     async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
         await self._handle_event(EventType.RUN_ERROR, agent=agent, error=error)
-        
+
     async def _handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
         callback_name = "on_" + event_type.value
         for handler in self._handlers:
