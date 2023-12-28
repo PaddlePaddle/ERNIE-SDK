@@ -162,17 +162,27 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         """
         self._tool_manager.add_tool(tool)
 
-    def unload_tool(self, tool: BaseTool) -> None:
+    def unload_tool(self, tool: Union[BaseTool, str]) -> None:
         """Unload a tool from the agent.
 
         Args:
             tool: The tool to unload.
         """
+        if isinstance(tool, str):
+            tool = self.get_tool(tool)
         self._tool_manager.remove_tool(tool)
 
     def get_tools(self) -> List[BaseTool]:
         """Get the tools that the agent can choose from."""
         return self._tool_manager.get_tools()
+
+    def get_tool(self, tool_name: str) -> BaseTool:
+        """Get the tool by its name.
+
+        Args:
+            tool_name: the tool name of the tool to get.
+        """
+        return self._tool_manager.get_tool(tool_name)
 
     def reset_memory(self) -> None:
         """Clear the chat history."""
