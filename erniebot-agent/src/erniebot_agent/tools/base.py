@@ -78,6 +78,9 @@ class Tool(BaseTool, ABC):
 
         if self.input_type is not None:
             inputs["parameters"] = self.input_type.function_call_schema()
+        else:
+            inputs["parameters"] = {"type": "object", "properties": {}}
+
         if self.ouptut_type is not None:
             inputs["responses"] = self.ouptut_type.function_call_schema()
 

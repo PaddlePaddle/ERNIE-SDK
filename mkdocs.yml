@@ -1,33 +1,72 @@
-site_name: Ernie Agent
+site_name: ERNIE Bot Agent
 repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
-repo_name: ERNIE-Agent
+repo_name: ERNIE-Bot-Agent
 site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
-  - 介绍: 'tutorials/introduction.md'
   - 快速开始:
-    - 准备: 'tutorials/preparation.md'
+    - 安装和鉴权: 'modules/preparation.md'
+    - 构建一个简单智能体: 'modules/quickstart.md'
     - 使用 Tool: 'modules/tools/getting-started.md' 
+  - 教程:
+    - Local Tool: "cookbooks/agent/local_tool.ipynb"
+    - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
+    - Memory: "cookbooks/agent/memory.ipynb"
+    - 在FunctionAgentWithRetrieval中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
+    - 在FunctionAgentWithRetrieval中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
+    - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
   - 核心模块:
-    - messages: 'modules/messages.md'
-    - chat_modles: 'modules/chat_models.md'
+    - message: 'modules/message.md'
+    - chat_models: 'modules/chat_models.md'
     - memory: 'modules/memory.md'
     - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
     - tools: 'modules/tools/create-tool.md'
-  - API:
+  - API Referene:
     - erniebot-agent:
-      - messages: "package/erniebot_agent/messages.md"
-      - memory: "package/erniebot_agent/memory.md"
-      - file: "package/erniebot_agent/file.md"
-      - tools: "package/erniebot_agent/tools.md"
-      - chat_models: "package/erniebot_agent/chat_models.md"
-      - retrieval: "package/erniebot_agent/retrieval.md"
       - agents: "package/erniebot_agent/agents.md"
+      - chat_models: "package/erniebot_agent/chat_models.md"
+      - file: "package/erniebot_agent/file.md"
+      - memory: "package/erniebot_agent/memory.md"
+      - retrieval: "package/erniebot_agent/retrieval.md"
+      - tools: "package/erniebot_agent/tools.md"
+  - ERNIE-Bot-SDK:
+    - 使用文档:
+      - 预备步骤:
+        - sdk/README.md
+        - sdk/installation.md
+        - sdk/authentication.md
+        - sdk/configuration.md
+        - sdk/models.md
+      - 使用指南:
+        - sdk/guides/chat_completion.md
+        - sdk/guides/embedding.md
+        - sdk/guides/image.md
+        - sdk/guides/function_calling.md
+    - API文档:
+      - sdk/api_reference/chat_completion.md
+      - sdk/api_reference/embedding.md
+      - sdk/api_reference/image.md
 
 theme:
   name: material
   favicon: img/favicon.png
+  features:
+    - navigation.tabs.sticky
+    - toc.integrate
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+  palette:
+    primary: black
+    accent: pink
+  font:
+    text: Noto Serif Simplified Chinese
+    code: Noto Serif Simplified Chinese
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -35,14 +74,21 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - admonition
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
 
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
   - mkdocstrings:
       default_handler: python
       handlers:

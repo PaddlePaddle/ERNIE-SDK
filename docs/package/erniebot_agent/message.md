@@ -6,6 +6,7 @@
     options:
         summary: true
         members:
+        - Message
         - SystemMessage
         - HumanMessage
         - AIMessage

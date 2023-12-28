@@ -83,7 +83,6 @@ class LimitTokensMemory(Memory):
                 deleted_message = self.msg_manager.pop_message()
                 self.mem_token_count -= deleted_message.token_count
             else:
-                # if delete all
                 if len(self.get_messages()) == 0:
                     raise RuntimeError(
                         "The messsage is now empty. \

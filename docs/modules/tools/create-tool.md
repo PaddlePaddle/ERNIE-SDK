@@ -1,8 +1,8 @@
-# 自定义 Tool
+# 创建 Tool
 
 在此，我们所提及的“自定义 Tool”指的是本地 Tool。为了更具体地阐述这一概念，我们将以 CurrentTimeTool 为例进行详细讲解。
 
-## Tool 剖析
+## 1. Tool 剖析
 
 为了确保一个工具（Tool）能够被代理（Agent）正常执行，需要进行以下配置：
 
@@ -51,7 +51,9 @@ class CurrentTimeTool(Tool):
         ]
 ```
 
-### 输入和输出参数
+## 2. 步骤
+
+### 2.1 输入和输出参数
 
 ```python
 class CurrentTimeToolOutputView(ToolParameterView):
@@ -76,7 +78,7 @@ Agent 在调用 Tool 之前，会通过 FunctionCall 抽取出对应字段信息
 !!! warn 注意
     每个 Tool 的返回结果都必须是字典类型数据。
 
-### Tool 的描述信息
+### 2.2 Tool 的描述信息
 
 ```python
 class CurrentTimeTool(Tool):
@@ -87,7 +89,7 @@ class CurrentTimeTool(Tool):
 
 此描述信息至关重要，决定着此 Tool 能够被正常调用，所以建议认真编写此字段信息。
 
-## Tool 的具体逻辑
+### 2.2 Tool 的具体逻辑
 
 这里就是发挥想象的地方，有了对应想要的输入信息，可以编写具体的业务逻辑，实现 Tool 的功能。
 
@@ -116,7 +118,7 @@ Agent 会根据输出参数来润色对应的结果，比如：
 * 当有课的时候，Agent 可能会润色成：查询到今天下午有一节：`高等数学`，时间是从下午两点到四点，地点在 `教室 102`，请注意提前进教室。
 * 当没有课的时候，Agent 可能会润色成：今天没有课，你可以去做一些自己喜欢的事情了。
 
-## Tool 的对话示例
+### 2.3 Tool 的对话示例
 
 当 Tool 数量过多时，此时 Agent 只根据 description 来判断是否要调用具体 Tool 是不够的， 此时可通过编写更多的对话示例来让 Agent 更精准的调用 Tool。
 
