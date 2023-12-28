@@ -136,6 +136,7 @@ async def demo_function():
     await local_file.write_contents_to('your_willing_path')
 ```
 4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件
+
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
