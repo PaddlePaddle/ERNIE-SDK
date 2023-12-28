@@ -202,7 +202,6 @@ RNIEBot-Agent框架定义了以下事件：
 - `tool_start`：Agent对tool的调用开始。
 - `tool_end`：Agent对tool的调用成功结束。
 - `tool_error`：Agent对tool的调用发生错误。
-- `run_error`：Agent的运行发生错误。
 - `run_end`：Agent的运行成功结束。
 
 #### 2.3.2 默认回调函数
@@ -249,12 +248,14 @@ class CustomAgent(Agent):
         # 构建输入message
         input_message = await HumanMessage.create_with_files(prompt, files or [])
         chat_history.append(input_message)
+        # 将输入消息存储到memory中
+        self.memory.add_message(input_message)
 
         # 与chat model交互
-        # 当`use_memory`为True时，输入和输出message将被自动加入到memory中
-        # 如果希望手动控制哪些message应该被添加到memory，可以指定`use_memory`为False，并手动维护memory
-        llm_resp = await self.run_llm([input_message], use_memory=True)
+        llm_resp = await self.run_llm(self.memory.get_messages())
         chat_history.append(llm_resp.message)
+        # 将输出消息存储到memory中
+        self.memory.add_message(llm_resp.message)
 
         # 根据chat model的输出，决定是否执行行动
         # 如果需要执行行动，还需确定执行行动所需信息

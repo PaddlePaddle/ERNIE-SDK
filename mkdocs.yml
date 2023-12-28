@@ -15,6 +15,7 @@ nav:
     - memory: 'modules/memory.md'
     - retrieval: 'modules/retrieval.md'
     - file: 'modules/file.md'
+    - agents: 'modules/agents.md'
   - 教程:
     - Local Tool: "cookbooks/agent/local_tool.ipynb"
     - Remote Tool: "cookbooks/agent/remote_tool.ipynb"
