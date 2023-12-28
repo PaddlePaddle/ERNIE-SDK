@@ -27,11 +27,12 @@ nav:
   - API Referene:
     - erniebot-agent:
       - agents: "package/erniebot_agent/agents.md"
+      - message: "package/erniebot_agent/message.md"
       - chat_models: "package/erniebot_agent/chat_models.md"
       - file: "package/erniebot_agent/file.md"
+      - tools: "package/erniebot_agent/tools.md"
       - memory: "package/erniebot_agent/memory.md"
       - retrieval: "package/erniebot_agent/retrieval.md"
-      - tools: "package/erniebot_agent/tools.md"
   - ERNIE-Bot-SDK:
     - 使用文档:
       - 预备步骤:
