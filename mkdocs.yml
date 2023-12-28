@@ -8,14 +8,13 @@ nav:
     - 安装和鉴权: 'modules/preparation.md'
     - 构建一个简单智能体: 'modules/quickstart.md'
   - 核心模块:
-    - chat_models: 'modules/chat_models.md'
-    - message: 'modules/message.md'
-    - file: 'modules/file.md'
-    - tools: 'modules/tools/create-tool.md'
-    - memory: 'modules/memory.md'
-    - retrieval: 'modules/retrieval.md'
-    - file: 'modules/file.md'
     - agents: 'modules/agents.md'
+    - chat_models: 'modules/chat_models.md'
+    - file: 'modules/file.md'
+    - memory: 'modules/memory.md'
+    - message: 'modules/message.md'
+    - retrieval: 'modules/retrieval.md'
+    - tools: 'modules/tools/create-tool.md'
   - 教程:
     - 工具(Tools)入门: "cookbooks/agent/tools_intro.ipynb"
     - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
