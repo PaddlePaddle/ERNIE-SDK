@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Dict, Optional
 import requests
 
 from erniebot_agent.utils.exceptions import BaizhongError
-
+from erniebot_agent.utils import config_from_environ as C
 logger = logging.getLogger(__name__)
 
 
@@ -42,13 +42,12 @@ class BaizhongSearch:
 
         """
         self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
-        global_access_token = os.getenv("EB_AGENT_ACCESS_TOKEN")
-        if global_access_token is not None:
-            self.access_token = global_access_token
-        elif access_token is not None:
+        if access_token is not None:
             self.access_token = access_token
+        elif C.get_global_access_token() is not None:
+            self.access_token = C.get_global_access_token()
         else:
-            raise BaizhongError("You must provide either a access_token or EB_AGENT_ACCESS_TOKEN.")
+            raise BaizhongError("Please ensure that either an access_token is provided or the EB_AGENT_ACCESS_TOKEN is set up as an environment variable.")
 
         if knowledge_base_id is not None:
             logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
