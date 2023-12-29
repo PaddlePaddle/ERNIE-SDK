@@ -13,7 +13,7 @@ cd ERNIE-Bot-SDK
 # 切换到特定分支，默认是develop分支
 # git checkout -b xxx origin/xxx
 
-# 首先安装Ernie Bot SDK
+# 首先安装Ernie Bot
 pip install ./erniebot
 
 # 然后安装ERNIE Bot Agent
