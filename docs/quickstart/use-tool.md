@@ -1,6 +1,4 @@
 
-## 使用 tool
-
 `erniebot-agent` 支持 LocalTool 和 RemoteTool的开发，使用方法如下所示：
 
 
