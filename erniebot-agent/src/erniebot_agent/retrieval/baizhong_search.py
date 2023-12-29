@@ -43,6 +43,7 @@ class BaizhongSearch:
 
         """
         self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
+        self.access_token : Optional[str] = None
         if access_token is not None:
             self.access_token = access_token
         elif C.get_global_access_token() is not None:
