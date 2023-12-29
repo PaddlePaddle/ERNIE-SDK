@@ -1,6 +1,3 @@
-#!/usr/env python3
-# -*- coding: UTF-8 -*-
-
 from flask import Flask, request, send_file, make_response, jsonify
 from flask_cors import CORS
 import json
