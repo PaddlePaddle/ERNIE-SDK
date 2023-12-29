@@ -185,7 +185,7 @@ Function agent是一种由大语言模型的函数调用能力驱动的agent。�
     # 将输出文件内容存储到指定文件中
     assert len(output_files) == 1
     await output_files[0].write_contents_to("output.wav")
-   ```
+    ```
 
 #### 2.3 回调函数
 
