@@ -34,7 +34,7 @@ nav:
     - Memory: "package/erniebot_agent/memory.md"
     - Message: "package/erniebot_agent/message.md"
     - Retrieval: "package/erniebot_agent/retrieval.md"
-  - ERNIE-Bot-SDK:
+  - ERNIE-Bot:
     - 使用文档:
       - 预备步骤:
         - sdk/README.md
