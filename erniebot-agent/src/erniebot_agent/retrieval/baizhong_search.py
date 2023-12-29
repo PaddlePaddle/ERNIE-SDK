@@ -25,7 +25,7 @@ class BaizhongSearch:
 
     def __init__(
         self,
-        access_token: str,
+        access_token: Optional[str] = None,
         knowledge_base_name: Optional[str] = None,
         knowledge_base_id: Optional[int] = None,
     ) -> None:
@@ -42,7 +42,14 @@ class BaizhongSearch:
 
         """
         self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
-        self.access_token = access_token
+        global_access_token = os.getenv("EB_AGENT_ACCESS_TOKEN")
+        if global_access_token is not None:
+            self.access_token = global_access_token
+        eilf access_token is not None:
+            self.access_token = access_token
+        else:
+            raise BaizhongError("You must provide either a access_token.")
+
         if knowledge_base_id is not None:
             logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
             self.knowledge_base_id = knowledge_base_id

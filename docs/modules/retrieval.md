@@ -20,3 +20,24 @@ Retrieval组件是一种接口，它能够在接收到非结构化查询时返�
 | retrieval 组件名称 | 功能描述 | 代码链接
 | :--: | :--: | :--: |
 | BaizhongSearch| 支持百度自研的文心百中搜索| [baizhong_search.py](../package/erniebot_agent/retrieval.md#erniebot_agent.retrieval.BaizhongSearch) |
+
+
+## 3.用法
+
+1.设置环境变量
+```
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export AISTUDIO_BASE_URL=<aistudio-base-url>
+```
+
+2. 定义百中Search：
+
+```
+baizhong_db = BaizhongSearch(knowledge_base_name="BaizhongExample")
+```
+
+3. 搜索：
+
+```
+baizhong_db.search('百度今天的股价是多少？')
+```
