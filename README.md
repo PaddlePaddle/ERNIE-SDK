@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>ERNIE Bot Agent & SDK</h1>
+<h1>ERNIE Bot SDK</h1>
 
 [开发文档](http://ernie-bot-agent.readthedocs.io/) | [智能体应用体验](https://aistudio.baidu.com/application/center?tag=agent)
 
@@ -13,11 +13,9 @@
 
 </div>
 
-**ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，旨在成为功能全面且高度可定制的大模型智能体开发框架。
+ERNIE Bot SDK 仓库包含两个项目：ERNIE Bot Agent 和 ERNIE Bot。ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大模型智能体开发框架，结合了飞桨星河社区的丰富预置平台功能。ERNIE Bot 则为开发者提供便捷接口，轻松调用文心大模型的文本创作、通用对话、语义向量及AI作图等基础功能。
 
-**ERNIE Bot SDK**为开发者提供便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
-
-![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/65fcd038-b374-49d3-a91c-5565ef0a80ab)
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/11987277/1fbcfbca-7695-4cca-9b4f-35a49d1d7c52)
 
 ## ERNIE Bot Agent
 
@@ -46,7 +44,7 @@
 git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
 cd ERNIE-Bot-SDK
 
-# 首先安装Ernie Bot SDK
+# 首先安装Ernie Bot
 pip install ./erniebot
 
 # 然后安装ERNIE Bot Agent
@@ -119,12 +117,12 @@ python quick_start.py
 
 教程[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
 
-## ERNIE Bot SDK
+## ERNIE Bot
 
-ERNIE Bot SDK 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
+ERNIE Bot 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
 
-更多详细的使用指南，请参阅[ERNIE Bot SDK](./erniebot/README.md)。
+更多详细的使用指南，请参阅[ERNIE Bot](./erniebot/README.md)。
 
 ## License
 
-ERNIE Bot Agent 和 ERNIE Bot SDK 遵循Apache-2.0开源协议。
+ERNIE Bot Agent 和 ERNIE Bot 遵循Apache-2.0开源协议。

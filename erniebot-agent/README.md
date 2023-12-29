@@ -35,7 +35,7 @@
 git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
 cd ERNIE-Bot-SDK
 
-# 首先安装Ernie Bot SDK
+# 首先安装Ernie Bot
 pip install ./erniebot
 
 # 然后安装ERNIE Bot Agent

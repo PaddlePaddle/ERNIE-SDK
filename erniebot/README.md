@@ -1,8 +1,8 @@
 <div align="center">
 
-<h1>ERNIE Bot SDK</h1>
+<h1>ERNIE Bot</h1>
 
-ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
+ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
@@ -41,7 +41,7 @@ ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力�
 
 ## 快速安装
 
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（要求Python >= 3.8)。
+执行如下命令，快速安装Python语言的最新版本ERNIE Bot（要求Python >= 3.8)。
 
 ```shell
 pip install --upgrade erniebot
@@ -49,7 +49,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
+使用ERNIE Bot之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
 
 ### Python接口
 
@@ -102,7 +102,7 @@ erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧"
 
 ### 对话补全（Chat Completion）
 
-ERNIE Bot SDK提供具备对话补全能力的ernie-3.5、ernie-turbo、ernie-4.0、ernie-longtext等文心大模型。
+ERNIE Bot提供具备对话补全能力的ernie-3.5、ernie-turbo、ernie-4.0、ernie-longtext等文心大模型。
 
 不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
 
@@ -133,7 +133,7 @@ print(response.get_result())
 
 ### 语义向量（Embedding）
 
-ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模型。
+ERNIE Bot提供用于生成文本的向量表示的ernie-text-embedding模型。
 
 该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将输入文本转为384维浮点数表示的向量。这些向量具备精准的语义表达能力，可用于度量文本之间的语义相似度。
 
@@ -159,7 +159,7 @@ print(response.get_result())
 
 ### 文生图（Image Generation）
 
-ERNIE Bot SDK提供具备文生图能力的ernie-vilg-v2大模型。
+ERNIE Bot提供具备文生图能力的ernie-vilg-v2大模型。
 
 该模型具备丰富的风格与强大的中文理解能力，支持生成多种尺寸的图片。
 
@@ -190,7 +190,7 @@ print(response.get_result())
 
 ### 函数调用（Function Calling）
 
-ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
+ERNIE Bot提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
 
 借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。
 
@@ -256,14 +256,10 @@ print(response.get_result())
 
 ## Gradio Demos
 
-为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](./examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
+为了让用户更全面、更直观地了解ERNIE Bot的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](./examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
 <img width="1296" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif" />
 
 ## Acknowledgement
 
 我们借鉴了[OpenAI Python Library](https://github.com/openai/openai-python)的部分API设计，在此对OpenAI Python Library作者及开源社区表示感谢。
-
-## License
-
-ERNIE Bot SDK遵循Apache-2.0开源协议。
