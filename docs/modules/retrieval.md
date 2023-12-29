@@ -31,10 +31,11 @@ export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export AISTUDIO_BASE_URL=<aistudio-base-url>
 ```
 
-2. 定义百中Search
+2. 连接AIStudio知识库
 
 ```
-baizhong_db = BaizhongSearch(knowledge_base_name="BaizhongExample")
+knowledge_base_id =<your aistudio knowledge base id>
+baizhong_db = BaizhongSearch(knowledge_base_id=knowledge_base_id)
 ```
 
 3. 搜索
