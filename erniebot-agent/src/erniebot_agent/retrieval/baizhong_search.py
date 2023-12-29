@@ -45,7 +45,7 @@ class BaizhongSearch:
         global_access_token = os.getenv("EB_AGENT_ACCESS_TOKEN")
         if global_access_token is not None:
             self.access_token = global_access_token
-        eilf access_token is not None:
+        elif access_token is not None:
             self.access_token = access_token
         else:
             raise BaizhongError("You must provide either a access_token.")
