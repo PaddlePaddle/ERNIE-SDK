@@ -11,7 +11,7 @@
 车头如何放置车牌    后牌照怎么装
 ```
 
-Retrieval组件是在给定非结构化查询的情况下返回文档的接口。Retrieval组件不需要存储文档，只需要返回（或检索）文档，并支持对上游向量数据库数据的增删查改操作。是目前最流行的RAG技术最重要的组件之一。
+Retrieval组件是一种接口，它能够在接收到非结构化查询时返回相关文档。无论是通过关键词检索还是语义检索，该组件都能有效地满足查询需求。值得注意的是，Retrieval组件无需存储文档，其主要功能在于返回或检索文档，并且能够灵活地对上游数据库进行数据的增加、删除、查找和修改操作。因此，它被广泛认为是当前最流行的RAG技术中不可或缺的重要组成部分。
 
 另外，Retrieval组件也是Agents应用的一个重要基础组件，提供了一个检索接口，用户可以挂载自己的私有文档，作为工具为agent提供外部知识。retrieval支持自研的文心百中搜索外，还兼容[LangChain](https://python.langchain.com/docs/modules/data_connection/)，[LlamaIndex](https://docs.llamaindex.ai/en/stable/getting_started/starter_example.html)的retrieval组件，以及众多检索增强的策略。
 
