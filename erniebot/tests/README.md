@@ -1,1 +1,1 @@
-ERNIE Bot SDK Smoke Tests
+ERNIE Bot Smoke Tests
