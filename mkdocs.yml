@@ -5,8 +5,9 @@ site_description: provides an easy-to-use Chinese agent builder tool suite.
 copyright: '@PaddlePaddle community'
 nav:
   - 快速开始:
-    - 安装和鉴权: 'modules/preparation.md'
-    - 构建一个简单智能体: 'modules/quickstart.md'
+    - 安装和鉴权: 'quickstart/preparation.md'
+    - 构建一个简单智能体: 'quickstart/agent.md'
+    - 使用 Tool: 'quickstart/use-tool.md'
   - 核心模块:
     - Agents: 'modules/agents.md'
     - Chat Models: 'modules/chat_models.md'
@@ -20,7 +21,7 @@ nav:
     - 模型(Chat Models): "cookbooks/agent/chat_models.ipynb"
     - 工具(Tools): "cookbooks/agent/tools_intro.ipynb"
     - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
-    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote_tool.ipynb"
+    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote-tool/remote_tool.ipynb"
     - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
     - 智能体(Agent)运行流程详解: "cookbooks/agent/function_agent.ipynb"
     - 在智能体中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
@@ -51,6 +52,10 @@ nav:
       - sdk/api_reference/chat_completion.md
       - sdk/api_reference/embedding.md
       - sdk/api_reference/image.md
+
+
+copyright: Copyright &copy; 2023 - Now PaddlePaddle Community
+
 
 theme:
   name: material
