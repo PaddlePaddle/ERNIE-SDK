@@ -1,0 +1,1 @@
+ERNIE Bot Smoke Tests

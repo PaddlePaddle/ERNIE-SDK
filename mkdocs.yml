@@ -1,40 +1,111 @@
-site_name: 文心一言 ERNIE Bot SDK
+site_name: ERNIE Bot Agent
+repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
+repo_name: ERNIE-Bot-Agent
+site_description: provides an easy-to-use Chinese agent builder tool suite.
+copyright: '@PaddlePaddle community'
+nav:
+  - 快速开始:
+    - 安装和鉴权: 'quickstart/preparation.md'
+    - 构建一个简单智能体: 'quickstart/agent.md'
+    - 使用 Tool: 'quickstart/use-tool.md'
+  - 核心模块:
+    - Agents: 'modules/agents.md'
+    - Chat Models: 'modules/chat_models.md'
+    - Tools: 'modules/tools/create-tool.md'
+    - File: 'modules/file.md'
+    - Memory: 'modules/memory.md'
+    - Message: 'modules/message.md'
+    - Retrieval: 'modules/retrieval.md'
+  - 教程:
+    - 信息(Message): "cookbooks/agent/message.ipynb"
+    - 模型(Chat Models): "cookbooks/agent/chat_models.ipynb"
+    - 工具(Tools): "cookbooks/agent/tools_intro.ipynb"
+    - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
+    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote-tool/remote_tool.ipynb"
+    - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
+    - 智能体(Agent)运行流程详解: "cookbooks/agent/function_agent.ipynb"
+    - 在智能体中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"
+    - 在智能体中使用llama_index: "cookbooks/agent/llama_index_function_agent_with_retrieval.ipynb"
+    - 使用langchain extension: "cookbooks/agent/how_to_use_langchain_extension.ipynb"
+  - API 文档:
+    - Agents: "package/erniebot_agent/agents.md"
+    - Chat Models: "package/erniebot_agent/chat_models.md"
+    - Tools: "package/erniebot_agent/tools.md"
+    - File: "package/erniebot_agent/file.md"
+    - Memory: "package/erniebot_agent/memory.md"
+    - Message: "package/erniebot_agent/message.md"
+    - Retrieval: "package/erniebot_agent/retrieval.md"
+  - ERNIE-Bot:
+    - 使用文档:
+      - 预备步骤:
+        - sdk/README.md
+        - sdk/installation.md
+        - sdk/authentication.md
+        - sdk/configuration.md
+        - sdk/models.md
+      - 使用指南:
+        - sdk/guides/chat_completion.md
+        - sdk/guides/embedding.md
+        - sdk/guides/image.md
+        - sdk/guides/function_calling.md
+    - API文档:
+      - sdk/api_reference/chat_completion.md
+      - sdk/api_reference/embedding.md
+      - sdk/api_reference/image.md
+
+
+copyright: Copyright &copy; 2023 - Now PaddlePaddle Community
+
+
 theme:
   name: material
-  custom_dir: ./.overrides
+  favicon: img/favicon.png
   features:
-    - content.code.copy
-  logo: assets/images/favicon.png
-  repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-sdk
-  features:
+    - navigation.tabs.sticky
+    - toc.integrate
+    - navigation.footer
+    - navigation.indexes
     - navigation.sections
     - navigation.tabs
-    - toc.integrate
-  language: zh
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
   palette:
-    primary: white
+    primary: black
+    accent: pink
+  font:
+    text: Noto Serif Simplified Chinese
+    code: Noto Serif Simplified Chinese
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
-nav:
-  - 使用文档:
-    - 预备步骤:
-      - README.md
-      - installation.md
-      - authentication.md
-      - configuration.md
-      - models.md
-    - 使用指南:
-      - guides/chat_completion.md
-      - guides/embedding.md
-      - guides/image.md
-      - guides/function_calling.md
-  - API文档:
-    - api_reference/chat_completion.md
-    - api_reference/embedding.md
-    - api_reference/image.md
+  - admonition
+  - pymdownx.details
+  - admonition
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
+
+
+plugins:
+  - search
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_bases: false
+            show_root_heading: true
+          paths: [erniebot-agent/src]
+          selection:
+            filters:
+              - "^__init__$"  # but always include __init__ modules and methods

@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import unittest
-
-from erniebot_agent.tools.calculator_tool import CalculatorTool
 
 import erniebot
 
-erniebot.api_type = "aistudio"
-erniebot.access_token = os.environ["AISTUDIO_ACCESS_TOKEN"]
+from erniebot_agent.tools.calculator_tool import CalculatorTool
 
 
 class TestCalculator(unittest.TestCase):
@@ -19,7 +15,7 @@ class TestCalculator(unittest.TestCase):
 
     def run_query(self, query):
         response = erniebot.ChatCompletion.create(
-            model="ernie-bot",
+            model="ernie-3.5",
             messages=[
                 {
                     "role": "user",

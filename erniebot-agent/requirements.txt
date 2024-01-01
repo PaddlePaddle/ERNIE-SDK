@@ -1,9 +1,11 @@
 aiohttp
 anyio
-erniebot
-PyYAML
-openapi_spec_validator
+asyncio-atexit
+# erniebot
 jinja2
-tqdm
-pydantic
 langchain
+openapi_spec_validator
+tqdm
+typing_extensions
+pydantic >= 2
+PyYAML
