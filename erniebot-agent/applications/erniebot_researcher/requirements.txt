@@ -1,0 +1,4 @@
+gradio
+jsonlines
+md2pdf
+langchain
