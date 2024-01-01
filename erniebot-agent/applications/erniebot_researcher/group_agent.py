@@ -5,11 +5,12 @@ import sys
 from typing import Dict, List, Optional, Tuple, Union
 
 from EditorActorAgent import EditorActorAgent
-from erniebot_agent.agents.base import Agent
 from RankingAgent import RankingAgent
 from ResearchAgent import ResearchAgent
 from ReviserActorAgent import ReviserActorAgent
 from tools.utils import erniebot_chat
+
+from erniebot_agent.agents.base import Agent
 
 logger = logging.getLogger(__name__)
 _VALID_SPEAKER_SELECTION_METHODS = ["auto", "manual", "random", "round_robin"]

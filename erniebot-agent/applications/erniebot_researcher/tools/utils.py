@@ -2,11 +2,11 @@ import os
 import urllib.parse
 from typing import Optional
 
+import erniebot
 import jsonlines
-from erniebot_agent.retrieval.document import Document
 from md2pdf.core import md2pdf
 
-import erniebot
+from erniebot_agent.retrieval.document import Document
 
 api_type = os.environ.get("api_type", None)
 access_token = os.environ.get("access_token", None)

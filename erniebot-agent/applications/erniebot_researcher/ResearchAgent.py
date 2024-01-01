@@ -2,9 +2,10 @@ import json
 from collections import OrderedDict
 from typing import Optional
 
+from tools.utils import add_citation, erniebot_chat, write_to_json
+
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.prompt import PromptTemplate
-from tools.utils import add_citation, erniebot_chat, write_to_json
 
 SUMMARIZE_MAX_LENGTH = 1800
 

@@ -1,9 +1,10 @@
 import json
 from typing import Optional
 
-from erniebot_agent.agents.base import Agent
 from tools.prompt_utils import prompt_markdow
 from tools.utils import erniebot_chat, write_to_json
+
+from erniebot_agent.agents.base import Agent
 
 
 class RankingAgent(Agent):

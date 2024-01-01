@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from typing import Optional, Type
 
+from pydantic import Field
+
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 from .prompt_utils import auto_agent_instructions
 from .utils import erniebot_chat

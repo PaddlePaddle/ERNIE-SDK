@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import List, Type
 
+from pydantic import Field
+
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 from .utils import erniebot_chat
 

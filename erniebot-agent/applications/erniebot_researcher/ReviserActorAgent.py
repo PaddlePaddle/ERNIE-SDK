@@ -1,8 +1,9 @@
 from typing import Optional
 
+from tools.utils import erniebot_chat, write_to_json
+
 from erniebot_agent.agents.base import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
-from tools.utils import erniebot_chat, write_to_json
 
 
 class ReviserActorAgent(Agent):

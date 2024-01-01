@@ -3,9 +3,10 @@ from __future__ import annotations
 import string
 from typing import Type
 
+from pydantic import Field
+
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 from .utils import write_md_to_pdf
 

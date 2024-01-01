@@ -3,9 +3,6 @@ from __future__ import annotations
 from functools import partial
 from typing import Type
 
-from erniebot_agent.extensions.langchain.llms import ErnieBot
-from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 from langchain.chains.combine_documents import collapse_docs, split_list_of_docs
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document, StrOutputParser
@@ -13,6 +10,10 @@ from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
 from langchain.text_splitter import SpacyTextSplitter
 from pydantic import Field
+
+from erniebot_agent.extensions.langchain.llms import ErnieBot
+from erniebot_agent.tools.base import Tool
+from erniebot_agent.tools.schema import ToolParameterView
 
 from .utils import access_token
 

@@ -4,9 +4,10 @@ import json
 from collections import OrderedDict
 from typing import Optional, Type
 
+from pydantic import Field
+
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from pydantic import Field
 
 from .prompt_utils import generate_reference, get_report_by_type
 from .utils import call_function, erniebot_chat
