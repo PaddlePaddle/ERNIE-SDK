@@ -5,6 +5,23 @@ import os
 
 import gradio as gr
 
+import jsonlines
+from EditorActorAgent import EditorActorAgent
+from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
+from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
+from RankingAgent import RankingAgent
+from ResearchAgent import ResearchAgent
+from ReviserActorAgent import ReviserActorAgent
+from tools.intent_detection_tool import IntentDetectionTool
+from tools.outline_generation_tool import OutlineGenerationTool
+from tools.ranking_tool import TextRankingTool
+from tools.report_writing_tool import ReportWritingTool
+from tools.semantic_citation_tool import SemanticCitationTool
+from tools.summarization_tool import TextSummarizationTool
+from tools.task_planning_tool import TaskPlanningTool
+from tools.utils import write_md_to_pdf
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
 parser.add_argument("--access_token", type=str, default="", help="The access token.")
@@ -25,22 +42,6 @@ api_type = args.api_type
 access_token = args.access_token
 os.environ["api_type"] = api_type
 os.environ["access_token"] = access_token
-import jsonlines
-from EditorActorAgent import EditorActorAgent
-from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
-from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
-from RankingAgent import RankingAgent
-from ResearchAgent import ResearchAgent
-from ReviserActorAgent import ReviserActorAgent
-from tools.intent_detection_tool import IntentDetectionTool
-from tools.outline_generation_tool import OutlineGenerationTool
-from tools.ranking_tool import TextRankingTool
-from tools.report_writing_tool import ReportWritingTool
-from tools.semantic_citation_tool import SemanticCitationTool
-from tools.summarization_tool import TextSummarizationTool
-from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import write_md_to_pdf
-
 
 def get_logs(jsonl_file="./outputs/erniebot/log.jsonl"):
     history = []
