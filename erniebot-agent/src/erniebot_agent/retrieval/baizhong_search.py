@@ -1,12 +1,14 @@
 import json
 import logging
 import os
-from typing import Any, ClassVar, Dict, Optional, List
+from typing import Any, ClassVar, Dict, List, Optional
 
 import requests
 
 from erniebot_agent.utils.exceptions import BaizhongError
+
 from .document import Document
+
 logger = logging.getLogger(__name__)
 
 
