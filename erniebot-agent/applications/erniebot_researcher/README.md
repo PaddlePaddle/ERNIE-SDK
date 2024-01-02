@@ -2,13 +2,12 @@
 
 ERNIE Researcher是一个自主智能体（Autonomous Agent），旨在对各种任务进行全面的在线研究。
 
-Agent可以制作详细、真实和公正的研究报告，并提供专注于相关资源、大纲和经验教训的定制选项。受最近的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和 当前最流行的[RAG](https://arxiv.org/abs/2005.11401)技术的启发， ERNIE Researcher解决了速度、确定性和可靠性问题，通过多Agent协作和并行工作提供了更稳定的性能和更高的速度。
+Agent可以制作详细、真实和公正的中文研究报告，并提供专注于相关资源、大纲和经验教训的定制选项。受最近的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和 当前最流行的[RAG](https://arxiv.org/abs/2005.11401)技术的启发， ERNIE Researcher通过Multi-Agent协作和并行工作解决了速度、确定性和可靠性问题。
 
 ## 为什么需要ERNIE Researcher？
 
 + 手动研究任务形成客观结论可能需要时间，有时需要数周才能找到正确的资源和信息。
 + 目前的LLM是根据过去和过时的信息进行训练的，产生幻觉的风险很大，这使得产生的报告几乎与研究任务无关。
-+ 支持网络搜索的解决方案只考虑有限的资源和内容，在某些情况下会导致肤浅的结论或有偏见的答案。
 + LLM生成的报告一般没有做段落级/句子级别的文献来源引用，生成的内容无法进行追踪和验证。
 
 ## 架构
@@ -22,15 +21,15 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
     <img src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/12107462/a265ff50-eab1-41bb-9291-6f4b6c6597cf" width="500px">
 </div>
 
-具体地：
+## 应用特色
 
 + 基于研究查询或任务创建特定领域的Agent。
 + 根据现有知识库的内容生成一组多样性的研究问题，这些问题共同形成对任何给定任务的客观意见。
 + 对于每个研究问题，从知识库中选择与给定问题相关的信息。
 + 过滤和汇总所有的信息来源，并生成最终的研究报告。
-+ 多个报告并行生成，并保持一定的多样性。
-+ 对多个报告进行质量评估和排序，克服伪随机性，并选择最优的报告。
-+ 对报告进行修订和编辑。
++ 多个报告Agent并行生成，并保持一定的多样性。
++ 使用思维链技术对多个报告进行质量评估和排序，克服伪随机性，并选择最优的报告。
++ 使用反思机制对报告进行修订和完善。
 
 
 ## 快速开始
@@ -56,6 +55,13 @@ pip install -r requirements.txt
 python ui.py --access_token <aistudio-access-token>
 ```
 
+## Reference
+
+[1] Lei Wang, Wanyu Xu, Yihuai Lan, Zhiqiang Hu, Yunshi Lan, Roy Ka-Wei Lee, Ee-Peng Lim:
+[Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models](https://arxiv.org/abs/2305.04091). ACL (1) 2023: 2609-2634
+
+[2] Weiwei Sun, Lingyong Yan, Xinyu Ma, Shuaiqiang Wang, Pengjie Ren, Zhumin Chen, Dawei Yin, Zhaochun Ren:
+[Is ChatGPT Good at Search? Investigating Large Language Models as Re-Ranking Agents](https://arxiv.org/abs/2304.09542). EMNLP 2023: 14918-14937
 
 
 ## :heart: Acknowledge
