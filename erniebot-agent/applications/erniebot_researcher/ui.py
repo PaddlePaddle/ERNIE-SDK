@@ -5,6 +5,22 @@ import os
 
 import gradio as gr
 import jsonlines
+from EditorActorAgent import EditorActorAgent
+from langchain.embeddings.openai import OpenAIEmbeddings
+from RankingAgent import RankingAgent
+from ResearchAgent import ResearchAgent
+from ReviserActorAgent import ReviserActorAgent
+from tools.intent_detection_tool import IntentDetectionTool
+from tools.outline_generation_tool import OutlineGenerationTool
+from tools.ranking_tool import TextRankingTool
+from tools.report_writing_tool import ReportWritingTool
+from tools.semantic_citation_tool import SemanticCitationTool
+from tools.summarization_tool import TextSummarizationTool
+from tools.task_planning_tool import TaskPlanningTool
+from tools.utils import FaissSearch, build_index, write_md_to_pdf
+
+from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
+from erniebot_agent.retrieval import BaizhongSearch
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
@@ -38,24 +54,6 @@ parser.add_argument("--server_port", type=int, default=8878)
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
-
-
-from EditorActorAgent import EditorActorAgent
-from langchain.embeddings.openai import OpenAIEmbeddings
-from RankingAgent import RankingAgent
-from ResearchAgent import ResearchAgent
-from ReviserActorAgent import ReviserActorAgent
-from tools.intent_detection_tool import IntentDetectionTool
-from tools.outline_generation_tool import OutlineGenerationTool
-from tools.ranking_tool import TextRankingTool
-from tools.report_writing_tool import ReportWritingTool
-from tools.semantic_citation_tool import SemanticCitationTool
-from tools.summarization_tool import TextSummarizationTool
-from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, build_index, write_md_to_pdf
-
-from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
-from erniebot_agent.retrieval import BaizhongSearch
 
 
 def get_logs(jsonl_file="./outputs/erniebot/log.jsonl"):
