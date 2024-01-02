@@ -58,11 +58,11 @@
 | function_call | Optional[FunctionCall] | FunctionCall的schema描述信息                   |
 
 
-`FunctionMessage`类继承`Message`类，以下是主要的属性。
+`FunctionMessage`类继承`Message`类，以下是主要的属性：
 
 | 属性       | 类型           | 描述                                                      |
 | ---------- | -------------- | ------------------------------------------------------- |
-| role         | str          | Message的角色，等于user                                   |
+| role         | str          | Message的角色，在底层api调用中值是user                                   |
 | content      | str          | Mesage的文本内容                                          |
 | token_count  | int          | 文本内容的token长度                                        |
 
