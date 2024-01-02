@@ -9,15 +9,12 @@ from md2pdf.core import md2pdf
 from erniebot_agent.retrieval.document import Document
 
 api_type = os.environ.get("api_type", None)
-access_token = os.environ.get("access_token", None)
-
 
 def erniebot_chat(messages: list, functions: Optional[str] = None, model: Optional[str] = None, **kwargs):
     if not model:
         model = "ernie-4.0"
     _config = dict(
         api_type=api_type,
-        access_token=access_token,
     )
     if functions is None:
         resp_stream = erniebot.ChatCompletion.create(
