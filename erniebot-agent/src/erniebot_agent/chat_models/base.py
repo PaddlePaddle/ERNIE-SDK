@@ -19,40 +19,46 @@ from erniebot_agent.memory.messages import AIMessage, AIMessageChunk, Message
 
 
 class ChatModel(metaclass=ABCMeta):
-    """The base class of chat-optimized LLM."""
+    """The base class of chat-optimized LLM.
+
+    Attributes:
+        model (str): The model name.
+        default_chat_kwargs (Any): A dict for setting default args for chat model,
+            the supported keys include `model`, `_config_`, `top_p`, etc.
+    """
 
     def __init__(self, model: str, **default_chat_kwargs: Any):
         self.model = model
         self.default_chat_kwargs = default_chat_kwargs
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[False] = ..., **kwargs: Any
     ) -> AIMessage:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: Literal[True], **kwargs: Any
     ) -> AsyncIterator[AIMessageChunk]:
         ...
 
     @overload
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
         ...
 
     @abstractmethod
-    async def async_chat(
+    async def chat(
         self, messages: List[Message], *, stream: bool = False, **kwargs: Any
     ) -> Union[AIMessage, AsyncIterator[AIMessageChunk]]:
-        """Asynchronously chats with the LLM.
+        """The abstract method for asynchronously chatting with the LLM.
 
         Args:
             messages (List[Message]): A list of messages.
             stream (bool): Whether to use streaming generation. Defaults to False.
-            **kwargs: Arbitrary keyword arguments.
+            **kwargs: Keyword arguments, such as `top_p`, `temperature`, `penalty_score`, and `system`.
 
         Returns:
             If stream is False, returns a single message.

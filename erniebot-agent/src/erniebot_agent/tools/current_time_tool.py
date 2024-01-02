@@ -20,7 +20,7 @@ class CurrentTimeTool(Tool):
     ouptut_type: Type[ToolParameterView] = CurrentTimeToolOutputView
 
     async def __call__(self) -> Dict[str, str]:
-        return {"current_time": datetime.strftime(datetime.now(), "%Y年%m月%d号 %点:%分:%秒")}
+        return {"current_time": datetime.strftime(datetime.now(), "%Y年%m月%d日 %H时%M分%S秒")}
 
     @property
     def examples(self) -> List[Message]:

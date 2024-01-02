@@ -15,6 +15,6 @@ class TestRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("shouxiezi.png"))
         agent = self.get_agent(toolkit)
 
-        result = await agent.async_run("帮我看看这张照片中的内容有什么", files=[file])
+        result = await agent.run("帮我看看这张照片中的内容有什么", files=[file])
         self.assertGreater(len(result.actions), 0)
         self.assertIn("春天的梦", result.text)
