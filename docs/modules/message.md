@@ -105,7 +105,7 @@ import asyncio
 from erniebot_agent.memory import HumanMessage, AIMessage
 from erniebot_agent.chat_models import ERNIEBot
 
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "<your access token>>"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
@@ -157,7 +157,7 @@ import asyncio
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.chat_models import ERNIEBot
 
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+os.environ["EB_AGENT_ACCESS_TOKEN"] =  "<your access token>>"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
