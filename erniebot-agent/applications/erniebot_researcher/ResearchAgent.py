@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import OrderedDict
 from typing import Optional
 
@@ -6,6 +7,8 @@ from tools.utils import add_citation, erniebot_chat, write_to_json
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
+
+logger = logging.getLogger(__name__)
 
 SUMMARIZE_MAX_LENGTH = 1800
 
@@ -93,7 +96,7 @@ class ResearchAgent(Agent):
                 value = doc["url"]
                 url_dict[key] = value
             else:
-                print(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
+                logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
         return responses, url_dict
 
@@ -103,7 +106,7 @@ class ResearchAgent(Agent):
         Returns:
             Report
         """
-        print(f"🔎 Running research for '{query}'...")
+        logger.info(f"🔎 Running research for '{query}'...")
         self.config.append(("开始", f"🔎 Running research for '{query}'..."))
         self.save_log()
         # Generate Agent
@@ -184,7 +187,7 @@ class ResearchAgent(Agent):
                 )
                 break
             except Exception as e:
-                print(e)
+                logger.error(e)
                 self.config.append(("报错", str(e)))
                 continue
         self.config.append(("草稿", report))

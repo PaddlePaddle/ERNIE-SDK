@@ -1,9 +1,12 @@
+import logging
 from typing import Optional
 
 from tools.utils import erniebot_chat, write_to_json
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
+
+logger = logging.getLogger(__name__)
 
 
 class ReviserActorAgent(Agent):
@@ -41,7 +44,7 @@ class ReviserActorAgent(Agent):
                 self.save_log()
                 return report
             except Exception as e:
-                print(e)
+                logger.error(e)
                 self.config.append(("报错信息", e))
                 continue
 

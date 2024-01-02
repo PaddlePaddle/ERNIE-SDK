@@ -68,17 +68,17 @@ class GroupChat:
         return f"阅读下面的对话。 从{[agent.name for agent in agents]} 中选择下一个角色来扮演。仅返回扮演的角色。" + strs
 
     def manual_select_speaker(self, agents: List[Agent]) -> Union[Agent, None]:
-        print("请从以下列表中选择下一位Agent：")
+        logger.info("请从以下列表中选择下一位Agent：")
         _n_agents = len(agents)
         for i in range(_n_agents):
-            print(f"{i+1}: {agents[i].name}")
+            logger.info(f"{i+1}: {agents[i].name}")
         try_count = 0
         # Assume the user will enter a valid number within 3 tries,
         # otherwise use auto selection to avoid blocking.
         while try_count <= 3:
             try_count += 1
             if try_count >= 3:
-                print(f"你已经尝试{try_count}次了。下一个agent将自动选择。")
+                logger.info(f"你已经尝试{try_count}次了。下一个agent将自动选择。")
                 break
             try:
                 nums = input("输入下一个发言者的序号（不输入任何内容或输入“q”以使用自动选择）：")
@@ -90,7 +90,7 @@ class GroupChat:
                 else:
                     raise ValueError
             except ValueError:
-                print(f"输入无效。请输入 1 到 {_n_agents} 之间的数字。")
+                logger.info(f"输入无效。请输入 1 到 {_n_agents} 之间的数字。")
         return None
 
     def _prepare_and_select_agents(self, last_speaker: Agent) -> Tuple[Optional[Agent], List[Agent]]:

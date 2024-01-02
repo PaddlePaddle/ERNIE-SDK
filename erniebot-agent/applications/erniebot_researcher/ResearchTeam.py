@@ -25,7 +25,7 @@ class ResearchTeam:
     async def _async_run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
-            report, _ = await researcher._async_run(query)
+            report, _ = await researcher._run(query)
             list_reports.append(report)
         if self.user_agent is not None:
             prompt = (
@@ -34,21 +34,19 @@ class ResearchTeam:
                 + str(len(self.research_actor_instance))
                 + "之间。"
             )
-            index = await self.user_agent._async_run(prompt)
+            index = await self.user_agent._run(prompt)
             immedia_report = list_reports[int(index) - 1]
         else:
-            immedia_report = await self.ranker_actor_instance._async_run(list_reports, query)
+            immedia_report = await self.ranker_actor_instance._run(list_reports, query)
         revised_report = immedia_report
         for i in range(iterations):
             if i == 0:
                 markdown_report = immedia_report
             else:
                 markdown_report = revised_report
-            respose = await self.editor_actor_instance._async_run(markdown_report)
+            respose = await self.editor_actor_instance._run(markdown_report)
             if respose["accept"] is True:
                 break
             else:
-                revised_report = await self.revise_actor_instance._async_run(
-                    markdown_report, respose["notes"]
-                )
+                revised_report = await self.revise_actor_instance._run(markdown_report, respose["notes"])
         return revised_report

@@ -1,10 +1,13 @@
 import json
+import logging
 from typing import Optional
 
 from tools.prompt_utils import prompt_markdow
 from tools.utils import erniebot_chat, write_to_json
 
 from erniebot_agent.agents.agent import Agent
+
+logger = logging.getLogger(__name__)
 
 
 class RankingAgent(Agent):
@@ -34,7 +37,7 @@ class RankingAgent(Agent):
                 reports.append(item)
         if len(reports) == 0:
             if self.is_reset:
-                print("所有的report都不是markdown格式，重新生成report")
+                logger.info("所有的report都不是markdown格式，重新生成report")
                 return [], None
             else:
                 reports = list_reports
@@ -61,5 +64,5 @@ class RankingAgent(Agent):
                 elif result_dict["accept"] is False or result_dict["accept"] == "false":
                     return False
             except Exception as e:
-                print(e)
+                logger.error(e)
                 continue
