@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-简而言之，`Message`是大语言模型的输入输出信息进行封装。大家可以使用`Message`和大语言模型进行交互，后续使用`Memory`模块也会接触`Message`。
+`Message`是大语言模型的输入输出信息进行封装。大家可以使用`Message`和大语言模型进行交互，后续使用`Memory`模块也会接触`Message`。
 
 在`ERNIE Bot Agent`中，主要有如下4类`Message`：
 
@@ -58,11 +58,11 @@
 | function_call | Optional[FunctionCall] | FunctionCall的schema描述信息                   |
 
 
-`FunctionMessage`类继承`Message`类，以下是主要的属性。
+`FunctionMessage`类继承`Message`类，以下是主要的属性：
 
 | 属性       | 类型           | 描述                                                      |
 | ---------- | -------------- | ------------------------------------------------------- |
-| role         | str          | Message的角色，等于user                                   |
+| role         | str          | Message的角色，在底层api调用中值是user                                   |
 | content      | str          | Mesage的文本内容                                          |
 | token_count  | int          | 文本内容的token长度                                        |
 
@@ -105,7 +105,7 @@ import asyncio
 from erniebot_agent.memory import HumanMessage, AIMessage
 from erniebot_agent.chat_models import ERNIEBot
 
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+os.environ["EB_AGENT_ACCESS_TOKEN"] = "<your access token>>"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
@@ -157,7 +157,7 @@ import asyncio
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.chat_models import ERNIEBot
 
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
+os.environ["EB_AGENT_ACCESS_TOKEN"] =  "<your access token>>"
 
 async def demo():
     model = ERNIEBot(model="ernie-3.5")
