@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-简而言之，`Message`是大语言模型的输入输出信息进行封装。大家可以使用`Message`和大语言模型进行交互，后续使用`Memory`模块也会接触`Message`。
+`Message`是大语言模型的输入输出信息进行封装。大家可以使用`Message`和大语言模型进行交互，后续使用`Memory`模块也会接触`Message`。
 
 在`ERNIE Bot Agent`中，主要有如下4类`Message`：
 
