@@ -5,7 +5,43 @@ import os
 
 import gradio as gr
 import jsonlines
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--api_type", type=str, default="aistudio")
+
+parser.add_argument("--knowledge_base_name_paper", type=str, default="", help="")
+parser.add_argument("--knowledge_base_name_abstract", type=str, default="", help="")
+parser.add_argument("--knowledge_base_id_paper", type=str, default="", help="")
+parser.add_argument("--knowledge_base_id_abstract", type=str, default="", help="")
+
+parser.add_argument("--faiss_name_paper", type=str, default="", help="")
+parser.add_argument("--faiss_name_abstract", type=str, default="", help="")
+parser.add_argument("--faiss_name_citation", type=str, default="", help="")
+
+parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
+parser.add_argument("--iterations", type=int, default=4, help="")
+parser.add_argument(
+    "--report_type",
+    type=str,
+    default="research_report",
+    help="['research_report','resource_report','outline_report']",
+)
+parser.add_argument(
+    "--embedding_type",
+    type=str,
+    default="open_embedding",
+    help="['open_embedding','baizhong','ernie_embedding']",
+)
+
+parser.add_argument("--server_name", type=str, default="0.0.0.0")
+parser.add_argument("--server_port", type=int, default=8878)
+args = parser.parse_args()
+os.environ["api_type"] = args.api_type
+access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
+
+
 from EditorActorAgent import EditorActorAgent
+from langchain.embeddings.openai import OpenAIEmbeddings
 from RankingAgent import RankingAgent
 from ResearchAgent import ResearchAgent
 from ReviserActorAgent import ReviserActorAgent
@@ -16,31 +52,10 @@ from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import write_md_to_pdf
+from tools.utils import FaissSearch, build_index, write_md_to_pdf
 
-from erniebot_agent.retrieval.baizhong_search import BaizhongSearch
-from erniebot_agent.tools.baizhong_tool import BaizhongSearchTool
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--api_type", type=str, default="aistudio")
-parser.add_argument("--access_token", type=str, default="", help="The access token.")
-parser.add_argument("--base_url", type=str, default="", help="The base url.")
-parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
-parser.add_argument(
-    "--report_type",
-    type=str,
-    default="research_report",
-    help="['research_report','resource_report','outline_report']",
-)
-parser.add_argument("--iterations", type=int, default=4, help="")
-parser.add_argument("--server_name", type=str, default="0.0.0.0")
-parser.add_argument("--server_port", type=int, default=8878)
-args = parser.parse_args()
-base_url = args.base_url
-api_type = args.api_type
-access_token = args.access_token
-os.environ["api_type"] = api_type
-os.environ["access_token"] = access_token
+from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
+from erniebot_agent.retrieval import BaizhongSearch
 
 
 def get_logs(jsonl_file="./outputs/erniebot/log.jsonl"):
@@ -52,33 +67,32 @@ def get_logs(jsonl_file="./outputs/erniebot/log.jsonl"):
 
 
 def generate_report(query, history=[]):
-    aurora_db_citation = BaizhongSearch(
-        base_url=base_url, project_name="citation_data", remark="construction test dataset", project_id=292
-    )
-    # aurora_db_retriver = BaizhongSearch(
-    #     base_url=base_url, project_name="demo_data_1", remark="construction test dataset", project_id=293
-    # )
-    # aurora_db_retriver_abstract = BaizhongSearch(
-    #     base_url=base_url,
-    #     project_name="demo_data_abstact",
-    #     remark="construction test dataset",
-    #     project_id=294,
-    # )
-    aurora_db_retriver = BaizhongSearch(
-        base_url=base_url,
-        project_name="retriver_abstract",
-        remark="construction test dataset",
-        project_id=337,
-    )
-    aurora_db_retriver_abstract = BaizhongSearch(
-        base_url=base_url,
-        project_name="retriver_abstract",
-        remark="construction test dataset",
-        project_id=337,
-    )
+    if args.embedding_type == "open_embedding":
+        embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
+        paper_db = build_index(faiss_name=args.faiss_name_paper, embeddings=embeddings)
+        abstract_db = build_index(faiss_name=args.faiss_name_abstract, embeddings=embeddings)
+        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
+        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+    elif args.embedding_type == "ernie_embedding":
+        embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
+        paper_db = build_index(faiss_name=args.faiss_name_paper, embeddings=embeddings)
+        abstract_db = build_index(faiss_name=args.faiss_name_abstract, embeddings=embeddings)
+        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
+        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+    elif args.embedding_type == "baizhong":
+        embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
+        retriever_search = BaizhongSearch(
+            access_token=access_token,
+            knowledge_base_name=args.knowledge_base_name_paper,
+            knowledge_base_id=args.knowledge_base_id_paper,
+        )
+        abstract_search = BaizhongSearch(
+            access_token=access_token,
+            knowledge_base_name=args.knowledge_base_name_abstract,
+            knowledge_base_id=args.knowledge_base_id_abstract,
+        )
+
     intent_detection_tool = IntentDetectionTool()
-    abstract_search = BaizhongSearchTool(description="abstact", db=aurora_db_retriver_abstract)
-    retriever_search = BaizhongSearchTool(description="all paper", db=aurora_db_retriver)
     outline_generation_tool = OutlineGenerationTool()
     ranking_tool = TextRankingTool()
     report_writing_tool = ReportWritingTool()
@@ -106,8 +120,9 @@ def generate_report(query, history=[]):
             outline_tool=outline_generation_tool,
             citation_tool=semantic_citation_tool,
             summarize_tool=summarization_tool,
-            aurora_db_citation=aurora_db_citation,
+            faiss_name_citation=args.faiss_name_citation,
             save_log_path="./outputs/erniebot/log.jsonl",
+            embeddings=embeddings,
         )
         research_actor.append(research_agent)
     editor_actor = EditorActorAgent(name="editor", save_log_path="./outputs/erniebot/log.jsonl")
@@ -119,11 +134,11 @@ def generate_report(query, history=[]):
     )
     list_reports = []
     for researcher in research_actor:
-        report, _ = asyncio.run(researcher._async_run(query))
+        report, _ = asyncio.run(researcher._run(query))
         list_reports.append(report)
     for i in range(args.iterations):
         if len(list_reports) > 1:
-            list_reports, immedia_report = asyncio.run(ranker_actor._async_run(list_reports, query))
+            list_reports, immedia_report = asyncio.run(ranker_actor._run(list_reports, query))
         else:
             immedia_report = list_reports[0]
         revised_report = immedia_report
@@ -131,11 +146,11 @@ def generate_report(query, history=[]):
             markdown_report = immedia_report
         else:
             markdown_report = revised_report
-        respose = asyncio.run(editor_actor._async_run(markdown_report))
+        respose = asyncio.run(editor_actor._run(markdown_report))
         if respose["accept"] is True:
             break
         else:
-            revised_report = asyncio.run(reviser_actor._async_run(markdown_report, respose["notes"]))
+            revised_report = asyncio.run(reviser_actor._run(markdown_report, respose["notes"]))
             list_reports.append(revised_report)
     path = write_md_to_pdf(args.report_type, target_path, revised_report)
     return revised_report, path
@@ -164,7 +179,7 @@ def launch_ui():
             with gr.Column():
                 query_textbox = gr.Textbox(placeholder="写一份关于机器学习发展的报告")
                 gr.Examples(
-                    [["写一份数字经济发展的报告"], ["写一份关于机器学习发展的报告"]],
+                    [["写一份有关大模型技术发展的报告"], ["写一份数字经济发展的报告"], ["写一份关于机器学习发展的报告"]],
                     inputs=[query_textbox],
                     outputs=[query_textbox],
                     label="示例输入",
