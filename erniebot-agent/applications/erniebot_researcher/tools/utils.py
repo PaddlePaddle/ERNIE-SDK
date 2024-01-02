@@ -14,7 +14,7 @@ access_token = os.environ.get("access_token", None)
 
 def erniebot_chat(messages: list, functions: Optional[str] = None, model: Optional[str] = None, **kwargs):
     if not model:
-        model = "ernie-bot-4"
+        model = "ernie-4.0"
     _config = dict(
         api_type=api_type,
         access_token=access_token,
@@ -30,7 +30,7 @@ def erniebot_chat(messages: list, functions: Optional[str] = None, model: Option
     return resp_stream["result"]
 
 
-def call_function(action: str, agent_role_prompt: str, model="ernie-bot-8k", **kwargs):
+def call_function(action: str, agent_role_prompt: str, model="ernie-longtext", **kwargs):
     messages = [
         {
             "role": "user",

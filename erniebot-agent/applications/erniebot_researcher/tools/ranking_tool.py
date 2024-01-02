@@ -43,7 +43,7 @@ class TextRankingTool(Tool):
                             result = erniebot_chat(messages=messages, temperature=1e-10)
                         else:
                             result = erniebot_chat(
-                                messages=messages, temperature=1e-10, model="ernie-bot-8k"
+                                messages=messages, temperature=1e-10, model="ernie-longtext"
                             )
                         l_index = result.index("{")
                         r_index = result.rindex("}")
