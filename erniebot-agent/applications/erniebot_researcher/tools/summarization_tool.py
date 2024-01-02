@@ -15,8 +15,6 @@ from erniebot_agent.extensions.langchain.llms import ErnieBot
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-from .utils import access_token
-
 TOKEN_MAX_LENGTH = 4800
 
 
@@ -34,7 +32,7 @@ class TextSummarizationTool(Tool):
     ouptut_type: Type[ToolParameterView] = TextSummarizationToolOutputView
 
     def map_reduce(self, question: str = ""):
-        llm = ErnieBot(aistudio_access_token=access_token)
+        llm = ErnieBot()
         document_prompt = PromptTemplate.from_template("{page_content}")
         partial_format_document = partial(format_document, prompt=document_prompt)
         prompt = (

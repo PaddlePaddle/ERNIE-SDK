@@ -2,7 +2,7 @@ from typing import Optional
 
 from tools.utils import erniebot_chat, write_to_json
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 
@@ -14,7 +14,7 @@ class ReviserActorAgent(Agent):
     def __init__(
         self,
         name: str,
-        llm: str = "erine-bot-4",
+        llm: str = "erine-4.0",
         system_message: Optional[str] = None,
         config: list = [],
         save_log_path=None,
@@ -27,7 +27,7 @@ class ReviserActorAgent(Agent):
         self.config = config
         self.save_log_path = save_log_path
 
-    async def _async_run(self, draft, notes):
+    async def _run(self, draft, notes):
         messages = [
             {
                 "role": "user",

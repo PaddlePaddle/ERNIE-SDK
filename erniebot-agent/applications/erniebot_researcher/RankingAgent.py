@@ -4,7 +4,7 @@ from typing import Optional
 from tools.prompt_utils import prompt_markdow
 from tools.utils import erniebot_chat, write_to_json
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.agent import Agent
 
 
 class RankingAgent(Agent):
@@ -27,7 +27,7 @@ class RankingAgent(Agent):
         self.save_log_path = save_log_path
         self.is_reset = False
 
-    async def _async_run(self, list_reports, query):
+    async def _run(self, list_reports, query):
         reports = []
         for item in list_reports:
             if self.check_format(item):

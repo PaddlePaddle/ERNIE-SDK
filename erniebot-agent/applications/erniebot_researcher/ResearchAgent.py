@@ -4,7 +4,7 @@ from typing import Optional
 
 from tools.utils import add_citation, erniebot_chat, write_to_json
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
 
 SUMMARIZE_MAX_LENGTH = 1800
@@ -97,7 +97,7 @@ class ResearchAgent(Agent):
         # write_to_json(f"{self.dir_path}/research-{query}.jsonl", responses)
         return responses, url_dict
 
-    async def _async_run(self, query):
+    async def _run(self, query):
         """
         Runs the ResearchAgent
         Returns:
