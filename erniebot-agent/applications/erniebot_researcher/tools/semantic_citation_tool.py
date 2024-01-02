@@ -66,6 +66,14 @@ class SemanticCitationTool(Tool):
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
                         if query_result[0]["score"] >= theta_min and query_result[0]["score"] <= theta_max:
+                            if (
+                                len(output_sent) > 0
+                                and f"<sup>[\\[{url_index[source]['index']}\\]]({source})</sup>"
+                                in output_sent[-1]
+                            ):
+                                output_sent[-1] = output_sent[-1].replace(
+                                    f"<sup>[\\[{url_index[source]['index']}\\]]({source})</sup>", ""
+                                )
                             sentence += f"<sup>[\\[{url_index[source]['index']}\\]]({source})</sup>"
                     output_sent.append(sentence)
                 chunk_text = "".join(output_sent)
