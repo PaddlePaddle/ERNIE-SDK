@@ -293,7 +293,7 @@ class RemoteToolkit:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
-            
+
             print(file_content)
 
             print("============================================================")
