@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from tools.utils import erniebot_chat, write_to_json
+from tools.utils import ReportCallbackHandler, erniebot_chat
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt.prompt_template import PromptTemplate
@@ -19,34 +19,37 @@ class ReviserActorAgent(Agent):
         name: str,
         llm: str = "erine-4.0",
         system_message: Optional[str] = None,
-        config: list = [],
-        save_log_path=None,
+        callbacks=None,
     ):
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
-        self.config = config
-        self.save_log_path = save_log_path
+        if callbacks is None:
+            self._callback_manager = ReportCallbackHandler()
+        else:
+            self._callback_manager = callbacks
 
     async def _run(self, draft, notes):
+        self._callback_manager.on_run_start(self.name, "")
         messages = [
             {
                 "role": "user",
                 "content": self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."),
             }
         ]
+        if len(messages[0]["content"]) > 4800:
+            model = "ernie-longtext"
+        else:
+            model = "ernie-4.0"
         while True:
             try:
-                report = erniebot_chat(messages=messages, system=self.system_message)
+                report = erniebot_chat(messages=messages, system=self.system_message, model=model)
                 self.config.append(("修订后的报告", report))
-                self.save_log()
+                self._callback_manager.on_run_end(self.name, report)
                 return report
             except Exception as e:
                 logger.error(e)
-                self.config.append(("报错信息", e))
+                self._callback_manager.on_run_error(self.name, str(e))
                 continue
-
-    def save_log(self):
-        write_to_json(self.save_log_path, self.config, mode="a")
