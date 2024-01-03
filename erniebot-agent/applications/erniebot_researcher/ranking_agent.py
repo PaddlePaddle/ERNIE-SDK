@@ -35,7 +35,7 @@ class RankingAgent(Agent):
         is_reset=False,
     ) -> None:
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
 
         self.ranking = ranking_tool
         self.config = config

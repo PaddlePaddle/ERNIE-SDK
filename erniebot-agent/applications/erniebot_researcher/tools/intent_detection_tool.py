@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Optional, Type
+from typing import Type
 
 from pydantic import Field
 
@@ -54,10 +54,10 @@ class IntentDetectionTool(Tool):
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
 
-    async def __call__(self, content: str, functions: Optional[str] = None, **kwargs):
+    async def __call__(self, content: str, **kwargs):
         prompt = auto_agent_instructions()
         messages = [{"role": "user", "content": prompt.format(content=content)}]
-        result = erniebot_chat(messages=messages, functions=functions, **kwargs)
+        result = erniebot_chat(messages=messages, **kwargs)
         # parse json object
         start_idx = result.index("{")
         end_idx = result.rindex("}")

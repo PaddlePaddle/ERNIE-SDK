@@ -56,7 +56,7 @@ class ResearchAgent:
             ......
         """
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.dir_path = dir_path
         self.report_type = report_type
         self.cfg = config

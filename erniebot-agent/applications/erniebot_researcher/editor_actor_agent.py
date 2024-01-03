@@ -58,7 +58,7 @@ class EditorActorAgent(Agent):
         save_log_path=None,
     ):
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
         self.config = config
         self.save_log_path = save_log_path

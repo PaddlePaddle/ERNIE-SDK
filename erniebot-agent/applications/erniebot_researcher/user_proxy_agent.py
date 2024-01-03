@@ -14,7 +14,7 @@ class UserProxyAgent(Agent):
         human_input_mode: Optional[str] = "ALWAYS",
     ):
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.human_input_mode = human_input_mode
 
     async def _async_run(self, draft):

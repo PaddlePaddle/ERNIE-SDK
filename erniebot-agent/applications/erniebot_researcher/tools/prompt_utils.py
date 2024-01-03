@@ -33,13 +33,3 @@ def create_abstract(chunk: str) -> Dict[str, str]:
         "role": "user",
         "content": f"""{chunk}，请用中文对上述文章进行总结，总结需要有概括性，不允许输出与文章内容无关的信息，字数控制在500字以内。""",
     }
-
-
-def create_outline(queries, question):
-    ques = ""
-    for i, query in enumerate(queries):
-        ques += f"{i+1}. {query}\n"
-    return {
-        "role": "user",
-        "content": f"""{ques}，请根据上面的问题生成一个关于"{question}"的大纲，大纲的最后章节是参考文献章节，字数控制在300字以内,并使用json的形式输出。""",
-    }
