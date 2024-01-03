@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 - **运行（run）**：指agent与用户的一轮交互。ERNIE Bot Agent框架中提供的agent均可配备memory组件，因此通常agent可以与用户进行多轮交互，多次运行之间的对话上下文能够被保存。
 - **行动（action）**：指agent在运行中被规划执行的一个动作，例如调用tool。
-- **步骤（step）**：指agent在运行中实际执行一次行动并得到结果，称为一个步骤。
+- **步骤（step）**：指agent在运行中实际执行一次行动并得到结果。
 
 #### 2.2 Function Agent
 
