@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import socket
 import time
 import unittest
@@ -6,11 +7,10 @@ import unittest
 import requests
 
 from erniebot_agent.tools import RemoteToolkit
-from erniebot_agent.tools.remote_tool import RemoteTool
-from erniebot_agent.tools.tool_manager import ToolManager
-
 from erniebot_agent.tools.calculator_tool import CalculatorTool
 from erniebot_agent.tools.current_time_tool import CurrentTimeTool
+from erniebot_agent.tools.remote_tool import RemoteTool
+from erniebot_agent.tools.tool_manager import ToolManager
 
 
 def is_port_in_use(port):
@@ -24,7 +24,6 @@ def is_port_in_use(port):
 
 
 class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
-
     def avaliable_free_port(self, exclude=None):
         exclude = exclude or []
         for port in range(8000, 9000):
@@ -37,7 +36,6 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
         raise ValueError("can not get valiable port in [8000, 8200]")
 
     def setUp(self) -> None:
-
         from multiprocessing import Process
 
         self.port = self.avaliable_free_port()
@@ -66,37 +64,21 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
 
         # 3. remote-toolkit
         toolkit = RemoteToolkit.from_url(f"http://127.0.0.1:{self.port}")
-        self.assertEqual(
-            len(toolkit.get_tools()),
-            2
-        )
+        self.assertEqual(len(toolkit.get_tools()), 2)
 
         # 4. current time description
         tool: RemoteTool = toolkit.get_tool("CurrentTimeTool")
-        self.assertEqual(
-            tool.tool_view.description,
-            CurrentTimeTool.description
-        )
+        self.assertEqual(tool.tool_view.description, CurrentTimeTool.description)
 
         # 5. parameters
         self.assertIsNone(tool.tool_view.parameters)
         model_fields = tool.tool_view.returns.model_fields
-        self.assertEqual(
-            len(model_fields),
-            1
-        )
-        self.assertIn(
-            "current_time",
-            model_fields
-        )
+        self.assertEqual(len(model_fields), 1)
+        self.assertIn("current_time", model_fields)
         current_time = model_fields["current_time"]
+        self.assertEqual(current_time.annotation, str)
         self.assertEqual(
-            current_time.annotation,
-            str
-        )
-        self.assertEqual(
-            current_time.description,
-            CurrentTimeTool.ouptut_type.model_fields["current_time"].description
+            current_time.description, CurrentTimeTool.ouptut_type.model_fields["current_time"].description
         )
 
 

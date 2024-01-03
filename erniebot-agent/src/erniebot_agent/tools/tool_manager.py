@@ -13,13 +13,15 @@
 # limitations under the License.
 from __future__ import annotations
 
-import json
-from typing import Dict, List, final
-from dataclasses import asdict
-import uvicorn
-import types
 import functools
+import json
+import types
+from dataclasses import asdict
+from typing import Dict, List, final
+
+import uvicorn
 from fastapi import FastAPI
+
 from erniebot_agent.tools.base import BaseTool
 
 
@@ -85,13 +87,13 @@ class ToolManager(object):
         def create_func(f, func_types, tool):
             # add your code to first parameter
             new_func = types.FunctionType(
-                f.__code__, f.__globals__, f.__name__,
-                f.__defaults__, f.__closure__
+                f.__code__, f.__globals__, f.__name__, f.__defaults__, f.__closure__
             )
             new_func.__annotations__ = func_types
             return functools.partial(new_func, __tool__=tool)
 
         for tool in self._tools.values():
+
             async def create_tool_endpoint_without_inputs(__tool__):
                 return await __tool__()
 
@@ -111,13 +113,12 @@ class ToolManager(object):
                 endpoint=func,
                 response_model=tool.ouptut_type,
                 description=tool.description,
-                operation_id=tool.tool_name
+                operation_id=tool.tool_name,
             )
 
         @app.get("/.well-known/openapi.yaml")
         def get_openapi_yaml():
-            """get openapi json schema from fastapi
-            """
+            """get openapi json schema from fastapi"""
             return app.openapi()
 
         uvicorn.run(app, host="0.0.0.0", port=port)
