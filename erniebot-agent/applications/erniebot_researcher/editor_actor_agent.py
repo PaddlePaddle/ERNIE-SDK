@@ -5,9 +5,9 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler, json_correct
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
+from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 
