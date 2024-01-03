@@ -2,7 +2,6 @@ import json
 import logging
 from typing import Optional
 
-from tools.utils import erniebot_chat, write_to_json
 from tools.utils import ReportCallbackHandler, erniebot_chat
 
 from erniebot_agent.agents.agent import Agent

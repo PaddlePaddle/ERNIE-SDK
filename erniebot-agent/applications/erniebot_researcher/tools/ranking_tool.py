@@ -6,11 +6,12 @@ from typing import List, Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+
 logger = logging.getLogger(__name__)
 
 

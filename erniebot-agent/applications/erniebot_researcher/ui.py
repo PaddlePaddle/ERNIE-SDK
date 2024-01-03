@@ -5,11 +5,11 @@ import logging
 import os
 
 import gradio as gr
-from EditorActorAgent import EditorActorAgent
+from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
-from RankingAgent import RankingAgent
-from ResearchAgent import ResearchAgent
-from ReviserActorAgent import ReviserActorAgent
+from ranking_agent import RankingAgent
+from research_agent import ResearchAgent
+from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
 from tools.ranking_tool import TextRankingTool
@@ -19,6 +19,7 @@ from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import FaissSearch, build_index, write_md_to_pdf
 
+from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.retrieval import BaizhongSearch
 
@@ -89,11 +90,12 @@ def generate_report(query, history=[]):
             knowledge_base_name=args.knowledge_base_name_abstract,
             knowledge_base_id=args.knowledge_base_id_abstract,
         )
-
-    intent_detection_tool = IntentDetectionTool()
-    outline_generation_tool = OutlineGenerationTool()
-    ranking_tool = TextRankingTool()
-    report_writing_tool = ReportWritingTool()
+    llm = ERNIEBot(model="ernie-4.0")
+    llm_long = ERNIEBot(model="ernie-longtext")
+    intent_detection_tool = IntentDetectionTool(llm)
+    outline_generation_tool = OutlineGenerationTool(llm)
+    ranking_tool = TextRankingTool(llm, llm_long)
+    report_writing_tool = ReportWritingTool(llm, llm_long)
     summarization_tool = TextSummarizationTool()
     task_planning_tool = TaskPlanningTool()
     semantic_citation_tool = SemanticCitationTool()
@@ -185,7 +187,7 @@ def launch_ui():
                 clear = gr.Button("清除", variant="primary", scale=1)
             submit.click(generate_report, inputs=[query_textbox], outputs=[report, report_url])
             clear.click(lambda _: ([None, None]), outputs=[report, report_url])
-        recording = gr.Textbox(label="历史记录")
+        recording = gr.Textbox(label="历史记录", max_lines=10)
         with gr.Row():
             clear_recoding = gr.Button(value="记录清除")
             submit_recoding = gr.Button(value="记录更新")

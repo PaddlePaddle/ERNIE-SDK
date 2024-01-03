@@ -204,6 +204,8 @@ def postprocess(report):
             abstract_json = json.loads(abstract_json[l_index : r_index + 1])
             abstract = abstract_json["摘要"]
             key = abstract_json["关键词"]
+            if type(key) is list:
+                key = "，".join(key)
             break
         except Exception as e:
             print(e)
@@ -213,12 +215,12 @@ def postprocess(report):
         paragraphs = []
         title = report_list[0]
         paragraphs.append(title)
-        paragraphs.append("**摘要：**" + abstract)
-        paragraphs.append("**关键词：**" + key)
+        paragraphs.append("**摘要** " + abstract)
+        paragraphs.append("**关键词** " + key)
         content = ""
         for item in report_list[1:]:
             if "#" not in item:
-                content += item
+                content += item + "\n"
             else:
                 if len(content) > 300:
                     paragraphs.append(content)
