@@ -103,7 +103,7 @@
 
 为了直观展示，我们举例进行说明如何创建，搜索以及保存 `File`对象。
 
-1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件，注：它的生命周期同整个事件循环。
+1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件(它的生命周期同整个事件循环)。
 
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
