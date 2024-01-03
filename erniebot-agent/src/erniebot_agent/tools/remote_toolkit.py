@@ -188,6 +188,9 @@ class RemoteToolkit:
         # paths
         paths = []
         for path, path_info in openapi_dict.get("paths", {}).items():
+            if ".well-known/openapi.yaml" in path:
+                continue
+
             for method, path_method_info in path_info.items():
                 paths.append(
                     RemoteToolView.from_openapi_dict(
@@ -292,8 +295,15 @@ class RemoteToolkit:
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
-            toolkit = RemoteToolkit.from_openapi_file(
-                file_path, access_token=access_token, file_manager=file_manager
+            spec_dict, _ = read_from_filename(file_path)
+
+            url = url.strip("/")
+
+            if "servers" not in spec_dict:
+                spec_dict["servers"] = [{"url": url}]
+
+            toolkit = RemoteToolkit.from_openapi_dict(
+                spec_dict, access_token=access_token, file_manager=file_manager
             )
             for server in toolkit.servers:
                 server.url = url
