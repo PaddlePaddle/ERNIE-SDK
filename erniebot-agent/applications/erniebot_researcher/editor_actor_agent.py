@@ -1,16 +1,12 @@
+import json
 import logging
 from typing import Optional
 
-
-from tools.utils import (
-    ReportCallbackHandler,
-    erniebot_chat,
-    json_correct,
-)
+from tools.utils import ReportCallbackHandler, erniebot_chat, json_correct
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
-import json
+
 logger = logging.getLogger(__name__)
 
 EB_EDIT_TEMPLATE = """你是一名编辑。

@@ -3,11 +3,7 @@ import logging
 from collections import OrderedDict
 from typing import Optional
 
-from tools.utils import (
-    ReportCallbackHandler,
-    add_citation,
-    erniebot_chat,
-)
+from tools.utils import ReportCallbackHandler, add_citation, erniebot_chat
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate

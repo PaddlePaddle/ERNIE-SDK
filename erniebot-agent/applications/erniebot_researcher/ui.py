@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import hashlib
+import logging
 import os
 
 import gradio as gr
@@ -20,7 +21,7 @@ from tools.utils import FaissSearch, build_index, write_md_to_pdf
 
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.retrieval import BaizhongSearch
-import logging
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
 
@@ -50,7 +51,7 @@ parser.add_argument(
 
 parser.add_argument("--server_name", type=str, default="0.0.0.0")
 parser.add_argument("--server_port", type=int, default=8878)
-parser.add_argument("--log_path", type=str, default='log.txt')
+parser.add_argument("--log_path", type=str, default="log.txt")
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
@@ -58,7 +59,7 @@ logging.basicConfig(filename=args.log_path, level=logging.INFO)
 
 
 def get_logs(path=args.log_path):
-    file = open("文件路径/文件名.txt", "r")
+    file = open(path, "r")
     content = file.read()
     return content
 
