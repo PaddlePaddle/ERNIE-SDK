@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler, json_correct
+from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -77,7 +77,7 @@ class EditorActorAgent(Agent):
                 start_idx = suggestions.index("{")
                 end_idx = suggestions.rindex("}")
                 suggestions = suggestions[start_idx : end_idx + 1]
-                suggestions = json_correct(suggestions)
+                suggestions = self.json_correct(suggestions)
                 suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
@@ -87,3 +87,12 @@ class EditorActorAgent(Agent):
                 logger.error(e)
                 await self._callback_manager.on_run_error(self.name, error_information=str(e))
                 continue
+
+    async def json_correct(self, json_data):
+        messages = [HumanMessage("请纠正以下数据的json格式：" + json_data)]
+        response = await self.llm.chat(messages)
+        res = response.content
+        start_idx = res.index("{")
+        end_idx = res.rindex("}")
+        corrected_data = res[start_idx : end_idx + 1]
+        return corrected_data

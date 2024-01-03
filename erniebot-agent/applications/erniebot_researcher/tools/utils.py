@@ -112,17 +112,6 @@ def erniebot_chat(messages: list, functions: Optional[str] = None, model: Option
     return resp_stream["result"]
 
 
-def call_function(action: str, agent_role_prompt: str, model="ernie-longtext", **kwargs):
-    messages = [
-        {
-            "role": "user",
-            "content": action,
-        }
-    ]
-    answer = erniebot_chat(messages, system=agent_role_prompt, model=model, **kwargs)
-    return answer
-
-
 def write_to_file(filename: str, text: str) -> None:
     """Write text to a file
 
@@ -159,13 +148,13 @@ def write_to_json(filename: str, list_data: list, mode="w") -> None:
             file.write(item)
 
 
-def json_correct(json_data):
-    messages = [{"role": "user", "content": "请纠正以下数据的json格式：" + json_data}]
-    res = erniebot_chat(messages)
-    start_idx = res.index("{")
-    end_idx = res.rindex("}")
-    corrected_data = res[start_idx : end_idx + 1]
-    return corrected_data
+# def json_correct(json_data):
+#     messages = [{"role": "user", "content": "请纠正以下数据的json格式：" + json_data}]
+#     res = erniebot_chat(messages)
+#     start_idx = res.index("{")
+#     end_idx = res.rindex("}")
+#     corrected_data = res[start_idx : end_idx + 1]
+#     return corrected_data
 
 
 def add_citation(paragraphs, faiss_name, embeddings):
@@ -232,5 +221,4 @@ def postprocess(report):
                 paragraphs.append(item)
         return "\n\n".join(paragraphs)
     else:
-        breakpoint()
         raise Exception("Report format error")
