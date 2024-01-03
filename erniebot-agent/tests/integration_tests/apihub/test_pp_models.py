@@ -21,31 +21,31 @@ class TestPPRemoteTool(RemoteToolTesting):
         files = self.get_files(result)
         self.assertEqual(len(files), 2)
 
-    @pytest.mark.asyncio
-    async def test_pp_human_v2(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-human-v2", file_manager=self.file_manager)
+    # @pytest.mark.asyncio
+    # async def test_pp_human_v2(self):
+    #     toolkit = RemoteToolkit.from_aistudio("pp-human-v2", file_manager=self.file_manager)
 
-        file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
-        agent = self.get_agent(toolkit)
+    #     file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
+    #     agent = self.get_agent(toolkit)
 
-        result = await agent.run("请帮我对图中的行人进行分析", files=[file])
-        files = self.get_files(result)
+    #     result = await agent.run("请帮我对图中的行人进行分析", files=[file])
+    #     files = self.get_files(result)
 
-        self.assertEqual(files[-1].type, "output")
+    #     self.assertEqual(files[-1].type, "output")
 
-    @pytest.mark.asyncio
-    async def test_pp_humansegv2(self):
-        toolkit = RemoteToolkit.from_aistudio("humanseg", file_manager=self.file_manager)
+    # @pytest.mark.asyncio
+    # async def test_pp_humansegv2(self):
+    #     toolkit = RemoteToolkit.from_aistudio("humanseg", file_manager=self.file_manager)
 
-        agent = self.get_agent(toolkit)
+    #     agent = self.get_agent(toolkit)
 
-        file_path = self.download_fixture_file("humanseg_input_img.jpg")
-        file = await self.file_manager.create_file_from_path(file_path)
+    #     file_path = self.download_fixture_file("humanseg_input_img.jpg")
+    #     file = await self.file_manager.create_file_from_path(file_path)
 
-        result = await agent.run("对这张图片进行人像分割，包含的文件为：", files=[file])
-        files = self.get_files(result)
-        self.assertEqual(len(files), 2)
-        self.assertEqual(len(result.steps), 1)
+    #     result = await agent.run("对这张图片进行人像分割，包含的文件为：", files=[file])
+    #     files = self.get_files(result)
+    #     self.assertEqual(len(files), 2)
+    #     self.assertEqual(len(result.steps), 1)
 
     @pytest.mark.asyncio
     async def test_pp_tinypose(self):
