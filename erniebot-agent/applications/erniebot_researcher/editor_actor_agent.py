@@ -77,7 +77,7 @@ class EditorActorAgent(Agent):
                 start_idx = suggestions.index("{")
                 end_idx = suggestions.rindex("}")
                 suggestions = suggestions[start_idx : end_idx + 1]
-                suggestions = self.json_correct(suggestions)
+                suggestions = await self.json_correct(suggestions)
                 suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")

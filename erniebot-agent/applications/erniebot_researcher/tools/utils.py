@@ -148,15 +148,6 @@ def write_to_json(filename: str, list_data: list, mode="w") -> None:
             file.write(item)
 
 
-# def json_correct(json_data):
-#     messages = [{"role": "user", "content": "请纠正以下数据的json格式：" + json_data}]
-#     res = erniebot_chat(messages)
-#     start_idx = res.index("{")
-#     end_idx = res.rindex("}")
-#     corrected_data = res[start_idx : end_idx + 1]
-#     return corrected_data
-
-
 def add_citation(paragraphs, faiss_name, embeddings):
     if os.path.exists(faiss_name):
         shutil.rmtree(faiss_name)
