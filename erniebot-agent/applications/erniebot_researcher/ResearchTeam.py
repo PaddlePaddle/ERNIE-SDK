@@ -30,9 +30,9 @@ class ResearchTeam:
         if self.user_agent is not None:
             prompt = (
                 f"请你从{list_reports}个待选的多个报告草稿中，选择一个合适的报告,"
-                + "直接输入序号即可，输入的序号在1和"
-                + str(len(self.research_actor_instance))
-                + "之间。"
+                "直接输入序号即可，输入的序号在1和"
+                str(len(self.research_actor_instance))
+                "之间。"
             )
             index = await self.user_agent._run(prompt)
             immedia_report = list_reports[int(index) - 1]
@@ -45,7 +45,7 @@ class ResearchTeam:
             else:
                 markdown_report = revised_report
             respose = await self.editor_actor_instance._run(markdown_report)
-            if respose["accept"] is True:
+            if respose["accept"]:
                 break
             else:
                 revised_report = await self.revise_actor_instance._run(markdown_report, respose["notes"])
