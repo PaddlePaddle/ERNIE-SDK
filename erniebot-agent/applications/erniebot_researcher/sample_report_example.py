@@ -133,9 +133,10 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
             llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor")
-    reviser_actor = ReviserActorAgent(name="reviser")
+    editor_actor = EditorActorAgent(name="editor", llm=llm)
+    reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
     ranker_actor = RankingAgent(
+        llm=llm,
         name="ranker",
         ranking_tool=tool_sets["ranking"],
     )

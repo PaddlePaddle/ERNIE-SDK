@@ -1,9 +1,11 @@
 import logging
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler, erniebot_chat
+from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -17,11 +19,12 @@ class ReviserActorAgent(Agent):
     def __init__(
         self,
         name: str,
-        llm: str = "erine-4.0",
+        llm: BaseERNIEBot,
         system_message: Optional[str] = None,
         callbacks=None,
     ):
         self.name = name
+        self.llm = llm
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
@@ -33,20 +36,11 @@ class ReviserActorAgent(Agent):
 
     async def _run(self, draft, notes):
         self._callback_manager.on_run_start(self.name, "")
-        messages = [
-            {
-                "role": "user",
-                "content": self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."),
-            }
-        ]
-        if len(messages[0]["content"]) > 4800:
-            model = "ernie-longtext"
-        else:
-            model = "ernie-4.0"
+        messages = [HumanMessage(self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."))]
         while True:
             try:
-                report = erniebot_chat(messages=messages, system=self.system_message, model=model)
-                self.config.append(("修订后的报告", report))
+                response = await self.llm.chat(messages=messages, system=self.system_message)
+                report = response.content
                 self._callback_manager.on_run_end(self.name, report)
                 return report
             except Exception as e:

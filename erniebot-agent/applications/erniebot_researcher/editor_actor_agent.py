@@ -2,10 +2,12 @@ import json
 import logging
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler, erniebot_chat, json_correct
+from tools.utils import ReportCallbackHandler, json_correct
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +54,13 @@ class EditorActorAgent(Agent):
     def __init__(
         self,
         name: str,
-        llm: str = "ernie-4.0",
+        llm: BaseERNIEBot,
         system_message: Optional[str] = None,
         callbacks=None,
     ):
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
-        self.model = llm
+        self.llm = llm
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])
         if callbacks is None:
             self._callback_manager = ReportCallbackHandler()
@@ -67,21 +69,11 @@ class EditorActorAgent(Agent):
 
     async def _run(self, report):
         await self._callback_manager.on_run_start(agent_name=self.name, query="")
-        messages = [
-            {
-                "role": "user",
-                "content": self.prompt.format(report=report),
-            }
-        ]
-        if len(messages[0]["content"]) > 4800:
-            model = "ernie-longtext"
-        else:
-            model = "ernie-4.0"
+        messages = [HumanMessage(self.prompt.format(report=report))]
         while True:
             try:
-                suggestions = erniebot_chat(
-                    messages=messages, functions=eb_functions, model=model, system=self.system_message
-                )
+                response = await self.llm.chat(messages, functions=eb_functions, system=self.system_message)
+                suggestions = response.content
                 start_idx = suggestions.index("{")
                 end_idx = suggestions.rindex("}")
                 suggestions = suggestions[start_idx : end_idx + 1]
