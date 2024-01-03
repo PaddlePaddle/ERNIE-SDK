@@ -21,9 +21,9 @@ class ReviserActorAgent(Agent):
         system_message: Optional[str] = None,
         config: list = [],
         save_log_path=None,
-    ):  # type: ignore
+    ):
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])

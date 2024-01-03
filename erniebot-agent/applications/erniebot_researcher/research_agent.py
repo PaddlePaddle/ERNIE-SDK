@@ -5,7 +5,6 @@ from typing import Optional
 
 from tools.utils import add_citation, erniebot_chat, write_to_json
 
-from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ SELECT_PROMPT = """
 """
 
 
-class ResearchAgent(Agent):
+class ResearchAgent:
     """
     ResearchAgent, refer to
     https://github.com/assafelovic/gpt-researcher/blob/master/examples/permchain_agents/research_team.py
@@ -100,7 +99,7 @@ class ResearchAgent(Agent):
                 break
         return responses, url_dict
 
-    async def _run(self, query):
+    async def run(self, query):
         """
         Runs the ResearchAgent
         Returns:
@@ -192,7 +191,6 @@ class ResearchAgent(Agent):
                 continue
         self.config.append(("草稿", report))
         self.save_log()
-        breakpoint()
         # Generate Citations
         citation_search = add_citation(paragraphs, self.faiss_name_citation, self.embeddings)
         final_report, path = await self.citation(
