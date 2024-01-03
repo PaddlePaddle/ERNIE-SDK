@@ -7,7 +7,6 @@ from tools.utils import (
     ReportCallbackHandler,
     add_citation,
     erniebot_chat,
-    write_to_json,
 )
 
 from erniebot_agent.agents.agent import Agent
