@@ -147,7 +147,6 @@ class ReportWritingTool(Tool):
         messages = [HumanMessage(report_type_func(question, research_summary, outline))]
         response = await self.llm.chat(messages, system=agent_role_prompt)
         final_report = response.content
-        breakpoint()
         if final_report == "":
             raise Exception("报告生成错误")
         # Manually Add reference on the bottom

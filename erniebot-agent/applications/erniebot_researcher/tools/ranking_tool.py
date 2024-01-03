@@ -64,7 +64,6 @@ class TextRankingTool(Tool):
             scores_all = []
             for item in reports:
                 content = rank_report_prompt(report=item, query=query)
-                # messages = [{"role": "user", "content": content}]
                 messages = [HumanMessage(content)]
                 while True:
                     try:

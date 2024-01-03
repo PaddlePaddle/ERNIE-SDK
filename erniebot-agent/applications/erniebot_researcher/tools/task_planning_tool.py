@@ -81,33 +81,18 @@ class TaskPlanningTool(Tool):
         **kwargs,
     ):
         if not context:
-            # result = call_function(
-            #     action=generate_search_queries_prompt(question),
-            #     agent_role_prompt=agent_role_prompt,
-            #     temperature=0.7,
-            # )
             messages = [HumanMessage(content=generate_search_queries_prompt(question))]
             response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
             result = response.content
         else:
             try:
                 if not is_comprehensive:
-                    # result = call_function(
-                    #     action=generate_search_queries_with_context(context, question),
-                    #     agent_role_prompt=agent_role_prompt,
-                    #     temperature=0.7,
-                    # )
                     messages = [
                         HumanMessage(content=generate_search_queries_with_context(context, question))
                     ]
                     response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
                     result = response.content
                 else:
-                    # result = call_function(
-                    # action=generate_search_queries_with_context_comprehensive(context, question),
-                    # agent_role_prompt=agent_role_prompt,
-                    # temperature=0.7,
-                    # )
                     messages = [
                         HumanMessage(
                             content=generate_search_queries_with_context_comprehensive(context, question)
