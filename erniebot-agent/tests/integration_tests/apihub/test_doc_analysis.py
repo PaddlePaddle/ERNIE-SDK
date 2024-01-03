@@ -19,7 +19,8 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("请帮我分析一下这个文档里面的内容：", files=[self.file])
-        self.assertEqual(len(result.files), 1)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 1)
         self.assertIn("城市管理执法办法", result.text)
 
     async def test_official_doc(self):
@@ -28,5 +29,6 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("帮我识别一下这个文件里面的内容：", files=[self.file])
-        self.assertEqual(len(result.files), 1)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 1)
         self.assertIn("城市管理执法办法", result.text)
