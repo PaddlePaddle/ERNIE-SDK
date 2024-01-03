@@ -103,7 +103,7 @@
 
 为了直观展示，我们举例进行说明如何创建，搜索以及保存 `File`对象。
 
-1. 通过 `GlobalFileManagerHandler`获取全局的FileManager，通过它来控制所有文件(它的生命周期同整个事件循环)。
+1. 通过 `GlobalFileManagerHandler`获取配置以及获取全局的FileManager，通过它来控制所有文件(它的生命周期同整个事件循环)。
 
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
@@ -112,19 +112,34 @@ async def demo_function():
     # 获取全局的FileManager，通过它来与Agent交互
     file_manager = await GlobalFileManagerHandler().get()  
 ```
-2. 通过 `GlobalFileManagerHandler`创建 `File`
+2. 通过 `GlobalFileManagerHandler`创建 `LocalFile`
 
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()
-    # 从文件路径创建File, file_type可选择local或者remote，file_path需要具体到文件名
+    # 从文件路径创建File, file_type可选择local或者remote，file_path需要具体到文件名，此处为local的示例
     local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
     # 获取File的id，用于以后的查找
     print(local_file.id)
 ```
-3. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
+3. 通过 `GlobalFileManagerHandler`创建 `RemoteFile`
+```python
+from erniebot_agent.file import GlobalFileManagerHandler
+
+async def demo_function():
+    # 需要在事件循环最开始配置，打开远程文件开关，注意需配置access token
+    await GlobalFileManagerHandler().configure(enable_remote_file=True)
+    ... # 此处省略一些其他的中间过程
+    # 获取全局的FileManager，通过它来创建RemoteFile
+    file_manager = await GlobalFileManagerHandler().get()
+    # 从文件路径创建File, file_type可选择local或者remote，file_path需要具体到文件名，此处为remote的示例
+    remote_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='remote')
+    # 获取File的id，用于以后的查找
+    print(remote_file.id)
+```
+4. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
@@ -137,7 +152,7 @@ async def demo_function():
     # 写出到指定位置，your_willing_path需要具体到文件名
     await local_file.write_contents_to('your_willing_path')
 ```
-4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件，详见[Agent](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/modules/agents/#22-function-agent)中的**使用function agent调用输入、输出中包含文件的tool**部分。
+5. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件，详见[Agent](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/modules/agents/#22-function-agent)中的**使用function agent调用输入、输出中包含文件的tool**部分。
 
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
