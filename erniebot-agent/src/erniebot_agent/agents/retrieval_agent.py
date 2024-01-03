@@ -14,14 +14,28 @@ QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问�
 
 OPENAI_RAG_PROMPT = """检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['document']}}
+    第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
 
 
+CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答问题相关的任何部分，并原样保留。如果背景中没有与问题相关的部分，则返回{no_output_str}。
+
+记住，不要编辑提取的背景部分。
+
+> 问题: {{query}}
+> 背景:
+>>>
+{{context}}
+>>>
+提取的相关部分:"""
+
+
 class RetrievalAgent(Agent):
-    def __init__(self, knowledge_base, top_k: int = 2, threshold: float = 0.1, **kwargs):
+    def __init__(
+        self, knowledge_base, top_k: int = 2, threshold: float = 0.1, use_extractor: bool = False, **kwargs
+    ):
         super().__init__(**kwargs)
         self.top_k = top_k
         self.threshold = threshold
@@ -29,6 +43,8 @@ class RetrievalAgent(Agent):
         self.query_transform = PromptTemplate(QUERY_DECOMPOSITION, input_variables=["prompt"])
         self.knowledge_base = knowledge_base
         self.rag_prompt = PromptTemplate(OPENAI_RAG_PROMPT, input_variables=["documents", "query"])
+        self.use_extractor = use_extractor
+        self.extractor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
 
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
@@ -47,17 +63,36 @@ class RetrievalAgent(Agent):
         json_results = self._parse_results(output_message.content)
         sub_queries = json_results.values()
         retrieval_results = []
-        duplicates = set()
-        for query in sub_queries:
-            documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
-            docs = [item for item in documents["documents"]]
-            for doc in docs:
-                if doc["content"] not in duplicates:
-                    duplicates.add(doc["content"])
-                    retrieval_results.append(doc)
-        step_input = HumanMessage(
-            content=self.rag_prompt.format(query=prompt, documents=retrieval_results[:3])
-        )
+        if self.use_extractor:
+            for query in sub_queries:
+                documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
+                docs = [item for item in documents["documents"]]
+                context = "\n".join([item["content"] for item in docs])
+                step_input = HumanMessage(content=self.extractor.format(query=prompt, context=context))
+                local_history: List[Message] = [step_input]
+                llm_resp = await self.run_llm(
+                    messages=local_history,
+                    functions=None,
+                    system=self.system_message.content if self.system_message is not None else None,
+                )
+                # Parse Compressed results
+                output_message = llm_resp.message
+                compressed_data = docs[0]
+                compressed_data["sub_query"] = query
+                compressed_data["content"] = output_message.content
+                retrieval_results.append(compressed_data)
+
+        else:
+            duplicates = set()
+            for query in sub_queries:
+                documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
+                docs = [item for item in documents["documents"]]
+                for doc in docs:
+                    if doc["content"] not in duplicates:
+                        duplicates.add(doc["content"])
+                        retrieval_results.append(doc)
+            retrieval_results = retrieval_results[:3]
+        step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=retrieval_results))
         chat_history: List[Message] = [step_input]
         llm_resp = await self.run_llm(
             messages=chat_history,
@@ -67,9 +102,9 @@ class RetrievalAgent(Agent):
 
         output_message = llm_resp.message
         chat_history.append(output_message)
-        response = self._create_finished_response(chat_history, actions_taken)
         self.memory.add_message(chat_history[0])
         self.memory.add_message(chat_history[-1])
+        response = self._create_finished_response(chat_history, actions_taken)
         return response
 
     def _parse_results(self, results):
