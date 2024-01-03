@@ -4,3 +4,4 @@ mkdocstrings-python
 mkdocs-material
 mkdocs-jupyter
 griffe
+mkdocs-rss-plugin
