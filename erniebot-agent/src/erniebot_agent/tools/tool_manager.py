@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import json
 from typing import Dict, List, final
-from typing import List
 from dataclasses import asdict
 import uvicorn
 import types
@@ -84,8 +84,10 @@ class ToolManager(object):
 
         def create_func(f, func_types, tool):
             # add your code to first parameter
-            new_func = types.FunctionType(f.__code__, f.__globals__, f.__name__,
-                f.__defaults__, f.__closure__)
+            new_func = types.FunctionType(
+                f.__code__, f.__globals__, f.__name__,
+                f.__defaults__, f.__closure__
+            )
             new_func.__annotations__ = func_types
             return functools.partial(new_func, __tool__=tool)
 
@@ -102,7 +104,7 @@ class ToolManager(object):
                 func = create_func(create_tool_endpoint, type_annotation, tool)
             else:
                 func = create_func(create_tool_endpoint_without_inputs, {}, tool)
-            
+
             tool_name = tool.tool_name.split("/")[-1]
             app.add_api_route(
                 f"/erniebot-agent-tools/0.0/{tool_name}",
@@ -111,7 +113,7 @@ class ToolManager(object):
                 description=tool.description,
                 operation_id=tool.tool_name
             )
-        
+
         @app.get("/.well-known/openapi.yaml")
         def get_openapi_yaml():
             """get openapi json schema from fastapi

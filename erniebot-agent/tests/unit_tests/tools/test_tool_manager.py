@@ -1,33 +1,16 @@
 from __future__ import annotations
-
-import base64
-import json
-import os
 import socket
-import tempfile
 import time
 import unittest
-import pytest
-import uuid
 
-import uvicorn
 import requests
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from requests.models import Response
-from typing import List
 
-from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.remote_tool import RemoteTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 from erniebot_agent.tools.calculator_tool import CalculatorTool
 from erniebot_agent.tools.current_time_tool import CurrentTimeTool
-from erniebot_agent.tools.utils import (
-    get_file_info_from_param_view,
-    parse_file_from_json_response,
-)
 
 
 def is_port_in_use(port):
@@ -54,7 +37,7 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
         raise ValueError("can not get valiable port in [8000, 8200]")
 
     def setUp(self) -> None:
-      
+
         from multiprocessing import Process
 
         self.port = self.avaliable_free_port()
@@ -73,11 +56,11 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
 
     async def test_plugin_schema(self):
         self.wait_until_server_is_ready()
-        
+
         # 1. get openapi yaml
         response = requests.get(f"http://127.0.0.1:{self.port}/.well-known/openapi.yaml")
         openapi = response.json()
-        
+
         # 2. validate
         self.assertEqual(openapi["info"]["version"], "0.0")
 
@@ -87,7 +70,7 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
             len(toolkit.get_tools()),
             2
         )
-        
+
         # 4. current time description
         tool: RemoteTool = toolkit.get_tool("CurrentTimeTool")
         self.assertEqual(
@@ -116,7 +99,6 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
             CurrentTimeTool.ouptut_type.model_fields["current_time"].description
         )
 
-        
 
 def test_tool_manager_crud():
     pass
