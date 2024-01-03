@@ -23,7 +23,7 @@ class ReportCallbackHandler(CallbackHandler):
         logging.info(f"{agent_name}开始运行：{query}")
 
     async def on_run_end(self, agent_name, response):
-        print("{agent_name}结束运行,{response}")
+        logging.info(f"{agent_name}结束运行,{response}")
 
     async def on_run_tool(self, tool_name, response):
         logging.info(f"{tool_name}的运行结果：{response}")
