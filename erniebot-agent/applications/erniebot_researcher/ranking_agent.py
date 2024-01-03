@@ -2,10 +2,10 @@ import json
 import logging
 from typing import Optional
 
+from erniebot.prompt import PromptTemplate
 from tools.utils import erniebot_chat, write_to_json
 
 from erniebot_agent.agents.agent import Agent
-from erniebot.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 
