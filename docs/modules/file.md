@@ -112,7 +112,6 @@ async def demo_function():
     # 获取全局的FileManager，通过它来与Agent交互
     file_manager = await GlobalFileManagerHandler().get()  
 ```
-
 2. 通过 `GlobalFileManagerHandler`创建 `File`
 
 ```python
@@ -122,10 +121,10 @@ async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()
     # 从文件路径创建File, file_type可选择local或者remote
     local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
+    # 获取File的id
+    print(local_file.id)
 ```
-
 3. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
-
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
@@ -138,7 +137,6 @@ async def demo_function():
     # 写出到指定位置
     await local_file.write_contents_to('your_willing_path')
 ```
-
 4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件，详见[Agent](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/modules/agents/#22-function-agent)中的**使用function agent调用输入、输出中包含文件的tool**部分。
 
 ```python
