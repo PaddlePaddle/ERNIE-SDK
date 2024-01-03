@@ -1,8 +1,6 @@
 import json
 import logging
 from typing import Optional
-
-from tools.prompt_utils import eb_functions
 from tools.utils import erniebot_chat, json_correct, write_to_json
 
 from erniebot_agent.agents.agent import Agent
@@ -21,6 +19,30 @@ EB_EDIT_TEMPLATE = """你是一名编辑。
 如果不符合以上所有标准，你应该发送适当的修订笔记，请以json的格式输出：
 如果需要进行修订，则按照下面的格式输出：{"accept":"false","notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": "true","notes":""}
 """
+
+eb_functions = [
+    {
+        "name": "revise",
+        "description": "发送草稿以进行修订",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string",
+                    "description": "编辑的中文备注，用于指导修订。",
+                },
+            },
+        },
+    },
+    {
+        "name": "accept",
+        "description": "接受草稿",
+        "parameters": {
+            "type": "object",
+            "properties": {"ready": {"const": True}},
+        },
+    },
+]
 
 
 class EditorActorAgent(Agent):

@@ -2,12 +2,24 @@ import json
 import logging
 from typing import Optional
 
-from tools.prompt_utils import prompt_markdow
 from tools.utils import erniebot_chat, write_to_json
 
 from erniebot_agent.agents.agent import Agent
+from erniebot.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
+
+
+def get_markdown_check_prompt(report):
+    prompt_markdow_str = """
+    现在给你1篇报告，你需要判断报告是不是markdown格式，并给出理由。你需要输出判断理由以及判断结果，判断结果是报告是markdown形式或者报告不是markdown格式
+    你的输出结果应该是个json形式，包括两个键值，一个是"判断理由"，一个是"accept"，如果你认为报告是markdown形式，则"accept"取值为True,如果你认为报告不是markdown形式，则"accept"取值为False，
+    你需要判断报告是不是markdown格式，并给出理由
+    {'判断理由':...,'accept':...}
+    报告：{{report}}
+    """
+    prompt_markdow = PromptTemplate(prompt_markdow_str, input_variables=["report"])
+    return prompt_markdow.format(report=report)
 
 
 class RankingAgent(Agent):
@@ -53,7 +65,7 @@ class RankingAgent(Agent):
     def check_format(self, report):
         while True:
             try:
-                messages = [{"role": "user", "content": prompt_markdow.format(report=report)}]
+                messages = [{"role": "user", "content": get_markdown_check_prompt(report)}]
                 result = erniebot_chat(messages=messages, temperature=0.001)
                 l_index = result.index("{")
                 r_index = result.index("}")
