@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import List, Type
 
 from pydantic import Field
@@ -11,9 +12,11 @@ from erniebot_agent.tools.schema import ToolParameterView
 from .prompt_utils import rank_report_prompt
 from .utils import erniebot_chat
 
+logger = logging.getLogger(__name__)
+
 
 class TextRankingToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
+    query: str = Field(description="Chunk of text to ranking")
 
 
 class TextRankingToolOutputView(ToolParameterView):
@@ -33,7 +36,7 @@ class TextRankingTool(Tool):
         if len(reports) == 1:
             return reports[0]
         elif len(reports) > 1:
-            socres_all = []
+            scores_all = []
             for item in reports:
                 content = rank_report_prompt(report=item, query=query)
                 messages = [{"role": "user", "content": content}]
@@ -50,11 +53,11 @@ class TextRankingTool(Tool):
                         result = result[l_index : r_index + 1]
                         result_dict = json.loads(result)
                         socre = int(result_dict["报告总得分"])
-                        socres_all.append(socre)
+                        scores_all.append(socre)
                         break
                     except Exception as e:
-                        print(e)
+                        logger.error(e)
                 continue
-            best_index = socres_all.index(max(socres_all))
+            best_index = scores_all.index(max(scores_all))
             rank_result = reports[best_index]
             return rank_result

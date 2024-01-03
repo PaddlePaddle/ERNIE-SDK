@@ -22,35 +22,6 @@ def generate_agent_role_prompt(agent):
     return prompts.get(agent, "No such agent")
 
 
-def auto_agent_instructions():
-    agent_instructions = """
-        这项任务涉及研究一个给定的主题，不论其复杂性或是否有确定的答案。研究是由一个特定的agent进行的，该agent由其类型和角色来定义，每个agent需要不同的指令。
-        Agent: agent是由主题领域和可用于研究所提供的主题的特定agent的名称来确定的。agent根据其专业领域进行分类，每种agent类型都与相应的表情符号相关联。
-        示例:
-        task: "我应该投资苹果股票吗"
-        response:
-        {
-            "agent": "💰 Finance Agent",
-            "agent_role_prompt: "您是一位经验丰富的金融分析AI助手。您的主要目标是根据提供的数据和趋势撰写全面、睿智、公正和系统化的财务报告。"
-        }
-        task: "转售运动鞋是否有利可图？"
-        response:
-        {
-            "agent":  "📈 Business Analyst Agent",
-            "agent_role_prompt": "您是一位经验丰富的AI商业分析助手。您的主要目标是根据提供的商业数据、市场趋势和战略分析制定全面、有见地、公正和系统化的业务报告。"
-        }
-        task: "海南最有趣的景点是什么？
-        response:
-        {
-            "agent:  "🌍 Travel Agent",
-            "agent_role_prompt": "您是一位环游世界的AI导游助手。您的主要任务是撰写有关给定地点的引人入胜、富有洞察力、公正和结构良好的旅行报告，包括历史、景点和文化见解。"
-        }
-        task: {{content}}
-        response:
-    """
-    return PromptTemplate(agent_instructions, input_variables=["content"])
-
-
 def create_message(chunk: str, question: str) -> Dict[str, str]:
     """Create a message for the chat completion
 
@@ -100,12 +71,12 @@ def generate_search_queries_prompt(question):
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
-    queries_prompt = """
+    prompt = """
     写出 4 个谷歌搜索查询，以从以下内容形成客观意见： "{{question}}"
     您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
     """
-    Queries_prompt = PromptTemplate(queries_prompt, input_variables=["question"])
-    return Queries_prompt.format(question=question)
+    queries_prompt = PromptTemplate(prompt, input_variables=["question"])
+    return queries_prompt.format(question=question)
 
 
 def generate_search_queries_with_context(context, question):
@@ -113,12 +84,12 @@ def generate_search_queries_with_context(context, question):
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
-    queries_prompt = """
+    prompt = """
     {{context}} 根据上述信息，写出 4 个搜索查询，以从以下内容形成客观意见： "{{question}}"
     您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
     """
-    Queries_prompt = PromptTemplate(queries_prompt, input_variables=["context", "question"])
-    return Queries_prompt.format(context=context, question=question)
+    queries_prompt = PromptTemplate(prompt, input_variables=["context", "question"])
+    return queries_prompt.format(context=context, question=question)
 
 
 def generate_search_queries_with_context_comprehensive(context, question):
@@ -142,7 +113,7 @@ def generate_report_prompt(question, research_summary, outline=None):
     Returns: str: The report prompt for the given question and research summary
     """
     if outline is None:
-        report_prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
+        prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
         现在给你一些信息，帮助你进行报告生成任务
         信息：{{information}}
         使用上述信息，详细报告回答以下问题或主题{{question}}
@@ -152,11 +123,11 @@ def generate_report_prompt(question, research_summary, outline=None):
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
         """
-        Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "question"])
-        strs = Report_prompt.format(information=research_summary, question=question)
+        report_prompt = PromptTemplate(prompt, input_variables=["information", "question"])
+        strs = report_prompt.format(information=research_summary, question=question)
     else:
         outline = outline.replace('"', "'")
-        report_prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
+        prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
         现在给你一些信息，帮助你进行报告生成任务
         信息：{{information}}
         使用上述信息，根据设定好的大纲{{outline}}
@@ -167,8 +138,8 @@ def generate_report_prompt(question, research_summary, outline=None):
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
         """
-        Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "outline", "question"])
-        strs = Report_prompt.format(information=research_summary, outline=outline, question=question)
+        report_prompt = PromptTemplate(prompt, input_variables=["information", "outline", "question"])
+        strs = report_prompt.format(information=research_summary, outline=outline, question=question)
     return strs.replace(". ", ".")
 
 
@@ -216,17 +187,6 @@ def get_report_by_type(report_type):
         "outline_report": generate_outline_report_prompt,
     }
     return report_type_mapping[report_type]
-
-
-EDIT_TEMPLATE = """你是一名编辑。
-你被指派任务编辑以下草稿，该草稿由一名非专家撰写。
-如果这份草稿足够好以供发布，请接受它，或者将它发送进行修订，同时附上指导修订的笔记。
-你应该检查以下事项：
-- 这份草稿必须充分回答原始问题。
-- 这份草稿必须按照APA格式编写。
-- 这份草稿必须不包含低级的句法错误。
-如果不符合以上所有标准，你应该发送适当的修订笔记。
-"""
 
 
 def generate_revisor_prompt(draft, notes):

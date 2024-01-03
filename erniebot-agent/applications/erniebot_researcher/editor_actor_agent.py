@@ -22,6 +22,7 @@ EB_EDIT_TEMPLATE = """你是一名编辑。
 如果需要进行修订，则按照下面的格式输出：{"accept":"false","notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": "true","notes":""}
 """
 
+
 class EditorActorAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = EB_EDIT_TEMPLATE
 
@@ -58,6 +59,7 @@ class EditorActorAgent(Agent):
                 suggestions = json_correct(suggestions)
                 suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
+                    raise Exception("accept and notes key do not exist")
 
                 self.config.append(("编辑给出的建议", f"{suggestions}\n\n"))
                 self.save_log()
