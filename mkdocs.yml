@@ -11,7 +11,7 @@ nav:
   - 核心模块:
     - Agents: 'modules/agents.md'
     - Chat Models: 'modules/chat_models.md'
-    - Tools: 'modules/tools/create-tool.md'
+    - Tools: 'modules/tools.md'
     - File: 'modules/file.md'
     - Memory: 'modules/memory.md'
     - Message: 'modules/message.md'
