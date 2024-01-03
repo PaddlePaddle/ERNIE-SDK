@@ -1,12 +1,16 @@
-import json
 import logging
 from typing import Optional
 
-from tools.utils import erniebot_chat, json_correct, write_to_json
+
+from tools.utils import (
+    ReportCallbackHandler,
+    erniebot_chat,
+    json_correct,
+)
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
-
+import json
 logger = logging.getLogger(__name__)
 
 EB_EDIT_TEMPLATE = """你是一名编辑。
@@ -54,27 +58,33 @@ class EditorActorAgent(Agent):
         name: str,
         llm: str = "ernie-4.0",
         system_message: Optional[str] = None,
-        config: list = [],
-        save_log_path=None,
+        callbacks=None,
     ):
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
-        self.config = config
-        self.save_log_path = save_log_path
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])
+        if callbacks is None:
+            self._callback_manager = ReportCallbackHandler()
+        else:
+            self._callback_manager = callbacks
 
     async def _run(self, report):
+        await self._callback_manager.on_run_start(agent_name=self.name, query="")
         messages = [
             {
                 "role": "user",
                 "content": self.prompt.format(report=report),
             }
         ]
+        if len(messages[0]["content"]) > 4800:
+            model = "ernie-longtext"
+        else:
+            model = "ernie-4.0"
         while True:
             try:
                 suggestions = erniebot_chat(
-                    messages=messages, functions=eb_functions, model=self.model, system=self.system_message
+                    messages=messages, functions=eb_functions, model=model, system=self.system_message
                 )
                 start_idx = suggestions.index("{")
                 end_idx = suggestions.rindex("}")
@@ -83,14 +93,9 @@ class EditorActorAgent(Agent):
                 suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
-
-                self.config.append(("编辑给出的建议", f"{suggestions}\n\n"))
-                self.save_log()
+                await self._callback_manager.on_run_end(self.name, suggestions)
                 return suggestions
             except Exception as e:
                 logger.error(e)
-                self.config.append(("报错信息", e))
+                await self._callback_manager.on_run_error(self.name, error_information=str(e))
                 continue
-
-    def save_log(self):
-        write_to_json(self.save_log_path, self.config, mode="a")

@@ -3,12 +3,17 @@ import logging
 from collections import OrderedDict
 from typing import Optional
 
-from tools.utils import add_citation, erniebot_chat, write_to_json
+from tools.utils import (
+    ReportCallbackHandler,
+    add_citation,
+    erniebot_chat,
+    write_to_json,
+)
 
+from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
-
 SUMMARIZE_MAX_LENGTH = 1800
 
 SELECT_PROMPT = """
@@ -17,7 +22,7 @@ SELECT_PROMPT = """
 """
 
 
-class ResearchAgent:
+class ResearchAgent(Agent):
     """
     ResearchAgent, refer to
     https://github.com/assafelovic/gpt-researcher/blob/master/examples/permchain_agents/research_team.py
@@ -40,13 +45,12 @@ class ResearchAgent:
         citation_tool,
         summarize_tool,
         faiss_name_citation,
-        config=[],
         system_message: Optional[str] = None,
         use_outline=True,
         use_context_planning=True,
-        save_log_path=None,
         nums_queries=4,
         embeddings=None,
+        callbacks=None,
     ):
         """
         Initialize the ResearchAgent class.
@@ -56,10 +60,9 @@ class ResearchAgent:
             ......
         """
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
         self.dir_path = dir_path
         self.report_type = report_type
-        self.cfg = config
         self.retriever = retriever_tool
         self.retriever_abstract = retriever_abstract_tool
         self.intent_detection = intent_detection_tool
@@ -72,12 +75,14 @@ class ResearchAgent:
         self.use_outline = use_outline
         self.agent_name = agent_name
         self.faiss_name_citation = faiss_name_citation
-        self.config = config
-        self.save_log_path = save_log_path
         self.use_context_planning = use_context_planning
         self.nums_queries = nums_queries
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
         self.embeddings = embeddings
+        if callbacks is None:
+            self._callback_manager = ReportCallbackHandler()
+        else:
+            self._callback_manager = callbacks
 
     async def run_search_summary(self, query):
         responses = []
@@ -95,24 +100,25 @@ class ResearchAgent:
                 value = doc["url"]
                 url_dict[key] = value
             else:
-                logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
+                print(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
         return responses, url_dict
 
-    async def run(self, query):
+    async def _run(self, query):
         """
         Runs the ResearchAgent
         Returns:
             Report
         """
-        logger.info(f"🔎 Running research for '{query}'...")
-        self.config.append(("开始", f"🔎 Running research for '{query}'..."))
-        self.save_log()
+        await self._callback_manager.on_run_start(
+            agent_name=self.name, query=f"🔎 Running research for '{query}'..."
+        )
         # Generate Agent
         result = await self.intent_detection(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
-        self.config.append((None, self.agent + self.role))
-        self.save_log()
+        await self._callback_manager.on_run_tool(
+            tool_name=self.intent_detection.description, response=self.agent + self.role
+        )
         if self.use_context_planning:
             sub_queries = []
             res = self.retriever_abstract.search(query, top_k=3)
@@ -147,19 +153,17 @@ class ResearchAgent:
             sub_queries = await self.task_planning(
                 question=query, agent_role_prompt=self.role, context=context
             )
-        self.config.append(("任务分解", "\n".join(sub_queries)))
-        self.save_log()
+        await self._callback_manager.on_run_tool(
+            tool_name=self.task_planning.description, response="\n".join(sub_queries)
+        )
         # Run Sub-Queries
         meta_data = OrderedDict()
-        # research_summary = ""
         paragraphs_item = []
-        # summary_list=[]
         for sub_query in sub_queries:
             research_result, url_dict = await self.run_search_summary(sub_query)
             meta_data.update(url_dict)
             paragraphs_item.extend(research_result)
-            self.config.append((sub_query, f"{research_result}\n\n"))
-            self.save_log()
+            await self._callback_manager.on_run_tool(tool_name=sub_query, response=f"{research_result}\n\n")
         paragraphs = []
         for item in paragraphs_item:
             if item not in paragraphs:
@@ -169,8 +173,7 @@ class ResearchAgent:
         # Generate Outline
         if self.use_outline:
             outline = await self.outline(sub_queries, query)
-            self.config.append(("报告大纲", outline))
-            self.save_log()
+            await self._callback_manager.on_run_tool(tool_name=self.outline.description, response=outline)
         else:
             outline = None
         # Conduct Research
@@ -186,19 +189,17 @@ class ResearchAgent:
                 )
                 break
             except Exception as e:
-                logger.error(e)
-                self.config.append(("报错", str(e)))
+                await self._callback_manager.on_run_error(
+                    tool_name=self.report_writing.description, error_information=str(e)
+                )
                 continue
-        self.config.append(("草稿", report))
-        self.save_log()
+        await self._callback_manager.on_run_tool(tool_name=self.report_writing.description, response=report)
         # Generate Citations
         citation_search = add_citation(paragraphs, self.faiss_name_citation, self.embeddings)
         final_report, path = await self.citation(
             report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
         )
-        self.config.append(("草稿加引用", report))
-        self.save_log()
+        await self._callback_manager.on_run_tool(tool_name=self.citation.description, response=final_report)
+        await self._callback_manager.on_run_end(tool_name=self.name, response=f"报告存储在{path}")
+        breakpoint()
         return final_report, path
-
-    def save_log(self):
-        write_to_json(self.save_log_path, self.config)
