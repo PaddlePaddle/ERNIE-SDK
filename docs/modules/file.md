@@ -8,11 +8,11 @@
 
 !!! notes 注意
 
-    -**不推荐**用户自行操作 `File`类以免造成资源泄露。
+    - **不推荐**用户自行操作 `File`类以免造成资源泄露。
 
-    -`FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
+    - `FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
 
-    -`FileManager`将作为此模块中生命周期最长的对象，它会在关闭时回收所有的持有对象（RemoteClient/temp local file），请不要随意关闭它。如果需要关闭，需要先停止对其中注册文件的使用。
+    - `FileManager`将作为此模块中生命周期最长的对象，它会在关闭时回收所有的持有对象（RemoteClient/temp local file），请不要随意关闭它。如果需要关闭，需要先停止对其中注册文件的使用。
 
 ## 2. 核心类
 
@@ -86,7 +86,7 @@
 
 !!! notes 注意
 
-    -`FileManager` 类不可被复制以免造成资源泄露。
+    - `FileManager` 类不可被复制以免造成资源泄露。
 
     - 如果未指定`save_dir`，那么当 `FileManager`关闭时，所有与之关联的本地文件都会被回收。反之，都会被保存。
 
@@ -119,7 +119,7 @@ from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()
-    # 从文件路径创建File, file_type可选择local或者remote
+    # 从文件路径创建File, file_type可选择local或者remote，
     local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
     # 获取File的id
     print(local_file.id)
