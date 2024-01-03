@@ -128,6 +128,10 @@ class ReportWritingTool(Tool):
     input_type: Type[ToolParameterView] = ReportWritingToolInputView
     ouptut_type: Type[ToolParameterView] = ReportWritingToolOutputView
 
+    def __init__(self, llm: BaseERNIEBot)-> None:
+        super().__init__()
+        self.llm = llm
+
     async def __call__(
         self,
         question: str,
@@ -141,30 +145,37 @@ class ReportWritingTool(Tool):
         # map reduce
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
         report_type_func = get_report_by_type(report_type)
-        final_report = call_function(
-            report_type_func(question, research_summary, outline), agent_role_prompt=agent_role_prompt
-        )
+        # final_report = call_function(
+        #     report_type_func(question, research_summary, outline), agent_role_prompt=agent_role_prompt
+        # )
+        messages = [HumanMessage(report_type_func(question, research_summary, outline))]
+        response = self.llm(messages,system=agent_role_prompt)
+        final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:
             final_report += "\n\n## 参考文献 \n"
-            messages = [{"role": "user", "content": generate_reference(meta_data).replace(". ", ".")}]
-            response = erniebot_chat(messages)
-            start_idx = response.index("{")
-            end_idx = response.rindex("}")
-            corrected_data = response[start_idx : end_idx + 1]
+            # messages = [{"role": "user", "content": generate_reference(meta_data).replace(". ", ".")}]
+            messages = [HumanMessage(content=generate_reference(meta_data).replace(". ", "."))]
+            response  = self.llm(messages)
+            result = response.content
+            start_idx = result.index("{")
+            end_idx = result.rindex("}")
+            corrected_data = result[start_idx : end_idx + 1]
             response = json.loads(corrected_data)
             for i, item in enumerate(response["参考文献"]):
                 final_report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
         elif "参考文献" in final_report[-500:]:
             idx = final_report.index("参考文献")
             final_report = final_report[idx + 4 :]
-            messages = [{"role": "user", "content": generate_reference(meta_data)}]
-            response = erniebot_chat(messages)
-            start_idx = response.index("{")
-            end_idx = response.rindex("}")
-            corrected_data = response[start_idx : end_idx + 1]
+            # messages = [{"role": "user", "content": generate_reference(meta_data)}]
+            messages = [HumanMessage(content=generate_reference(meta_data))]
+            response  = self.llm(messages)
+            result = response.content
+            start_idx = result.index("{")
+            end_idx = result.rindex("}")
+            corrected_data = result[start_idx : end_idx + 1]
             response = json.loads(corrected_data)
             for i, item in enumerate(response["参考文献"]):
                 final_report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"

@@ -8,7 +8,8 @@ from pydantic import Field
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 from .utils import erniebot_chat
 
 
@@ -54,10 +55,15 @@ class IntentDetectionTool(Tool):
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
 
+    def __init__(self, llm: BaseERNIEBot)-> None:
+        super().__init__()
+        self.llm = llm
+
     async def __call__(self, content: str, **kwargs):
         prompt = auto_agent_instructions()
-        messages = [{"role": "user", "content": prompt.format(content=content)}]
-        result = erniebot_chat(messages=messages, **kwargs)
+        messages = [HumanMessage(prompt.format(content=content))]
+        response = await self.llm.chat(messages=messages)
+        result = response.content
         # parse json object
         start_idx = result.index("{")
         end_idx = result.rindex("}")

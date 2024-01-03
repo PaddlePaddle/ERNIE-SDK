@@ -132,7 +132,7 @@ def generate_report(query, history=[]):
     )
     list_reports = []
     for researcher in research_actor:
-        report, _ = asyncio.run(researcher._run(query))
+        report, _ = asyncio.run(researcher.run(query))
         list_reports.append(report)
     for i in range(args.iterations):
         if len(list_reports) > 1:

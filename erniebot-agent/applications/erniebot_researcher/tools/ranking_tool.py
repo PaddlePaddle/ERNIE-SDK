@@ -9,7 +9,7 @@ from pydantic import Field
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-
+from erniebot_agent.memory import HumanMessage
 from .utils import erniebot_chat
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,11 @@ class TextRankingTool(Tool):
     input_type: Type[ToolParameterView] = TextRankingToolInputView
     ouptut_type: Type[ToolParameterView] = TextRankingToolOutputView
 
+    def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot)-> None:
+        super().__init__()
+        self.llm = llm
+        self.llm_long = llm_long
+
     async def __call__(
         self,
         reports: List,
@@ -59,15 +64,17 @@ class TextRankingTool(Tool):
             scores_all = []
             for item in reports:
                 content = rank_report_prompt(report=item, query=query)
-                messages = [{"role": "user", "content": content}]
+                # messages = [{"role": "user", "content": content}]
+                messages = [HumanMessage(content)]
                 while True:
                     try:
                         if len(content) <= 4800:
-                            result = erniebot_chat(messages=messages, temperature=1e-10)
+                            response = self.llm(messages=messages, temperature=1e-10)
                         else:
-                            result = erniebot_chat(
-                                messages=messages, temperature=1e-10, model="ernie-longtext"
+                            response = self.llm_long(
+                                messages=messages, temperature=1e-10,
                             )
+                        result = response.text
                         l_index = result.index("{")
                         r_index = result.rindex("}")
                         result = result[l_index : r_index + 1]

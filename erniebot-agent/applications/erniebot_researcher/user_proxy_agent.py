@@ -1,6 +1,6 @@
 from typing import Optional
 
-from erniebot_agent.agents.base import Agent
+from erniebot_agent.agents.agent import Agent
 
 
 class UserProxyAgent(Agent):

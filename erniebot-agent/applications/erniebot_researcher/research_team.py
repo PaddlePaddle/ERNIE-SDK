@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from EditorActorAgent import EditorActorAgent
-from RankingAgent import RankingAgent
-from ResearchAgent import ResearchAgent
-from ReviserActorAgent import ReviserActorAgent
-from UserProxyAgent import UserProxyAgent
+from editor_actor_agent import EditorActorAgent
+from ranking_agent import RankingAgent
+from research_agent import ResearchAgent
+from reviser_actor_agent import ReviserActorAgent
+from user_proxy_agent import UserProxyAgent
 
 
 class ResearchTeam:
@@ -22,7 +22,7 @@ class ResearchTeam:
         self.ranker_actor_instance = ranker_actor
         self.user_agent = user_agent
 
-    async def _async_run(self, query, iterations=3):
+    async def run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
             report, _ = await researcher.run(query)
