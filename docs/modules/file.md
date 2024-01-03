@@ -121,7 +121,7 @@ async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()
     # 从文件路径创建File, file_type可选择local或者remote，
     local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
-    # 获取File的id
+    # 获取File的id，用于以后的查找
     print(local_file.id)
 ```
 3. 通过 `GlobalFileManagerHandler`搜索以及保存 `File`
