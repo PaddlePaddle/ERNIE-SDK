@@ -6,12 +6,11 @@ from typing import List, Type
 
 from pydantic import Field
 
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.memory import HumanMessage
-from .utils import erniebot_chat
-
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +47,7 @@ class TextRankingTool(Tool):
     input_type: Type[ToolParameterView] = TextRankingToolInputView
     ouptut_type: Type[ToolParameterView] = TextRankingToolOutputView
 
-    def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot)-> None:
+    def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot) -> None:
         super().__init__()
         self.llm = llm
         self.llm_long = llm_long
@@ -72,7 +71,8 @@ class TextRankingTool(Tool):
                             response = self.llm(messages=messages, temperature=1e-10)
                         else:
                             response = self.llm_long(
-                                messages=messages, temperature=1e-10,
+                                messages=messages,
+                                temperature=1e-10,
                             )
                         result = response.text
                         l_index = result.index("{")

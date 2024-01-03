@@ -9,8 +9,8 @@ from pydantic import Field
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-
-from .utils import call_function, erniebot_chat
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 
 
 def generate_reference(meta_dict):
@@ -128,7 +128,7 @@ class ReportWritingTool(Tool):
     input_type: Type[ToolParameterView] = ReportWritingToolInputView
     ouptut_type: Type[ToolParameterView] = ReportWritingToolOutputView
 
-    def __init__(self, llm: BaseERNIEBot)-> None:
+    def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()
         self.llm = llm
 
@@ -149,7 +149,7 @@ class ReportWritingTool(Tool):
         #     report_type_func(question, research_summary, outline), agent_role_prompt=agent_role_prompt
         # )
         messages = [HumanMessage(report_type_func(question, research_summary, outline))]
-        response = self.llm(messages,system=agent_role_prompt)
+        response = self.llm(messages, system=agent_role_prompt)
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
@@ -158,7 +158,7 @@ class ReportWritingTool(Tool):
             final_report += "\n\n## 参考文献 \n"
             # messages = [{"role": "user", "content": generate_reference(meta_data).replace(". ", ".")}]
             messages = [HumanMessage(content=generate_reference(meta_data).replace(". ", "."))]
-            response  = self.llm(messages)
+            response = self.llm(messages)
             result = response.content
             start_idx = result.index("{")
             end_idx = result.rindex("}")
@@ -171,7 +171,7 @@ class ReportWritingTool(Tool):
             final_report = final_report[idx + 4 :]
             # messages = [{"role": "user", "content": generate_reference(meta_data)}]
             messages = [HumanMessage(content=generate_reference(meta_data))]
-            response  = self.llm(messages)
+            response = self.llm(messages)
             result = response.content
             start_idx = result.index("{")
             end_idx = result.rindex("}")

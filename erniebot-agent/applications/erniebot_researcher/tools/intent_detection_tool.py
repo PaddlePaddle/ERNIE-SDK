@@ -5,12 +5,11 @@ from typing import Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
-from .utils import erniebot_chat
 
 
 def auto_agent_instructions():
@@ -55,7 +54,7 @@ class IntentDetectionTool(Tool):
     input_type: Type[ToolParameterView] = IntentDetectionToolInputView
     ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
 
-    def __init__(self, llm: BaseERNIEBot)-> None:
+    def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()
         self.llm = llm
 
