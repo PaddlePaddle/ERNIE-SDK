@@ -12,7 +12,6 @@ from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-
 logger = logging.getLogger(__name__)
 
 
