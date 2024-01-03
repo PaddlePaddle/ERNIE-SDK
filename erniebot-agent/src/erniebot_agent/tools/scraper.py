@@ -14,8 +14,11 @@ from pydantic import Field
 
 
 
+class ScraperToolInputItemView(ToolParameterView):
+    url: str = Field(description="http 有效链接")
+
 class ScraperToolInputView(ToolParameterView):
-    urls: List[str] = Field(description="http 有效链接列表")
+    urls: List[ScraperToolInputItemView] = Field(description="http 有效链接列表")
 
 class ScraperToolOutputView(ToolParameterView):
     result: List[str] = Field(description="每个 URL 链接中有效的内容")
@@ -40,6 +43,7 @@ class ScraperTool(Tool):
         })
 
     async def __call__(self, urls: List[str]) -> Any:
+        urls = [item["url"] for item in urls]
         partial_extract = partial(self.extract_data_from_link, session=self.session)
         with ThreadPoolExecutor(max_workers=20) as executor:
             contents = executor.map(partial_extract, urls)
