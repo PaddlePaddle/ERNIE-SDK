@@ -1,11 +1,14 @@
 import json
 import logging
 from collections import OrderedDict
-from typing import Optional
+from typing import List, Optional
 
-from tools.utils import ReportCallbackHandler, add_citation, erniebot_chat
+from tools.utils import ReportCallbackHandler, add_citation
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.file.base import File
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -40,6 +43,7 @@ class ResearchAgent(Agent):
         citation_tool,
         summarize_tool,
         faiss_name_citation,
+        llm: BaseERNIEBot,
         system_message: Optional[str] = None,
         use_outline=True,
         use_context_planning=True,
@@ -55,7 +59,7 @@ class ResearchAgent(Agent):
             ......
         """
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE  # type: ignore
+        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.dir_path = dir_path
         self.report_type = report_type
         self.retriever = retriever_tool
@@ -74,6 +78,7 @@ class ResearchAgent(Agent):
         self.nums_queries = nums_queries
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
         self.embeddings = embeddings
+        self.llm = llm
         if callbacks is None:
             self._callback_manager = ReportCallbackHandler()
         else:
@@ -99,14 +104,14 @@ class ResearchAgent(Agent):
                 break
         return responses, url_dict
 
-    async def _run(self, query):
+    async def _run(self, query, files: Optional[List[File]] = None):
         """
         Runs the ResearchAgent
         Returns:
             Report
         """
         await self._callback_manager.on_run_start(
-            agent_name=self.name, query=f"🔎 Running research for '{query}'..."
+            agent=self, agent_name=self, prompt=f"🔎 Running research for '{query}'..."
         )
         # Generate Agent
         result = await self.intent_detection(query)
@@ -130,14 +135,13 @@ class ResearchAgent(Agent):
             )
             sub_queries.extend(sub_queries_all)
             sub_queries = list(set(sub_queries))
+            # Sampling 4 sub-queries
             if len(sub_queries) > self.nums_queries:
                 messages = [
-                    {
-                        "role": "user",
-                        "content": self.select_prompt.format(queries=str(sub_queries), question=query),
-                    }
+                    HumanMessage(content=self.select_prompt.format(queries=str(sub_queries), question=query))
                 ]
-                result = erniebot_chat(messages)
+                responese = await self.llm.chat(messages)
+                result = responese.content
                 start_idx = result.index("[")
                 end_idx = result.rindex("]")
                 result = result[start_idx : end_idx + 1]
@@ -196,5 +200,4 @@ class ResearchAgent(Agent):
         )
         await self._callback_manager.on_run_tool(tool_name=self.citation.description, response=final_report)
         await self._callback_manager.on_run_end(tool_name=self.name, response=f"报告存储在{path}")
-        breakpoint()
         return final_report, path

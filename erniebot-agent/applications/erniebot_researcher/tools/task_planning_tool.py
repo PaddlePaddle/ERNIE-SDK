@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Optional, Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-from .utils import call_function
+
+logger = logging.getLogger(__name__)
 
 
 def generate_search_queries_prompt(question):
@@ -65,6 +69,10 @@ class TaskPlanningTool(Tool):
     input_type: Type[ToolParameterView] = TaskPlanningToolInputView
     ouptut_type: Type[ToolParameterView] = TaskPlanningToolOutputView
 
+    def __init__(self, llm: BaseERNIEBot) -> None:
+        super().__init__()
+        self.llm = llm
+
     async def __call__(
         self,
         question: str,
@@ -74,30 +82,46 @@ class TaskPlanningTool(Tool):
         **kwargs,
     ):
         if not context:
-            result = call_function(
-                action=generate_search_queries_prompt(question),
-                agent_role_prompt=agent_role_prompt,
-                temperature=0.7,
-            )
+            # result = call_function(
+            #     action=generate_search_queries_prompt(question),
+            #     agent_role_prompt=agent_role_prompt,
+            #     temperature=0.7,
+            # )
+            messages = [HumanMessage(content=generate_search_queries_prompt(question))]
+            response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
+            result = response.content
         else:
             try:
                 if not is_comprehensive:
-                    result = call_function(
-                        action=generate_search_queries_with_context(context, question),
-                        agent_role_prompt=agent_role_prompt,
-                        temperature=0.7,
-                    )
+                    # result = call_function(
+                    #     action=generate_search_queries_with_context(context, question),
+                    #     agent_role_prompt=agent_role_prompt,
+                    #     temperature=0.7,
+                    # )
+                    messages = [
+                        HumanMessage(content=generate_search_queries_with_context(context, question))
+                    ]
+                    response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
+                    result = response.content
                 else:
-                    result = call_function(
-                        action=generate_search_queries_with_context_comprehensive(context, question),
-                        agent_role_prompt=agent_role_prompt,
-                        temperature=0.7,
-                    )
+                    # result = call_function(
+                    # action=generate_search_queries_with_context_comprehensive(context, question),
+                    # agent_role_prompt=agent_role_prompt,
+                    # temperature=0.7,
+                    # )
+                    messages = [
+                        HumanMessage(
+                            content=generate_search_queries_with_context_comprehensive(context, question)
+                        )
+                    ]
+                    response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
+                    result = response.content
+
                 start_idx = result.index("[")
                 end_idx = result.rindex("]")
                 result = result[start_idx : end_idx + 1]
                 plan = json.loads(result)
             except Exception as e:
-                print(e)
+                logger.error(e)
                 plan = []
         return plan

@@ -6,11 +6,11 @@ from typing import Optional, Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
 
 
 def generate_reference(meta_dict):
@@ -142,23 +142,19 @@ class ReportWritingTool(Tool):
         outline=None,
         **kwargs,
     ):
-        # map reduce
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
         report_type_func = get_report_by_type(report_type)
-        # final_report = call_function(
-        #     report_type_func(question, research_summary, outline), agent_role_prompt=agent_role_prompt
-        # )
         messages = [HumanMessage(report_type_func(question, research_summary, outline))]
-        response = self.llm(messages, system=agent_role_prompt)
+        response = await self.llm.chat(messages, system=agent_role_prompt)
         final_report = response.content
+        breakpoint()
         if final_report == "":
             raise Exception("报告生成错误")
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:
             final_report += "\n\n## 参考文献 \n"
-            # messages = [{"role": "user", "content": generate_reference(meta_data).replace(". ", ".")}]
             messages = [HumanMessage(content=generate_reference(meta_data).replace(". ", "."))]
-            response = self.llm(messages)
+            response = await self.llm.chat(messages)
             result = response.content
             start_idx = result.index("{")
             end_idx = result.rindex("}")
@@ -169,9 +165,8 @@ class ReportWritingTool(Tool):
         elif "参考文献" in final_report[-500:]:
             idx = final_report.index("参考文献")
             final_report = final_report[idx + 4 :]
-            # messages = [{"role": "user", "content": generate_reference(meta_data)}]
             messages = [HumanMessage(content=generate_reference(meta_data))]
-            response = self.llm(messages)
+            response = await self.llm.chat(messages)
             result = response.content
             start_idx = result.index("{")
             end_idx = result.rindex("}")

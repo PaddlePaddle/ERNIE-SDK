@@ -14,16 +14,19 @@ from langchain.vectorstores import FAISS
 from md2pdf.core import md2pdf
 from sklearn.metrics.pairwise import cosine_similarity
 
+from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback import CallbackHandler
 from erniebot_agent.prompt import PromptTemplate
 
 
 class ReportCallbackHandler(CallbackHandler):
-    async def on_run_start(self, agent_name, query):
-        logging.info(f"{agent_name}开始运行：{query}")
+    async def on_run_start(self, agent: BaseAgent, prompt, **kwargs):
+        agent_name = kwargs.get("agent_name", None)
+        logging.info(f"{agent_name}开始运行：{prompt}")
 
-    async def on_run_end(self, agent_name, response):
-        print("{agent_name}结束运行,{response}")
+    async def on_run_end(self, agent: BaseAgent, response, **kwargs):
+        agent_name = kwargs.get("agent_name", None)
+        logging.info(f"{agent_name}结束运行,{response}")
 
     async def on_run_tool(self, tool_name, response):
         logging.info(f"{tool_name}的运行结果：{response}")

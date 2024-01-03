@@ -2,11 +2,12 @@ import json
 import logging
 from typing import Optional
 
-from tools.utils import erniebot_chat, write_to_json
-from tools.utils import ReportCallbackHandler, erniebot_chat
+from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
+from erniebot_agent.memory import HumanMessage
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +31,14 @@ class RankingAgent(Agent):
         self,
         name: str,
         ranking_tool,
+        llm: BaseERNIEBot,
         system_message: Optional[str] = None,
         callbacks=None,
         is_reset=False,
     ) -> None:
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.llm = llm
 
         self.ranking = ranking_tool
         self.is_reset = False
@@ -65,8 +68,9 @@ class RankingAgent(Agent):
     def check_format(self, report):
         while True:
             try:
-                messages = [{"role": "user", "content": get_markdown_check_prompt(report)}]
-                result = erniebot_chat(messages=messages, temperature=0.001)
+                messages = [HumanMessage(content=get_markdown_check_prompt(report))]
+                response = self.llm.chat(messages=messages, temperature=0.001)
+                result = response.content
                 l_index = result.index("{")
                 r_index = result.index("}")
                 result = result[l_index : r_index + 1]

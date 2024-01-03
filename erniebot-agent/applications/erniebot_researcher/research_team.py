@@ -25,7 +25,7 @@ class ResearchTeam:
     async def run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
-            report, _ = await researcher.run(query)
+            report = await researcher.run(query)
             list_reports.append(report)
         if self.user_agent is not None:
             prompt = (

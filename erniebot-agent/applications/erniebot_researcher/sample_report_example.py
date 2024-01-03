@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import hashlib
 import os
+import time
 
 from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -84,16 +85,14 @@ def get_retrievers():
     return {"full_text": retriever_search, "abstract": abstract_search, "embeddings": embeddings}
 
 
-def get_tools():
-    llm = ERNIEBot(model="ernie-4.0")
-    llm_long = ERNIEBot(model="ernie-longtext")
+def get_tools(llm, llm_long):
     # breakpoint()
     intent_detection_tool = IntentDetectionTool(llm=llm)
     outline_generation_tool = OutlineGenerationTool(llm=llm)
     ranking_tool = TextRankingTool(llm=llm, llm_long=llm_long)
     report_writing_tool = ReportWritingTool(llm=llm_long)
     summarization_tool = TextSummarizationTool()
-    task_planning_tool = TaskPlanningTool()
+    task_planning_tool = TaskPlanningTool(llm=llm)
     semantic_citation_tool = SemanticCitationTool()
 
     return {
@@ -107,13 +106,11 @@ def get_tools():
     }
 
 
-def get_agents(retriever_sets, tool_sets):
+def get_agents(retriever_sets, tool_sets, llm, llm_long):
     dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
     target_path = f"./outputsl/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
     os.makedirs(target_path, exist_ok=True)
     os.makedirs(dir_path, exist_ok=True)
-    # llm = ERNIEBot(model="ernie-4.0")
-    # llm_long = ERNIEBot(model="ernie-longtext")
     research_actor = []
     for i in range(args.num_research_agent):
         agents_name = "agent_" + str(i)
@@ -132,16 +129,15 @@ def get_agents(retriever_sets, tool_sets):
             citation_tool=tool_sets["semantic_citation"],
             summarize_tool=tool_sets["text_summarization"],
             faiss_name_citation=args.faiss_name_citation,
-            save_log_path="./outputs/erniebot/log.jsonl",
             embeddings=retriever_sets["embeddings"],
+            llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", save_log_path="./outputs/erniebot/log.jsonl")
-    reviser_actor = ReviserActorAgent(name="reviser", save_log_path="./outputs/erniebot/log.jsonl")
+    editor_actor = EditorActorAgent(name="editor")
+    reviser_actor = ReviserActorAgent(name="reviser")
     ranker_actor = RankingAgent(
         name="ranker",
         ranking_tool=tool_sets["ranking"],
-        save_log_path="./outputs/erniebot/log.jsonl",
     )
     return {
         "research_agents": research_actor,
@@ -152,9 +148,11 @@ def get_agents(retriever_sets, tool_sets):
 
 
 def main(query):
+    llm_long = ERNIEBot(model="ernie-longtext")
+    llm = ERNIEBot(model="ernie-4.0")
     retriever_sets = get_retrievers()
-    tool_sets = get_tools()
-    agent_sets = get_agents(retriever_sets, tool_sets)
+    tool_sets = get_tools(llm, llm_long)
+    agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long)
     research_team = ResearchTeam(
         research_actor=agent_sets["research_agents"],
         ranker_actor=agent_sets["ranker"],
@@ -168,4 +166,7 @@ def main(query):
 
 if "__main__" == __name__:
     query = "写一份有关大模型技术发展的报告"
+    start_time = time.time()
     main(query)
+    end_time = time.time()
+    print("Took time: {}".format(end_time - start_time))

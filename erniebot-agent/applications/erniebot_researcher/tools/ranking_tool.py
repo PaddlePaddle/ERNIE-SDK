@@ -6,11 +6,12 @@ from typing import List, Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,9 +69,9 @@ class TextRankingTool(Tool):
                 while True:
                     try:
                         if len(content) <= 4800:
-                            response = self.llm(messages=messages, temperature=1e-10)
+                            response = self.llm.chat(messages=messages, temperature=1e-10)
                         else:
-                            response = self.llm_long(
+                            response = self.llm_long.chat(
                                 messages=messages,
                                 temperature=1e-10,
                             )
