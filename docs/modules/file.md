@@ -119,7 +119,7 @@ from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
     file_manager = await GlobalFileManagerHandler().get()
-    # 从文件路径创建File, file_type可选择local或者remote，
+    # 从文件路径创建File, file_type可选择local或者remote，file_path需要具体到文件名
     local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
     # 获取File的id，用于以后的查找
     print(local_file.id)
@@ -134,7 +134,7 @@ async def demo_function():
     file = file_manager.look_up_file_by_id(file_id='your_file_id')
     # 读取file内容(bytes)
     file_content = await file.read_contents()
-    # 写出到指定位置
+    # 写出到指定位置，your_willing_path需要具体到文件名
     await local_file.write_contents_to('your_willing_path')
 ```
 4. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件，详见[Agent](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/modules/agents/#22-function-agent)中的**使用function agent调用输入、输出中包含文件的tool**部分。
