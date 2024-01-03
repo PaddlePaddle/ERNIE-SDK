@@ -1,10 +1,10 @@
-# ERNIE Researcher 
+# ERNIEBot Researcher 
 
-ERNIE Researcher是一个自主智能体（Autonomous Agent），旨在对各种任务进行全面的在线研究。
+ERNIEBot Researcher是一个自主智能体（Autonomous Agent），旨在对各种任务进行全面的在线研究。
 
-Agent可以制作详细、真实和公正的中文研究报告，并提供专注于相关资源、大纲和经验教训的定制选项。受最近的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和 当前最流行的[RAG](https://arxiv.org/abs/2005.11401)技术的启发， ERNIE Researcher通过Multi-Agent协作和并行工作解决了速度、确定性和可靠性问题。
+ERNIEBot Researcher能够精心编撰内容详尽、真实可信且立场公正的中文研究报告，同时根据需求提供针对特定资源、结构化大纲以及宝贵经验教训的深度定制服务。汲取了近期备受瞩目的[Plan-and-Solve]((https://arxiv.org/abs/2305.04091) )技术的精髓，并结合当前流行的[RAG]((https://arxiv.org/abs/2005.11401))技术的优势，ERNIEBot Researcher通过多Agent协作和高效并行处理机制，有效攻克了速度瓶颈、决策确定性及成果可靠性等难题。
 
-## 为什么需要ERNIE Researcher？
+## 为什么需要ERNIEBot Researcher？
 
 + 手动研究任务形成客观结论可能需要时间，有时需要数周才能找到正确的资源和信息。
 + 目前的LLM是根据过去和过时的信息进行训练的，产生幻觉的风险很大，这使得产生的报告几乎与研究任务无关。

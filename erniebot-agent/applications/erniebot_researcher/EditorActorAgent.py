@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Optional
 
 from tools.prompt_utils import EB_EDIT_TEMPLATE, eb_functions
@@ -6,6 +7,8 @@ from tools.utils import erniebot_chat, json_correct, write_to_json
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.prompt import PromptTemplate
+
+logger = logging.getLogger(__name__)
 
 
 class EditorActorAgent(Agent):
@@ -48,7 +51,7 @@ class EditorActorAgent(Agent):
                 self.save_log()
                 return suggestions
             except Exception as e:
-                print(e)
+                logger.error(e)
                 self.config.append(("报错信息", e))
                 continue
 
