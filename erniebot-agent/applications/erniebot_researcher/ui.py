@@ -1,10 +1,10 @@
 import argparse
 import asyncio
 import hashlib
+import logging
 import os
 
 import gradio as gr
-import jsonlines
 from EditorActorAgent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
 from RankingAgent import RankingAgent
@@ -51,17 +51,17 @@ parser.add_argument(
 
 parser.add_argument("--server_name", type=str, default="0.0.0.0")
 parser.add_argument("--server_port", type=int, default=8878)
+parser.add_argument("--log_path", type=str, default="log.txt")
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
+logging.basicConfig(filename=args.log_path, level=logging.INFO)
 
 
-def get_logs(jsonl_file="./outputs/erniebot/log.jsonl"):
-    history = []
-    with jsonlines.open(jsonl_file, "r") as file:
-        for item in file:
-            history.append(item)
-    return history
+def get_logs(path=args.log_path):
+    file = open(path, "r")
+    content = file.read()
+    return content
 
 
 def generate_report(query, history=[]):
@@ -119,16 +119,14 @@ def generate_report(query, history=[]):
             citation_tool=semantic_citation_tool,
             summarize_tool=summarization_tool,
             faiss_name_citation=args.faiss_name_citation,
-            save_log_path="./outputs/erniebot/log.jsonl",
             embeddings=embeddings,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", save_log_path="./outputs/erniebot/log.jsonl")
-    reviser_actor = ReviserActorAgent(name="reviser", save_log_path="./outputs/erniebot/log.jsonl")
+    editor_actor = EditorActorAgent(name="editor")
+    reviser_actor = ReviserActorAgent(name="reviser")
     ranker_actor = RankingAgent(
         name="ranker",
         ranking_tool=ranking_tool,
-        save_log_path="./outputs/erniebot/log.jsonl",
     )
     list_reports = []
     for researcher in research_actor:
@@ -187,7 +185,7 @@ def launch_ui():
                 clear = gr.Button("清除", variant="primary", scale=1)
             submit.click(generate_report, inputs=[query_textbox], outputs=[report, report_url])
             clear.click(lambda _: ([None, None]), outputs=[report, report_url])
-        recording = gr.Chatbot(label="历史记录")
+        recording = gr.Textbox(label="历史记录")
         with gr.Row():
             clear_recoding = gr.Button(value="记录清除")
             submit_recoding = gr.Button(value="记录更新")

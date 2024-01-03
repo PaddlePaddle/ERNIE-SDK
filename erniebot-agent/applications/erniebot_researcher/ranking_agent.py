@@ -2,10 +2,10 @@ import json
 import logging
 from typing import Optional
 
-from erniebot.prompt import PromptTemplate
-from tools.utils import erniebot_chat, write_to_json
+from tools.utils import ReportCallbackHandler, erniebot_chat
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -30,37 +30,36 @@ class RankingAgent(Agent):
         name: str,
         ranking_tool,
         system_message: Optional[str] = None,
-        config: list = [],
-        save_log_path=None,
+        callbacks=None,
         is_reset=False,
     ) -> None:
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
 
         self.ranking = ranking_tool
-        self.config = config
-        self.save_log_path = save_log_path
         self.is_reset = False
+        if callbacks is None:
+            self._callback_manager = ReportCallbackHandler()
+        else:
+            self._callback_manager = callbacks
 
     async def _run(self, list_reports, query):
+        self._callback_manager.on_run_start(self.name, "")
         reports = []
         for item in list_reports:
             if self.check_format(item):
                 reports.append(item)
         if len(reports) == 0:
             if self.is_reset:
+                self._callback_manager.on_run_end(self.name, "所有的report都不是markdown格式，重新生成report")
                 logger.info("所有的report都不是markdown格式，重新生成report")
                 return [], None
             else:
                 reports = list_reports
         best_report = await self.ranking(reports, query)
-        self.config.append(("最好的report", best_report))
-        if self.save_log_path:
-            self.save_log()
+        self._callback_manager.on_run_tool(self.ranking.description, best_report)
+        self._callback_manager.on_run_end(self.name, "")
         return reports, best_report
-
-    def save_log(self):
-        write_to_json(self.save_log_path, self.config, mode="a")
 
     def check_format(self, report):
         while True:
@@ -76,5 +75,6 @@ class RankingAgent(Agent):
                 elif result_dict["accept"] is False or result_dict["accept"] == "false":
                     return False
             except Exception as e:
+                self._callback_manager.on_run_error("格式检查", str(e))
                 logger.error(e)
                 continue
