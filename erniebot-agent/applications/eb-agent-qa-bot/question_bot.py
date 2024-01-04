@@ -70,7 +70,7 @@ def load_agent():
         module_db = FAISS.load_local(faiss_name_module, embeddings)
     except RuntimeError as e:
         raise RuntimeError(f"Make sure you have initialized the database first.\n {e}")
-        
+
     llm = ERNIEBot(model="ernie-3.5")
     faiss_search = FaissSearch(db=db, embeddings=embeddings, module_db=module_db)
     agent = FunctionAgentWithRetrieval(
