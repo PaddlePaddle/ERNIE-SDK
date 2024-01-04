@@ -27,7 +27,7 @@ __all__ = ["FineTuningTask", "FineTuningJob"]
 
 
 class FineTuningTask(EBResource, Creatable):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN_SFT,
         APIType.AISTUDIO,
     )
@@ -125,7 +125,7 @@ class FineTuningTask(EBResource, Creatable):
 
 
 class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.QIANFAN_SFT,)
 
     @classmethod
     def create(

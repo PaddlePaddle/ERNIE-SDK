@@ -39,11 +39,11 @@ __all__ = ["ChatCompletionWithPlugins"]
 
 
 class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.CUSTOM,
     )
-    _api_info_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {
+    _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "path": "/erniebot/plugins",
         },
@@ -248,8 +248,8 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         plugins = kwargs["plugins"]
 
         # path
-        if self.api_type in self.supported_api_types:
-            api_info = self._api_info_dict[self.api_type]
+        if self.api_type in self.SUPPORTED_API_TYPES:
+            api_info = self._API_INFO_DICT[self.api_type]
             path = api_info["path"]
         else:
             raise errors.UnsupportedAPITypeError(

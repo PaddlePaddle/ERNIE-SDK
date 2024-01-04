@@ -96,7 +96,7 @@ class _Image(EBResource):
 
 
 class ImageV1(_Image):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
     @classmethod
     def create(
@@ -254,7 +254,7 @@ class ImageV1(_Image):
 
 
 class ImageV2(_Image):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (APIType.YINIAN,)
 
     @classmethod
     def create(

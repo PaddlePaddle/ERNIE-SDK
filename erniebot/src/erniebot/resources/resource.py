@@ -59,7 +59,7 @@ class EBResource(object):
     POLLING_TIMEOUT_SECS: Final[float] = constants.POLLING_TIMEOUT_SECS
     POLLING_INTERVAL_SECS: Final[float] = constants.POLLING_INTERVAL_SECS
 
-    supported_api_types: ClassVar[Tuple[APIType, ...]]
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]]
 
     def __init__(self, **config: Any) -> None:
         object.__init__(self)
@@ -289,7 +289,7 @@ class EBResource(object):
 
     @classmethod
     def get_supported_api_type_names(cls) -> List[str]:
-        return list(map(operator.attrgetter("name"), cls.supported_api_types))
+        return list(map(operator.attrgetter("name"), cls.SUPPORTED_API_TYPES))
 
     @overload
     def _request(

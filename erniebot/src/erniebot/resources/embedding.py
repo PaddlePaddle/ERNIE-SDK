@@ -27,11 +27,11 @@ __all__ = ["Embedding", "EmbeddingResponse"]
 
 
 class Embedding(EBResource, Creatable):
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+    SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.AISTUDIO,
     )
-    _api_info_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {
+    _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "embeddings",
             "models": {
@@ -154,8 +154,8 @@ class Embedding(EBResource, Creatable):
         input = kwargs["input"]
 
         # path
-        if self.api_type in self.supported_api_types:
-            api_info = self._api_info_dict[self.api_type]
+        if self.api_type in self.SUPPORTED_API_TYPES:
+            api_info = self._API_INFO_DICT[self.api_type]
             if model not in api_info["models"]:
                 raise errors.InvalidArgumentError(f"{repr(model)} is not a supported model.")
             path = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"
