@@ -5,7 +5,7 @@ ERNIEBot-Agent QA Bot是一个EB-Agent使用教学机器人，基于`FunctionAge
 
 ## 架构
 
-此应用基于`FunctionAgentWithRetrieval`（后续`RetrievalAgent`上线后将更改为Retrieval），将此仓库中相关模块的markdown文件以及ipynb的示例代码文件向量化并通过自定义检索工具检索，实现EB-Agent教学机器人。
+此应用基于`FunctionAgentWithRetrieval`（后续`RetrievalAgent`上线后将同步更换），将此仓库中相关模块的markdown文件以及ipynb的示例代码文件向量化并通过自定义检索工具检索，实现EB-Agent教学机器人。
 
 ### 自定义检索工具
 
