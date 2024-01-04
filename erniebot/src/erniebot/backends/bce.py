@@ -317,7 +317,8 @@ class QianfanLegacyBackend(_BCELegacyBackend):
     api_type: ClassVar[APIType] = APIType.QIANFAN
     base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]
@@ -343,7 +344,8 @@ class YinianBackend(_BCELegacyBackend):
     api_type: ClassVar[APIType] = APIType.YINIAN
     base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]
@@ -368,7 +370,8 @@ class QianfanBackend(_BCEBackend):
     api_type: ClassVar[APIType] = APIType.QIANFAN
     base_url: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]

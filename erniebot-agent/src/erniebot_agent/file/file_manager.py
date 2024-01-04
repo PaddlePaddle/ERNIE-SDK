@@ -490,7 +490,7 @@ class FileManager(Closeable, Noncopyable):
 
     def _get_remote_file_client(self) -> RemoteFileClient:
         if self._remote_file_client is None:
-            raise AttributeError("No remote file client is set.")
+            raise RuntimeError("No remote file client is set.")
         else:
             return self._remote_file_client
 

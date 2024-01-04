@@ -40,9 +40,9 @@ _PLUGINS_WO_FILE_IO: Final[Tuple[str]] = ("eChart",)
 class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     """The base class for agents.
 
-    Typically, this is the class that a custom agent class should inherit from.
-    A class inheriting from this class must implement how the agent orchestates
-    the components to complete tasks.
+    Typically, this class should be the base class for custom agent classes. A
+    class derived from this class must implement how the agent orchestates the
+    components to complete tasks.
 
     Attributes:
         llm: The LLM that the agent uses.
@@ -138,22 +138,17 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         self,
         messages: List[Message],
         *,
-        use_memory: bool = False,
         llm_opts: Optional[Mapping[str, Any]] = None,
     ) -> LLMResponse:
         """Run the LLM asynchronously.
 
         Args:
             messages: The input messages.
-            use_memory: Whether to use the agent's memory.
             llm_opts: Options to pass to the LLM.
 
         Returns:
             Response from the LLM.
         """
-        if use_memory:
-            self.memory.add_messages(messages)
-            messages = self.memory.get_messages()
         await self._callback_manager.on_llm_start(agent=self, llm=self.llm, messages=messages)
         try:
             llm_resp = await self._run_llm(messages, **(llm_opts or {}))
@@ -162,8 +157,6 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             raise e
         else:
             await self._callback_manager.on_llm_end(agent=self, llm=self.llm, response=llm_resp)
-        if use_memory:
-            self.memory.add_message(llm_resp.message)
         return llm_resp
 
     @final

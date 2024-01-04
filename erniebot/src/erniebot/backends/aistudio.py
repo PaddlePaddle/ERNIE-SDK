@@ -37,27 +37,6 @@ class AIStudioBackend(EBBackend):
                 raise RuntimeError("No access token is configured.")
         self._access_token = access_token
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
-        if resp["errorCode"] != 0:
-            ecode = resp["errorCode"]
-            emsg = resp["errorMsg"]
-            if ecode in (4, 17):
-                raise errors.RequestLimitError(emsg, ecode=ecode)
-            elif ecode in (18, 40410):
-                raise errors.RateLimitError(emsg, ecode=ecode)
-            elif ecode in (110, 40401):
-                raise errors.InvalidTokenError(emsg, ecode=ecode)
-            elif ecode == 111:
-                raise errors.TokenExpiredError(emsg, ecode=ecode)
-            elif ecode in (336003, 336006, 336007):
-                raise errors.BadRequestError(emsg, ecode=ecode)
-            elif ecode == 336100:
-                raise errors.TryAgain(emsg, ecode=ecode)
-            else:
-                raise errors.APIError(emsg, ecode=ecode)
-        else:
-            return EBResponse(resp.rcode, resp.result, resp.rheaders)
-
     def request(
         self,
         method: str,
@@ -109,6 +88,28 @@ class AIStudioBackend(EBBackend):
             headers=headers,
             request_timeout=request_timeout,
         )
+
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
+        if resp["errorCode"] != 0:
+            ecode = resp["errorCode"]
+            emsg = resp["errorMsg"]
+            if ecode in (4, 17):
+                raise errors.RequestLimitError(emsg, ecode=ecode)
+            elif ecode in (18, 40410):
+                raise errors.RateLimitError(emsg, ecode=ecode)
+            elif ecode in (110, 40401):
+                raise errors.InvalidTokenError(emsg, ecode=ecode)
+            elif ecode == 111:
+                raise errors.TokenExpiredError(emsg, ecode=ecode)
+            elif ecode in (336003, 336006, 336007):
+                raise errors.BadRequestError(emsg, ecode=ecode)
+            elif ecode == 336100:
+                raise errors.TryAgain(emsg, ecode=ecode)
+            else:
+                raise errors.APIError(emsg, ecode=ecode)
+        else:
+            return EBResponse(resp.rcode, resp.result, resp.rheaders)
 
     def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
         if "Authorization" in headers:

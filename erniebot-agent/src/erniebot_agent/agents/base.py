@@ -44,7 +44,6 @@ class BaseAgent(Protocol[LLMT]):
         self,
         messages: List[Message],
         *,
-        use_memory: bool = False,
         llm_opts: Optional[Mapping[str, Any]] = None,
     ) -> LLMResponse:
         ...

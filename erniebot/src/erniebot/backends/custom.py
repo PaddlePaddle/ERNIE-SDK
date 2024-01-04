@@ -14,8 +14,8 @@
 
 from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
 
-import erniebot.errors as errors
 from erniebot.api_types import APIType
+from erniebot.backends.bce import QianfanLegacyBackend
 from erniebot.response import EBResponse
 from erniebot.types import HeadersType, ParamsType
 
@@ -23,9 +23,7 @@ from .base import EBBackend
 
 
 class CustomBackend(EBBackend):
-    """
-    Custom backend for debugging purposes.
-    """
+    """Custom backend for debugging purposes."""
 
     api_type: ClassVar[APIType] = APIType.CUSTOM
 
@@ -84,23 +82,6 @@ class CustomBackend(EBBackend):
             request_timeout=request_timeout,
         )
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
-        if "error_code" in resp and "error_msg" in resp:
-            ecode = resp["error_code"]
-            emsg = resp["error_msg"]
-            if ecode == 17:
-                raise errors.RequestLimitError(emsg, ecode=ecode)
-            elif ecode == 18:
-                raise errors.RateLimitError(emsg, ecode=ecode)
-            elif ecode == 110:
-                raise errors.InvalidTokenError(emsg, ecode=ecode)
-            elif ecode == 111:
-                raise errors.TokenExpiredError(emsg, ecode=ecode)
-            elif ecode in (336002, 336003, 336006, 336007, 336102):
-                raise errors.BadRequestError(emsg, ecode=ecode)
-            elif ecode == 336100:
-                raise errors.TryAgain(emsg, ecode=ecode)
-            else:
-                raise errors.APIError(emsg, ecode=ecode)
-        else:
-            return resp
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
+        return QianfanLegacyBackend.handle_response(resp)

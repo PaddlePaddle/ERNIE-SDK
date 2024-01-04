@@ -79,14 +79,14 @@ class _GlobalAuthTokenCache(metaclass=SingletonMeta):
                 record = self._cache[key_pair]
 
         with record.lock:
-            timestamp = time.time()
+            timestamp = time.monotonic()
             if record.updated_at is None or timestamp - record.updated_at > self._MIN_UPDATE_INTERVAL_SECS:
                 try:
                     auth_token = token_requestor()
                 except Exception as e:
                     raise errors.TokenUpdateFailedError from e
                 record.auth_token = auth_token
-                record.updated_at = time.time()
+                record.updated_at = time.monotonic()
                 upserted = True
             else:
                 assert record.auth_token is not None

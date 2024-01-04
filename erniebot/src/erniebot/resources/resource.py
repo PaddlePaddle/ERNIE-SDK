@@ -20,7 +20,6 @@ from typing import (
     AsyncIterator,
     Callable,
     ClassVar,
-    Dict,
     Final,
     Iterator,
     List,
@@ -60,8 +59,7 @@ class EBResource(object):
     POLLING_TIMEOUT_SECS: Final[float] = constants.POLLING_TIMEOUT_SECS
     POLLING_INTERVAL_SECS: Final[float] = constants.POLLING_INTERVAL_SECS
 
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = ()
-    _build_backend_opts_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {}
+    supported_api_types: ClassVar[Tuple[APIType, ...]]
 
     def __init__(self, **config: Any) -> None:
         object.__init__(self)
@@ -75,11 +73,7 @@ class EBResource(object):
         self.max_retries = self._cfg["max_retries"] or 0
         self.retry_after = (self._cfg["min_retry_delay"] or 0, self._cfg["max_retry_delay"] or 0)
 
-        self._backend = build_backend(
-            self.api_type,
-            self._cfg,
-            **self._build_backend_opts_dict.get(self.api_type, {}),
-        )
+        self._backend = build_backend(self.api_type, self._cfg)
 
     @classmethod
     def get_supported_api_type_names(cls) -> List[str]:
@@ -252,7 +246,7 @@ class EBResource(object):
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
     ) -> EBResponse:
-        st_time = time.time()
+        st_time = time.monotonic()
         while True:
             resp = self.request(
                 method=method,
@@ -264,7 +258,7 @@ class EBResource(object):
             )
             if until(resp):
                 return resp
-            if time.time() > st_time + self.POLLING_TIMEOUT_SECS:
+            if time.monotonic() - st_time > self.POLLING_TIMEOUT_SECS:
                 raise errors.TimeoutError
             logging.info("Waiting...")
             time.sleep(self.POLLING_INTERVAL_SECS)
@@ -280,7 +274,7 @@ class EBResource(object):
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
     ) -> EBResponse:
-        st_time = time.time()
+        st_time = time.monotonic()
         while True:
             resp = await self.arequest(
                 method=method,
@@ -292,7 +286,7 @@ class EBResource(object):
             )
             if until(resp):
                 return resp
-            if time.time() > st_time + self.POLLING_TIMEOUT_SECS:
+            if time.monotonic() - st_time > self.POLLING_TIMEOUT_SECS:
                 raise errors.TimeoutError
             logging.info("Waiting...")
             await asyncio.sleep(self.POLLING_INTERVAL_SECS)

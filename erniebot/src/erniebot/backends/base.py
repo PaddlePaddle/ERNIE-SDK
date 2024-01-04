@@ -36,9 +36,6 @@ class EBBackend(object):
             proxy=self._cfg.get("proxy", None),
         )
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
-        raise NotImplementedError
-
     def request(
         self,
         method: str,
@@ -61,4 +58,8 @@ class EBBackend(object):
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        raise NotImplementedError
+
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         raise NotImplementedError
