@@ -5,7 +5,6 @@ from collections import OrderedDict
 from typing import Optional, Type
 
 from pydantic import Field
-from tools.utils import postprocess
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
@@ -179,5 +178,5 @@ class ReportWritingTool(Tool):
         if meta_data:
             for index, (key, val) in enumerate(meta_data.items()):
                 url_index[val] = {"name": key, "index": index + 1}
-        final_report = postprocess(final_report)
+        # final_report = postprocess(final_report)
         return final_report, url_index

@@ -1,10 +1,11 @@
 import json
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -47,7 +48,23 @@ class RankingAgent(Agent):
         else:
             self._callback_manager = callbacks
 
-    async def _run(self, list_reports, query):
+    async def run(self, list_reports: List[str], query: str) -> AgentResponse:
+        """Run the agent asynchronously.
+
+        Args:
+            query: A natural language text describing the task that the agent
+                should perform.
+            files: A list of files that the agent can use to perform the task.
+
+        Returns:
+            Response from the agent.
+        """
+        await self._callback_manager.on_run_start(agent=self, prompt=query)
+        agent_resp = await self._run(query, list_reports)
+        await self._callback_manager.on_run_end(agent=self, response=agent_resp)
+        return agent_resp
+
+    async def _run(self, query, list_reports):
         self._callback_manager.on_run_start(self.name, "")
         reports = []
         for item in list_reports:

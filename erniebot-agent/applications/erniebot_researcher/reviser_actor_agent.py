@@ -4,6 +4,7 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
@@ -33,6 +34,22 @@ class ReviserActorAgent(Agent):
             self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
+
+    async def run(self, draft: str, notes: str) -> AgentResponse:
+        """Run the agent asynchronously.
+
+        Args:
+            query: A natural language text describing the task that the agent
+                should perform.
+            files: A list of files that the agent can use to perform the task.
+
+        Returns:
+            Response from the agent.
+        """
+        await self._callback_manager.on_run_start(agent=self, prompt=draft)
+        agent_resp = await self._run(draft, notes)
+        await self._callback_manager.on_run_end(agent=self, response=agent_resp)
+        return agent_resp
 
     async def _run(self, draft, notes):
         self._callback_manager.on_run_start(self.name, "")

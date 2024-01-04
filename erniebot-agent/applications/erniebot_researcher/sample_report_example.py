@@ -89,7 +89,7 @@ def get_tools(llm, llm_long):
     intent_detection_tool = IntentDetectionTool(llm=llm)
     outline_generation_tool = OutlineGenerationTool(llm=llm)
     ranking_tool = TextRankingTool(llm=llm, llm_long=llm_long)
-    report_writing_tool = ReportWritingTool(llm=llm_long)
+    report_writing_tool = ReportWritingTool(llm=llm, llm_long=llm_long)
     summarization_tool = TextSummarizationTool()
     task_planning_tool = TaskPlanningTool(llm=llm)
     semantic_citation_tool = SemanticCitationTool()
