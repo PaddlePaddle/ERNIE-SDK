@@ -5,7 +5,14 @@ from functools import partial
 from typing import Any, List, Type
 
 import requests
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+    import lxml # type: ignore
+
+except ImportError:
+    raise ImportError(
+        "Could not import scraper dependent packages. Please install it with `pip install beautifulsoup4 lxml`."
+    )
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.retrievers import ArxivRetriever
 from pydantic import Field
@@ -43,7 +50,7 @@ class ScraperTool(Tool):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
 
-    async def __call__(self, urls: List[str]) -> Any:
+    async def __call__(self, urls: List[dict]) -> Any:
         urls = [item["url"] for item in urls]
         partial_extract = partial(self.extract_data_from_link, session=self.session)
         with ThreadPoolExecutor(max_workers=20) as executor:
@@ -107,7 +114,7 @@ class ScraperTool(Tool):
         Returns:
             str: The text scraped from the pdf
         """
-        retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
+        retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None) # type: ignore
         docs = retriever.get_relevant_documents(query=query)
         return docs[0].page_content
 
