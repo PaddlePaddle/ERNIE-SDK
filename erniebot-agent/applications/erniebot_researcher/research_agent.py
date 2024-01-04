@@ -1,13 +1,11 @@
 import json
 import logging
 from collections import OrderedDict
-from typing import List, Optional
+from typing import Optional
 
 from tools.utils import ReportCallbackHandler, add_citation
 
-from erniebot_agent.agents.agent import Agent
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.file.base import File
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 
@@ -20,7 +18,7 @@ SELECT_PROMPT = """
 """
 
 
-class ResearchAgent(Agent):
+class ResearchAgent:
     """
     ResearchAgent, refer to
     https://github.com/assafelovic/gpt-researcher/blob/master/examples/permchain_agents/research_team.py
@@ -100,11 +98,11 @@ class ResearchAgent(Agent):
                 value = doc["url"]
                 url_dict[key] = value
             else:
-                print(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
+                logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
         return responses, url_dict
 
-    async def _run(self, query, files: Optional[List[File]] = None):
+    async def run(self, query):
         """
         Runs the ResearchAgent
         Returns:
@@ -199,5 +197,5 @@ class ResearchAgent(Agent):
             report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
         )
         await self._callback_manager.on_run_tool(tool_name=self.citation.description, response=final_report)
-        await self._callback_manager.on_run_end(tool_name=self.name, response=f"报告存储在{path}")
+        await self._callback_manager.on_run_end(self, agent_name=self.name, response=f"报告存储在{path}")
         return final_report, path

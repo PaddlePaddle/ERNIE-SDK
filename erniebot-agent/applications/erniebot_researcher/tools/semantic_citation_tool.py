@@ -46,7 +46,7 @@ class SemanticCitationTool(Tool):
             if "参考文献" in chunk_text:
                 output_text.append(chunk_text)
                 break
-            elif "#" in chunk_text:
+            elif "#" in chunk_text or "摘要" in chunk_text or "关键词" in chunk_text:
                 output_text.append(chunk_text)
                 continue
             else:
