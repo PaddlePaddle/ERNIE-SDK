@@ -32,6 +32,7 @@ class FaissSearch:
         self.embeddings = embeddings
 
     def search(self, query: str, top_k: int = 2):
+        # 搜索时，同时添加最相关的两个文档以及最相关的一个代码示例
         docs = self.db.similarity_search(query, top_k)
         para_result = self.embeddings.embed_documents([i.page_content for i in docs])
         query_result = self.embeddings.embed_query(query)
@@ -51,7 +52,7 @@ class FaissSearch:
                 retrieval_results.append(
                     {"content": doc.metadata["raw_text"], "score": similarities[index], "title": ""}
                 )
-
+        # module_db 用于示例代码搜索代码
         code = self.module_db.similarity_search(query, 1)[0]
         # make sure 'ipynb' in code.metadata
         retrieval_results.append({"content": code.metadata["ipynb"], "score": 1, "title": code.page_content})
