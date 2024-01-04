@@ -6,11 +6,12 @@ from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
+from erniebot_agent.agents.schema import AgentResponse
 
 logger = logging.getLogger(__name__)
-
+TOKEN_MAX_LENGTH=4200
 
 class RenderAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = "你是一个报告润色助手，你的主要工作是报告进行内容上的润色"
@@ -20,13 +21,13 @@ class RenderAgent(Agent):
         name: str,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         callbacks=None,
     ):
         self.name = name
         self.llm = llm
         self.llm_long = llm_long
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         self.template_abstract = """
         请你总结报告并给出报告的摘要和关键词，摘要在100-200字之间，关键词不超过5个词。
         你需要输出一个json形式的字符串，内容为{'摘要':...,'关键词':...}。
@@ -48,13 +49,19 @@ class RenderAgent(Agent):
         else:
             self._callback_manager = callbacks
 
+    async def run(self, report: str) -> AgentResponse:
+        await self._callback_manager.on_run_start(agent=self, prompt=report)
+        agent_resp = await self._run(report)
+        await self._callback_manager.on_run_end(agent=self, response=agent_resp)
+        return agent_resp
+
     async def _run(self, report):
-        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt="")
+        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt=report)
         while True:
             try:
                 content = self.prompt_template_abstract.format(report=report)
                 messages = [HumanMessage(content)]
-                if len(content) > 4800:
+                if len(content) > TOKEN_MAX_LENGTH:
                     reponse = await self.llm_long.chat(messages)
                 else:
                     reponse = await self.llm.chat(messages)

@@ -11,7 +11,7 @@ from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 logger = logging.getLogger(__name__)
 MAX_RETRY = 10
-
+TOKEN_MAX_LENGTH=4200
 
 class ReviserActorAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = """你是一名专业作家。你已经受到编辑的指派，需要修订以下草稿，该草稿由一名非专家撰写。你可以选择是否遵循编辑的备注，视情况而定。
@@ -53,7 +53,7 @@ class ReviserActorAgent(Agent):
         retry_count = 0
         while True:
             try:
-                if len(content) > 4800:
+                if len(content) > TOKEN_MAX_LENGTH:
                     response = await self.llm_long.chat(messages=messages, system=self.system_message)
                 else:
                     response = await self.llm.chat(messages=messages, system=self.system_message)

@@ -50,6 +50,7 @@ eb_functions = [
 ]
 
 MAX_RETRY = 10
+TOKEN_MAX_LENGTH = 4200
 
 
 class EditorActorAgent(Agent):
@@ -88,7 +89,7 @@ class EditorActorAgent(Agent):
         retry_count = 0
         while True:
             try:
-                if len(content) < 4800:
+                if len(content) < TOKEN_MAX_LENGTH:
                     response = await self.llm.chat(
                         messages, functions=eb_functions, system=self.system_message
                     )

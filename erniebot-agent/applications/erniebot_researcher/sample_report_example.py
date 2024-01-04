@@ -9,6 +9,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from research_team import ResearchTeam
+from render_agent import RenderAgent
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
@@ -18,7 +19,7 @@ from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import FaissSearch, build_index
-
+from erniebot_agent.memory import SystemMessage
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.retrieval import BaizhongSearch
@@ -114,7 +115,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         research_agent = ResearchAgent(
             name="generate_report",
             agent_name=agents_name,
-            system_message="你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿",
+            system_message=SystemMessage("你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿"),
             dir_path=dir_path,
             report_type=args.report_type,
             retriever_abstract_tool=retriever_sets["abstract"],
@@ -131,7 +132,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         )
         research_actor.append(research_agent)
     editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
-    reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
+    reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
+    render_actor = RenderAgent(name="render", llm=llm, llm_long=llm_long)
     ranker_actor = RankingAgent(
         llm=llm,
         llm_long=llm_long,
@@ -143,6 +145,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         "editor": editor_actor,
         "reviser": reviser_actor,
         "ranker": ranker_actor,
+        'render':render_actor
     }
 
 
@@ -159,8 +162,10 @@ def main(query):
         ranker_actor=agent_sets["ranker"],
         editor_actor=agent_sets["editor"],
         reviser_actor=agent_sets["reviser"],
+        render_actor=agent_sets["render"],
         report_type=args.report_type,
         target_path=target_path,
+
     )
 
     report, file_path = asyncio.run(research_team.run(query))

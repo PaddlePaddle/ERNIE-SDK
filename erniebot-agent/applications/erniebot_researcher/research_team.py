@@ -4,6 +4,7 @@ from editor_actor_agent import EditorActorAgent
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
+from render_agent import RenderAgent
 from tools.utils import write_md_to_pdf
 from user_proxy_agent import UserProxyAgent
 
@@ -15,6 +16,7 @@ class ResearchTeam:
         ranker_actor: RankingAgent,
         editor_actor: EditorActorAgent,
         reviser_actor: ReviserActorAgent,
+        render_actor: Optional[RenderAgent] = None,
         user_agent: Optional[UserProxyAgent] = None,
         report_type: str = "research_report",
         target_path: str = "output",
@@ -23,6 +25,7 @@ class ResearchTeam:
         self.editor_actor_instance = editor_actor
         self.revise_actor_instance = reviser_actor
         self.ranker_actor_instance = ranker_actor
+        self.render_actor_instance = render_actor
         self.user_agent = user_agent
         self.report_type = report_type
         self.target_path = target_path
@@ -64,5 +67,7 @@ class ResearchTeam:
                 revised_report = await self.revise_actor_instance.run(markdown_report, respose["notes"])
                 # Add revise report to the list of reports
                 list_reports.append(revised_report)
+        if self.render_actor_instance:
+            revised_report = await self.render_actor_instance.run(revised_report)
         path = write_md_to_pdf(self.report_type, self.target_path, revised_report)
         return revised_report, path
