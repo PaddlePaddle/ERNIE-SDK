@@ -13,7 +13,8 @@ from erniebot_agent.prompt import PromptTemplate
 logger = logging.getLogger(__name__)
 
 MAX_RETRY = 10
-TOKEN_MAX_LENGTH=4200
+TOKEN_MAX_LENGTH = 4200
+
 
 def get_markdown_check_prompt(report):
     prompt_markdow_str = """

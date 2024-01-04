@@ -14,7 +14,8 @@ from erniebot_agent.tools.schema import ToolParameterView
 
 logger = logging.getLogger(__name__)
 MAX_RETRY = 10
-TOKEN_MAX_LENGTH=4200
+TOKEN_MAX_LENGTH = 4200
+
 
 def rank_report_prompt(report, query):
     prompt = """现在给你1篇报告，现在你需要严格按照以下的标准，对这个报告进行打分，越符合标准得分越高，打分区间在0-10之间，

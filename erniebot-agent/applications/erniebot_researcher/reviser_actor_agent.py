@@ -11,7 +11,8 @@ from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 logger = logging.getLogger(__name__)
 MAX_RETRY = 10
-TOKEN_MAX_LENGTH=4200
+TOKEN_MAX_LENGTH = 4200
+
 
 class ReviserActorAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = """你是一名专业作家。你已经受到编辑的指派，需要修订以下草稿，该草稿由一名非专家撰写。你可以选择是否遵循编辑的备注，视情况而定。

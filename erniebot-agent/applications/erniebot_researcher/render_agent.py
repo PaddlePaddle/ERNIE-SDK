@@ -5,13 +5,14 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
-from erniebot_agent.agents.schema import AgentResponse
 
 logger = logging.getLogger(__name__)
-TOKEN_MAX_LENGTH=4200
+TOKEN_MAX_LENGTH = 4200
+
 
 class RenderAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = "你是一个报告润色助手，你的主要工作是报告进行内容上的润色"
@@ -27,7 +28,9 @@ class RenderAgent(Agent):
         self.name = name
         self.llm = llm
         self.llm_long = llm_long
-        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = (
+            system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        )
         self.template_abstract = """
         请你总结报告并给出报告的摘要和关键词，摘要在100-200字之间，关键词不超过5个词。
         你需要输出一个json形式的字符串，内容为{'摘要':...,'关键词':...}。

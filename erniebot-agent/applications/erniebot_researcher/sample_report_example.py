@@ -7,9 +7,9 @@ import time
 from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
 from ranking_agent import RankingAgent
+from render_agent import RenderAgent
 from research_agent import ResearchAgent
 from research_team import ResearchTeam
-from render_agent import RenderAgent
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
@@ -19,9 +19,10 @@ from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import FaissSearch, build_index
-from erniebot_agent.memory import SystemMessage
+
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
+from erniebot_agent.memory import SystemMessage
 from erniebot_agent.retrieval import BaizhongSearch
 
 parser = argparse.ArgumentParser()
@@ -145,7 +146,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         "editor": editor_actor,
         "reviser": reviser_actor,
         "ranker": ranker_actor,
-        'render':render_actor
+        "render": render_actor,
     }
 
 
@@ -165,7 +166,6 @@ def main(query):
         render_actor=agent_sets["render"],
         report_type=args.report_type,
         target_path=target_path,
-
     )
 
     report, file_path = asyncio.run(research_team.run(query))
