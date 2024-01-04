@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, ClassVar, Dict, Final, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import erniebot.errors as errors
 from erniebot.api_types import APIType
@@ -27,7 +27,11 @@ __all__ = ["Embedding", "EmbeddingResponse"]
 
 
 class Embedding(EBResource, Creatable):
-    _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.AISTUDIO,
+    )
+    _api_info_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "resource_id": "embeddings",
             "models": {
@@ -45,11 +49,6 @@ class Embedding(EBResource, Creatable):
             },
         },
     }
-
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
-        APIType.QIANFAN,
-        APIType.AISTUDIO,
-    )
 
     @classmethod
     def create(
@@ -156,7 +155,7 @@ class Embedding(EBResource, Creatable):
 
         # path
         if self.api_type in self.supported_api_types:
-            api_info = self._API_INFO_DICT[self.api_type]
+            api_info = self._api_info_dict[self.api_type]
             if model not in api_info["models"]:
                 raise errors.InvalidArgumentError(f"{repr(model)} is not a supported model.")
             path = f"/{api_info['resource_id']}/{api_info['models'][model]['model_id']}"

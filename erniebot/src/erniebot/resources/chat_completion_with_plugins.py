@@ -17,7 +17,6 @@ from typing import (
     AsyncIterator,
     ClassVar,
     Dict,
-    Final,
     Iterator,
     List,
     Literal,
@@ -40,7 +39,11 @@ __all__ = ["ChatCompletionWithPlugins"]
 
 
 class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
-    _API_INFO_DICT: Final[Dict[APIType, Dict[str, Any]]] = {
+    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
+        APIType.QIANFAN,
+        APIType.CUSTOM,
+    )
+    _api_info_dict: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
             "path": "/erniebot/plugins",
         },
@@ -48,11 +51,6 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             "path": "/erniebot/plugins_v3",
         },
     }
-
-    supported_api_types: ClassVar[Tuple[APIType, ...]] = (
-        APIType.QIANFAN,
-        APIType.CUSTOM,
-    )
 
     @overload
     @classmethod
@@ -251,7 +249,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
 
         # path
         if self.api_type in self.supported_api_types:
-            api_info = self._API_INFO_DICT[self.api_type]
+            api_info = self._api_info_dict[self.api_type]
             path = api_info["path"]
         else:
             raise errors.UnsupportedAPITypeError(
