@@ -97,7 +97,7 @@ def generate_report(query, history=[]):
     ranking_tool = TextRankingTool(llm, llm_long)
     report_writing_tool = ReportWritingTool(llm, llm_long)
     summarization_tool = TextSummarizationTool()
-    task_planning_tool = TaskPlanningTool()
+    task_planning_tool = TaskPlanningTool(llm=llm)
     semantic_citation_tool = SemanticCitationTool()
     dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
     target_path = f"./outputsl/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
@@ -122,14 +122,12 @@ def generate_report(query, history=[]):
             summarize_tool=summarization_tool,
             faiss_name_citation=args.faiss_name_citation,
             embeddings=embeddings,
+            llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor")
-    reviser_actor = ReviserActorAgent(name="reviser")
-    ranker_actor = RankingAgent(
-        name="ranker",
-        ranking_tool=ranking_tool,
-    )
+    editor_actor = EditorActorAgent(name="editor", llm=llm)
+    reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
+    ranker_actor = RankingAgent(name="ranker", ranking_tool=ranking_tool, llm=llm)
     list_reports = []
     for researcher in research_actor:
         report, _ = asyncio.run(researcher.run(query))
