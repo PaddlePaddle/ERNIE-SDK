@@ -19,7 +19,8 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("帮我把这个图片转换为卡通风格", files=[self.file])
-        self.assertEqual(len(result.files), 2)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 2)
 
     @pytest.mark.asyncio
     async def test_person_animation(self):
@@ -28,4 +29,5 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("帮我把这张人像图片转化为动漫的图片", files=[self.file])
-        self.assertEqual(len(result.files), 2)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 2)

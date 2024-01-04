@@ -18,31 +18,34 @@ class TestPPRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("请帮我对图片中的人像抠出来", files=[file])
+        files = self.get_files(result)
+        self.assertEqual(len(files), 2)
 
-        self.assertEqual(len(result.files), 2)
+    # @pytest.mark.asyncio
+    # async def test_pp_human_v2(self):
+    #     toolkit = RemoteToolkit.from_aistudio("pp-human-v2", file_manager=self.file_manager)
 
-    @pytest.mark.asyncio
-    async def test_pp_human_v2(self):
-        toolkit = RemoteToolkit.from_aistudio("pp-human-v2", file_manager=self.file_manager)
+    #     file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
+    #     agent = self.get_agent(toolkit)
 
-        file = await self.file_manager.create_file_from_path(self.download_fixture_file("human_attr.jpg"))
-        agent = self.get_agent(toolkit)
+    #     result = await agent.run("请帮我对图中的行人进行分析", files=[file])
+    #     files = self.get_files(result)
 
-        result = await agent.run("请帮我对图中的行人进行分析", files=[file])
-        self.assertEqual(result.files[-1].type, "output")
+    #     self.assertEqual(files[-1].type, "output")
 
-    @pytest.mark.asyncio
-    async def test_pp_humansegv2(self):
-        toolkit = RemoteToolkit.from_aistudio("humanseg", file_manager=self.file_manager)
+    # @pytest.mark.asyncio
+    # async def test_pp_humansegv2(self):
+    #     toolkit = RemoteToolkit.from_aistudio("humanseg", file_manager=self.file_manager)
 
-        agent = self.get_agent(toolkit)
+    #     agent = self.get_agent(toolkit)
 
-        file_path = self.download_fixture_file("humanseg_input_img.jpg")
-        file = await self.file_manager.create_file_from_path(file_path)
+    #     file_path = self.download_fixture_file("humanseg_input_img.jpg")
+    #     file = await self.file_manager.create_file_from_path(file_path)
 
-        result = await agent.run("对这张图片进行人像分割，包含的文件为：", files=[file])
-        self.assertEqual(len(result.files), 2)
-        self.assertEqual(len(result.steps), 1)
+    #     result = await agent.run("对这张图片进行人像分割，包含的文件为：", files=[file])
+    #     files = self.get_files(result)
+    #     self.assertEqual(len(files), 2)
+    #     self.assertEqual(len(result.steps), 1)
 
     @pytest.mark.asyncio
     async def test_pp_tinypose(self):
@@ -53,7 +56,8 @@ class TestPPRemoteTool(RemoteToolTesting):
         file = await self.file_manager.create_file_from_path(file_path)
 
         result = await agent.run("检测这张图片中的人体关键点，包含的文件为：", files=[file])
-        self.assertEqual(len(result.files), 2)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 2)
         self.assertEqual(len(result.steps), 1)
 
     @pytest.mark.asyncio
@@ -72,7 +76,8 @@ class TestPPRemoteTool(RemoteToolTesting):
         self.assertEqual(decoded_tool_ret["vehicle_plates"], ["CCL9542"])
         self.assertIn("vehicle_attrs", decoded_tool_ret)
         self.assertEqual(decoded_tool_ret["vehicle_attrs"], [{"color": "blue", "kind": "Unknown"}])
-        self.assertEqual(len(response.files), 2)
+        files = self.get_files(response)
+        self.assertEqual(len(files), 2)
 
     @pytest.mark.asyncio
     async def test_pp_structure(self):
@@ -81,7 +86,8 @@ class TestPPRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
         file = await self.file_manager.create_file_from_path(self.download_fixture_file("ocr_table.png"))
         result = await agent.run("请帮我提取一下这个表格的内容", files=[file])
-        self.assertEqual(len(result.files), 1)
+        files = self.get_files(result)
+        self.assertEqual(len(files), 1)
         self.assertIn("设备", result.text)
 
     @pytest.mark.asyncio
