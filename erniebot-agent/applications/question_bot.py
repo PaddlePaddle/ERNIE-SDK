@@ -69,8 +69,6 @@ def open_and_concatenate_ipynb(ipynb_path, encoding):
     # 按顺序拼接Markdown文本和code单元
     concatenated_content = ""
     for cell in notebook_content["cells"]:
-        # if cell["cell_type"] == "markdown":
-        #     concatenated_content += cell["source"] + "\n\n"
         if cell["cell_type"] == "code":
             concatenated_content += "```python\n" + cell["source"] + "```\n\n"
 
