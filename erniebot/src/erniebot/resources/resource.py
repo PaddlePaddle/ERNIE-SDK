@@ -41,7 +41,7 @@ from erniebot.api_types import APIType, convert_str_to_api_type
 from erniebot.backends import build_backend
 from erniebot.config import GlobalConfig
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 
 
 class EBResource(object):
@@ -94,7 +94,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
@@ -108,7 +107,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Iterator[EBResponse]:
         ...
@@ -122,7 +120,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
@@ -136,7 +133,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         retrying = tenacity.Retrying(
@@ -163,7 +159,6 @@ class EBResource(object):
                     stream=stream,
                     params=params,
                     headers=headers,
-                    files=files,
                     request_timeout=request_timeout,
                 )
         raise AssertionError
@@ -177,7 +172,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
@@ -191,7 +185,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> AsyncIterator[EBResponse]:
         ...
@@ -205,7 +198,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
@@ -219,7 +211,6 @@ class EBResource(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         async_retrying = tenacity.AsyncRetrying(
@@ -246,7 +237,6 @@ class EBResource(object):
                     stream=stream,
                     params=params,
                     headers=headers,
-                    files=files,
                     request_timeout=request_timeout,
                 )
         raise AssertionError
@@ -270,7 +260,6 @@ class EBResource(object):
                 stream=False,
                 params=params,
                 headers=headers,
-                files=None,
                 request_timeout=request_timeout,
             )
             if until(resp):
@@ -299,7 +288,6 @@ class EBResource(object):
                 stream=False,
                 params=params,
                 headers=headers,
-                files=None,
                 request_timeout=request_timeout,
             )
             if until(resp):
@@ -317,7 +305,6 @@ class EBResource(object):
         stream: Literal[False],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> EBResponse:
         ...
@@ -330,7 +317,6 @@ class EBResource(object):
         stream: Literal[True],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> Iterator[EBResponse]:
         ...
@@ -343,7 +329,6 @@ class EBResource(object):
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
@@ -356,7 +341,6 @@ class EBResource(object):
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         resp = self._backend.request(
@@ -365,7 +349,6 @@ class EBResource(object):
             stream,
             params=params,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
         if stream:
@@ -384,7 +367,6 @@ class EBResource(object):
         stream: Literal[False],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> EBResponse:
         ...
@@ -397,7 +379,6 @@ class EBResource(object):
         stream: Literal[True],
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> AsyncIterator[EBResponse]:
         ...
@@ -410,7 +391,6 @@ class EBResource(object):
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
@@ -423,7 +403,6 @@ class EBResource(object):
         stream: bool,
         params: Optional[ParamsType],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         resp = await self._backend.arequest(
@@ -432,7 +411,6 @@ class EBResource(object):
             stream,
             params=params,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
         if stream:

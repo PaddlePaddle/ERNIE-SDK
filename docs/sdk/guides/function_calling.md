@@ -11,7 +11,7 @@
 
 借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。
 
-在ERNIE Bot SDK中，`erniebot.ChatCompletion.create`接口提供函数调用功能。关于该接口的更多详情请参考[ChatCompletion API文档](../api_reference/chat_completion.md)。
+在ERNIE Bot中，`erniebot.ChatCompletion.create`接口提供函数调用功能。关于该接口的更多详情请参考[ChatCompletion API文档](../api_reference/chat_completion.md)。
 
 ## 使用示例
 

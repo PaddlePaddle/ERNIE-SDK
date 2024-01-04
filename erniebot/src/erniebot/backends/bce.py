@@ -34,7 +34,7 @@ import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.auth import build_auth_token_manager
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 from erniebot.utils.url import add_query_params
 
 from .base import EBBackend
@@ -59,7 +59,6 @@ class _BCELegacyBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -67,7 +66,6 @@ class _BCELegacyBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         access_token = self._auth_manager.get_auth_token()
@@ -79,7 +77,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
@@ -95,7 +92,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
 
@@ -107,7 +103,6 @@ class _BCELegacyBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -115,7 +110,6 @@ class _BCELegacyBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         loop = asyncio.get_running_loop()
@@ -129,7 +123,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
@@ -146,7 +139,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
 
@@ -171,7 +163,6 @@ class _BCEBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -179,7 +170,6 @@ class _BCEBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_bce_fields_to_headers(headers, method, url)
         return self._client.send_request(
@@ -188,7 +178,6 @@ class _BCEBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
@@ -200,7 +189,6 @@ class _BCEBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -208,7 +196,6 @@ class _BCEBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_bce_fields_to_headers(headers, method, url)
         return await self._client.asend_request(
@@ -217,7 +204,6 @@ class _BCEBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 

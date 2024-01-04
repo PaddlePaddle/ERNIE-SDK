@@ -278,6 +278,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         stream = kwargs.get("stream", False)
 
         return RequestWithStream(
+            method="POST",
             path=path,
             params=params,
             headers=headers,

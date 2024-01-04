@@ -19,7 +19,7 @@ import erniebot.errors as errors
 import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 
 from .base import EBBackend
 
@@ -66,7 +66,6 @@ class AIStudioBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -74,7 +73,6 @@ class AIStudioBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
         return self._client.send_request(
@@ -83,7 +81,6 @@ class AIStudioBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
@@ -95,7 +92,6 @@ class AIStudioBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -103,7 +99,6 @@ class AIStudioBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
         return await self._client.asend_request(
@@ -112,7 +107,6 @@ class AIStudioBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 

@@ -180,6 +180,7 @@ class Embedding(EBResource, Creatable):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,

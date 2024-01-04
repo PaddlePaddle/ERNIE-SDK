@@ -17,7 +17,7 @@ from typing import AsyncIterator, ClassVar, Iterator, Optional, Union
 from erniebot.api_types import APIType
 from erniebot.http_client import EBClient
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 
 
 class EBBackend(object):
@@ -47,7 +47,6 @@ class EBBackend(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         raise NotImplementedError
@@ -60,7 +59,6 @@ class EBBackend(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         raise NotImplementedError

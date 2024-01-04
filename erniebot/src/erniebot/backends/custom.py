@@ -17,7 +17,7 @@ from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
 import erniebot.errors as errors
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import HeadersType, ParamsType
 
 from .base import EBBackend
 
@@ -40,7 +40,6 @@ class CustomBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -48,7 +47,6 @@ class CustomBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         return self._client.send_request(
@@ -57,7 +55,6 @@ class CustomBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
@@ -69,7 +66,6 @@ class CustomBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -77,7 +73,6 @@ class CustomBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         return await self._client.asend_request(
@@ -86,7 +81,6 @@ class CustomBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
