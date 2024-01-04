@@ -13,6 +13,7 @@ from langchain.text_splitter import (
     RecursiveCharacterTextSplitter,
 )
 from langchain.vectorstores import FAISS
+from langchain_core.documents import Document
 from sklearn.metrics.pairwise import cosine_similarity
 
 from erniebot_agent.agents.function_agent_with_retrieval import (
@@ -49,16 +50,22 @@ def read_md_file(file_path: str) -> Union[str, None]:
         return None
 
 
-def read_md_files(file_paths: Union[str, List[str]]) -> Union[List[str], str]:
-    if isinstance(file_paths, str):
-        return read_md_file(file_paths)
-    elif isinstance(file_paths, list):
-        md_contents = ""
-        for file_path in file_paths:
-            content = read_md_file(file_path)
-            if content is not None:
-                md_contents += content
-        return md_contents
+def load_md_files_to_doc(
+    file_paths: List[str],
+    chunk_size: int = 1000,
+    chunk_overlap: int = 30,
+) -> List[Document]:
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    output_document = []
+    for file in file_paths:
+        content = read_md_file(file)
+        if content is None:
+            continue
+        md_header_splits = markdown_splitter.split_text(content)
+        splits = text_splitter.split_documents(md_header_splits)
+        output_document.extend(splits)
+    return output_document
 
 
 def open_and_concatenate_ipynb(ipynb_path, encoding):
@@ -121,15 +128,14 @@ def load_agent():
             "./docs/modules/message.md",
             "./docs/modules/chat_models.md",
             "./docs/modules/tools.md",
+            "./docs/quickstart/agent.md",
+            "./docs/quickstart/use-tool.md",
         ]
-        content = read_md_files(md_file_path)
-        markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-        md_header_splits = markdown_splitter.split_text(content)
-        chunk_size = 500
+        chunk_size = 1000
         chunk_overlap = 30
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-        splits = text_splitter.split_documents(md_header_splits)
-        db = FAISS.from_documents(splits, embeddings)
+        content_doc = load_md_files_to_doc(md_file_path, chunk_size, chunk_overlap)
+
+        db = FAISS.from_documents(content_doc, embeddings)
         db.save_local(faiss_name)
 
         ipynb_path = [
@@ -139,10 +145,10 @@ def load_agent():
             "./docs/cookbooks/agent/message.ipynb",
             "./docs/cookbooks/agent/local_tool.ipynb",
             "./docs/cookbooks/agent/tools_intro.ipynb",
+            "./docs/cookbooks/agent/remote-tool/remote_tool.ipynb",
         ]
         modules = [item[item.rfind("/") + 1 : item.rfind(".ipynb")] for item in ipynb_path]
         module_doc = []
-        from langchain_core.documents import Document
 
         for i in range(len(modules)):
             module_doc.append(
