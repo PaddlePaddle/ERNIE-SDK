@@ -10,7 +10,9 @@
 # class TestRemoteTool(RemoteToolTesting):
 #     async def asyncSetUp(self) -> None:
 #         await super().asyncSetUp()
-#         self.file = await self.file_manager.create_file_from_path(self.download_fixture_file("城市管理执法办法.pdf"))
+#         self.file = await self.file_manager.create_file_from_path(
+#             self.download_fixture_file("城市管理执法办法.pdf")
+#         )
 
 #     @pytest.mark.asyncio
 #     async def test_doc_analysis(self):
