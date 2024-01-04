@@ -6,7 +6,7 @@ from tools.utils import ReportCallbackHandler
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -21,12 +21,12 @@ class ReviserActorAgent(Agent):
         self,
         name: str,
         llm: BaseERNIEBot,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         callbacks=None,
     ):
         self.name = name
         self.llm = llm
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         self.model = llm
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])

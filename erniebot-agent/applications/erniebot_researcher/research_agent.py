@@ -6,7 +6,7 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler, add_citation
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class ResearchAgent:
         summarize_tool,
         faiss_name_citation,
         llm: BaseERNIEBot,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         use_outline=True,
         use_context_planning=True,
         nums_queries=4,
@@ -59,7 +59,7 @@ class ResearchAgent:
             ......
         """
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         self.dir_path = dir_path
         self.report_type = report_type
         self.retriever = retriever_tool

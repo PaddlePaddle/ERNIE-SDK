@@ -7,7 +7,7 @@ from tools.utils import ReportCallbackHandler
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -18,9 +18,9 @@ MAX_RETRY = 10
 def get_markdown_check_prompt(report):
     prompt_markdow_str = """
     现在给你1篇报告，你需要判断报告是不是markdown格式，并给出理由。你需要输出判断理由以及判断结果，判断结果是报告是markdown形式或者报告不是markdown格式
-    你的输出结果应该是个json形式，包括两个键值，一个是"判断理由"，一个是"accept"，如果你认为报告是markdown形式，则"accept"取值为True,如果你认为报告不是markdown形式，则"accept"取值为False，
+    你的输出结果应该是个json形式，包括两个键值，一个是"判断理由"，一个是"accept"，如果你认为报告是markdown形式，则"accept"取值为true,如果你认为报告不是markdown形式，则"accept"取值为false，
     你需要判断报告是不是markdown格式，并给出理由
-    {'判断理由':...,'accept':...}
+    {"判断理由":...,"accept":...}
     报告：{{report}}
     """
     prompt_markdow = PromptTemplate(prompt_markdow_str, input_variables=["report"])
@@ -36,12 +36,12 @@ class RankingAgent(Agent):
         ranking_tool,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         callbacks=None,
         is_reset=False,
     ) -> None:
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         self.llm = llm
         self.llm_long = llm_long
 

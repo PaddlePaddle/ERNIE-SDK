@@ -8,7 +8,7 @@ from tools.utils import ReportCallbackHandler
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -60,11 +60,11 @@ class EditorActorAgent(Agent):
         name: str,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
-        system_message: Optional[str] = None,
+        system_message: Optional[SystemMessage] = None,
         callbacks=None,
     ):
         self.name = name
-        self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         self.llm = llm
         self.llm_long = llm_long
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])

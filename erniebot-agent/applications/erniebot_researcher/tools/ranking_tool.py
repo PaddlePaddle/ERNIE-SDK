@@ -74,7 +74,7 @@ class TextRankingTool(Tool):
                                 messages=messages,
                                 temperature=1e-10,
                             )
-                        result = response.text
+                        result = response.content
                         l_index = result.index("{")
                         r_index = result.rindex("}")
                         result = result[l_index : r_index + 1]
