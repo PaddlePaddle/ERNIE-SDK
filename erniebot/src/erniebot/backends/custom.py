@@ -46,7 +46,6 @@ class CustomBackend(EBBackend):
             supplied_headers=headers,
             params=params,
         )
-
         return self._client.send_request(
             method,
             url,
@@ -72,7 +71,6 @@ class CustomBackend(EBBackend):
             supplied_headers=headers,
             params=params,
         )
-
         return await self._client.asend_request(
             method,
             url,

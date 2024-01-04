@@ -54,6 +54,8 @@ class AIStudioBackend(EBBackend):
             params=params,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
+        if method.upper() == "POST":
+            headers["Content-Type"] = "application/json"
         return self._client.send_request(
             method,
             url,
@@ -80,6 +82,8 @@ class AIStudioBackend(EBBackend):
             params=params,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
+        if method.upper() == "POST":
+            headers["Content-Type"] = "application/json"
         return await self._client.asend_request(
             method,
             url,
