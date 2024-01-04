@@ -108,8 +108,7 @@ plugins:
         - categories
         - tags 
   - search
-  - social:
-      cards_layout: default
+  - social
   - mkdocs-jupyter:
       ignore_h1_titles: True
   - mkdocstrings:
