@@ -121,7 +121,8 @@ class ScraperTool(Tool):
             str: The text from the soup
         """
         text = ""
-        tags = ["p", "h1", "h2", "h3", "h4", "h5"]
+        tags = ["p", "pre", "h1", "h2", "h3", "h4", "h5"]
         for element in soup.find_all(tags):  # Find all the <p> elements
-            text += element.text + "\n"
+            text += element.text + "\n\n"
+
         return text
