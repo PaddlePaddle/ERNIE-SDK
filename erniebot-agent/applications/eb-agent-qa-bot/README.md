@@ -1,6 +1,6 @@
 # ERNIEBot-Agent QA Bot
 
-ERNIEBot-Agent QA Bot是一个EB-Agent使用教学机器人，基于`FunctionAgentWithRetrieval`，该工具旨在辅助用户解决与EB-Agent相关的问题，帮助他们更快的使用此库。
+ERNIEBot-Agent QA Bot是一个EB-Agent使用教学机器人，基于`FunctionAgentWithRetrieval`，该工具旨在辅助用户解决与EB-Agent相关的问题，帮助用户更快的使用`erniebot_agent`库，搭建属于自己的Agent。
 
 
 ## 架构
@@ -30,9 +30,9 @@ pip install ernie_agent
 ```
 > 第二步：如果是第一次运行，请先初始化向量库
 ```bash
-python question_bot.py --init=True --access_token <aistudio-access-token>
+python question_bot.py --init=True --access-token <aistudio-access-token>
 ```
 > 如果已经初始化过向量库，直接运行即可
 ```bash
-python question_bot.py --access_token <aistudio-access-token>
+python question_bot.py --access-token <aistudio-access-token>
 ```
