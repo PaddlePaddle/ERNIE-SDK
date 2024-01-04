@@ -84,9 +84,9 @@ def load_agent():
 
 
 async def main(agent):
-    # response = await agent.run('怎么使用File模块？')
-    # response = await agent.run('怎么获取我的File的内容？')
-    response = await agent.run("怎么创建一个EB-Agent，给出具体的代码？")
+    # response = await agent.run('怎么从aistudio创建远程tool？')
+    # response = await agent.run('如何创建一个LocalTool？')
+    response = await agent.run("如何创建一个agent")
     print(response.text)
 
 
