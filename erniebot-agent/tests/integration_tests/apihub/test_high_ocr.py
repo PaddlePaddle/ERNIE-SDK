@@ -16,5 +16,6 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("帮我看看这张照片中的内容有什么", files=[file])
-        self.assertGreater(len(result.actions), 0)
+        action_steps = self.get_action_steps(result)
+        self.assertGreater(len(action_steps), 0)
         self.assertIn("春天的梦", result.text)

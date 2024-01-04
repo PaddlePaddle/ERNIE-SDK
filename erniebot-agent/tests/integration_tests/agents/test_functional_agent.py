@@ -49,7 +49,7 @@ async def test_function_agent_run_one_hit(llm, tool, memory):
 
     steps = response.steps
     assert len(steps) == 1
-    assert steps[0].info.tool_name == tool.tool_name
+    assert steps[0].info["tool_name"] == tool.tool_name
 
 
 @pytest.mark.asyncio
