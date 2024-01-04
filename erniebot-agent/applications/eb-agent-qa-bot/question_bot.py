@@ -61,8 +61,8 @@ class FaissSearch:
 
 
 def load_agent():
-    faiss_name = "faiss_index"
-    faiss_name_module = "faiss_index_module"
+    faiss_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "faiss_index")
+    faiss_name_module = os.path.join(os.path.dirname(os.path.abspath(__file__)), "faiss_index_module")
     if args.init:
         init_db(faiss_name, faiss_name_module, embeddings)
     try:
