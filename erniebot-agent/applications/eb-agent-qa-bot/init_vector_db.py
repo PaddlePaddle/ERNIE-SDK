@@ -19,6 +19,7 @@ headers_to_split_on = [
 
 
 def get_summary(content: str) -> Union[str, None]:
+    """Get summary of md files, you can also change another llm model."""
     chat_message = {"role": "user", "content": f"请帮我给以下markdown文件生成摘要用于用户问文档内容时的检索匹配，不要超过400个字：\n{content}"}
     summary = erniebot.ChatCompletion.create(
         model="ernie-longtext",
@@ -28,6 +29,7 @@ def get_summary(content: str) -> Union[str, None]:
 
 
 def open_and_concatenate_ipynb(ipynb_path: str, encoding: str) -> str:
+    """Get content of ipynb file."""
     with open(ipynb_path, "r", encoding=encoding) as f:
         notebook_content = nbformat.read(f, as_version=4)
 
@@ -112,5 +114,5 @@ def init_db(faiss_name, faiss_name_module, embeddings):
             )
         )
 
-    module_db = FAISS.from_documents(module_doc, embeddings)
-    module_db.save_local(faiss_name_module)
+    module_code_db = FAISS.from_documents(module_doc, embeddings)
+    module_code_db.save_local(faiss_name_module)

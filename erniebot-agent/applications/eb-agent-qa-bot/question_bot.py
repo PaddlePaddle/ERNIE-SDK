@@ -26,13 +26,13 @@ embeddings = ErnieEmbeddings(aistudio_access_token=os.environ["EB_AGENT_ACCESS_T
 
 
 class FaissSearch:
-    def __init__(self, db, embeddings, module_db):
+    def __init__(self, db, embeddings, module_code_db):
         self.db = db
-        self.module_db = module_db
+        self.module_code_db = module_code_db
         self.embeddings = embeddings
 
     def search(self, query: str, top_k: int = 2):
-        # 搜索时，同时添加最相关的两个文档以及最相关的一个代码示例
+        # 搜索时，同时召回最相关的两个文档片段以及最相关的一个代码示例
         docs = self.db.similarity_search(query, top_k)
         para_result = self.embeddings.embed_documents([i.page_content for i in docs])
         query_result = self.embeddings.embed_query(query)
@@ -52,8 +52,8 @@ class FaissSearch:
                 retrieval_results.append(
                     {"content": doc.metadata["raw_text"], "score": similarities[index], "title": ""}
                 )
-        # module_db 用于示例代码搜索代码
-        code = self.module_db.similarity_search(query, 1)[0]
+        # module_code_db 用于相关代码的召回
+        code = self.module_code_db.similarity_search(query, 1)[0]
         # make sure 'ipynb' in code.metadata
         retrieval_results.append({"content": code.metadata["ipynb"], "score": 1, "title": code.page_content})
 
@@ -67,12 +67,12 @@ def load_agent():
         init_db(faiss_name, faiss_name_module, embeddings)
     try:
         db = FAISS.load_local(faiss_name, embeddings)
-        module_db = FAISS.load_local(faiss_name_module, embeddings)
+        module_code_db = FAISS.load_local(faiss_name_module, embeddings)
     except RuntimeError as e:
         raise RuntimeError(f"Make sure you have initialized the database first.\n {e}")
 
     llm = ERNIEBot(model="ernie-3.5")
-    faiss_search = FaissSearch(db=db, embeddings=embeddings, module_db=module_db)
+    faiss_search = FaissSearch(db=db, embeddings=embeddings, module_code_db=module_code_db)
     agent = FunctionAgentWithRetrieval(
         llm=llm,
         tools=[],
