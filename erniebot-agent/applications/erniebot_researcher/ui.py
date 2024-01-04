@@ -132,6 +132,7 @@ def generate_report(query, history=[]):
     for researcher in research_actor:
         report, _ = asyncio.run(researcher.run(query))
         list_reports.append(report)
+    breakpoint()
     for i in range(args.iterations):
         if len(list_reports) > 1:
             list_reports, immedia_report = asyncio.run(ranker_actor._run(list_reports, query))
