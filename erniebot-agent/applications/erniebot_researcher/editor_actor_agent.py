@@ -22,7 +22,7 @@ EB_EDIT_TEMPLATE = """你是一名编辑。
 - 这份草稿必须不包含低级的句法错误。
 - 这份草稿的标题不能包含任何引用
 如果不符合以上所有标准，你应该发送适当的修订笔记，请以json的格式输出：
-如果需要进行修订，则按照下面的格式输出：{"accept":"false","notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": "true","notes":""}
+如果需要进行修订，则按照下面的格式输出：{"accept": false,"notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": true,"notes":""}
 """
 
 eb_functions = [
@@ -106,7 +106,7 @@ class EditorActorAgent(Agent):
                     suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
-                await self._callback_manager.on_run_end(self, agent_name=self.name, prompt=suggestions)
+                await self._callback_manager.on_run_end(self, agent_name=self.name, response=suggestions)
                 return suggestions
             except Exception as e:
                 logger.error(e)

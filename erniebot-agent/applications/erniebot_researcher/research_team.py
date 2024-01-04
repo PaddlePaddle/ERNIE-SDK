@@ -5,7 +5,7 @@ from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
 from user_proxy_agent import UserProxyAgent
-
+from tools.utils import write_md_to_pdf
 
 class ResearchTeam:
     def __init__(
@@ -15,12 +15,16 @@ class ResearchTeam:
         editor_actor: EditorActorAgent,
         reviser_actor: ReviserActorAgent,
         user_agent: Optional[UserProxyAgent] = None,
+        report_type: str = "research_report",
+        target_path: str = "output",
     ):
         self.research_actor_instance = research_actor
         self.editor_actor_instance = editor_actor
         self.revise_actor_instance = reviser_actor
         self.ranker_actor_instance = ranker_actor
         self.user_agent = user_agent
+        self.report_type = report_type
+        self.target_path = target_path
 
     async def run(self, query, iterations=3):
         list_reports = []
@@ -59,4 +63,5 @@ class ResearchTeam:
                 revised_report = await self.revise_actor_instance.run(markdown_report, respose["notes"])
                 # Add revise report to the list of reports
                 list_reports.append(revised_report)
-        return revised_report
+        path = write_md_to_pdf(self.report_type, self.target_path, revised_report)
+        return revised_report, path

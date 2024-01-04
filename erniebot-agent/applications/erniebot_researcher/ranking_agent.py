@@ -80,7 +80,6 @@ class RankingAgent(Agent):
         retry_count = 0
         while True:
             try:
-                # report[0]: report, report[1]: report_name
                 content = get_markdown_check_prompt(report)
                 messages = [HumanMessage(content=content)]
                 if len(content) < 4800:

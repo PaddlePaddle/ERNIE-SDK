@@ -148,7 +148,6 @@ class ReportWritingTool(Tool):
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
-        # breakpoint()
         meta_data_json = json.dumps(meta_data, ensure_ascii=False)
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:
