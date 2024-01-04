@@ -1,7 +1,7 @@
 aiohttp
 anyio
 asyncio-atexit
-# erniebot
+erniebot == 0.5.0
 jinja2
 langchain
 openapi_spec_validator
