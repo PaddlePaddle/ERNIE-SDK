@@ -276,7 +276,6 @@ class RemoteToolkit:
         if access_token is None:
             access_token = C.get_global_access_token()
 
-        print("============================================================")
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_dir = "./"
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
@@ -293,10 +292,6 @@ class RemoteToolkit:
             file_path = os.path.join(temp_dir, "openapi.yaml")
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
-
-            print(file_content)
-
-            print("============================================================")
 
             toolkit = RemoteToolkit.from_openapi_file(
                 file_path, access_token=access_token, file_manager=file_manager
