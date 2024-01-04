@@ -42,7 +42,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         tools: Union[ToolManager, List[BaseTool]],
         *,
         memory: Optional[Memory] = None,
-        system_message: Optional[SystemMessage] = None,
+        system: Optional[str] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
@@ -54,7 +54,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             tools: A list of tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
                 history. If not specified, a new WholeMemory object will be instantiated.
-            system_message: A message that tells the LLM how to interpret the
+            system: A message that tells the LLM how to interpret the
                 conversations. If `None`, the system message contained in
                 `memory` will be used.
             callbacks: A list of callback handlers for the agent to use. If
@@ -78,10 +78,10 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         else:
             self.memory = memory
 
-        if system_message:
-            self.system_message = system_message
+        if system:
+            self.system = SystemMessage(system)
         else:
-            self.system_message = self.memory.get_system_message()
+            self.system = self.memory.get_system_message()
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from typing import List, Optional, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
@@ -41,6 +42,8 @@ from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS = 5
 
+_logger = logging.getLogger(__name__)
+
 
 class FunctionAgent(Agent):
     """An agent driven by function calling.
@@ -68,7 +71,7 @@ class FunctionAgent(Agent):
         tools: Union[ToolManager, List[BaseTool]],
         *,
         memory: Optional[Memory] = None,
-        system_message: Optional[SystemMessage] = None,
+        system: Optional[SystemMessage] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
@@ -81,7 +84,7 @@ class FunctionAgent(Agent):
             tools: A list of tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
                 history.
-            system_message: A message that tells the LLM how to interpret the
+            system: A message that tells the LLM how to interpret the
                 conversations. If `None`, the system message contained in
                 `memory` will be used.
             callbacks: A list of callback handlers for the agent to use. If
@@ -99,7 +102,7 @@ class FunctionAgent(Agent):
             llm=llm,
             tools=tools,
             memory=memory,
-            system_message=system_message,
+            system=system,
             callbacks=callbacks,
             file_manager=file_manager,
             plugins=plugins,
@@ -138,10 +141,15 @@ class FunctionAgent(Agent):
     async def _step(self, chat_history: List[Message]) -> Tuple[AgentStep, List[Message]]:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
+        if hasattr(self.llm, "system"):
+            _logger.warning(
+                "The `system` message has already been set in the agent;"
+                "the `system` message configured in ERNIEBot will become ineffective."
+            )
         llm_resp = await self.run_llm(
             messages=input_messages,
             functions=self._tool_manager.get_tool_schemas(),
-            system=self.system_message.content if self.system_message is not None else None,
+            system=self.system.content if self.system is not None else None,
             plugins=self._plugins,
         )
         output_message = llm_resp.message  # AIMessage
