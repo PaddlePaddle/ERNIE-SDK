@@ -13,6 +13,7 @@ from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
 logger = logging.getLogger(__name__)
+MAX_RETRY = 10
 
 
 def rank_report_prompt(report, query):
@@ -65,6 +66,7 @@ class TextRankingTool(Tool):
             for item in reports:
                 content = rank_report_prompt(report=item, query=query)
                 messages = [HumanMessage(content)]
+                retry_count = 0
                 while True:
                     try:
                         if len(content) <= 4800:
@@ -83,8 +85,13 @@ class TextRankingTool(Tool):
                         scores_all.append(socre)
                         break
                     except Exception as e:
+                        retry_count += 1
+                        if retry_count > MAX_RETRY:
+                            logger.error("Unable to get valid score")
+                            scores_all.append(0)
+                            break
                         logger.error(e)
-                continue
+                        continue
             best_index = scores_all.index(max(scores_all))
             rank_result = reports[best_index]
             return rank_result

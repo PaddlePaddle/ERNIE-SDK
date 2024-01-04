@@ -46,7 +46,6 @@ class RankingAgent(Agent):
         )
         self.llm = llm
         self.llm_long = llm_long
-
         self.ranking = ranking_tool
         self.is_reset = is_reset
         if callbacks is None:
@@ -64,11 +63,14 @@ class RankingAgent(Agent):
         await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=query)
         reports = []
         for item in list_reports:
-            if await self.check_format(item):
+            format_check = await self.check_format(item)
+            if format_check:
                 reports.append(item)
         if len(reports) == 0:
             if self.is_reset:
-                await self._callback_manager.on_run_end(self.name, "所有的report都不是markdown格式，重新生成report")
+                await self._callback_manager.on_run_end(
+                    self, agent_name=self.name, response="所有的report都不是markdown格式，重新生成report"
+                )
                 logger.info("所有的report都不是markdown格式，重新生成report")
                 return [], None
             else:

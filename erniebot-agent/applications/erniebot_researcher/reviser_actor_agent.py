@@ -10,17 +10,19 @@ from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
 
 logger = logging.getLogger(__name__)
+MAX_RETRY = 10
 
 
 class ReviserActorAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = """你是一名专业作家。你已经受到编辑的指派，需要修订以下草稿，该草稿由一名非专家撰写。你可以选择是否遵循编辑的备注，视情况而定。
-            使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。
+            使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。url链接需要保留，不应该改变
             """
 
     def __init__(
         self,
         name: str,
         llm: BaseERNIEBot,
+        llm_long: BaseERNIEBot,
         system_message: Optional[SystemMessage] = None,
         callbacks=None,
     ):
@@ -29,7 +31,7 @@ class ReviserActorAgent(Agent):
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
-        self.model = llm
+        self.llm_long = llm_long
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
         if callbacks is None:
@@ -44,15 +46,25 @@ class ReviserActorAgent(Agent):
         return agent_resp
 
     async def _run(self, draft, notes):
-        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt=draft)
-        messages = [HumanMessage(self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."))]
+        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt="")
+        notes = str(draft).replace("{", "").replace("}", "")
+        content = self.prompt_template.format(draft=draft, notes=notes).replace(". ", ".")
+        messages = [HumanMessage(content)]
+        retry_count = 0
         while True:
             try:
-                response = await self.llm.chat(messages=messages, system=self.system_message)
+                if len(content) > 4800:
+                    response = await self.llm_long.chat(messages=messages, system=self.system_message)
+                else:
+                    response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
-                await self._callback_manager.on_run_end(self, agent_name=self.name, prompt=report)
+                await self._callback_manager.on_run_end(self, agent_name=self.name, response=report)
                 return report
             except Exception as e:
+                retry_count += 1
+                if retry_count > MAX_RETRY:
+                    logger.error("LLM error")
+                    break
                 logger.error(e)
                 await self._callback_manager.on_run_error(self.name, str(e))
                 continue
