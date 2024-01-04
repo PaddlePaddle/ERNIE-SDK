@@ -295,7 +295,7 @@ class RemoteToolkit:
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
-            spec_dict, _ = read_from_filename(file_path)
+            spec_dict: dict = read_from_filename(file_path)[0]  # type: ignore
 
             url = url.strip("/")
 

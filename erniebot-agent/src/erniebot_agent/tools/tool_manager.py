@@ -22,7 +22,8 @@ from typing import Dict, List, final
 import uvicorn
 from fastapi import FastAPI
 
-from erniebot_agent.tools.base import BaseTool
+from erniebot_agent.tools.base import BaseTool, Tool
+from erniebot_agent.tools.remote_tool import RemoteTool
 
 
 @final
@@ -93,6 +94,8 @@ class ToolManager(object):
             return functools.partial(new_func, __tool__=tool)
 
         for tool in self._tools.values():
+            if not isinstance(tool, Tool):
+                continue
 
             async def create_tool_endpoint_without_inputs(__tool__):
                 return await __tool__()
