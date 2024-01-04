@@ -64,7 +64,9 @@ class EditorActorAgent(Agent):
         callbacks=None,
     ):
         self.name = name
-        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = (
+            system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        )
         self.llm = llm
         self.llm_long = llm_long
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])

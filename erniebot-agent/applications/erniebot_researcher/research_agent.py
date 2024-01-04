@@ -59,7 +59,9 @@ class ResearchAgent:
             ......
         """
         self.name = name
-        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = (
+            system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        )
         self.dir_path = dir_path
         self.report_type = report_type
         self.retriever = retriever_tool

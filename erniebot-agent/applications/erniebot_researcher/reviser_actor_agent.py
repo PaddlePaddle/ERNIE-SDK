@@ -26,7 +26,9 @@ class ReviserActorAgent(Agent):
     ):
         self.name = name
         self.llm = llm
-        self.system_message = system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        self.system_message = (
+            system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
+        )
         self.model = llm
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
