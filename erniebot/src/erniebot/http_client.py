@@ -65,7 +65,7 @@ import erniebot
 
 from . import constants, errors
 from .response import EBResponse
-from .types import FilesType, HeadersType, ParamsType
+from .types import HeadersType, ParamsType
 from .utils import logging
 from .utils.url import add_query_params
 
@@ -102,7 +102,6 @@ class EBClient(object):
         path: str,
         supplied_headers: Optional[HeadersType],
         params: Optional[ParamsType],
-        files: Optional[FilesType],
     ) -> Tuple[str, HeadersType, Optional[bytes]]:
         url = f"{self._base_url}{path}"
         headers = self._validate_headers(supplied_headers)
@@ -111,10 +110,9 @@ class EBClient(object):
         if method == "GET" or method == "DELETE":
             if params:
                 url = add_query_params(url, [(str(k), str(v)) for k, v in params.items() if v is not None])
-        elif method in {"POST", "PUT"}:
-            if params and not files:
+        elif method == "POST" or method == "PUT":
+            if params:
                 data = json.dumps(params).encode()
-                headers["Content-Type"] = "application/json"
         else:
             raise errors.ConnectionError(f"Unrecognized HTTP method: {repr(method)}")
         headers = self.get_request_headers(method, headers)
@@ -134,7 +132,6 @@ class EBClient(object):
         *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         ctx = self._make_requests_session_context_manager()
@@ -144,11 +141,10 @@ class EBClient(object):
         try:
             result = self.send_request_raw(
                 session,
-                method.lower(),
+                method.upper(),
                 url,
                 data=data,
                 headers=headers,
-                files=files,
                 stream=stream,
                 request_timeout=request_timeout,
             )
@@ -194,7 +190,6 @@ class EBClient(object):
         *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ctx = self._make_aiohttp_session_context_manager()
@@ -204,11 +199,10 @@ class EBClient(object):
         try:
             result = await self.asend_request_raw(
                 session,
-                method.lower(),
+                method.upper(),
                 url,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
             should_clean_up_result = True
@@ -261,7 +255,6 @@ class EBClient(object):
         url: str,
         data: Optional[bytes],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         stream: bool,
         request_timeout: Optional[float],
     ) -> requests.Response:
@@ -271,7 +264,6 @@ class EBClient(object):
                 url,
                 headers=headers,
                 data=data,
-                files=files,
                 stream=stream,
                 timeout=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS,
                 proxies=session.proxies,
@@ -290,12 +282,8 @@ class EBClient(object):
         url: str,
         data: Optional[bytes],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
-        if files is not None:
-            raise ValueError("`files` is currently not supported.")
-
         timeout = aiohttp.ClientTimeout(
             total=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS
         )

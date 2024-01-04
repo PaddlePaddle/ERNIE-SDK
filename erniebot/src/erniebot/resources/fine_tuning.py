@@ -116,6 +116,7 @@ class FineTuningTask(EBResource, Creatable):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -353,6 +354,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -397,6 +399,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -441,6 +444,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,

@@ -32,19 +32,18 @@ class _Image(EBResource):
         req = self._prepare_paint(create_kwargs)
         timeout = req.timeout
         resp_p = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=timeout,
         )
 
         req = self._prepare_fetch(resp_p)
         resp_f = self.poll(
             until=self._check_status,
-            method="POST",
+            method=req.method,
             path=req.path,
             params=req.params,
             headers=req.headers,
@@ -60,19 +59,18 @@ class _Image(EBResource):
         req = self._prepare_paint(create_kwargs)
         timeout = req.timeout
         resp_p = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=timeout,
         )
 
         req = self._prepare_fetch(resp_p)
         resp_f = await self.apoll(
             until=self._check_status,
-            method="POST",
+            method=req.method,
             path=req.path,
             params=req.params,
             headers=req.headers,
@@ -211,6 +209,7 @@ class ImageV1(_Image):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -235,6 +234,7 @@ class ImageV1(_Image):
         headers = {"Accept": "application/json"}
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -413,6 +413,7 @@ class ImageV2(_Image):
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -437,6 +438,7 @@ class ImageV2(_Image):
         headers = {"Accept": "application/json"}
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
