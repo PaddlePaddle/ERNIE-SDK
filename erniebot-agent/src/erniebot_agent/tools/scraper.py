@@ -13,15 +13,17 @@ from erniebot_agent.tools.base import Tool, ToolParameterView
 from pydantic import Field
 
 
-
 class ScraperToolInputItemView(ToolParameterView):
     url: str = Field(description="http 有效链接")
+
 
 class ScraperToolInputView(ToolParameterView):
     urls: List[ScraperToolInputItemView] = Field(description="http 有效链接列表")
 
+
 class ScraperToolOutputView(ToolParameterView):
     result: List[str] = Field(description="每个 URL 链接中有效的内容")
+
 
 class ScraperTool(Tool):
     """
@@ -67,7 +69,7 @@ class ScraperTool(Tool):
             if len(content) < 100:
                 return {'url': link, 'raw_content': None}
             return {'url': link, 'raw_content': content}
-        except Exception as e:
+        except Exception:
             return {'url': link, 'raw_content': None}
 
     def scrape_text_with_bs(self, link, session):

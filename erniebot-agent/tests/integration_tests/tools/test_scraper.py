@@ -23,8 +23,9 @@ class TestScraper(unittest.IsolatedAsyncioTestCase):
         )
         result = await agent.run(query)
         return result.text
-        
 
     async def test_run(self):
-        result = await self.run_query(f"请参考：https://ernie-bot-agent.readthedocs.io/zh-cn/latest/  回答：ERNIE Bot SDK 仓库包含几个项目")
+        result = await self.run_query(
+            "请参考：https://ernie-bot-agent.readthedocs.io/zh-cn/latest/  回答：ERNIE Bot SDK 仓库包含几个项目"
+        )
         self.assertIn("ERNIE Bot Agent", result)
