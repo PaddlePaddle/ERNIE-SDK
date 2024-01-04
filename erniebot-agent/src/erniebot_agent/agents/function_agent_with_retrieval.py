@@ -121,7 +121,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 llm_resp = await self._run_llm(
                     messages=chat_history,
                     functions=None,
-                    system=self.system_message.content if self.system_message is not None else None,
+                    system=self.system.content if self.system is not None else None,
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:

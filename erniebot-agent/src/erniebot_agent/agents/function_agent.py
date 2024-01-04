@@ -31,12 +31,7 @@ from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Memory
-from erniebot_agent.memory.messages import (
-    FunctionMessage,
-    HumanMessage,
-    Message,
-    SystemMessage,
-)
+from erniebot_agent.memory.messages import FunctionMessage, HumanMessage, Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
@@ -71,7 +66,7 @@ class FunctionAgent(Agent):
         tools: Union[ToolManager, List[BaseTool]],
         *,
         memory: Optional[Memory] = None,
-        system: Optional[SystemMessage] = None,
+        system: Optional[str] = None,
         callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
