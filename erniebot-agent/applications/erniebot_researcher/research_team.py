@@ -4,8 +4,9 @@ from editor_actor_agent import EditorActorAgent
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
-from user_proxy_agent import UserProxyAgent
 from tools.utils import write_md_to_pdf
+from user_proxy_agent import UserProxyAgent
+
 
 class ResearchTeam:
     def __init__(
