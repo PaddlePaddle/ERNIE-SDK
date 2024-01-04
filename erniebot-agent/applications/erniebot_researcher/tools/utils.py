@@ -18,21 +18,41 @@ from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback import CallbackHandler
 from erniebot_agent.prompt import PromptTemplate
 
+default_logger = logging.getLogger(__name__)
 
 class ReportCallbackHandler(CallbackHandler):
+
+    logger: logging.Logger
+
+    def __init__(
+        self,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
+        """Initialize a logging handler.
+
+        Args:
+            logger: The logger to use. If `None`, a default logger will be used.
+        """
+        super().__init__()
+
+        if logger is None:
+            self.logger = default_logger
+        else:
+            self.logger = logger
+
     async def on_run_start(self, agent: BaseAgent, prompt, **kwargs):
         agent_name = kwargs.get("agent_name", None)
-        logging.info(f"{agent_name}开始运行：{prompt}")
+        self.logger.info(f"{agent_name}开始运行：{prompt}")
 
     async def on_run_end(self, agent: BaseAgent, response, **kwargs):
         agent_name = kwargs.get("agent_name", None)
-        logging.info(f"{agent_name}结束运行,{response}")
+        self.logger.info(f"{agent_name}结束运行,{response}")
 
     async def on_run_tool(self, tool_name, response):
-        logging.info(f"{tool_name}的运行结果：{response}")
+        self.logger.info(f"{tool_name}的运行结果：{response}")
 
     async def on_run_error(self, tool_name, error_information):
-        logging.error(f"{tool_name}的调用失败，错误信息：{error_information}")
+        self.logger.error(f"{tool_name}的调用失败，错误信息：{error_information}")
 
 
 class FaissSearch:

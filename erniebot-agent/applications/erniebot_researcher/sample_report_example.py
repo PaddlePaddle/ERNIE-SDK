@@ -18,6 +18,7 @@ from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import FaissSearch, build_index
+from erniebot_agent.agents.callback.handlers import LoggingHandler
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
@@ -92,7 +93,7 @@ def get_tools(llm, llm_long):
     report_writing_tool = ReportWritingTool(llm=llm, llm_long=llm_long)
     summarization_tool = TextSummarizationTool()
     task_planning_tool = TaskPlanningTool(llm=llm)
-    semantic_citation_tool = SemanticCitationTool()
+    semantic_citation_tool = SemanticCitationTool(theta_min=0.7)
 
     return {
         "intent_detection": intent_detection_tool,
@@ -132,10 +133,11 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
             llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", llm=llm)
+    editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
     reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
     ranker_actor = RankingAgent(
         llm=llm,
+        llm_long=llm_long,
         name="ranker",
         ranking_tool=tool_sets["ranking"],
     )

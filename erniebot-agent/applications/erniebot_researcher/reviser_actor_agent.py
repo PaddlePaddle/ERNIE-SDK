@@ -42,13 +42,13 @@ class ReviserActorAgent(Agent):
         return agent_resp
 
     async def _run(self, draft, notes):
-        await self._callback_manager.on_run_start(self.name, "")
+        await self._callback_manager.on_run_start(self, agent_name= self.name, prompt=draft)
         messages = [HumanMessage(self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."))]
         while True:
             try:
                 response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
-                await self._callback_manager.on_run_end(self.name, report)
+                await self._callback_manager.on_run_end(self, agent_name=self.name, prompt=report)
                 return report
             except Exception as e:
                 logger.error(e)

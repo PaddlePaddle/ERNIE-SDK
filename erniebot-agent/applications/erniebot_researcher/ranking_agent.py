@@ -12,6 +12,7 @@ from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 
+MAX_RETRY=10
 
 def get_markdown_check_prompt(report):
     prompt_markdow_str = """
@@ -33,6 +34,7 @@ class RankingAgent(Agent):
         name: str,
         ranking_tool,
         llm: BaseERNIEBot,
+        llm_long: BaseERNIEBot,
         system_message: Optional[str] = None,
         callbacks=None,
         is_reset=False,
@@ -40,23 +42,23 @@ class RankingAgent(Agent):
         self.name = name
         self.system_message = system_message or self.DEFAULT_SYSTEM_MESSAGE
         self.llm = llm
+        self.llm_long = llm_long
 
         self.ranking = ranking_tool
-        self.is_reset = False
+        self.is_reset = is_reset
         if callbacks is None:
             self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
 
     async def run(self, list_reports: List[str], query: str) -> AgentResponse:
-        breakpoint()
         await self._callback_manager.on_run_start(agent=self, prompt=query)
         agent_resp = await self._run(query, list_reports)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
     async def _run(self, query, list_reports):
-        await self._callback_manager.on_run_start(self.name, query)
+        await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=query)
         reports = []
         for item in list_reports:
             if await self.check_format(item):
@@ -70,14 +72,20 @@ class RankingAgent(Agent):
                 reports = list_reports
         best_report = await self.ranking(reports, query)
         await self._callback_manager.on_run_tool(self.ranking.description, best_report)
-        await self._callback_manager.on_run_end(self.name, "")
+        await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=best_report)
         return reports, best_report
 
     async def check_format(self, report):
+        retry_count = 0
         while True:
             try:
-                messages = [HumanMessage(content=get_markdown_check_prompt(report))]
-                response = await self.llm.chat(messages=messages, temperature=0.001)
+                # report[0]: report, report[1]: report_name
+                content = get_markdown_check_prompt(report)
+                messages = [HumanMessage(content=content)]
+                if len(content)<4800:
+                    response = await self.llm.chat(messages=messages, temperature=0.001)
+                else:
+                    response = await self.llm_long.chat(messages=messages, temperature=0.001)
                 result = response.content
                 l_index = result.index("{")
                 r_index = result.index("}")
@@ -90,4 +98,7 @@ class RankingAgent(Agent):
             except Exception as e:
                 await self._callback_manager.on_run_error("格式检查", str(e))
                 logger.error(e)
+                retry_count += 1
+                if retry_count > MAX_RETRY:
+                    raise Exception(f"Failed to check report format after {MAX_RETRY} times.")
                 continue

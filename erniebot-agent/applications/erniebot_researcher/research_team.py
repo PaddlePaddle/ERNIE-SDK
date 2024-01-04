@@ -25,7 +25,7 @@ class ResearchTeam:
     async def run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
-            report = await researcher.run(query)
+            report, _ = await researcher.run(query)
             list_reports.append(report)
         if self.user_agent is not None:
             prompt = (
@@ -34,10 +34,20 @@ class ResearchTeam:
             )
             index = await self.user_agent.run(prompt)
             immedia_report = list_reports[int(index) - 1]
-        else:
-            immedia_report = await self.ranker_actor_instance.run(list_reports, query)
-        revised_report = immedia_report
+            list_reports = [immedia_report]
+      
         for i in range(iterations):
+            # Listwise ranking
+            if len(list_reports) > 1:
+                # Filter out low quality report and ranking the remaining reports
+                list_reports, immedia_report = await self.ranker_actor_instance.run(list_reports, query)
+                if len(list_reports) == 0:
+                    raise Exception("Current report is not good to optimize.")
+            elif len(list_reports)==1:
+                immedia_report = list_reports[0]
+            else:
+                raise Exception("No report to optimize.")
+            revised_report = immedia_report
             if i == 0:
                 markdown_report = immedia_report
             else:
@@ -47,4 +57,6 @@ class ResearchTeam:
                 break
             else:
                 revised_report = await self.revise_actor_instance.run(markdown_report, respose["notes"])
+                # Add revise report to the list of reports
+                list_reports.append(revised_report)
         return revised_report

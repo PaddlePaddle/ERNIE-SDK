@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 import string
-from typing import Type
+from typing import Optional, Type
+import logging
 
 from pydantic import Field
 
@@ -10,6 +9,7 @@ from erniebot_agent.tools.schema import ToolParameterView
 
 from .utils import write_md_to_pdf
 
+logger = logging.getLogger(__name__)
 
 class SemanticCitationToolInputView(ToolParameterView):
     query: str = Field(description="Chunk of text to summarize")
@@ -28,6 +28,11 @@ class SemanticCitationTool(Tool):
         """判断一个字符是否是标点符号"""
         return char in string.punctuation
 
+    def __init__(self, theta_min=0.4, theta_max=0.95) -> None:
+        super().__init__()
+        self.theta_min = theta_min
+        self.theta_max = theta_max
+        
     async def __call__(
         self,
         reports: str,
@@ -36,10 +41,14 @@ class SemanticCitationTool(Tool):
         report_type: str,
         dir_path: str,
         citation_faiss_research,
-        theta_min=0.4,
-        theta_max=0.95,
+        theta_min: Optional[float]=None,
+        theta_max: Optional[float]=None,
         **kwargs,
     ):
+        if theta_min:
+            self.theta_min = theta_min
+        if theta_max:
+            self.theta_max = theta_max
         list_data = reports.split("\n\n")
         output_text = []
         for chunk_text in list_data:
@@ -59,13 +68,13 @@ class SemanticCitationTool(Tool):
                         query_result = citation_faiss_research.search(query=sentence, top_k=1, filters=None)
                     except Exception as e:
                         output_sent.append(sentence)
-                        print(e)
+                        logger.error(f"Faiss search error: {e}")
                         continue
                     source = query_result[0]["url"]
                     if len(sentence.strip()) > 0:
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
-                        if query_result[0]["score"] >= theta_min and query_result[0]["score"] <= theta_max:
+                        if query_result[0]["score"] >= self.theta_min and query_result[0]["score"] <= self.theta_max:
                             if (
                                 len(output_sent) > 0
                                 and f"<sup>[\\[{url_index[source]['index']}\\]]({source})</sup>"
