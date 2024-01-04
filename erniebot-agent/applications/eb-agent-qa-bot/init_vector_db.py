@@ -70,6 +70,7 @@ def load_md_files_to_doc(
         md_header_splits = markdown_splitter.split_text(content)
         splits = text_splitter.split_documents(md_header_splits)
         for i in range(len(splits)):
+            # 生成summary用于检索
             splits[i].metadata["raw_text"] = splits[i].page_content
             splits[i].page_content = get_summary(splits[i].page_content)
         output_document.extend(splits)
