@@ -12,7 +12,8 @@ from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRY=10
+MAX_RETRY = 10
+
 
 def get_markdown_check_prompt(report):
     prompt_markdow_str = """
@@ -82,7 +83,7 @@ class RankingAgent(Agent):
                 # report[0]: report, report[1]: report_name
                 content = get_markdown_check_prompt(report)
                 messages = [HumanMessage(content=content)]
-                if len(content)<4800:
+                if len(content) < 4800:
                     response = await self.llm.chat(messages=messages, temperature=0.001)
                 else:
                     response = await self.llm_long.chat(messages=messages, temperature=0.001)

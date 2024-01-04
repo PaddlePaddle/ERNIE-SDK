@@ -1,6 +1,6 @@
+import logging
 import string
 from typing import Optional, Type
-import logging
 
 from pydantic import Field
 
@@ -10,6 +10,7 @@ from erniebot_agent.tools.schema import ToolParameterView
 from .utils import write_md_to_pdf
 
 logger = logging.getLogger(__name__)
+
 
 class SemanticCitationToolInputView(ToolParameterView):
     query: str = Field(description="Chunk of text to summarize")
@@ -32,7 +33,7 @@ class SemanticCitationTool(Tool):
         super().__init__()
         self.theta_min = theta_min
         self.theta_max = theta_max
-        
+
     async def __call__(
         self,
         reports: str,
@@ -41,8 +42,8 @@ class SemanticCitationTool(Tool):
         report_type: str,
         dir_path: str,
         citation_faiss_research,
-        theta_min: Optional[float]=None,
-        theta_max: Optional[float]=None,
+        theta_min: Optional[float] = None,
+        theta_max: Optional[float] = None,
         **kwargs,
     ):
         if theta_min:
@@ -74,7 +75,10 @@ class SemanticCitationTool(Tool):
                     if len(sentence.strip()) > 0:
                         if not self.is_punctuation(sentence[-1]):
                             sentence += "。"
-                        if query_result[0]["score"] >= self.theta_min and query_result[0]["score"] <= self.theta_max:
+                        if (
+                            query_result[0]["score"] >= self.theta_min
+                            and query_result[0]["score"] <= self.theta_max
+                        ):
                             if (
                                 len(output_sent) > 0
                                 and f"<sup>[\\[{url_index[source]['index']}\\]]({source})</sup>"

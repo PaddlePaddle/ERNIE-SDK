@@ -20,8 +20,8 @@ from erniebot_agent.prompt import PromptTemplate
 
 default_logger = logging.getLogger(__name__)
 
-class ReportCallbackHandler(CallbackHandler):
 
+class ReportCallbackHandler(CallbackHandler):
     logger: logging.Logger
 
     def __init__(

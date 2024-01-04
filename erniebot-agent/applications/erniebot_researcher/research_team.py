@@ -35,7 +35,7 @@ class ResearchTeam:
             index = await self.user_agent.run(prompt)
             immedia_report = list_reports[int(index) - 1]
             list_reports = [immedia_report]
-      
+
         for i in range(iterations):
             # Listwise ranking
             if len(list_reports) > 1:
@@ -43,7 +43,7 @@ class ResearchTeam:
                 list_reports, immedia_report = await self.ranker_actor_instance.run(list_reports, query)
                 if len(list_reports) == 0:
                     raise Exception("Current report is not good to optimize.")
-            elif len(list_reports)==1:
+            elif len(list_reports) == 1:
                 immedia_report = list_reports[0]
             else:
                 raise Exception("No report to optimize.")

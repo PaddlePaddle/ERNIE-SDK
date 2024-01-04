@@ -18,7 +18,6 @@ from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import FaissSearch, build_index
-from erniebot_agent.agents.callback.handlers import LoggingHandler
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings

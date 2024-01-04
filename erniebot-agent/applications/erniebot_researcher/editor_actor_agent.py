@@ -1,11 +1,12 @@
 import json
 import logging
-from typing import Optional, List
 import time
+from typing import Optional
 
 from tools.utils import ReportCallbackHandler
-from erniebot_agent.agents.schema import AgentResponse
+
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -72,7 +73,6 @@ class EditorActorAgent(Agent):
         else:
             self._callback_manager = callbacks
 
-
     async def run(self, report: str) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=report)
         agent_resp = await self._run(report)
@@ -86,17 +86,22 @@ class EditorActorAgent(Agent):
         retry_count = 0
         while True:
             try:
-                if len(content)<4800:
-                    response = await self.llm.chat(messages, functions=eb_functions, system=self.system_message)
+                if len(content) < 4800:
+                    response = await self.llm.chat(
+                        messages, functions=eb_functions, system=self.system_message
+                    )
                 else:
-                    response = await self.llm_long.chat(messages, functions=eb_functions, system=self.system_message)
+                    response = await self.llm_long.chat(
+                        messages, functions=eb_functions, system=self.system_message
+                    )
                 suggestions = response.content
                 start_idx = suggestions.index("{")
                 end_idx = suggestions.rindex("}")
                 suggestions = suggestions[start_idx : end_idx + 1]
                 try:
                     suggestions = json.loads(suggestions)
-                except:
+                except Exception as e:
+                    logger.error(e)
                     suggestions = await self.json_correct(suggestions)
                     suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
@@ -106,9 +111,9 @@ class EditorActorAgent(Agent):
             except Exception as e:
                 logger.error(e)
                 await self._callback_manager.on_run_error(self.name, error_information=str(e))
-                retry_count+=1
+                retry_count += 1
                 time.sleep(0.5)
-                if retry_count >MAX_RETRY:
+                if retry_count > MAX_RETRY:
                     raise Exception(f"Failed to edit research for {report} after {MAX_RETRY} times.")
                 continue
 

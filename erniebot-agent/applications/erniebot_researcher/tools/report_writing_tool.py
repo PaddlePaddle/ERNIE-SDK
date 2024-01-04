@@ -13,7 +13,6 @@ from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
 
-
 def generate_reference(meta_dict):
     json_format = """{
             "参考文献": [

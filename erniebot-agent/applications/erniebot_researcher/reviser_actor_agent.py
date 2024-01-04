@@ -42,7 +42,7 @@ class ReviserActorAgent(Agent):
         return agent_resp
 
     async def _run(self, draft, notes):
-        await self._callback_manager.on_run_start(self, agent_name= self.name, prompt=draft)
+        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt=draft)
         messages = [HumanMessage(self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."))]
         while True:
             try:
