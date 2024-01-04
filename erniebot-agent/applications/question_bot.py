@@ -8,15 +8,11 @@ os.environ["EB_AGENT_ACCESS_TOKEN"] = "your access token"
 from typing import List, Union
 
 import nbformat
-from langchain.document_loaders.base import BaseLoader
-from langchain.document_loaders.helpers import detect_file_encodings
 from langchain.text_splitter import (
-    CharacterTextSplitter,
     MarkdownHeaderTextSplitter,
     RecursiveCharacterTextSplitter,
 )
 from langchain.vectorstores import FAISS
-from langchain_core.documents import Document
 from sklearn.metrics.pairwise import cosine_similarity
 
 from erniebot_agent.agents.function_agent_with_retrieval import (
@@ -24,7 +20,7 @@ from erniebot_agent.agents.function_agent_with_retrieval import (
 )
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
-from erniebot_agent.memory import SystemMessage, LimitTokensMemory
+from erniebot_agent.memory import LimitTokensMemory, SystemMessage
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--init", type=bool, default=False)
@@ -82,7 +78,6 @@ def open_and_concatenate_ipynb(ipynb_path, encoding):
     return concatenated_content
 
 
-
 class FaissSearch:
     def __init__(self, db, embeddings, module_db):
         self.db = db
@@ -109,10 +104,8 @@ class FaissSearch:
                     {"content": doc.page_content, "score": similarities[index], "title": ""}
                 )
         code = self.module_db.similarity_search(query, 1)[0]
-        retrieval_results.append(
-            {"content": code.metadata['ipynb'], "score": 1, "title": code.page_content}
-        )
-        
+        retrieval_results.append({"content": code.metadata["ipynb"], "score": 1, "title": code.page_content})
+
         return retrieval_results
 
 
@@ -149,12 +142,18 @@ def load_agent():
             "./docs/cookbooks/agent/local_tool.ipynb",
             "./docs/cookbooks/agent/tools_intro.ipynb",
         ]
-        modules = [item[item.rfind('/')+1:item.rfind('.ipynb')] for item in ipynb_path]
+        modules = [item[item.rfind("/") + 1 : item.rfind(".ipynb")] for item in ipynb_path]
         module_doc = []
         from langchain_core.documents import Document
+
         for i in range(len(modules)):
-            module_doc.append(Document(page_content=modules[i], metadata={'ipynb': open_and_concatenate_ipynb(ipynb_path[i], 'utf-8')}))
-        
+            module_doc.append(
+                Document(
+                    page_content=modules[i],
+                    metadata={"ipynb": open_and_concatenate_ipynb(ipynb_path[i], "utf-8")},
+                )
+            )
+
         module_db = FAISS.from_documents(module_doc, embeddings)
         module_db.save_local(faiss_name_module)
 
@@ -172,7 +171,7 @@ def load_agent():
         ),
         top_k=2,
         token_limit=5000,
-        memory=memory
+        memory=memory,
     )
     return agent
 
