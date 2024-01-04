@@ -108,7 +108,6 @@ plugins:
         - categories
         - tags 
   - search
-  - social
   - mkdocs-jupyter:
       ignore_h1_titles: True
   - mkdocstrings:
