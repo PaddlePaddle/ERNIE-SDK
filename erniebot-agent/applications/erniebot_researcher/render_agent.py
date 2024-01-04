@@ -94,5 +94,4 @@ class RenderAgent(Agent):
             await self._callback_manager.on_run_end(self.name, "\n\n".join(paragraphs))
             return "\n\n".join(paragraphs)
         else:
-
             raise Exception("Report format error")
