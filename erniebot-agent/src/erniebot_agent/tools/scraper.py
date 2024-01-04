@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any
-from langchain.document_loaders import PyMuPDFLoader
-from langchain.retrievers import ArxivRetriever
 from functools import partial
+from typing import Any, List, Type
+
 import requests
 from bs4 import BeautifulSoup
-
-from typing import List, Type
-from erniebot_agent.tools.base import Tool, ToolParameterView
+from langchain.document_loaders import PyMuPDFLoader
+from langchain.retrievers import ArxivRetriever
 from pydantic import Field
+
+from erniebot_agent.tools.base import Tool, ToolParameterView
 
 
 class ScraperToolInputItemView(ToolParameterView):
@@ -29,6 +29,7 @@ class ScraperTool(Tool):
     """
     Scraper class to extract the content from the links
     """
+
     description: str = "能够从 HTTP URL 链接中提取文本内容"
     input_type: Type[ToolParameterView] = ScraperToolInputView
     output_type: Type[ToolParameterView] = ScraperToolOutputView
@@ -40,16 +41,14 @@ class ScraperTool(Tool):
             urls:
         """
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": user_agent
-        })
+        self.session.headers.update({"User-Agent": user_agent})
 
     async def __call__(self, urls: List[str]) -> Any:
         urls = [item["url"] for item in urls]
         partial_extract = partial(self.extract_data_from_link, session=self.session)
         with ThreadPoolExecutor(max_workers=20) as executor:
             contents = executor.map(partial_extract, urls)
-        res = [content for content in contents if content['raw_content'] is not None]
+        res = [content for content in contents if content["raw_content"] is not None]
         return {"result": res}
 
     def extract_data_from_link(self, link, session):
@@ -67,14 +66,14 @@ class ScraperTool(Tool):
                 content = self.scrape_text_with_bs(link, session)
 
             if len(content) < 100:
-                return {'url': link, 'raw_content': None}
-            return {'url': link, 'raw_content': content}
+                return {"url": link, "raw_content": None}
+            return {"url": link, "raw_content": content}
         except Exception:
-            return {'url': link, 'raw_content': None}
+            return {"url": link, "raw_content": None}
 
     def scrape_text_with_bs(self, link, session):
         response = session.get(link, timeout=4)
-        soup = BeautifulSoup(response.content, 'lxml', from_encoding=response.encoding)
+        soup = BeautifulSoup(response.content, "lxml", from_encoding=response.encoding)
 
         for script_or_style in soup(["script", "style"]):
             script_or_style.extract()
@@ -122,7 +121,7 @@ class ScraperTool(Tool):
             str: The text from the soup
         """
         text = ""
-        tags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5']
+        tags = ["p", "h1", "h2", "h3", "h4", "h5"]
         for element in soup.find_all(tags):  # Find all the <p> elements
             text += element.text + "\n"
         return text

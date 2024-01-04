@@ -5,14 +5,12 @@ import unittest
 from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.memory import WholeMemory
-
-
 from erniebot_agent.tools.scraper import ScraperTool
 
 
 class TestScraper(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.tool = ScraperTool('eb-agent')
+        self.tool = ScraperTool("eb-agent")
 
     async def run_query(self, query) -> str:
         llm = ERNIEBot("ernie-3.5")
