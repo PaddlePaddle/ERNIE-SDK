@@ -36,7 +36,7 @@ def generate_report_prompt(question, research_summary, outline=None):
         信息：{{information}}
         使用上述信息，详细报告回答以下问题或主题{{question}}
         -----
-        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字，并采用Markdown语法和APA格式。
+        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在2400字，并采用Markdown语法和APA格式。
         注意报告标题前面必须有'#'
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
@@ -53,7 +53,7 @@ def generate_report_prompt(question, research_summary, outline=None):
         使用上述信息，根据设定好的大纲{{outline}}
         详细报告回答以下问题或主题{{question}}
         -----
-        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在3000字，并采用Markdown语法和APA格式。
+        报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在2400字，并采用Markdown语法和APA格式。
         注意报告标题前面必须有'#'
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
@@ -148,7 +148,6 @@ class ReportWritingTool(Tool):
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
-        # breakpoint()
         meta_data_json = json.dumps(meta_data, ensure_ascii=False)
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:

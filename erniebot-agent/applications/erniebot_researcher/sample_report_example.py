@@ -92,7 +92,7 @@ def get_tools(llm, llm_long):
     report_writing_tool = ReportWritingTool(llm=llm, llm_long=llm_long)
     summarization_tool = TextSummarizationTool()
     task_planning_tool = TaskPlanningTool(llm=llm)
-    semantic_citation_tool = SemanticCitationTool()
+    semantic_citation_tool = SemanticCitationTool(theta_min=0.7)
 
     return {
         "intent_detection": intent_detection_tool,
@@ -107,8 +107,6 @@ def get_tools(llm, llm_long):
 
 def get_agents(retriever_sets, tool_sets, llm, llm_long):
     dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
-    target_path = f"./outputsl/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
-    os.makedirs(target_path, exist_ok=True)
     os.makedirs(dir_path, exist_ok=True)
     research_actor = []
     for i in range(args.num_research_agent):
@@ -132,10 +130,11 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
             llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", llm=llm)
+    editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
     reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
     ranker_actor = RankingAgent(
         llm=llm,
+        llm_long=llm_long,
         name="ranker",
         ranking_tool=tool_sets["ranking"],
     )
@@ -150,6 +149,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
 def main(query):
     llm_long = ERNIEBot(model="ernie-longtext")
     llm = ERNIEBot(model="ernie-4.0")
+    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
+    os.makedirs(target_path, exist_ok=True)
     retriever_sets = get_retrievers()
     tool_sets = get_tools(llm, llm_long)
     agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long)
@@ -158,9 +159,12 @@ def main(query):
         ranker_actor=agent_sets["ranker"],
         editor_actor=agent_sets["editor"],
         reviser_actor=agent_sets["reviser"],
+        report_type=args.report_type,
+        target_path=target_path,
     )
 
-    report = asyncio.run(research_team.run(query))
+    report, file_path = asyncio.run(research_team.run(query))
+    print(file_path)
     print(report)
 
 
