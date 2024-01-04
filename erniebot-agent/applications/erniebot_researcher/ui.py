@@ -8,6 +8,7 @@ import gradio as gr
 from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
 from ranking_agent import RankingAgent
+from render_agent import RenderAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
@@ -125,16 +126,17 @@ def generate_report(query, history=[]):
             llm=llm,
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", llm=llm)
-    reviser_actor = ReviserActorAgent(name="reviser", llm=llm)
-    ranker_actor = RankingAgent(name="ranker", ranking_tool=ranking_tool, llm=llm)
+    editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
+    reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
+    ranker_actor = RankingAgent(name="ranker", ranking_tool=ranking_tool, llm=llm, llm_long=llm_long)
+    render_actor = RenderAgent(name="render", llm=llm, llm_long=llm_long)
     list_reports = []
     for researcher in research_actor:
         report, _ = asyncio.run(researcher.run(query))
         list_reports.append(report)
     for i in range(args.iterations):
         if len(list_reports) > 1:
-            list_reports, immedia_report = asyncio.run(ranker_actor._run(list_reports, query))
+            list_reports, immedia_report = asyncio.run(ranker_actor._run(query, list_reports))
         else:
             immedia_report = list_reports[0]
         revised_report = immedia_report
@@ -143,12 +145,13 @@ def generate_report(query, history=[]):
         else:
             markdown_report = revised_report
         respose = asyncio.run(editor_actor._run(markdown_report))
-        if respose["accept"] is True:
+        if respose["accept"] is True or respose["accept"] == "true":
             break
         else:
             revised_report = asyncio.run(reviser_actor._run(markdown_report, respose["notes"]))
             list_reports.append(revised_report)
-    path = write_md_to_pdf(args.report_type, target_path, revised_report)
+    polish_report = asyncio.run(render_actor._run(revised_report))
+    path = write_md_to_pdf(args.report_type, target_path, polish_report)
     return revised_report, path
 
 

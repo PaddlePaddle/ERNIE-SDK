@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shutil
@@ -16,7 +15,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback import CallbackHandler
-from erniebot_agent.prompt import PromptTemplate
 
 default_logger = logging.getLogger(__name__)
 
@@ -180,58 +178,3 @@ def add_citation(paragraphs, faiss_name, embeddings):
     )
     faiss_search = FaissSearch(db=faiss_db, embeddings=embeddings)
     return faiss_search
-
-
-def postprocess(report):
-    prompt_abstract = """
-    请你总结报告并给出报告的摘要和关键词，摘要在100-200字之间，关键词不超过5个词。
-    你需要输出一个json形式的字符串，内容为{'摘要':...,'关键词':...}。
-    现在给你报告的内容：
-    {{report}}"""
-    polish_prompt = """你的任务是扩写和润色相关内容，
-    你需要把相关内容扩写到300-400字之间，扩写的内容必须与给出的内容相关。
-    下面给出内容:
-    {content}
-    扩写并润色内容为:"""
-    Prompt_abstract = PromptTemplate(prompt_abstract, input_variables=["report"])
-    messages = [{"role": "user", "content": Prompt_abstract.format(report=report)}]
-    if len(messages[0]["content"]) > 4800:
-        model = "ernie-longtext"
-    else:
-        model = "ernie-4.0"
-    while True:
-        try:
-            abstract_json = erniebot_chat(messages, model=model)
-            l_index = abstract_json.find("{")
-            r_index = abstract_json.rfind("}")
-            abstract_json = json.loads(abstract_json[l_index : r_index + 1])
-            abstract = abstract_json["摘要"]
-            key = abstract_json["关键词"]
-            if type(key) is list:
-                key = "，".join(key)
-            break
-        except Exception as e:
-            print(e)
-            continue
-    report_list = report.split("\n\n")
-    if "#" in report_list[0] and "##" in report_list[1]:
-        paragraphs = []
-        title = report_list[0]
-        paragraphs.append(title)
-        paragraphs.append("**摘要** " + abstract)
-        paragraphs.append("**关键词** " + key)
-        content = ""
-        for item in report_list[1:]:
-            if "#" not in item:
-                content += item + "\n"
-            else:
-                if len(content) > 300:
-                    paragraphs.append(content)
-                elif len(content) > 0:
-                    messages = [{"role": "user", "content": polish_prompt.format(content=content)}]
-                    paragraphs.append(erniebot_chat(messages=messages))
-                content = ""
-                paragraphs.append(item)
-        return "\n\n".join(paragraphs)
-    else:
-        raise Exception("Report format error")
