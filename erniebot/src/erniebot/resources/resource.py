@@ -75,10 +75,6 @@ class EBResource(object):
 
         self._backend = build_backend(self.api_type, self._cfg)
 
-    @classmethod
-    def get_supported_api_type_names(cls) -> List[str]:
-        return list(map(operator.attrgetter("name"), cls.supported_api_types))
-
     @overload
     def request(
         self,
@@ -290,6 +286,10 @@ class EBResource(object):
                 raise errors.TimeoutError
             logging.info("Waiting...")
             await asyncio.sleep(self.POLLING_INTERVAL_SECS)
+
+    @classmethod
+    def get_supported_api_type_names(cls) -> List[str]:
+        return list(map(operator.attrgetter("name"), cls.supported_api_types))
 
     @overload
     def _request(
