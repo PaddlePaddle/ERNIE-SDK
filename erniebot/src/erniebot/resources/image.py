@@ -203,7 +203,11 @@ class ImageV1(_Image):
         _set_val_if_key_exists(kwargs, params, "num")
 
         # headers
-        headers = kwargs.get("headers", {"Accept": "application/json"})
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -231,7 +235,9 @@ class ImageV1(_Image):
         params["taskId"] = resp_p.data["taskId"]
 
         # headers
-        headers = {"Accept": "application/json"}
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
 
         return Request(
             method="POST",
@@ -275,7 +281,7 @@ class ImageV2(_Image):
             height: Height of the image(s).
             version: Version of the model.
             image_num: Number of images to generate.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -322,7 +328,7 @@ class ImageV2(_Image):
             height: Height of the image(s).
             version: Version of the model.
             image_num: Number of images to generate.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -407,7 +413,11 @@ class ImageV2(_Image):
         _set_val_if_key_exists(kwargs, params, "image_num")
 
         # headers
-        headers = kwargs.get("headers", {"Accept": "application/json"})
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -435,7 +445,9 @@ class ImageV2(_Image):
         params["task_id"] = resp_p.data["task_id"]
 
         # headers
-        headers = {"Accept": "application/json"}
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
 
         return Request(
             method="POST",

@@ -104,7 +104,7 @@ class EBClient(object):
         params: Optional[ParamsType],
     ) -> Tuple[str, HeadersType, Optional[bytes]]:
         url = f"{self._base_url}{path}"
-        headers = self._validate_headers(supplied_headers)
+        headers = self._get_request_headers(supplied_headers)
         data = None
         method = method.upper()
         if method == "GET" or method == "DELETE":
@@ -115,7 +115,6 @@ class EBClient(object):
                 data = json.dumps(params).encode()
         else:
             raise errors.ConnectionError(f"Unrecognized HTTP method: {repr(method)}")
-        headers = self.get_request_headers(method, headers)
 
         logging.debug("Method: %s", method)
         logging.debug("URL: %s", url)
@@ -238,16 +237,6 @@ class EBClient(object):
 
         return resp
 
-    def get_request_headers(self, method: str, extra: HeadersType) -> HeadersType:
-        headers = {}
-
-        headers["User-Agent"] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
-        # TODO: Add other headers
-
-        headers.update(extra)
-
-        return headers
-
     def send_request_raw(
         self,
         session: requests.Session,
@@ -303,12 +292,19 @@ class EBClient(object):
 
         return result
 
-    def _validate_headers(self, supplied_headers: Optional[HeadersType]) -> HeadersType:
-        headers: dict = {}
+    def _get_request_headers(self, method: str, supplied_headers: Optional[HeadersType]) -> HeadersType:
+        headers = {}
 
-        if supplied_headers is None:
-            return headers
+        headers["User-Agent"] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
+        # TODO: Add other default headers
 
+        if supplied_headers is not None:
+            self._validate_headers(supplied_headers)
+            headers.update(supplied_headers)
+
+        return headers
+        
+    def _validate_headers(self, supplied_headers: HeadersType) -> HeadersType:
         if not isinstance(supplied_headers, dict):
             raise TypeError("`supplied_headers` must be a dictionary.")
 
@@ -317,31 +313,6 @@ class EBClient(object):
                 raise TypeError("Header keys must be strings.")
             if not isinstance(v, str):
                 raise TypeError("Header values must be strings.")
-            headers[k] = v
-
-        return headers
-
-    def _parse_line(self, line: bytes) -> Optional[str]:
-        if line:
-            if line.startswith(constants.STREAM_RESPONSE_PREFIX):
-                line = line[len(constants.STREAM_RESPONSE_PREFIX) :]
-                return line.decode("utf-8")
-            else:
-                # Filter out other lines
-                return None
-        return None
-
-    def _parse_stream(self, rbody: Iterator[bytes]) -> Iterator[str]:
-        for line in rbody:
-            _line = self._parse_line(line)
-            if _line is not None:
-                yield _line
-
-    async def _parse_async_stream(self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
-        async for line in rbody:
-            _line = self._parse_line(line)
-            if _line is not None:
-                yield _line
 
     def _interpret_response(
         self, response: requests.Response
@@ -452,6 +423,28 @@ class EBClient(object):
         if self._resp_handler is not None:
             response = self._resp_handler(response)
         return response
+
+    def _parse_stream(self, rbody: Iterator[bytes]) -> Iterator[str]:
+        for line in rbody:
+            _line = self._parse_line(line)
+            if _line is not None:
+                yield _line
+
+    async def _parse_async_stream(self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
+        async for line in rbody:
+            _line = self._parse_line(line)
+            if _line is not None:
+                yield _line
+                
+    def _parse_line(self, line: bytes) -> Optional[str]:
+        if line:
+            if line.startswith(constants.STREAM_RESPONSE_PREFIX):
+                line = line[len(constants.STREAM_RESPONSE_PREFIX) :]
+                return line.decode("utf-8")
+            else:
+                # Filter out other lines
+                return None
+        return None
 
     @contextmanager
     def _make_requests_session_context_manager(self) -> Generator[requests.Session, None, None]:

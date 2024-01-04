@@ -110,7 +110,7 @@ class FineTuningTask(EBResource, Creatable):
         params["description"] = description
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = kwargs.get("headers", {})
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -348,7 +348,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         params["trainType"] = "ERNIE-Bot-turbo-0725"
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = kwargs.get("headers", {})
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -393,7 +393,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         params["jobId"] = job_id
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = kwargs.get("headers", {})
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -438,7 +438,7 @@ class FineTuningJob(EBResource, Creatable, Queryable, Cancellable):
         params["jobId"] = job_id
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = kwargs.get("headers", {})
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)

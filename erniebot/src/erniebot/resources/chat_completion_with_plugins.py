@@ -269,7 +269,7 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
             params.update(kwargs["extra_params"])
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = kwargs.get("headers", {})
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
