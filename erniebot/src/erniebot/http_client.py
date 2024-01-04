@@ -104,7 +104,7 @@ class EBClient(object):
         params: Optional[ParamsType],
     ) -> Tuple[str, HeadersType, Optional[bytes]]:
         url = f"{self._base_url}{path}"
-        headers = self._get_request_headers(supplied_headers)
+        headers = self._get_request_headers(method, supplied_headers)
         data = None
         method = method.upper()
         if method == "GET" or method == "DELETE":
@@ -303,8 +303,8 @@ class EBClient(object):
             headers.update(supplied_headers)
 
         return headers
-        
-    def _validate_headers(self, supplied_headers: HeadersType) -> HeadersType:
+
+    def _validate_headers(self, supplied_headers: HeadersType) -> None:
         if not isinstance(supplied_headers, dict):
             raise TypeError("`supplied_headers` must be a dictionary.")
 
@@ -435,7 +435,7 @@ class EBClient(object):
             _line = self._parse_line(line)
             if _line is not None:
                 yield _line
-                
+
     def _parse_line(self, line: bytes) -> Optional[str]:
         if line:
             if line.startswith(constants.STREAM_RESPONSE_PREFIX):
