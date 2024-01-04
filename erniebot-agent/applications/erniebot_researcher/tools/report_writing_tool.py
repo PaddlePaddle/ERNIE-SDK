@@ -21,11 +21,7 @@ def generate_reference(meta_dict):
                 "链接": "文章链接",
                 }]
             }"""
-    return (
-        f""""{meta_dict},根据上面的数据，生成报告的参考文献，按照如下json的形式输出:
-            """
-        + json_format
-    )
+    return f"{meta_dict},根据上面的数据，生成报告的参考文献，请严格按照如下【JSON格式】的形式输出:" + json_format
 
 
 def generate_report_prompt(question, research_summary, outline=None):
@@ -49,6 +45,8 @@ def generate_report_prompt(question, research_summary, outline=None):
         strs = report_prompt.format(information=research_summary, question=question)
     else:
         outline = outline.replace('"', "'")
+        # remove spaces
+        outline = outline.replace(" ", "")
         prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
         现在给你一些信息，帮助你进行报告生成任务
         信息：{{information}}
@@ -149,10 +147,12 @@ class ReportWritingTool(Tool):
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
+        breakpoint()
+        meta_data_json = json.dumps(meta_data, ensure_ascii=False)
         # Manually Add reference on the bottom
         if "参考文献" not in final_report:
             final_report += "\n\n## 参考文献 \n"
-            messages = [HumanMessage(content=generate_reference(meta_data).replace(". ", "."))]
+            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
             response = await self.llm.chat(messages)
             result = response.content
             start_idx = result.index("{")
@@ -163,8 +163,8 @@ class ReportWritingTool(Tool):
                 final_report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
         elif "参考文献" in final_report[-500:]:
             idx = final_report.index("参考文献")
-            final_report = final_report[idx + 4 :]
-            messages = [HumanMessage(content=generate_reference(meta_data))]
+            final_report = final_report[:idx]
+            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
             response = await self.llm.chat(messages)
             result = response.content
             start_idx = result.index("{")

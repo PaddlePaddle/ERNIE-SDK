@@ -19,6 +19,8 @@ SELECT_PROMPT = """
 您必须以以下格式回复一个中文字符串列表：["query 1", "query 2", "query 3", "query 4"].
 """
 
+MAX_RETRY = 10
+
 
 class ResearchAgent(Agent):
     """
@@ -111,7 +113,7 @@ class ResearchAgent(Agent):
             Report
         """
         await self._callback_manager.on_run_start(
-            agent=self, agent_name=self, prompt=f"🔎 Running research for '{query}'..."
+            agent=self, agent_name=self.name, prompt=f"🔎 Running research for '{query}'..."
         )
         # Generate Agent
         result = await self.intent_detection(query)
@@ -167,6 +169,7 @@ class ResearchAgent(Agent):
         for item in paragraphs_item:
             if item not in paragraphs:
                 paragraphs.append(item)
+        # 1. 摘要 ==> 1.摘要 for avoiding erniebot request error
         research_summary = "\n\n".join([str(i) for i in paragraphs]).replace(". ", ".")
         outline = None
         # Generate Outline
@@ -176,6 +179,7 @@ class ResearchAgent(Agent):
         else:
             outline = None
         # Conduct Research
+        retry_count = 0
         while True:
             try:
                 report, url_index = await self.report_writing(
@@ -191,6 +195,9 @@ class ResearchAgent(Agent):
                 await self._callback_manager.on_run_error(
                     tool_name=self.report_writing.description, error_information=str(e)
                 )
+                retry_count += 1
+                if retry_count > MAX_RETRY:
+                    raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
         await self._callback_manager.on_run_tool(tool_name=self.report_writing.description, response=report)
         # Generate Citations
@@ -199,5 +206,5 @@ class ResearchAgent(Agent):
             report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
         )
         await self._callback_manager.on_run_tool(tool_name=self.citation.description, response=final_report)
-        await self._callback_manager.on_run_end(tool_name=self.name, response=f"报告存储在{path}")
+        await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
         return final_report, path

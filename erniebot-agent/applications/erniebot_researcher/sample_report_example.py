@@ -86,7 +86,6 @@ def get_retrievers():
 
 
 def get_tools(llm, llm_long):
-    # breakpoint()
     intent_detection_tool = IntentDetectionTool(llm=llm)
     outline_generation_tool = OutlineGenerationTool(llm=llm)
     ranking_tool = TextRankingTool(llm=llm, llm_long=llm_long)
