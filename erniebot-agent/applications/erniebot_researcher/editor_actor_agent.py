@@ -68,7 +68,7 @@ class EditorActorAgent(Agent):
             self._callback_manager = callbacks
 
     async def _run(self, report):
-        await self._callback_manager.on_run_start(agent_name=self.name, query="")
+        await self._callback_manager.on_run_start(agent_name=self.name, query=report)
         messages = [HumanMessage(self.prompt.format(report=report))]
         while True:
             try:

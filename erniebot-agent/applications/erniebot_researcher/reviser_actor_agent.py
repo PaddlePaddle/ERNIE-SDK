@@ -36,31 +36,21 @@ class ReviserActorAgent(Agent):
             self._callback_manager = callbacks
 
     async def run(self, draft: str, notes: str) -> AgentResponse:
-        """Run the agent asynchronously.
-
-        Args:
-            query: A natural language text describing the task that the agent
-                should perform.
-            files: A list of files that the agent can use to perform the task.
-
-        Returns:
-            Response from the agent.
-        """
         await self._callback_manager.on_run_start(agent=self, prompt=draft)
         agent_resp = await self._run(draft, notes)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
     async def _run(self, draft, notes):
-        self._callback_manager.on_run_start(self.name, "")
+        await self._callback_manager.on_run_start(self.name, "")
         messages = [HumanMessage(self.prompt_template.format(draft=draft, notes=notes).replace(". ", "."))]
         while True:
             try:
                 response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
-                self._callback_manager.on_run_end(self.name, report)
+                await self._callback_manager.on_run_end(self.name, report)
                 return report
             except Exception as e:
                 logger.error(e)
-                self._callback_manager.on_run_error(self.name, str(e))
+                await self._callback_manager.on_run_error(self.name, str(e))
                 continue

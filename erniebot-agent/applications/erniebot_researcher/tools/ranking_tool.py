@@ -68,9 +68,9 @@ class TextRankingTool(Tool):
                 while True:
                     try:
                         if len(content) <= 4800:
-                            response = self.llm.chat(messages=messages, temperature=1e-10)
+                            response = await self.llm.chat(messages=messages, temperature=1e-10)
                         else:
-                            response = self.llm_long.chat(
+                            response = await self.llm_long.chat(
                                 messages=messages,
                                 temperature=1e-10,
                             )
