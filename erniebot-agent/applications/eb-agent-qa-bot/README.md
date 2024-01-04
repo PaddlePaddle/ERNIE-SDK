@@ -30,7 +30,7 @@ cd ERNIE-Bot-SDK
 pip install ernie_agent
 ```
 
-> 第二步：如果是第一次运行，请先初始化向量库
+> 第二步：如果是第一次运行，请先初始化向量库(应用中同时上传了向量库也可以)
 
 ```bash
 python question_bot.py --init=True --access-token <aistudio-access-token>
