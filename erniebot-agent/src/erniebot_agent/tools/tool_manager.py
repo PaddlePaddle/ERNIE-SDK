@@ -17,13 +17,9 @@ import functools
 import json
 import types
 from dataclasses import asdict
-from typing import Dict, List, final
-
-import uvicorn
-from fastapi import FastAPI
+from typing import Callable, Dict, List, final
 
 from erniebot_agent.tools.base import BaseTool, Tool
-from erniebot_agent.tools.remote_tool import RemoteTool
 
 
 @final
@@ -82,11 +78,25 @@ class ToolManager(object):
         Args:
             port (int, optional): the port of local toolkit server. Defaults to 5000.
         """
+        try:
+            import uvicorn
+            from fastapi import FastAPI
+        except ImportError:
+            raise ImportError(
+                "Could not import fastapi or uvicorn python package. Please install it "
+                "with `pip install uvicorn fastapi`."
+            )
 
         app = FastAPI(title="erniebot-agent-tools", version="0.0")
 
-        def create_func(f, func_types, tool):
-            # add your code to first parameter
+        def create_func(f: Callable, func_types: dict, tool: BaseTool) -> Callable:
+            """create new function for fastapi routers
+
+            Args:
+                f (Callable): the proxy function to call tool
+                func_types (dict): the annotations for function inputs
+                tool (BaseTool): the instance of the tool
+            """
             new_func = types.FunctionType(
                 f.__code__, f.__globals__, f.__name__, f.__defaults__, f.__closure__
             )
