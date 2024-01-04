@@ -6,6 +6,7 @@ from typing import Optional, Type
 
 from pydantic import Field
 
+
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -128,9 +129,10 @@ class ReportWritingTool(Tool):
     input_type: Type[ToolParameterView] = ReportWritingToolInputView
     ouptut_type: Type[ToolParameterView] = ReportWritingToolOutputView
 
-    def __init__(self, llm: BaseERNIEBot) -> None:
+    def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot) -> None:
         super().__init__()
         self.llm = llm
+        self.llm_long = llm_long
 
     async def __call__(
         self,
@@ -145,7 +147,7 @@ class ReportWritingTool(Tool):
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
         report_type_func = get_report_by_type(report_type)
         messages = [HumanMessage(report_type_func(question, research_summary, outline))]
-        response = await self.llm.chat(messages, system=agent_role_prompt)
+        response = await self.llm_long.chat(messages, system=agent_role_prompt)
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
@@ -177,5 +179,5 @@ class ReportWritingTool(Tool):
         if meta_data:
             for index, (key, val) in enumerate(meta_data.items()):
                 url_index[val] = {"name": key, "index": index + 1}
-        # final_report=postprocess(final_report)
+        # final_report = postprocess(final_report)
         return final_report, url_index

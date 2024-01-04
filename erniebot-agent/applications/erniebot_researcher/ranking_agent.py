@@ -48,28 +48,28 @@ class RankingAgent(Agent):
             self._callback_manager = callbacks
 
     async def _run(self, list_reports, query):
-        self._callback_manager.on_run_start(self.name, "")
+        await self._callback_manager.on_run_start(self.name, "")
         reports = []
         for item in list_reports:
-            if self.check_format(item):
+            if await self.check_format(item):
                 reports.append(item)
         if len(reports) == 0:
             if self.is_reset:
-                self._callback_manager.on_run_end(self.name, "所有的report都不是markdown格式，重新生成report")
+                await self._callback_manager.on_run_end(self.name, "所有的report都不是markdown格式，重新生成report")
                 logger.info("所有的report都不是markdown格式，重新生成report")
                 return [], None
             else:
                 reports = list_reports
         best_report = await self.ranking(reports, query)
-        self._callback_manager.on_run_tool(self.ranking.description, best_report)
-        self._callback_manager.on_run_end(self.name, "")
+        await self._callback_manager.on_run_tool(self.ranking.description, best_report)
+        await self._callback_manager.on_run_end(self.name, "")
         return reports, best_report
 
-    def check_format(self, report):
+    async def check_format(self, report):
         while True:
             try:
                 messages = [HumanMessage(content=get_markdown_check_prompt(report))]
-                response = self.llm.chat(messages=messages, temperature=0.001)
+                response = await self.llm.chat(messages=messages, temperature=0.001)
                 result = response.content
                 l_index = result.index("{")
                 r_index = result.index("}")
@@ -80,6 +80,6 @@ class RankingAgent(Agent):
                 elif result_dict["accept"] is False or result_dict["accept"] == "false":
                     return False
             except Exception as e:
-                self._callback_manager.on_run_error("格式检查", str(e))
+                await self._callback_manager.on_run_error("格式检查", str(e))
                 logger.error(e)
                 continue
