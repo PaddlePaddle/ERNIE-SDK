@@ -4,6 +4,7 @@ from collections import OrderedDict
 from typing import Optional
 
 from tools.utils import ReportCallbackHandler
+from tools.utils import JsonUtil
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -21,7 +22,7 @@ SELECT_PROMPT = """
 MAX_RETRY = 10
 
 
-class ResearchAgent:
+class ResearchAgent(JsonUtil):
     """
     ResearchAgent, refer to
     https://github.com/assafelovic/gpt-researcher/blob/master/examples/permchain_agents/research_team.py
@@ -144,10 +145,11 @@ class ResearchAgent:
                 ]
                 responese = await self.llm.chat(messages)
                 result = responese.content
-                start_idx = result.index("[")
-                end_idx = result.rindex("]")
-                result = result[start_idx : end_idx + 1]
-                sub_queries = json.loads(result)
+                # start_idx = result.index("[")
+                # end_idx = result.rindex("]")
+                # result = result[start_idx : end_idx + 1]
+                # sub_queries = json.loads(result)
+                sub_queries = self.parse_json(result,'[',']')
         else:
             context = ""
             # Generate Sub-Queries including original query

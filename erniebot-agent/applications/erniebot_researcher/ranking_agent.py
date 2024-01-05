@@ -3,6 +3,7 @@ import logging
 from typing import List, Optional
 
 from tools.utils import ReportCallbackHandler
+from tools.utils import JsonUtil
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -29,7 +30,7 @@ def get_markdown_check_prompt(report):
     return prompt_markdow.format(report=report)
 
 
-class RankingAgent(Agent):
+class RankingAgent(Agent, JsonUtil):
     DEFAULT_SYSTEM_MESSAGE = """你是一个排序助手，你的任务就是对给定的内容和query的相关性进行排序."""
 
     def __init__(
@@ -92,10 +93,7 @@ class RankingAgent(Agent):
                 else:
                     response = await self.llm_long.chat(messages=messages, temperature=0.001)
                 result = response.content
-                l_index = result.index("{")
-                r_index = result.index("}")
-                result = result[l_index : r_index + 1]
-                result_dict = json.loads(result)
+                result_dict = self.parse_json(result)
                 if result_dict["accept"] is True or result_dict["accept"] == "true":
                     return True
                 elif result_dict["accept"] is False or result_dict["accept"] == "false":

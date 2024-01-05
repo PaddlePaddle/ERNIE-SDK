@@ -8,7 +8,7 @@ from pydantic import Field
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 
 def generate_reference(meta_dict):
     json_format = """{
@@ -45,10 +45,12 @@ class SemanticCitationTool(Tool):
         """判断一个字符是否是标点符号"""
         return char in string.punctuation
 
-    def __init__(self, theta_min=0.4, theta_max=0.95) -> None:
+    def __init__(self, llm: BaseERNIEBot, theta_min=0.4, theta_max=0.95) -> None:
         super().__init__()
         self.theta_min = theta_min
         self.theta_max = theta_max
+        self.llm = llm
+
 
     async def __call__(
         self,

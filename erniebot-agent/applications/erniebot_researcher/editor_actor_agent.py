@@ -4,6 +4,7 @@ import time
 from typing import Optional
 
 from tools.utils import ReportCallbackHandler
+from tools.utils import JsonUtil
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -56,7 +57,7 @@ MAX_RETRY = 10
 TOKEN_MAX_LENGTH = 4200
 
 
-class EditorActorAgent(Agent):
+class EditorActorAgent(Agent, JsonUtil):
     DEFAULT_SYSTEM_MESSAGE = EB_EDIT_TEMPLATE
 
     def __init__(
@@ -101,16 +102,18 @@ class EditorActorAgent(Agent):
                     response = await self.llm_long.chat(
                         messages, functions=eb_functions, system=self.system_message
                     )
-                suggestions = response.content
-                start_idx = suggestions.index("{")
-                end_idx = suggestions.rindex("}")
-                suggestions = suggestions[start_idx : end_idx + 1]
+                res = response.content
+                
                 try:
-                    suggestions = json.loads(suggestions)
+                    # start_idx = suggestions.index("{")
+                    # end_idx = suggestions.rindex("}")
+                    # suggestions = suggestions[start_idx : end_idx + 1]
+                    # suggestions = json.loads(suggestions)
+                    suggestions = self.parse_json(res)
                 except Exception as e:
                     logger.error(e)
-                    suggestions = await self.json_correct(suggestions)
-                    suggestions = json.loads(suggestions)
+                    suggestions = await self.json_correct(res)
+                    
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
                 return suggestions
@@ -124,10 +127,12 @@ class EditorActorAgent(Agent):
                 continue
 
     async def json_correct(self, json_data):
-        messages = [HumanMessage("请纠正以下数据的json格式：" + json_data)]
+        messages = [HumanMessage("请纠正以下数据的json格式：%s" % json_data)]
         response = await self.llm.chat(messages)
         res = response.content
-        start_idx = res.index("{")
-        end_idx = res.rindex("}")
-        corrected_data = res[start_idx : end_idx + 1]
+        # start_idx = res.index("{")
+        # end_idx = res.rindex("}")
+        # corrected_data = res[start_idx : end_idx + 1]
+        # corrected_data = json.loads(corrected_data)
+        corrected_data = self.parse_json(res)
         return corrected_data

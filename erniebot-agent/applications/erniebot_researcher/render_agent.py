@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from typing import Optional
 
 from tools.utils import ReportCallbackHandler, add_citation, write_md_to_pdf
@@ -10,12 +11,13 @@ from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
+from tools.utils import JsonUtil
 
 logger = logging.getLogger(__name__)
 TOKEN_MAX_LENGTH = 4200
 
 
-class RenderAgent(Agent):
+class RenderAgent(Agent, JsonUtil):
     DEFAULT_SYSTEM_MESSAGE = "你是一个报告润色助手，你的主要工作是报告进行内容上的润色"
 
     def __init__(
@@ -78,10 +80,8 @@ class RenderAgent(Agent):
                     reponse = await self.llm_long.chat(messages)
                 else:
                     reponse = await self.llm.chat(messages)
-                abstract_json = reponse.content
-                l_index = abstract_json.find("{")
-                r_index = abstract_json.rfind("}")
-                abstract_json = json.loads(abstract_json[l_index : r_index + 1])
+                res = reponse.content
+                abstract_json = self.parse_json(res)
                 abstract = abstract_json["摘要"]
                 key = abstract_json["关键词"]
                 if type(key) is list:
@@ -98,19 +98,39 @@ class RenderAgent(Agent):
                 paragraphs.append("**关键词** " + key)
             content = ""
             for item in report_list[1:]:
+                # paragraphs
                 if "#" not in item:
                     content += item + "\n"
+                # Title
                 else:
+                    # Not to render
                     if len(content) > 300:
                         paragraphs.append(content)
+                    # Rendering
                     elif len(content) > 0:
                         content = self.prompt_template_polish.format(content=content)
                         messages = [HumanMessage(content)]
-                        reponse = await self.llm.chat(messages)
+                        try:
+                            reponse = await self.llm.chat(messages)
+                        except Exception as e:
+                            await self._callback_manager.on_llm_error(self, self.llm, e)
+                            time.sleep(0.5)
+                            reponse = await self.llm.chat(messages)
                         paragraphs.append(reponse.content)
                     content = ""
+                    # Add title to 
                     paragraphs.append(item)
-
+            # The last paragraph
+            if len(content)>0:
+                content = self.prompt_template_polish.format(content=content)
+                messages = [HumanMessage(content)]
+                try:
+                    reponse = await self.llm.chat(messages)
+                except Exception as e:
+                    await self._callback_manager.on_llm_error(self, self.llm, e)
+                    time.sleep(0.5)
+                    reponse = await self.llm.chat(messages)
+                paragraphs.append(reponse.content)
             # Generate Citations
             final_report = "\n\n".join(paragraphs)
         else:
@@ -129,5 +149,5 @@ class RenderAgent(Agent):
             )
         else:
             path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
-        await self._callback_manager.on_tool_end(self, tool=self.citation, response=final_report)
+        await self._callback_manager.on_tool_end(self, tool=self.citation, response={'report': final_report})
         return final_report, path

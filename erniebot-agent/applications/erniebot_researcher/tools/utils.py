@@ -26,6 +26,8 @@ default_logger = logging.getLogger(__name__)
 class ReportCallbackHandler(LoggingHandler):
     async def on_run_start(self, agent: BaseAgent, prompt, **kwargs):
         agent_name = kwargs.get("agent_name", None)
+        if isinstance(prompt, (dict, list, tuple)):
+            prompt = json.dumps(prompt, ensure_ascii=False)
         # self.logger.info(f"{agent_name}开始运行：{prompt}")
         self._agent_info(
             "%s named %s is about to start running with input:\n%s",
@@ -202,3 +204,11 @@ def add_citation(paragraphs, faiss_name, embeddings):
     )
     faiss_search = FaissSearch(db=faiss_db, embeddings=embeddings)
     return faiss_search
+
+class JsonUtil:
+    def parse_json(self, json_str, start_indicator: str='{', end_indicator:str= '}'):
+        start_idx = json_str.index(start_indicator)
+        end_idx = json_str.rindex(end_indicator)
+        corrected_data = json_str[start_idx : end_idx + 1]
+        response = json.loads(corrected_data)
+        return response
