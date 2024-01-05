@@ -5,6 +5,7 @@ from typing import List, Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
@@ -50,7 +51,7 @@ class RankingAgent(Agent):
         self.ranking = ranking_tool
         self.is_reset = is_reset
         if callbacks is None:
-            self._callback_manager = ReportCallbackHandler()
+            self._callback_manager = CallbackManager([ReportCallbackHandler()])
         else:
             self._callback_manager = callbacks
 
@@ -61,7 +62,7 @@ class RankingAgent(Agent):
         return agent_resp
 
     async def _run(self, query, list_reports):
-        await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=query)
+        await self._callback_manager.on_tool_start(agent=self, tool=self.ranking, input_args=list_reports)
         reports = []
         for item in list_reports:
             format_check = await self.check_format(item)
@@ -69,16 +70,15 @@ class RankingAgent(Agent):
                 reports.append(item)
         if len(reports) == 0:
             if self.is_reset:
-                await self._callback_manager.on_run_end(
-                    self, agent_name=self.name, response="所有的report都不是markdown格式，重新生成report"
-                )
+                # await self._callback_manager.on_run_end(
+                #     self, agent_name=self.name, response="所有的report都不是markdown格式，重新生成report"
+                # )
                 logger.info("所有的report都不是markdown格式，重新生成report")
                 return [], None
             else:
                 reports = list_reports
         best_report = await self.ranking(reports, query)
-        await self._callback_manager.on_run_tool(self.ranking.description, best_report)
-        await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=best_report)
+        await self._callback_manager.on_tool_end(agent=self, tool=self.ranking, input_args=best_report)
         return reports, best_report
 
     async def check_format(self, report):

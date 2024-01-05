@@ -1,10 +1,9 @@
+import json
 import logging
 import os
 import shutil
 import urllib.parse
-from typing import Optional
 
-import erniebot
 import jsonlines
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFDirectoryLoader
@@ -14,43 +13,70 @@ from md2pdf.core import md2pdf
 from sklearn.metrics.pairwise import cosine_similarity
 
 from erniebot_agent.agents.base import BaseAgent
-from erniebot_agent.agents.callback import CallbackHandler
+from erniebot_agent.agents.callback import LoggingHandler
+from erniebot_agent.agents.schema import ToolResponse
+from erniebot_agent.tools.base import BaseTool
+from erniebot_agent.utils.json import to_pretty_json
+from erniebot_agent.utils.output_style import ColoredContent
 
 default_logger = logging.getLogger(__name__)
 
 
-class ReportCallbackHandler(CallbackHandler):
-    logger: logging.Logger
-
-    def __init__(
-        self,
-        logger: Optional[logging.Logger] = None,
-    ) -> None:
-        """Initialize a logging handler.
-
-        Args:
-            logger: The logger to use. If `None`, a default logger will be used.
-        """
-        super().__init__()
-
-        if logger is None:
-            self.logger = default_logger
-        else:
-            self.logger = logger
-
+class ReportCallbackHandler(LoggingHandler):
     async def on_run_start(self, agent: BaseAgent, prompt, **kwargs):
         agent_name = kwargs.get("agent_name", None)
-        self.logger.info(f"{agent_name}开始运行：{prompt}")
+        # self.logger.info(f"{agent_name}开始运行：{prompt}")
+        self._agent_info(
+            "%s named %s is about to start running with input:\n%s",
+            agent.__class__.__name__,
+            agent_name,
+            ColoredContent(prompt, role="user"),
+            subject="Run",
+            state="Start",
+        )
 
     async def on_run_end(self, agent: BaseAgent, response, **kwargs):
         agent_name = kwargs.get("agent_name", None)
-        self.logger.info(f"{agent_name}结束运行,{response}")
+        self._agent_info(
+            "%s %s finished running.", agent.__class__.__name__, agent_name, subject="Run", state="End"
+        )
 
-    async def on_run_tool(self, tool_name, response):
-        self.logger.info(f"{tool_name}的运行结果：{response}")
+    async def on_tool_start(self, agent: BaseAgent, tool: BaseTool, input_args: str) -> None:
+        if isinstance(input_args, (dict, list)):
+            js_inputs = json.dumps(input_args, ensure_ascii=False)
+        elif isinstance(input_args, str):
+            js_inputs = input_args
+        else:
+            js_inputs = to_pretty_json(input_args, from_json=True)
+        js_inputs = input_args
+        self._agent_info(
+            "%s is about to start running with input:\n%s",
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
+            subject="Tool",
+            state="Start",
+        )
+
+    async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
+        """Called to log when a tool ends running."""
+        if isinstance(response, (dict, list)):
+            js_inputs = json.dumps(response, ensure_ascii=False)
+        else:
+            js_inputs = to_pretty_json(response, from_json=True)
+        self._agent_info(
+            "%s finished running with output:\n%s",
+            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(js_inputs, role="function"),
+            subject="Tool",
+            state="End",
+        )
 
     async def on_run_error(self, tool_name, error_information):
         self.logger.error(f"{tool_name}的调用失败，错误信息：{error_information}")
+
+    def _agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
+        msg = f"[{subject}][{state}] {msg}"
+        self.logger.info(msg, *args, **kwargs)
 
 
 class FaissSearch:
@@ -116,18 +142,6 @@ def build_index(faiss_name, embeddings, path=None, abstract=False, origin_data=N
         db = FAISS.from_documents(origin_data, embeddings)
         db.save_local(faiss_name)
     return db
-
-
-def erniebot_chat(messages: list, functions: Optional[str] = None, model: Optional[str] = None, **kwargs):
-    if not model:
-        model = "ernie-4.0"
-    if functions is None:
-        resp_stream = erniebot.ChatCompletion.create(model=model, messages=messages, **kwargs, stream=False)
-    else:
-        resp_stream = erniebot.ChatCompletion.create(
-            model=model, messages=messages, **kwargs, functions=functions, stream=False
-        )
-    return resp_stream["result"]
 
 
 def write_to_file(filename: str, text: str) -> None:

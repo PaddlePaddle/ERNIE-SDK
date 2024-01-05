@@ -59,8 +59,8 @@ class CallbackManager(object):
         """Remove all callback handlers."""
         self._handlers.clear()
 
-    async def on_run_start(self, agent: BaseAgent, prompt: str) -> None:
-        await self._handle_event(EventType.RUN_START, agent=agent, prompt=prompt)
+    async def on_run_start(self, agent: BaseAgent, prompt: str, **kwargs) -> None:
+        await self._handle_event(EventType.RUN_START, agent=agent, prompt=prompt, **kwargs)
 
     async def on_llm_start(self, agent: BaseAgent, llm: ChatModel, messages: List[Message]) -> None:
         await self._handle_event(EventType.LLM_START, agent=agent, llm=llm, messages=messages)

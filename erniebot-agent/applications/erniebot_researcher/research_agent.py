@@ -5,6 +5,7 @@ from typing import Optional
 
 from tools.utils import ReportCallbackHandler, add_citation
 
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -58,6 +59,7 @@ class ResearchAgent:
             report_type:
             ......
         """
+
         self.name = name
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
@@ -82,7 +84,7 @@ class ResearchAgent:
         self.embeddings = embeddings
         self.llm = llm
         if callbacks is None:
-            self._callback_manager = ReportCallbackHandler()
+            self._callback_manager = CallbackManager([ReportCallbackHandler()])
         else:
             self._callback_manager = callbacks
 
@@ -91,6 +93,7 @@ class ResearchAgent:
         url_dict = {}
         results = self.retriever.search(query, top_k=3)
         length_limit = 0
+        await self._callback_manager.on_tool_start(agent=self, tool=self.summarize, input_args=query)
         for doc in results:
             res = await self.summarize(doc["content"], query)
             # Add reference to avoid hallucination
@@ -104,6 +107,7 @@ class ResearchAgent:
             else:
                 logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
+        await self._callback_manager.on_tool_end(self, tool=self.summarize, response=responses)
         return responses, url_dict
 
     async def run(self, query):
@@ -116,11 +120,13 @@ class ResearchAgent:
             agent=self, agent_name=self.name, prompt=f"🔎 Running research for '{query}'..."
         )
         # Generate Agent
+        await self._callback_manager.on_tool_start(agent=self, tool=self.intent_detection, input_args=query)
         result = await self.intent_detection(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
-        await self._callback_manager.on_run_tool(
-            tool_name=self.intent_detection.description, response=self.agent + self.role
-        )
+
+        await self._callback_manager.on_tool_end(agent=self, tool=self.intent_detection, response=result)
+
+        await self._callback_manager.on_tool_start(agent=self, tool=self.task_planning, input_args=query)
         if self.use_context_planning:
             sub_queries = []
             res = self.retriever_abstract.search(query, top_k=3)
@@ -154,9 +160,7 @@ class ResearchAgent:
             sub_queries = await self.task_planning(
                 question=query, agent_role_prompt=self.role, context=context
             )
-        await self._callback_manager.on_run_tool(
-            tool_name=self.task_planning.description, response="\n".join(sub_queries)
-        )
+        await self._callback_manager.on_tool_end(self, tool=self.task_planning, response=sub_queries)
         # Run Sub-Queries
         meta_data = OrderedDict()
         paragraphs_item = []
@@ -164,7 +168,7 @@ class ResearchAgent:
             research_result, url_dict = await self.run_search_summary(sub_query)
             meta_data.update(url_dict)
             paragraphs_item.extend(research_result)
-            await self._callback_manager.on_run_tool(tool_name=sub_query, response=f"{research_result}\n\n")
+
         paragraphs = []
         for item in paragraphs_item:
             if item not in paragraphs:
@@ -172,12 +176,17 @@ class ResearchAgent:
         # 1. 摘要 ==> 1.摘要 for avoiding erniebot request error
         research_summary = "\n\n".join([str(i) for i in paragraphs]).replace(". ", ".")
         outline = None
+
+        await self._callback_manager.on_tool_start(agent=self, tool=self.outline, input_args=sub_queries)
         # Generate Outline
         if self.use_outline:
             outline = await self.outline(sub_queries, query)
             await self._callback_manager.on_run_tool(tool_name=self.outline.description, response=outline)
         else:
             outline = None
+        await self._callback_manager.on_tool_end(self, tool=self.outline, response=outline)
+
+        await self._callback_manager.on_tool_start(agent=self, tool=self.report_writing, input_args=query)
         # Conduct Research
         retry_count = 0
         while True:
@@ -199,12 +208,12 @@ class ResearchAgent:
                 if retry_count > MAX_RETRY:
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
-        await self._callback_manager.on_run_tool(tool_name=self.report_writing.description, response=report)
+
+        await self._callback_manager.on_tool_end(self, tool=self.report_writing, response=report)
         # Generate Citations
         citation_search = add_citation(paragraphs, self.faiss_name_citation, self.embeddings)
         final_report, path = await self.citation(
             report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
         )
-        await self._callback_manager.on_run_tool(tool_name=self.citation.description, response=final_report)
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
         return final_report, path
