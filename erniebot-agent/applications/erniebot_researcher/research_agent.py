@@ -3,7 +3,7 @@ import logging
 from collections import OrderedDict
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler, add_citation
+from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -41,15 +41,12 @@ class ResearchAgent:
         task_planning_tool,
         report_writing_tool,
         outline_tool,
-        citation_tool,
         summarize_tool,
-        faiss_name_citation,
         llm: BaseERNIEBot,
         system_message: Optional[SystemMessage] = None,
         use_outline=True,
         use_context_planning=True,
         nums_queries=4,
-        embeddings=None,
         callbacks=None,
     ):
         """
@@ -72,16 +69,13 @@ class ResearchAgent:
         self.task_planning = task_planning_tool
         self.report_writing = report_writing_tool
         self.outline = outline_tool
-        self.citation = citation_tool
         self.summarize = summarize_tool
         self.use_context_planning = use_context_planning
         self.use_outline = use_outline
         self.agent_name = agent_name
-        self.faiss_name_citation = faiss_name_citation
         self.use_context_planning = use_context_planning
         self.nums_queries = nums_queries
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
-        self.embeddings = embeddings
         self.llm = llm
         if callbacks is None:
             self._callback_manager = CallbackManager([ReportCallbackHandler()])
@@ -191,13 +185,14 @@ class ResearchAgent:
         retry_count = 0
         while True:
             try:
-                report, url_index = await self.report_writing(
+                report, path = await self.report_writing(
                     question=query,
                     research_summary=research_summary,
                     report_type=self.report_type,
                     agent_role_prompt=self.role,
-                    meta_data=meta_data,
                     outline=outline,
+                    agent_name=self.agent_name,
+                    dir_path=self.dir_path,
                 )
                 break
             except Exception as e:
@@ -208,12 +203,6 @@ class ResearchAgent:
                 if retry_count > MAX_RETRY:
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
-
         await self._callback_manager.on_tool_end(self, tool=self.report_writing, response=report)
-        # Generate Citations
-        citation_search = add_citation(paragraphs, self.faiss_name_citation, self.embeddings)
-        final_report, path = await self.citation(
-            report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
-        )
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
-        return final_report, path
+        return report, meta_data, paragraphs

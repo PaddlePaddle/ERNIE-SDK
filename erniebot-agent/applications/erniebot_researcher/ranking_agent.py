@@ -65,7 +65,10 @@ class RankingAgent(Agent):
         await self._callback_manager.on_tool_start(agent=self, tool=self.ranking, input_args=list_reports)
         reports = []
         for item in list_reports:
-            format_check = await self.check_format(item)
+            if type(item) is not str:
+                format_check = await self.check_format(item[0])
+            else:
+                format_check = await self.check_format(item)
             if format_check:
                 reports.append(item)
         if len(reports) == 0:
@@ -77,9 +80,13 @@ class RankingAgent(Agent):
                 return [], None
             else:
                 reports = list_reports
-        best_report = await self.ranking(reports, query)
+        response = await self.ranking(reports, query)
+        if type(response) is not str:
+            best_report = response[0]
+        else:
+            best_report = response
         await self._callback_manager.on_tool_end(agent=self, tool=self.ranking, input_args=best_report)
-        return reports, best_report
+        return reports, response
 
     async def check_format(self, report):
         retry_count = 0

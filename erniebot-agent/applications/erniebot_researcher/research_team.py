@@ -5,7 +5,6 @@ from ranking_agent import RankingAgent
 from render_agent import RenderAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
-from tools.utils import write_md_to_pdf
 from user_proxy_agent import UserProxyAgent
 
 
@@ -18,8 +17,6 @@ class ResearchTeam:
         reviser_actor: ReviserActorAgent,
         render_actor: Optional[RenderAgent] = None,
         user_agent: Optional[UserProxyAgent] = None,
-        report_type: str = "research_report",
-        target_path: str = "output",
     ):
         self.research_actor_instance = research_actor
         self.editor_actor_instance = editor_actor
@@ -27,14 +24,13 @@ class ResearchTeam:
         self.ranker_actor_instance = ranker_actor
         self.render_actor_instance = render_actor
         self.user_agent = user_agent
-        self.report_type = report_type
-        self.target_path = target_path
+        self.render_actor = render_actor
 
     async def run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
-            report, _ = await researcher.run(query)
-            list_reports.append(report)
+            report, meta_data, paragraphs = await researcher.run(query)
+            list_reports.append((report, (meta_data, paragraphs)))
         if self.user_agent is not None:
             prompt = (
                 f"请你从{list_reports}个待选的多个报告草稿中，选择一个合适的报告,"
@@ -43,7 +39,6 @@ class ResearchTeam:
             index = await self.user_agent.run(prompt)
             immedia_report = list_reports[int(index) - 1]
             list_reports = [immedia_report]
-
         for i in range(iterations):
             # Listwise ranking
             if len(list_reports) > 1:
@@ -67,7 +62,8 @@ class ResearchTeam:
                 revised_report = await self.revise_actor_instance.run(markdown_report, respose["notes"])
                 # Add revise report to the list of reports
                 list_reports.append(revised_report)
-        if self.render_actor_instance:
-            revised_report = await self.render_actor_instance.run(revised_report)
-        path = write_md_to_pdf(self.report_type, self.target_path, revised_report)
+        if type(revised_report) is not str:
+            revised_report, path = await self.render_actor_instance.run(
+                report=revised_report[0], meta_data=revised_report[1][0], summarize=revised_report[1][1]
+            )
         return revised_report, path
