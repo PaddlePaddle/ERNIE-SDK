@@ -85,7 +85,6 @@ class RankingAgent(Agent):
         await self._callback_manager.on_tool_end(agent=self, tool=self.ranking, response=best_report)
         return reports, response
 
-
     async def check_format(self, report):
         retry_count = 0
         while True:
