@@ -205,8 +205,9 @@ def add_citation(paragraphs, faiss_name, embeddings):
     faiss_search = FaissSearch(db=faiss_db, embeddings=embeddings)
     return faiss_search
 
+
 class JsonUtil:
-    def parse_json(self, json_str, start_indicator: str='{', end_indicator:str= '}'):
+    def parse_json(self, json_str, start_indicator: str = "{", end_indicator: str = "}"):
         start_idx = json_str.index(start_indicator)
         end_idx = json_str.rindex(end_indicator)
         corrected_data = json_str[start_idx : end_idx + 1]

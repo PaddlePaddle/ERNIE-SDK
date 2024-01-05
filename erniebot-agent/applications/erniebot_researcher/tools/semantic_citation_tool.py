@@ -5,10 +5,11 @@ from typing import Optional, Type
 
 from pydantic import Field
 
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
-from erniebot_agent.chat_models.erniebot import BaseERNIEBot
+
 
 def generate_reference(meta_dict):
     json_format = """{
@@ -50,7 +51,6 @@ class SemanticCitationTool(Tool):
         self.theta_min = theta_min
         self.theta_max = theta_max
         self.llm = llm
-
 
     async def __call__(
         self,

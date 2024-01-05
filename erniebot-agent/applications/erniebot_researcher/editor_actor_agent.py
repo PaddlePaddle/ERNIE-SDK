@@ -1,10 +1,8 @@
-import json
 import logging
 import time
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler
-from tools.utils import JsonUtil
+from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -103,7 +101,7 @@ class EditorActorAgent(Agent, JsonUtil):
                         messages, functions=eb_functions, system=self.system_message
                     )
                 res = response.content
-                
+
                 try:
                     # start_idx = suggestions.index("{")
                     # end_idx = suggestions.rindex("}")
@@ -113,7 +111,7 @@ class EditorActorAgent(Agent, JsonUtil):
                 except Exception as e:
                     logger.error(e)
                     suggestions = await self.json_correct(res)
-                    
+
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
                 return suggestions

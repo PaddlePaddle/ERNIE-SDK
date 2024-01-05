@@ -1,10 +1,8 @@
-import json
 import logging
 from collections import OrderedDict
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler
-from tools.utils import JsonUtil
+from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -149,7 +147,7 @@ class ResearchAgent(JsonUtil):
                 # end_idx = result.rindex("]")
                 # result = result[start_idx : end_idx + 1]
                 # sub_queries = json.loads(result)
-                sub_queries = self.parse_json(result,'[',']')
+                sub_queries = self.parse_json(result, "[", "]")
         else:
             context = ""
             # Generate Sub-Queries including original query

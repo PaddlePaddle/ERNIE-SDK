@@ -1,9 +1,7 @@
-import json
 import logging
 from typing import List, Optional
 
-from tools.utils import ReportCallbackHandler
-from tools.utils import JsonUtil
+from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
