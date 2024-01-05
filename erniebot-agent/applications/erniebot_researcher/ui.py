@@ -159,6 +159,7 @@ def generate_report(query, history=[]):
         editor_actor=editor_actor,
         reviser_actor=reviser_actor,
         render_actor=render_actor,
+        use_reflection=True,
     )
     report, path = asyncio.run(team_actor.run(query))
     return report, path
