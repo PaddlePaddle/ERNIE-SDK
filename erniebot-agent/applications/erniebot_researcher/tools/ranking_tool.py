@@ -60,6 +60,7 @@ class TextRankingTool(Tool):
         reports: List,
         query: str,
     ):
+        breakpoint()
         if len(reports) == 1:
             return reports[0]
         elif len(reports) > 1:

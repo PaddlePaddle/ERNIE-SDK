@@ -30,7 +30,6 @@ class ResearchTeam:
         list_reports = []
         for researcher in self.research_actor_instance:
             report, meta_data, paragraphs = await researcher.run(query)
-            list_reports.append((report, (meta_data, paragraphs)))
             list_reports.append(
                 {
                     "report": report,
