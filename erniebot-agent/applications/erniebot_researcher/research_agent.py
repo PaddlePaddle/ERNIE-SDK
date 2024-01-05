@@ -194,9 +194,7 @@ class ResearchAgent:
                 )
                 break
             except Exception as e:
-                await self._callback_manager.on_run_error(
-                    tool_name=self.report_writing.description, error_information=str(e)
-                )
+                await self._callback_manager.on_tool_error(self, tool=self.report_writing, error=e)
                 retry_count += 1
                 if retry_count > MAX_RETRY:
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")

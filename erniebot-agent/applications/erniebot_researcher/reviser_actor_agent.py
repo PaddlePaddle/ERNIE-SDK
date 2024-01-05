@@ -48,8 +48,8 @@ class ReviserActorAgent(Agent):
 
     async def _run(self, draft, notes):
         notes = str(notes).replace("{", "").replace("}", "")
-        if type(draft) is not str:
-            content = self.prompt_template.format(draft=draft[0], notes=notes).replace(". ", ".")
+        if isinstance(draft, dict):
+            content = self.prompt_template.format(draft=draft["report"], notes=notes).replace(". ", ".")
         else:
             content = self.prompt_template.format(draft=draft, notes=notes).replace(". ", ".")
         messages = [HumanMessage(content)]
@@ -61,9 +61,11 @@ class ReviserActorAgent(Agent):
                 else:
                     response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
-                if type(draft) is not str:
-                    report = (report, draft[1])
-                return report
+                if isinstance(draft, dict):
+                    draft["report"] = report
+                else:
+                    draft = report
+                return draft
             except Exception as e:
                 await self._callback_manager.on_llm_error(self, self.llm, e)
                 retry_count += 1

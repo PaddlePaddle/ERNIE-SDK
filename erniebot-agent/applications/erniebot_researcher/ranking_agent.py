@@ -65,8 +65,8 @@ class RankingAgent(Agent):
         await self._callback_manager.on_tool_start(agent=self, tool=self.ranking, input_args=list_reports)
         reports = []
         for item in list_reports:
-            if type(item) is not str:
-                format_check = await self.check_format(item[0])
+            if isinstance(item, dict):
+                format_check = await self.check_format(item["report"])
             else:
                 format_check = await self.check_format(item)
             if format_check:
@@ -78,11 +78,7 @@ class RankingAgent(Agent):
             else:
                 reports = list_reports
         response = await self.ranking(reports, query)
-        if type(response) is not str:
-            best_report = response[0]
-        else:
-            best_report = response
-        await self._callback_manager.on_tool_end(agent=self, tool=self.ranking, response=best_report)
+        await self._callback_manager.on_tool_end(agent=self, tool=self.ranking, response=response)
         return reports, response
 
     async def check_format(self, report):

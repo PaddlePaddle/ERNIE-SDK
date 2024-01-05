@@ -110,6 +110,9 @@ def get_tools(llm, llm_long):
 def get_agents(retriever_sets, tool_sets, llm, llm_long):
     dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
     os.makedirs(dir_path, exist_ok=True)
+
+    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
+    os.makedirs(target_path, exist_ok=True)
     research_actor = []
     for i in range(args.num_research_agent):
         agents_name = "agent_" + str(i)
@@ -125,16 +128,22 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
             task_planning_tool=tool_sets["task_planning"],
             report_writing_tool=tool_sets["report_writing"],
             outline_tool=tool_sets["outline"],
-            citation_tool=tool_sets["semantic_citation"],
             summarize_tool=tool_sets["text_summarization"],
-            faiss_name_citation=args.faiss_name_citation,
-            embeddings=retriever_sets["embeddings"],
             llm=llm,
         )
         research_actor.append(research_agent)
     editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
     reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
-    render_actor = RenderAgent(name="render", llm=llm, llm_long=llm_long)
+    render_actor = RenderAgent(
+        name="render",
+        llm=llm,
+        llm_long=llm_long,
+        citation_tool=tool_sets["semantic_citation"],
+        faiss_name_citation=args.faiss_name_citation,
+        embeddings=retriever_sets["embeddings"],
+        dir_path=target_path,
+        report_type=args.report_type,
+    )
     ranker_actor = RankingAgent(
         llm=llm,
         llm_long=llm_long,
@@ -153,8 +162,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
 def main(query):
     llm_long = ERNIEBot(model="ernie-longtext")
     llm = ERNIEBot(model="ernie-4.0")
-    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
-    os.makedirs(target_path, exist_ok=True)
+
     retriever_sets = get_retrievers()
     tool_sets = get_tools(llm, llm_long)
     agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long)
@@ -164,8 +172,6 @@ def main(query):
         editor_actor=agent_sets["editor"],
         reviser_actor=agent_sets["reviser"],
         render_actor=agent_sets["render"],
-        report_type=args.report_type,
-        target_path=target_path,
     )
 
     report, file_path = asyncio.run(research_team.run(query))

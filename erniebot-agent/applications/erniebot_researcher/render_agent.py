@@ -26,7 +26,6 @@ class RenderAgent(Agent):
         citation_tool,
         embeddings,
         faiss_name_citation: str,
-        agent_name: str,
         dir_path: str,
         report_type: str,
         system_message: Optional[str] = None,
@@ -35,7 +34,6 @@ class RenderAgent(Agent):
         self.name = name
         self.llm = llm
         self.llm_long = llm_long
-        self.agent_name = agent_name
         self.report_type = report_type
         self.dir_path = dir_path
         self.embeddings = embeddings
@@ -124,7 +122,7 @@ class RenderAgent(Agent):
             final_report, path = await self.citation(
                 report=final_report,
                 meta_data=meta_data,
-                agent_name=self.agent_name,
+                agent_name=self.name,
                 report_type=self.report_type,
                 dir_path=self.dir_path,
                 citation_faiss_research=citation_search,

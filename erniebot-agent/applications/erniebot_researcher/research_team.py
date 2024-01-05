@@ -31,6 +31,13 @@ class ResearchTeam:
         for researcher in self.research_actor_instance:
             report, meta_data, paragraphs = await researcher.run(query)
             list_reports.append((report, (meta_data, paragraphs)))
+            list_reports.append(
+                {
+                    "report": report,
+                    "meta_data": meta_data,
+                    "paragraphs": paragraphs,
+                }
+            )
         if self.user_agent is not None:
             prompt = (
                 f"请你从{list_reports}个待选的多个报告草稿中，选择一个合适的报告,"
@@ -55,15 +62,18 @@ class ResearchTeam:
                 markdown_report = immedia_report
             else:
                 markdown_report = revised_report
-            respose = await self.editor_actor_instance.run(markdown_report)
-            if respose["accept"]:
+            # report, (meta_data, paragraphs)
+            response = await self.editor_actor_instance.run(markdown_report)
+            if response["accept"]:
                 break
             else:
-                revised_report = await self.revise_actor_instance.run(markdown_report, respose["notes"])
+                revised_report = await self.revise_actor_instance.run(markdown_report, response["notes"])
                 # Add revise report to the list of reports
                 list_reports.append(revised_report)
-        if type(revised_report) is not str:
-            revised_report, path = await self.render_actor_instance.run(
-                report=revised_report[0], meta_data=revised_report[1][0], summarize=revised_report[1][1]
-            )
+
+        revised_report, path = await self.render_actor_instance.run(
+            report=revised_report["report"],
+            meta_data=revised_report["meta_data"],
+            summarize=revised_report["paragraphs"],
+        )
         return revised_report, path

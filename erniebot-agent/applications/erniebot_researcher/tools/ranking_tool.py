@@ -65,8 +65,8 @@ class TextRankingTool(Tool):
         elif len(reports) > 1:
             scores_all = []
             for item in reports:
-                if type(item) is not str:
-                    content = rank_report_prompt(report=item[0], query=query)
+                if isinstance(item, dict):
+                    content = rank_report_prompt(report=item["report"], query=query)
                 else:
                     content = rank_report_prompt(report=item, query=query)
                 messages = [HumanMessage(content)]

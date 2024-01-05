@@ -86,8 +86,8 @@ class EditorActorAgent(Agent):
         return agent_resp
 
     async def _run(self, report):
-        if type(report) is not str:
-            report = report[0]
+        if isinstance(report, dict):
+            report = report["report"]
         content = self.prompt.format(report=report)
         messages = [HumanMessage(content)]
         retry_count = 0
