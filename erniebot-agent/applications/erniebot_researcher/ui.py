@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import hashlib
-import logging
 import os
 
 import gradio as gr
@@ -19,12 +18,13 @@ from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, build_index
+from tools.utils import FaissSearch, ReportCallbackHandler, build_index
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.memory import SystemMessage
 from erniebot_agent.retrieval import BaizhongSearch
+from erniebot_agent.utils.logging import setup_logging
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
@@ -59,7 +59,10 @@ parser.add_argument("--log_path", type=str, default="log.txt")
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
-logging.basicConfig(filename=args.log_path, level=logging.INFO)
+os.environ["EB_AGENT_LOGGING_FILE"] = args.log_path
+# sh = logging.StreamHandler()
+# logging.basicConfig(filename=args.log_path, level=logging.INFO)
+logger = setup_logging(use_fileformatter=False)
 
 
 def get_logs(path=args.log_path):
@@ -123,21 +126,32 @@ def generate_report(query, history=[]):
             outline_tool=outline_generation_tool,
             summarize_tool=summarization_tool,
             llm=llm,
+            callbacks=ReportCallbackHandler(logger=logger),
         )
         research_actor.append(research_agent)
-    editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
-    reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
-    ranker_actor = RankingAgent(name="ranker", ranking_tool=ranking_tool, llm=llm, llm_long=llm_long)
+    editor_actor = EditorActorAgent(
+        name="editor", llm=llm, llm_long=llm_long, callbacks=ReportCallbackHandler(logger=logger)
+    )
+    reviser_actor = ReviserActorAgent(
+        name="reviser", llm=llm, llm_long=llm_long, callbacks=ReportCallbackHandler(logger=logger)
+    )
+    ranker_actor = RankingAgent(
+        name="ranker",
+        ranking_tool=ranking_tool,
+        llm=llm,
+        llm_long=llm_long,
+        callbacks=ReportCallbackHandler(logger=logger),
+    )
     render_actor = RenderAgent(
         name="render",
         llm=llm,
         llm_long=llm_long,
         faiss_name_citation=args.faiss_name_citation,
         embeddings=embeddings,
-        agent_name=agents_name,
         dir_path=target_path,
         report_type=args.report_type,
         citation_tool=semantic_citation_tool,
+        callbacks=ReportCallbackHandler(logger=logger),
     )
     team_actor = ResearchTeam(
         ranker_actor=ranker_actor,
@@ -145,6 +159,7 @@ def generate_report(query, history=[]):
         editor_actor=editor_actor,
         reviser_actor=reviser_actor,
         render_actor=render_actor,
+        use_reflection=True,
     )
     report, path = asyncio.run(team_actor.run(query))
     return report, path

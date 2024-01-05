@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
@@ -54,9 +54,9 @@ class RankingAgent(Agent, JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, list_reports: List[str], query: str) -> AgentResponse:
-        await self._callback_manager.on_run_start(agent=self, prompt=query)
-        agent_resp = await self._run(query, list_reports)
+    async def run(self, list_reports: List[Union[str, dict]], query: str) -> AgentResponse:
+        await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=query)
+        agent_resp = await self._run(query=query, list_reports=list_reports)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 

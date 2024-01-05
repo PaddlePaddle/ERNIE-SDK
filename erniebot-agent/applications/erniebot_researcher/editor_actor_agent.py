@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Optional
+from typing import Optional, Union
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
@@ -78,13 +78,15 @@ class EditorActorAgent(Agent, JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: str) -> AgentResponse:
-        await self._callback_manager.on_run_start(agent=self, prompt=report)
+    async def run(self, report: Union[str, dict]) -> AgentResponse:
+        if type(report) == dict:
+            report = report["report"]
+        await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=report)
         agent_resp = await self._run(report)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    async def _run(self, report):
+    async def _run(self, report: Union[dict, str]):
         if isinstance(report, dict):
             report = report["report"]
         content = self.prompt.format(report=report)
