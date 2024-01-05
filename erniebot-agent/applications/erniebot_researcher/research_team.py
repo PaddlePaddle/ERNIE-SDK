@@ -81,7 +81,7 @@ class ResearchTeam:
                     raise Exception("Current report is not good to optimize.")
             elif len(list_reports) == 1:
                 immedia_report = list_reports[0]
-                
+
             revised_report = immedia_report
 
         revised_report, path = await self.render_actor_instance.run(
