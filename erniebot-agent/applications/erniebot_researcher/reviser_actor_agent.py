@@ -4,6 +4,7 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
@@ -36,7 +37,7 @@ class ReviserActorAgent(Agent):
         self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
         if callbacks is None:
-            self._callback_manager = ReportCallbackHandler()
+            self._callback_manager = CallbackManager([ReportCallbackHandler()])
         else:
             self._callback_manager = callbacks
 
@@ -47,7 +48,6 @@ class ReviserActorAgent(Agent):
         return agent_resp
 
     async def _run(self, draft, notes):
-        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt="")
         notes = str(draft).replace("{", "").replace("}", "")
         content = self.prompt_template.format(draft=draft, notes=notes).replace(". ", ".")
         messages = [HumanMessage(content)]
@@ -59,7 +59,6 @@ class ReviserActorAgent(Agent):
                 else:
                     response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
-                await self._callback_manager.on_run_end(self, agent_name=self.name, response=report)
                 return report
             except Exception as e:
                 retry_count += 1
@@ -67,5 +66,5 @@ class ReviserActorAgent(Agent):
                     logger.error("LLM error")
                     break
                 logger.error(e)
-                await self._callback_manager.on_run_error(self.name, str(e))
+                await self._callback_manager.on_llm_error(self, self.llm, e)
                 continue

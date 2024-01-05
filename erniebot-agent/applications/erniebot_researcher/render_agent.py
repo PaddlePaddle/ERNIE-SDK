@@ -5,6 +5,7 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
@@ -48,7 +49,7 @@ class RenderAgent(Agent):
             template=self.template_polish, input_variables=["content"]
         )
         if callbacks is None:
-            self._callback_manager = ReportCallbackHandler()
+            self._callback_manager = CallbackManager([ReportCallbackHandler()])
         else:
             self._callback_manager = callbacks
 
@@ -59,7 +60,6 @@ class RenderAgent(Agent):
         return agent_resp
 
     async def _run(self, report):
-        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt=report)
         while True:
             try:
                 content = self.prompt_template_abstract.format(report=report)
@@ -78,7 +78,7 @@ class RenderAgent(Agent):
                     key = "，".join(key)
                 break
             except Exception as e:
-                await self._callback_manager.on_run_error(self.name + "生成摘要和关键词功能", str(e))
+                await self._callback_manager.on_llm_error(self, self.llm, e)
                 continue
         report_list = report.split("\n\n")
         if "#" in report_list[0] and "##" in report_list[1]:
@@ -101,7 +101,6 @@ class RenderAgent(Agent):
                         paragraphs.append(reponse.content)
                     content = ""
                     paragraphs.append(item)
-            await self._callback_manager.on_run_end(self.name, "\n\n".join(paragraphs))
             return "\n\n".join(paragraphs)
         else:
             raise Exception("Report format error")

@@ -6,6 +6,7 @@ from typing import Optional
 from tools.utils import ReportCallbackHandler
 
 from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
@@ -72,7 +73,7 @@ class EditorActorAgent(Agent):
         self.llm_long = llm_long
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])
         if callbacks is None:
-            self._callback_manager = ReportCallbackHandler()
+            self._callback_manager = CallbackManager([ReportCallbackHandler()])
         else:
             self._callback_manager = callbacks
 
@@ -83,7 +84,6 @@ class EditorActorAgent(Agent):
         return agent_resp
 
     async def _run(self, report):
-        await self._callback_manager.on_run_start(self, agent_name=self.name, prompt=report)
         content = self.prompt.format(report=report)
         messages = [HumanMessage(content)]
         retry_count = 0
@@ -109,11 +109,10 @@ class EditorActorAgent(Agent):
                     suggestions = json.loads(suggestions)
                 if "accept" not in suggestions and "notes" not in suggestions:
                     raise Exception("accept and notes key do not exist")
-                await self._callback_manager.on_run_end(self, agent_name=self.name, response=suggestions)
                 return suggestions
             except Exception as e:
                 logger.error(e)
-                await self._callback_manager.on_run_error(self.name, error_information=str(e))
+                await self._callback_manager.on_llm_error(self, self.llm, error=e)
                 retry_count += 1
                 time.sleep(0.5)
                 if retry_count > MAX_RETRY:

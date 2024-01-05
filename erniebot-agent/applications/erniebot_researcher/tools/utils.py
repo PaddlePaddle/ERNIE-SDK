@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import urllib.parse
+from typing import Union
 
 import jsonlines
 from langchain.docstore.document import Document
@@ -41,31 +42,40 @@ class ReportCallbackHandler(LoggingHandler):
             "%s %s finished running.", agent.__class__.__name__, agent_name, subject="Run", state="End"
         )
 
-    async def on_tool_start(self, agent: BaseAgent, tool: BaseTool, input_args: str) -> None:
+    async def on_tool_start(self, agent: BaseAgent, tool: Union[BaseTool, str], input_args: str) -> None:
         if isinstance(input_args, (dict, list)):
             js_inputs = json.dumps(input_args, ensure_ascii=False)
         elif isinstance(input_args, str):
             js_inputs = input_args
         else:
             js_inputs = to_pretty_json(input_args, from_json=True)
-        js_inputs = input_args
+        if isinstance(tool, BaseTool):
+            tool_name = tool.__class__.__name__
+        else:
+            tool_name = tool
         self._agent_info(
             "%s is about to start running with input:\n%s",
-            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(tool_name, role="function"),
             ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="Start",
         )
 
-    async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
+    async def on_tool_end(
+        self, agent: BaseAgent, tool: Union[BaseTool, str], response: ToolResponse
+    ) -> None:
         """Called to log when a tool ends running."""
         if isinstance(response, (dict, list)):
             js_inputs = json.dumps(response, ensure_ascii=False)
         else:
             js_inputs = to_pretty_json(response, from_json=True)
+        if isinstance(tool, BaseTool):
+            tool_name = tool.__class__.__name__
+        else:
+            tool_name = tool
         self._agent_info(
             "%s finished running with output:\n%s",
-            ColoredContent(tool.__class__.__name__, role="function"),
+            ColoredContent(tool_name, role="function"),
             ColoredContent(js_inputs, role="function"),
             subject="Tool",
             state="End",

@@ -84,8 +84,8 @@ class CallbackManager(object):
     ) -> None:
         await self._handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 
-    async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
-        await self._handle_event(EventType.RUN_END, agent=agent, response=response)
+    async def on_run_end(self, agent: BaseAgent, response: AgentResponse, **kwargs) -> None:
+        await self._handle_event(EventType.RUN_END, agent=agent, response=response, **kwargs)
 
     async def _handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
         callback_name = "on_" + event_type.value

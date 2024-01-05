@@ -175,15 +175,13 @@ class ResearchAgent:
                 paragraphs.append(item)
         # 1. 摘要 ==> 1.摘要 for avoiding erniebot request error
         research_summary = "\n\n".join([str(i) for i in paragraphs]).replace(". ", ".")
-        outline = None
 
         await self._callback_manager.on_tool_start(agent=self, tool=self.outline, input_args=sub_queries)
         # Generate Outline
+        outline = None
         if self.use_outline:
             outline = await self.outline(sub_queries, query)
-            await self._callback_manager.on_run_tool(tool_name=self.outline.description, response=outline)
-        else:
-            outline = None
+
         await self._callback_manager.on_tool_end(self, tool=self.outline, response=outline)
 
         await self._callback_manager.on_tool_start(agent=self, tool=self.report_writing, input_args=query)
@@ -209,11 +207,17 @@ class ResearchAgent:
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
 
-        await self._callback_manager.on_tool_end(self, tool=self.report_writing, response=report)
+        await self._callback_manager.on_tool_end(
+            self, tool=self.report_writing, response={"report": report, "url_index": url_index}
+        )
         # Generate Citations
+        await self._callback_manager.on_tool_start(agent=self, tool=self.citation, input_args=report)
         citation_search = add_citation(paragraphs, self.faiss_name_citation, self.embeddings)
         final_report, path = await self.citation(
             report, url_index, self.agent_name, self.report_type, self.dir_path, citation_search
+        )
+        await self._callback_manager.on_tool_end(
+            self, tool=self.citation, response={"report": final_report, "path": path}
         )
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
         return final_report, path
