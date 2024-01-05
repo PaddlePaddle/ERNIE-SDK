@@ -2,13 +2,13 @@ import json
 import logging
 from typing import Optional
 
-from tools.utils import ReportCallbackHandler
+from tools.utils import ReportCallbackHandler, add_citation, write_md_to_pdf
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -23,12 +23,24 @@ class RenderAgent(Agent):
         name: str,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
-        system_message: Optional[SystemMessage] = None,
+        citation_tool,
+        embeddings,
+        faiss_name_citation: str,
+        agent_name: str,
+        dir_path: str,
+        report_type: str,
+        system_message: Optional[str] = None,
         callbacks=None,
     ):
         self.name = name
         self.llm = llm
         self.llm_long = llm_long
+        self.agent_name = agent_name
+        self.report_type = report_type
+        self.dir_path = dir_path
+        self.embeddings = embeddings
+        self.citation = citation_tool
+        self.faiss_name_citation = faiss_name_citation
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
@@ -53,13 +65,13 @@ class RenderAgent(Agent):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: str) -> AgentResponse:
+    async def run(self, report: str, summarize=None, meta_data=None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=report)
-        agent_resp = await self._run(report)
+        agent_resp = await self._run(report, summarize, meta_data)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    async def _run(self, report):
+    async def _run(self, report, summarize=None, meta_data=None):
         while True:
             try:
                 content = self.prompt_template_abstract.format(report=report)
@@ -81,12 +93,11 @@ class RenderAgent(Agent):
                 await self._callback_manager.on_llm_error(self, self.llm, e)
                 continue
         report_list = report.split("\n\n")
-        if "#" in report_list[0] and "##" in report_list[1]:
-            paragraphs = []
-            title = report_list[0]
-            paragraphs.append(title)
-            paragraphs.append("**摘要** " + abstract)
-            paragraphs.append("**关键词** " + key)
+        if "#" in report_list[0]:
+            paragraphs = [report_list[0]]
+            if "##" in report_list[1]:
+                paragraphs.append("**摘要** " + abstract)
+                paragraphs.append("**关键词** " + key)
             content = ""
             for item in report_list[1:]:
                 if "#" not in item:
@@ -101,6 +112,24 @@ class RenderAgent(Agent):
                         paragraphs.append(reponse.content)
                     content = ""
                     paragraphs.append(item)
-            return "\n\n".join(paragraphs)
+
+            # Generate Citations
+            final_report = "\n\n".join(paragraphs)
         else:
-            raise Exception("Report format error")
+            logging.error("Report format error, unable to add abstract and keywords")
+            final_report = report
+        await self._callback_manager.on_tool_start(self, tool=self.citation, input_args=final_report)
+        if summarize is not None and meta_data is not None:
+            citation_search = add_citation(summarize, self.faiss_name_citation, self.embeddings)
+            final_report, path = await self.citation(
+                report=final_report,
+                meta_data=meta_data,
+                agent_name=self.agent_name,
+                report_type=self.report_type,
+                dir_path=self.dir_path,
+                citation_faiss_research=citation_search,
+            )
+        else:
+            path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
+        await self._callback_manager.on_tool_end(self, tool=self.citation, response=final_report)
+        return final_report, path

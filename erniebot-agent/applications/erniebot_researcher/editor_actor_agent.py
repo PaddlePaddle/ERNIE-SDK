@@ -18,6 +18,8 @@ EB_EDIT_TEMPLATE = """你是一名编辑。
 你被指派任务编辑以下草稿，该草稿由一名非专家撰写。
 如果这份草稿足够好以供发布，请接受它，或者将它发送进行修订，同时附上指导修订的笔记。
 你应该检查以下事项：
+- 这份草稿第一行必须是题目，第二行是一级标题。
+- 这份草稿的题目前面必须要有#，保证markdown格式正确。
 - 这份草稿必须充分回答原始问题。
 - 这份草稿必须按照APA格式编写。
 - 这份草稿必须不包含低级的句法错误。
@@ -84,6 +86,8 @@ class EditorActorAgent(Agent):
         return agent_resp
 
     async def _run(self, report):
+        if type(report) is not str:
+            report = report[0]
         content = self.prompt.format(report=report)
         messages = [HumanMessage(content)]
         retry_count = 0
