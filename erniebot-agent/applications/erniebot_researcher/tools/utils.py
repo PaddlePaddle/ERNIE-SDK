@@ -43,7 +43,7 @@ class ReportCallbackHandler(LoggingHandler):
         )
 
     async def on_tool_start(self, agent: BaseAgent, tool: Union[BaseTool, str], input_args: str) -> None:
-        if isinstance(input_args, (dict, list)):
+        if isinstance(input_args, (dict, list, tuple)):
             js_inputs = json.dumps(input_args, ensure_ascii=False)
         elif isinstance(input_args, str):
             js_inputs = input_args
@@ -65,7 +65,7 @@ class ReportCallbackHandler(LoggingHandler):
         self, agent: BaseAgent, tool: Union[BaseTool, str], response: ToolResponse
     ) -> None:
         """Called to log when a tool ends running."""
-        if isinstance(response, (dict, list)):
+        if isinstance(response, (dict, list, tuple)):
             js_inputs = json.dumps(response, ensure_ascii=False)
         else:
             js_inputs = to_pretty_json(response, from_json=True)
