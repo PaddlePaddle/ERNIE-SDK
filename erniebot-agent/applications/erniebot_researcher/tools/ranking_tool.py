@@ -65,7 +65,10 @@ class TextRankingTool(Tool):
         elif len(reports) > 1:
             scores_all = []
             for item in reports:
-                content = rank_report_prompt(report=item, query=query)
+                if type(item) is not str:
+                    content = rank_report_prompt(report=item[0], query=query)
+                else:
+                    content = rank_report_prompt(report=item, query=query)
                 messages = [HumanMessage(content)]
                 retry_count = 0
                 while True:

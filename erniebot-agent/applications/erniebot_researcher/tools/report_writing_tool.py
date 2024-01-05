@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
-from collections import OrderedDict
-from typing import Optional, Type
+from typing import Type
 
 from pydantic import Field
 
@@ -12,16 +10,7 @@ from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-
-def generate_reference(meta_dict):
-    json_format = """{
-            "参考文献": [
-                {
-                "标题": "文章标题",
-                "链接": "文章链接",
-                }]
-            }"""
-    return f"{meta_dict},根据上面的数据，生成报告的参考文献，请严格按照如下【JSON格式】的形式输出:" + json_format
+from .utils import write_md_to_pdf
 
 
 def generate_report_prompt(question, research_summary, outline=None):
@@ -37,7 +26,8 @@ def generate_report_prompt(question, research_summary, outline=None):
         使用上述信息，详细报告回答以下问题或主题{{question}}
         -----
         报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在2400字，并采用Markdown语法和APA格式。
-        注意报告标题前面必须有'#'
+        注意报告标题前面必须有'#'。
+        请注意生成的报告第一行必须是题目，第二行必须是一级标题。题目和一级标题之间没有其它内容。
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
         """
@@ -54,7 +44,8 @@ def generate_report_prompt(question, research_summary, outline=None):
         详细报告回答以下问题或主题{{question}}
         -----
         报告应专注于回答问题，结构良好，内容丰富，包括事实和数字（如果有的话），字数控制在2400字，并采用Markdown语法和APA格式。
-        注意报告标题前面必须有'#'
+        注意报告标题前面必须有'#'。
+        请注意生成的报告第一行必须是题目，第二行必须是一级标题。题目和一级标题之间没有其它内容。
         您必须基于给定信息确定自己的明确和有效观点。不要得出一般和无意义的结论。
         在报告末尾以APA格式列出所有使用的来源URL。
         """
@@ -137,7 +128,8 @@ class ReportWritingTool(Tool):
         research_summary: str,
         report_type: str,
         agent_role_prompt: str,
-        meta_data: Optional[OrderedDict] = None,
+        agent_name: str,
+        dir_path: str,
         outline=None,
         **kwargs,
     ):
@@ -148,34 +140,5 @@ class ReportWritingTool(Tool):
         final_report = response.content
         if final_report == "":
             raise Exception("报告生成错误")
-        meta_data_json = json.dumps(meta_data, ensure_ascii=False)
-        # Manually Add reference on the bottom
-        if "参考文献" not in final_report:
-            final_report += "\n\n## 参考文献 \n"
-            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
-            response = await self.llm.chat(messages)
-            result = response.content
-            start_idx = result.index("{")
-            end_idx = result.rindex("}")
-            corrected_data = result[start_idx : end_idx + 1]
-            response = json.loads(corrected_data)
-            for i, item in enumerate(response["参考文献"]):
-                final_report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
-        elif "参考文献" in final_report[-500:]:
-            idx = final_report.index("参考文献")
-            final_report = final_report[:idx]
-            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
-            response = await self.llm.chat(messages)
-            result = response.content
-            start_idx = result.index("{")
-            end_idx = result.rindex("}")
-            corrected_data = result[start_idx : end_idx + 1]
-            response = json.loads(corrected_data)
-            for i, item in enumerate(response["参考文献"]):
-                final_report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
-        url_index = {}
-        if meta_data:
-            for index, (key, val) in enumerate(meta_data.items()):
-                url_index[val] = {"name": key, "index": index + 1}
-        # final_report = postprocess(final_report)
-        return final_report, url_index
+        path = write_md_to_pdf(agent_name + "__" + report_type, dir_path, final_report)
+        return final_report, path

@@ -16,8 +16,7 @@ TOKEN_MAX_LENGTH = 4200
 
 class ReviserActorAgent(Agent):
     DEFAULT_SYSTEM_MESSAGE = """你是一名专业作家。你已经受到编辑的指派，需要修订以下草稿，该草稿由一名非专家撰写。你可以选择是否遵循编辑的备注，视情况而定。
-            使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。url链接需要保留，不应该改变
-            """
+    使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。url链接需要保留，不应该改变"""
 
     def __init__(
         self,
@@ -33,7 +32,7 @@ class ReviserActorAgent(Agent):
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
         self.llm_long = llm_long
-        self.template = "草稿:\n\n{{draft}}" + "编辑的备注:\n\n{{notes}}"
+        self.template = "现在给你草稿的内容\n草稿：\n{{draft}}" + "\n请你按照编辑的备注来修改下面的草稿，现在给你编辑的备注：\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
         if callbacks is None:
             self._callback_manager = ReportCallbackHandler()
@@ -47,9 +46,13 @@ class ReviserActorAgent(Agent):
         return agent_resp
 
     async def _run(self, draft, notes):
+        breakpoint()
         await self._callback_manager.on_run_start(self, agent_name=self.name, prompt="")
-        notes = str(draft).replace("{", "").replace("}", "")
-        content = self.prompt_template.format(draft=draft, notes=notes).replace(". ", ".")
+        notes = str(notes).replace("{", "").replace("}", "")
+        if type(draft) is not str:
+            content = self.prompt_template.format(draft=draft[0], notes=notes).replace(". ", ".")
+        else:
+            content = self.prompt_template.format(draft=draft, notes=notes).replace(". ", ".")
         messages = [HumanMessage(content)]
         retry_count = 0
         while True:
@@ -60,12 +63,13 @@ class ReviserActorAgent(Agent):
                     response = await self.llm.chat(messages=messages, system=self.system_message)
                 report = response.content
                 await self._callback_manager.on_run_end(self, agent_name=self.name, response=report)
+                if type(draft) is not str:
+                    report = (report, draft[1])
                 return report
             except Exception as e:
                 retry_count += 1
                 if retry_count > MAX_RETRY:
                     logger.error("LLM error")
-                    break
-                logger.error(e)
+                    return draft
                 await self._callback_manager.on_run_error(self.name, str(e))
                 continue

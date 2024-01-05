@@ -10,6 +10,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from ranking_agent import RankingAgent
 from render_agent import RenderAgent
 from research_agent import ResearchAgent
+from research_team import ResearchTeam
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
@@ -18,10 +19,11 @@ from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, build_index, write_md_to_pdf
+from tools.utils import FaissSearch, build_index
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
+from erniebot_agent.memory import SystemMessage
 from erniebot_agent.retrieval import BaizhongSearch
 
 parser = argparse.ArgumentParser()
@@ -110,7 +112,7 @@ def generate_report(query, history=[]):
         research_agent = ResearchAgent(
             name="generate_report",
             agent_name=agents_name,
-            system_message="你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿",
+            system_message=SystemMessage("你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿"),
             dir_path=dir_path,
             report_type=args.report_type,
             retriever_abstract_tool=abstract_search,
@@ -119,40 +121,33 @@ def generate_report(query, history=[]):
             task_planning_tool=task_planning_tool,
             report_writing_tool=report_writing_tool,
             outline_tool=outline_generation_tool,
-            citation_tool=semantic_citation_tool,
             summarize_tool=summarization_tool,
-            faiss_name_citation=args.faiss_name_citation,
-            embeddings=embeddings,
             llm=llm,
         )
         research_actor.append(research_agent)
     editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
     reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
     ranker_actor = RankingAgent(name="ranker", ranking_tool=ranking_tool, llm=llm, llm_long=llm_long)
-    render_actor = RenderAgent(name="render", llm=llm, llm_long=llm_long)
-    list_reports = []
-    for researcher in research_actor:
-        report, _ = asyncio.run(researcher.run(query))
-        list_reports.append(report)
-    for i in range(args.iterations):
-        if len(list_reports) > 1:
-            list_reports, immedia_report = asyncio.run(ranker_actor._run(query, list_reports))
-        else:
-            immedia_report = list_reports[0]
-        revised_report = immedia_report
-        if i == 0:
-            markdown_report = immedia_report
-        else:
-            markdown_report = revised_report
-        respose = asyncio.run(editor_actor._run(markdown_report))
-        if respose["accept"] is True or respose["accept"] == "true":
-            break
-        else:
-            revised_report = asyncio.run(reviser_actor._run(markdown_report, respose["notes"]))
-            list_reports.append(revised_report)
-    polish_report = asyncio.run(render_actor._run(revised_report))
-    path = write_md_to_pdf(args.report_type, target_path, polish_report)
-    return revised_report, path
+    render_actor = RenderAgent(
+        name="render",
+        llm=llm,
+        llm_long=llm_long,
+        faiss_name_citation=args.faiss_name_citation,
+        embeddings=embeddings,
+        agent_name=agents_name,
+        dir_path=target_path,
+        report_type=args.report_type,
+        citation_tool=semantic_citation_tool,
+    )
+    team_actor = ResearchTeam(
+        ranker_actor=ranker_actor,
+        research_actor=research_actor,
+        editor_actor=editor_actor,
+        reviser_actor=reviser_actor,
+        render_actor=render_actor,
+    )
+    report, path = asyncio.run(team_actor.run(query))
+    return report, path
 
 
 def launch_ui():

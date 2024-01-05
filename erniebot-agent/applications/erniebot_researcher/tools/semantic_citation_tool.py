@@ -1,11 +1,27 @@
 import logging
 import string
+from collections import OrderedDict
 from typing import Optional, Type
 
 from pydantic import Field
 
+from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
+
+
+def generate_reference(meta_dict):
+    json_format = """{
+            "参考文献": [
+                {
+                "标题": "文章标题",
+                "链接": "文章链接",
+                }]
+            }"""
+    return f"{meta_dict},根据上面的数据，生成报告的参考文献，请严格按照如下【JSON格式】的形式输出:" + json_format
+
+
+import json
 
 from .utils import write_md_to_pdf
 
@@ -36,21 +52,50 @@ class SemanticCitationTool(Tool):
 
     async def __call__(
         self,
-        reports: str,
-        url_index: dict,
+        report: str,
         agent_name: str,
         report_type: str,
         dir_path: str,
         citation_faiss_research,
+        meta_data: Optional[OrderedDict] = None,
         theta_min: Optional[float] = None,
         theta_max: Optional[float] = None,
         **kwargs,
     ):
+        # Manually Add reference on the bottom
+        meta_data_json = json.dumps(meta_data, ensure_ascii=False)
+        if "参考文献" not in report:
+            report += "\n\n## 参考文献 \n"
+            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
+            response = await self.llm.chat(messages)
+            result = response.content
+            start_idx = result.index("{")
+            end_idx = result.rindex("}")
+            corrected_data = result[start_idx : end_idx + 1]
+            response = json.loads(corrected_data)
+            for i, item in enumerate(response["参考文献"]):
+                report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
+        elif "参考文献" in report[-500:]:
+            idx = report.index("参考文献")
+            report = report[:idx]
+            messages = [HumanMessage(content=generate_reference(meta_data_json).replace(". ", "."))]
+            response = await self.llm.chat(messages)
+            result = response.content
+            start_idx = result.index("{")
+            end_idx = result.rindex("}")
+            corrected_data = result[start_idx : end_idx + 1]
+            response = json.loads(corrected_data)
+            for i, item in enumerate(response["参考文献"]):
+                report += f"{i+1}. {item['标题']} [链接]({item['链接']})\n"
         if theta_min:
             self.theta_min = theta_min
+        url_index = {}
+        if meta_data:
+            for index, (key, val) in enumerate(meta_data.items()):
+                url_index[val] = {"name": key, "index": index + 1}
         if theta_max:
             self.theta_max = theta_max
-        list_data = reports.split("\n\n")
+        list_data = report.split("\n\n")
         output_text = []
         for chunk_text in list_data:
             if "参考文献" in chunk_text:
