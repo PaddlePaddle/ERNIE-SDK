@@ -158,6 +158,7 @@ def setup_logging(
     use_standard_format: bool = True,
     use_file_handler: bool = False,
     max_log_length: int = 100,
+    use_fileformatter: bool = True,
 ) -> None:
     """Configures logging for the ERNIE Bot Agent library.
 
@@ -194,7 +195,11 @@ def setup_logging(
             log_file_path = "erniebot-agent.log"
         if use_file_handler or log_file_path:
             file_handler = logging.FileHandler(log_file_path)
-            file_handler.setFormatter(FileFormatter("%(message)s"))
+            if use_fileformatter:
+                file_handler.setFormatter(FileFormatter("%(message)s"))
+            else:
+                file_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
             logger.addHandler(file_handler)
 
         ColoredContent.set_global_max_length(max_log_length)
+    return logger

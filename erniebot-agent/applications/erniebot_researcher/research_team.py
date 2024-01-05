@@ -29,11 +29,10 @@ class ResearchTeam:
     async def run(self, query, iterations=3):
         list_reports = []
         for researcher in self.research_actor_instance:
-            report, meta_data, paragraphs = await researcher.run(query)
+            report, paragraphs = await researcher.run(query)
             list_reports.append(
                 {
                     "report": report,
-                    "meta_data": meta_data,
                     "paragraphs": paragraphs,
                 }
             )
@@ -61,7 +60,6 @@ class ResearchTeam:
                 markdown_report = immedia_report
             else:
                 markdown_report = revised_report
-            # report, (meta_data, paragraphs)
             response = await self.editor_actor_instance.run(markdown_report)
             if response["accept"]:
                 break
@@ -72,7 +70,6 @@ class ResearchTeam:
 
         revised_report, path = await self.render_actor_instance.run(
             report=revised_report["report"],
-            meta_data=revised_report["meta_data"],
             summarize=revised_report["paragraphs"],
         )
         return revised_report, path

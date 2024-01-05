@@ -63,13 +63,13 @@ class RenderAgent(Agent, JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: str, summarize=None, meta_data=None) -> AgentResponse:
+    async def run(self, report: str, summarize=None) -> AgentResponse:
         await self._callback_manager.on_run_start(agent=self, prompt=report)
-        agent_resp = await self._run(report, summarize, meta_data)
+        agent_resp = await self._run(report, summarize)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    async def _run(self, report, summarize=None, meta_data=None):
+    async def _run(self, report, summarize=None):
         while True:
             try:
                 content = self.prompt_template_abstract.format(report=report)
@@ -88,7 +88,7 @@ class RenderAgent(Agent, JsonUtil):
             except Exception as e:
                 await self._callback_manager.on_llm_error(self, self.llm, e)
                 continue
-        report_list = report.split("\n\n")
+        report_list = [item for item in report.split("\n\n") if item.strip() != ""]
         if "#" in report_list[0]:
             paragraphs = [report_list[0]]
             if "##" in report_list[1]:
@@ -135,17 +135,15 @@ class RenderAgent(Agent, JsonUtil):
             logging.error("Report format error, unable to add abstract and keywords")
             final_report = report
         await self._callback_manager.on_tool_start(self, tool=self.citation, input_args=final_report)
-        if summarize is not None and meta_data is not None:
+        if summarize is not None:
             citation_search = add_citation(summarize, self.faiss_name_citation, self.embeddings)
             final_report, path = await self.citation(
                 report=final_report,
-                meta_data=meta_data,
                 agent_name=self.name,
                 report_type=self.report_type,
                 dir_path=self.dir_path,
                 citation_faiss_research=citation_search,
             )
-        else:
-            path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
+        path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
         await self._callback_manager.on_tool_end(self, tool=self.citation, response={"report": final_report})
         return final_report, path

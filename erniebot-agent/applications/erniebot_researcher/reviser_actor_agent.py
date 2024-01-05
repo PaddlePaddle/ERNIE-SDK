@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from tools.utils import ReportCallbackHandler
 
@@ -40,8 +40,11 @@ class ReviserActorAgent(Agent):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, draft: str, notes: str) -> AgentResponse:
-        await self._callback_manager.on_run_start(agent=self, prompt=draft)
+    async def run(self, draft: Union[str, dict], notes: str) -> AgentResponse:
+        if type(draft) == dict:
+            await self._callback_manager.on_run_start(agent=self, prompt=draft["report"])
+        else:
+            await self._callback_manager.on_run_start(agent=self, prompt=draft)
         agent_resp = await self._run(draft, notes)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
