@@ -74,7 +74,6 @@ pip install --upgrade erniebot-agent[all]
 
 ```python
 import asyncio
-import os
 
 from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
