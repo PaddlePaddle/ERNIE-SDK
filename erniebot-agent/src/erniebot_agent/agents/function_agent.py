@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from typing import List, Optional, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
@@ -40,7 +41,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS = 5
-
+_logger = logging.getLogger(__name__)
 
 class FunctionAgent(Agent):
     """An agent driven by function calling.
@@ -118,7 +119,7 @@ class FunctionAgent(Agent):
             self._first_tools = first_tools
             for tool in self._first_tools:
                 if tool not in self.get_tools():
-                    raise RuntimeError("The first tool must be in the tools list")
+                    raise RuntimeError("The first tool must be in the tools list.")
         else:
             self._first_tools = []
 
@@ -137,8 +138,13 @@ class FunctionAgent(Agent):
             curr_step, new_messages = await self._step(chat_history, use_tool=tool)
             chat_history.extend(new_messages)
             num_steps_taken += 1
-            if not isinstance(curr_step, NoActionStep):
+            if not isinstance(curr_step, NoActionStep):                
                 steps_taken.append(curr_step)
+            else:
+                # If tool choice not work, skip this round
+                _logger.warning(f"Selected tool [{tool.tool_name}] not work")
+                chat_history.pop()
+
 
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)

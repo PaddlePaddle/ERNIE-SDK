@@ -53,6 +53,11 @@ def tool():
 def llm():
     return ERNIEBot(model="ernie-3.5")
 
+@pytest.mark.asyncio
+async def test_tool_choice_not_exist(llm, tool):
+    with pytest.raises(RuntimeError) as exc_info:
+        FunctionAgent(llm=llm, first_tools=[tool], tools=[])
+    assert str(exc_info.value) == "The first tool must be in the tools list."
 
 @pytest.mark.asyncio
 async def test_function_agent_run_tool_choice(llm, tool):
