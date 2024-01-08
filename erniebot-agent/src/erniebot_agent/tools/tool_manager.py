@@ -17,7 +17,7 @@ import functools
 import json
 import types
 from dataclasses import asdict
-from typing import Callable, Dict, List, final
+from typing import Callable, Dict, Iterable, List, final
 
 from erniebot_agent.tools.base import BaseTool, Tool
 
@@ -30,7 +30,7 @@ class ToolManager(object):
     https://github.com/deepset-ai/haystack/blob/main/haystack/agents/base.py
     """
 
-    def __init__(self, tools: List[BaseTool]) -> None:
+    def __init__(self, tools: Iterable[BaseTool]) -> None:
         super().__init__()
         self._tools: Dict[str, BaseTool] = {}
         for tool in tools:

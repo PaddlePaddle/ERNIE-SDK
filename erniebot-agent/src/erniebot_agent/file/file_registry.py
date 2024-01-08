@@ -14,9 +14,9 @@
 
 from typing import Dict, Generic, List, Optional, TypeVar, final
 
-from erniebot_agent.file.base import File
+from erniebot_agent.file.base import BaseFile
 
-_T = TypeVar("_T", bound=File)
+_T = TypeVar("_T", bound=BaseFile)
 
 
 @final
