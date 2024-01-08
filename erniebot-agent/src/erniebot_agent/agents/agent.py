@@ -1,5 +1,6 @@
 import abc
 import json
+import logging
 from typing import (
     Any,
     Dict,
@@ -36,6 +37,8 @@ from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Final[Tuple[str]] = ("eChart",)
 
+_logger = logging.getLogger(__name__)
+
 
 class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     """The base class for agents.
@@ -59,7 +62,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         *,
         memory: Optional[Memory] = None,
         system: Optional[str] = None,
-        callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
+        callbacks: Optional[Union[CallbackManager, Iterable[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
     ) -> None:
@@ -225,7 +228,12 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             if reserved_opt in opts:
                 raise TypeError(f"`{reserved_opt}` should not be set.")
         functions = self._tool_manager.get_tool_schemas()
-        opts["system"] = self.system_message.content if self.system_message is not None else None
+        if hasattr(self.llm, "system"):
+            _logger.warning(
+                "The `system` message has already been set in the agent;"
+                "the `system` message configured in ERNIEBot will become ineffective."
+            )
+        opts["system"] = self.system.content if self.system is not None else None
         opts["plugins"] = self._plugins
         llm_ret = await self.llm.chat(messages, stream=False, functions=functions, **opts)
         return LLMResponse(message=llm_ret)

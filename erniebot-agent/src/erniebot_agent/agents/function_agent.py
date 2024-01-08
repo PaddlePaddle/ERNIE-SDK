@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from typing import Final, Iterable, List, Optional, Sequence, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
@@ -35,8 +34,6 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS: Final[int] = 5
-
-_logger = logging.getLogger(__name__)
 
 
 class FunctionAgent(Agent):
