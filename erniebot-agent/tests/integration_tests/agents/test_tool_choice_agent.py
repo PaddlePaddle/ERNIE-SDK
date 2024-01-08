@@ -46,8 +46,6 @@ def tool():
                     "wind_speed": 20,
                 }
 
-    print(WeatherTool().function_call_schema())
-
     return WeatherTool()
 
 
