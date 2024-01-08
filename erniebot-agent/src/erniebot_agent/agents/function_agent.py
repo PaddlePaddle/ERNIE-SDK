@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 from collections import deque
 from dataclasses import dataclass, replace
 from typing import Deque, List, Optional, Tuple, Union
@@ -46,6 +47,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS = 5
+_logger = logging.getLogger(__name__)
 
 
 class FunctionAgent(Agent):
@@ -79,6 +81,7 @@ class FunctionAgent(Agent):
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
+        first_tools: Optional[List[BaseTool]] = [],
     ) -> None:
         """Initialize a function agent.
 
@@ -100,6 +103,8 @@ class FunctionAgent(Agent):
                 `plugins` to `[]` to disable the use of plugins.
             max_steps: The maximum number of steps in each agent run. If `None`,
                 use a default value.
+            first_tools: A list of tools that will be used first when running
+                the agent.
         """
         super().__init__(
             llm=llm,
@@ -116,6 +121,13 @@ class FunctionAgent(Agent):
             self.max_steps = max_steps
         else:
             self.max_steps = _MAX_STEPS
+        if first_tools:
+            self._first_tools = first_tools
+            for tool in self._first_tools:
+                if tool not in self.get_tools():
+                    raise RuntimeError("The first tool must be in the tools list.")
+        else:
+            self._first_tools = []
         self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=5)
         self._snapshot_for_curr_run: Optional[FunctionAgentRunSnapshot] = None
 
@@ -129,7 +141,6 @@ class FunctionAgent(Agent):
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         steps_taken: List[AgentStep] = []
-        num_steps_taken = 0
 
         if self._snapshot_for_curr_run is not None:
             chat_history[:] = self._snapshot_for_curr_run.chat_history
@@ -142,11 +153,23 @@ class FunctionAgent(Agent):
             )
             chat_history.append(run_input)
 
+        for tool in self._first_tools:
+            curr_step, new_messages = await self._step(chat_history, use_tool=tool)
+            chat_history.extend(new_messages)
+            num_steps_taken += 1
+            if not isinstance(curr_step, NoActionStep):
+                steps_taken.append(curr_step)
+            else:
+                # If tool choice not work, skip this round
+                _logger.warning(f"Selected tool [{tool.tool_name}] not work")
+                chat_history.pop()
+
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
             chat_history.extend(new_messages)
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
+
             if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
                 response = self._create_finished_response(chat_history, steps_taken)
                 self.memory.add_message(chat_history[0])
@@ -157,15 +180,27 @@ class FunctionAgent(Agent):
         response = self._create_stopped_response(chat_history, steps_taken)
         return response
 
-    async def _step(self, chat_history: List[Message]) -> Tuple[AgentStep, List[Message]]:
+    async def _step(
+        self, chat_history: List[Message], use_tool: Optional[BaseTool] = None
+    ) -> Tuple[AgentStep, List[Message]]:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
-        llm_resp = await self.run_llm(
-            messages=input_messages,
-            functions=self._tool_manager.get_tool_schemas(),
-            system=self.system_message.content if self.system_message is not None else None,
-            plugins=self._plugins,
-        )
+        if use_tool is not None:
+            tool_choice = {"type": "function", "function": {"name": use_tool.tool_name}}
+            llm_resp = await self.run_llm(
+                messages=input_messages,
+                functions=[use_tool.function_call_schema()],  # only regist one tool
+                system=self.system_message.content if self.system_message is not None else None,
+                plugins=self._plugins,
+                tool_choice=tool_choice,
+            )
+        else:
+            llm_resp = await self.run_llm(
+                messages=input_messages,
+                functions=self._tool_manager.get_tool_schemas(),
+                system=self.system_message.content if self.system_message is not None else None,
+                plugins=self._plugins,
+            )
         output_message = llm_resp.message  # AIMessage
         new_messages.append(output_message)
         if output_message.function_call is not None:
