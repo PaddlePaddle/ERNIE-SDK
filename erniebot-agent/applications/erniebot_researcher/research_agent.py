@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 from typing import Optional
 
 from tools.utils import JsonUtil, ReportCallbackHandler
@@ -149,11 +148,9 @@ class ResearchAgent(JsonUtil):
             )
         await self._callback_manager.on_tool_end(self, tool=self.task_planning, response=sub_queries)
         # Run Sub-Queries
-        meta_data = OrderedDict()
         paragraphs_item = []
         for sub_query in sub_queries:
             research_result, url_dict = await self.run_search_summary(sub_query)
-            meta_data.update(url_dict)
             paragraphs_item.extend(research_result)
 
         paragraphs = []
@@ -196,4 +193,4 @@ class ResearchAgent(JsonUtil):
             self, tool=self.report_writing, response={"report": report, "file_path": path}
         )
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
-        return report, meta_data, paragraphs
+        return report, paragraphs
