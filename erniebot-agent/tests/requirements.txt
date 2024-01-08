@@ -4,3 +4,5 @@ pytest-asyncio
 pytest-cov
 uvicorn
 pymupdf
+beautifulsoup4
+lxml
