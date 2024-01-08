@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from builtins import dict
+
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -14,6 +17,8 @@ def generate_report_prompt(question, research_summary, outline=None):
             research_summary (str): The research summary to generate the report prompt for
     Returns: str: The report prompt for the given question and research summary
     """
+    if isinstance(outline, dict):
+        outline = json.dumps(outline, ensure_ascii=False)
     if outline is None:
         prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
         现在给你一些信息，帮助你进行报告生成任务

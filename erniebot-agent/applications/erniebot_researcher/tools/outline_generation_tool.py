@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import List
 
+from tools.utils import JsonUtil
+
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
 
 
-class OutlineGenerationTool(Tool):
+class OutlineGenerationTool(Tool, JsonUtil):
     description: str = "text outline generation tool"
 
     def __init__(self, llm: BaseERNIEBot) -> None:
@@ -32,7 +34,5 @@ class OutlineGenerationTool(Tool):
         ]
         response = await self.llm.chat(messages=messages)
         outline = response.content
-        start_idx = outline.index("{")
-        end_idx = outline.rindex("}")
-        outline = outline[start_idx : end_idx + 1]
+        outline = self.parse_json(outline)
         return outline

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from typing import List
 
@@ -8,6 +7,8 @@ from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
+
+from .utils import JsonUtil
 
 logger = logging.getLogger(__name__)
 MAX_RETRY = 10
@@ -34,7 +35,7 @@ def rank_report_prompt(report, query):
     return strs
 
 
-class TextRankingTool(Tool):
+class TextRankingTool(Tool, JsonUtil):
     description: str = "text ranking tool"
 
     def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot) -> None:
@@ -68,10 +69,7 @@ class TextRankingTool(Tool):
                                 temperature=1e-10,
                             )
                         result = response.content
-                        l_index = result.index("{")
-                        r_index = result.rindex("}")
-                        result = result[l_index : r_index + 1]
-                        result_dict = json.loads(result)
+                        result_dict = self.parse_json(result)
                         socre = int(result_dict["报告总得分"])
                         scores_all.append(socre)
                         break

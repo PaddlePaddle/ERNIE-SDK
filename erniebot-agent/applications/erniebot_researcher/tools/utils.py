@@ -28,7 +28,6 @@ class ReportCallbackHandler(LoggingHandler):
         agent_name = kwargs.get("agent_name", None)
         if isinstance(prompt, (dict, list, tuple)):
             prompt = json.dumps(prompt, ensure_ascii=False)
-        # self.logger.info(f"{agent_name}开始运行：{prompt}")
         self._agent_info(
             "%s named %s is about to start running with input:\n%s",
             agent.__class__.__name__,
@@ -174,7 +173,7 @@ def md_to_pdf(input_file, output_file):
 def write_md_to_pdf(task: str, path: str, text: str) -> str:
     file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
-
+    # TODO：seeking better markdown to pdf converter
     # encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
     encoded_file_path = urllib.parse.quote(f"{file_path}.md")
     return encoded_file_path
