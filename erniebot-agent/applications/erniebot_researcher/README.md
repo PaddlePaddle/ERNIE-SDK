@@ -18,7 +18,7 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
 
 
 <div align="center">
-    <img src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/12107462/a265ff50-eab1-41bb-9291-6f4b6c6597cf" width="500px">
+    <img src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/12107462/12b43239-6166-4c66-a260-33ab795901d7" width="500px">
 </div>
 
 ## 应用特色
@@ -30,6 +30,7 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
 + 多个报告Agent并行生成，并保持一定的多样性。
 + 使用思维链技术对多个报告进行质量评估和排序，克服伪随机性，并选择最优的报告。
 + 使用反思机制对报告进行修订和完善。
++ 使用润色机制提升报告的整体可读性，融合更多的细节描述。
 
 **注意** 
 1. 生成一次报告需要花费10min以上，并且research agent设置的越多，消耗的时间越长，同时会消耗大量的Tokens。
