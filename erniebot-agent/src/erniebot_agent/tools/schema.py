@@ -245,6 +245,9 @@ class ToolParameterView(BaseModel):
             if "type" not in field_dict or "description" not in field_dict:
                 continue
 
+            if field_name.startswith("__"):
+                continue
+
             field_type = python_type_from_json_type(field_dict)
 
             if field_type is List[ToolParameterView]:
@@ -496,5 +499,6 @@ class Endpoint:
 @dataclass
 class EndpointInfo:
     title: str
-    description: str
     version: str
+
+    description: Optional[str] = None
