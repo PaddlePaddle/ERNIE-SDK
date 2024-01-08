@@ -95,6 +95,8 @@ class FunctionAgent(Agent):
                 `plugins` to `[]` to disable the use of plugins.
             max_steps: The maximum number of steps in each agent run. If `None`,
                 use a default value.
+            first_tools: A list of tools that will be used first when running
+                the agent.
         """
         super().__init__(
             llm=llm,
