@@ -222,7 +222,9 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
         return ToolResponse(json=tool_ret_json, input_files=input_files, output_files=output_files)
 
-    async def _run_llm(self, messages: List[Message], functions=None, **opts: Any) -> LLMResponse:
+    async def _run_llm(
+        self, messages: List[Message], functions: Optional[List[dict]] = None, **opts: Any
+    ) -> LLMResponse:
         """Run the LLM asynchronously without invoking callbacks.
 
         This method is called in `run_llm`.
