@@ -143,7 +143,7 @@ class FunctionAgent(Agent):
             chat_history.extend(new_messages)
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
-                # breakpoint()
+
             if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
                 response = self._create_finished_response(chat_history, steps_taken)
                 self.memory.add_message(chat_history[0])
