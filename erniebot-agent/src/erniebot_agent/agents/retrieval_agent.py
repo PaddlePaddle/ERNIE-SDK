@@ -73,7 +73,7 @@ class FaissAbstractSearch:
         retrieval_results = []
         for doc, score in docs:
             retrieval_results.append(
-                {"content": doc.page_content, "title": doc.metadata["title"], "score": score}
+                {"content": doc.page_content, "score": score}
             )
         return retrieval_results
 
