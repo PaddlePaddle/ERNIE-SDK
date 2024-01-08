@@ -16,4 +16,6 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("请帮我把这张图片的底纹给删掉", files=[file])
-        self.assertEqual(len(result.files), 2)
+        files = self.get_files(result)
+
+        self.assertEqual(len(files), 2)

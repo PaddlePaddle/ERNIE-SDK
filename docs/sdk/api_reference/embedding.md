@@ -23,7 +23,7 @@ erniebot.Embedding.create(
 | model | str | 是 | 模型名称。当前支持`"ernie-text-embedding"`。 |
 | input | list[str] | 是 | 输入的文本列表，列表中每个元素为一段单独的文本。注意：<ul><li>列表长度有最大限制。对于ernie-text-embedding模型，列表长度不能超过16。</li><li>每段文本的token数量有最大限制，超出限制则报错（可以采用<code>汉字数 + 单词数 * 1.3</code>估算token数量）。对于ernie-text-embedding模型，每段文本支持最多384个token。</li><li>文本内容不能为空。</li></ul> |
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
-| headers | dict | 否 | 附加的HTTP请求头。 |
+| headers | dict | 否 | 自定义HTTP请求头。 |
 | request_timeout | float | 否 | 单个HTTP请求的超时时间，单位为秒。 |
 | \_config\_ | dict | 否 | 用于覆盖全局配置。 |
 

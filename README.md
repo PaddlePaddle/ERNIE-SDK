@@ -52,7 +52,7 @@ pip install ./erniebot-agent            # 安装核心模块
 # pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
 
-#### 快速安装（暂不支持）
+#### 快速安装
 
 执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
@@ -74,7 +74,6 @@ pip install --upgrade erniebot-agent[all]
 
 ```python
 import asyncio
-import os
 
 from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot

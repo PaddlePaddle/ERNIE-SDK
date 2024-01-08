@@ -11,7 +11,7 @@ import requests
 from openapi_spec_validator.readers import read_from_filename
 from yaml import safe_dump
 
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import FileManager
 from erniebot_agent.memory.messages import (
     AIMessage,
     FunctionCall,
@@ -31,7 +31,7 @@ from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.exceptions import RemoteToolError
 from erniebot_agent.utils.http import url_file_exists
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -188,6 +188,9 @@ class RemoteToolkit:
         # paths
         paths = []
         for path, path_info in openapi_dict.get("paths", {}).items():
+            if ".well-known/openapi.yaml" in path:
+                continue
+
             for method, path_method_info in path_info.items():
                 paths.append(
                     RemoteToolView.from_openapi_dict(
@@ -234,7 +237,7 @@ class RemoteToolkit:
     def _get_authorization_headers(cls, access_token: Optional[str]) -> dict:
         headers = {"Content-Type": "application/json"}
         if access_token is None:
-            logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
+            _logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers
@@ -279,7 +282,7 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(openapi_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                _logger.debug(f"The resource requested returned the following headers: {response.headers}")
                 raise RemoteToolError(
                     f"`{openapi_yaml_url}` returned {response.status_code}: {response.text}", stage="Loading"
                 )
@@ -292,8 +295,15 @@ class RemoteToolkit:
             with open(file_path, "w+", encoding="utf-8") as f:
                 f.write(file_content)
 
-            toolkit = RemoteToolkit.from_openapi_file(
-                file_path, access_token=access_token, file_manager=file_manager
+            spec_dict: dict = read_from_filename(file_path)[0]  # type: ignore
+
+            url = url.strip("/")
+
+            if "servers" not in spec_dict:
+                spec_dict["servers"] = [{"url": url}]
+
+            toolkit = RemoteToolkit.from_openapi_dict(
+                spec_dict, access_token=access_token, file_manager=file_manager
             )
             for server in toolkit.servers:
                 server.url = url
@@ -322,7 +332,7 @@ class RemoteToolkit:
         with tempfile.TemporaryDirectory() as temp_dir:
             response = requests.get(examples_yaml_url, headers=cls._get_authorization_headers(access_token))
             if response.status_code != 200:
-                logger.debug(f"The resource requested returned the following headers: {response.headers}")
+                _logger.debug(f"The resource requested returned the following headers: {response.headers}")
                 raise RemoteToolError(
                     f"`{examples_yaml_url}` returned {response.status_code}: {response.text}",
                     stage="Loading",

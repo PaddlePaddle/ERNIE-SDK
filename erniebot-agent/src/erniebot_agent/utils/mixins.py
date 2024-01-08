@@ -32,6 +32,9 @@ class Closeable(Protocol):
     async def close(self) -> None:
         ...
 
+    async def aclose(self) -> None:
+        return await self.close()
+
     def ensure_not_closed(self) -> None:
         if self.closed:
             raise ObjectClosedError(f"{repr(self)} is closed.")

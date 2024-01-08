@@ -14,6 +14,7 @@ class CountingCallbackHandler(CallbackHandler):
         self.tool_starts = 0
         self.tool_ends = 0
         self.tool_errors = 0
+        self.run_errors = 0
         self.run_ends = 0
 
     async def on_run_start(self, agent, prompt):
@@ -36,6 +37,9 @@ class CountingCallbackHandler(CallbackHandler):
 
     async def on_tool_error(self, agent, tool, error):
         self.tool_errors += 1
+
+    async def on_run_error(self, agent, error):
+        self.run_errors += 1
 
     async def on_run_end(self, agent, response):
         self.run_ends += 1

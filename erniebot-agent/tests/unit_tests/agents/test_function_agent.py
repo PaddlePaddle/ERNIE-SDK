@@ -75,6 +75,7 @@ async def test_function_agent_callbacks(identity_tool):
     await agent.run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
+    assert callback_handler.run_errors == 0
 
 
 @pytest.mark.asyncio

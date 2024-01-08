@@ -28,7 +28,7 @@ pip install -r erniebot-agent/dev-requirements.txt
 pip install -e './erniebot-agent/.[all]'
 ```
 
-### 快速安装（暂不支持）
+### 快速安装
 
 执行如下命令，快速安装最新版本ERNIE Bot Agent（要求Python >= 3.8)。
 
