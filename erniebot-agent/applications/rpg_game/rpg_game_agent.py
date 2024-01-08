@@ -24,7 +24,7 @@ import gradio as gr
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
-from erniebot_agent.file.base import File
+from erniebot_agent.file import File
 from erniebot_agent.memory.messages import AIMessage, HumanMessage
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.tools.base import BaseTool
