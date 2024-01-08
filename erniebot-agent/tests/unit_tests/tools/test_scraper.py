@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import unittest
 
-from erniebot_agent.agents.function_agent import FunctionAgent
-from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools.scraper import ScraperTool
 
 
