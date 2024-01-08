@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
-from pydantic import BaseModel, Field, create_model, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
