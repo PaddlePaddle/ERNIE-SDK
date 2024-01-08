@@ -24,7 +24,7 @@ from typing import (
 )
 
 from erniebot.response import EBResponse
-from erniebot.types import FilesType, HeadersType, ParamsType
+from erniebot.types import HeadersType, ParamsType
 
 
 @runtime_checkable
@@ -44,7 +44,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
@@ -58,7 +57,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Iterator[EBResponse]:
         ...
@@ -72,7 +70,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         ...
@@ -85,7 +82,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         """Makes an HTTP request for the resource.
@@ -96,7 +92,6 @@ class Resource(Protocol):
             stream: Whether to enable streaming.
             params: Parameters to send.
             headers: Headers to add to the request.
-            files: Files to upload.
             request_timeout: Request timeout in seconds.
 
         Returns:
@@ -114,7 +109,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> EBResponse:
         ...
@@ -128,7 +122,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> AsyncIterator[EBResponse]:
         ...
@@ -142,7 +135,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = ...,
         headers: Optional[HeadersType] = ...,
-        files: Optional[FilesType] = ...,
         request_timeout: Optional[float] = ...,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ...
@@ -155,7 +147,6 @@ class Resource(Protocol):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         """Asynchronous version of `request`."""

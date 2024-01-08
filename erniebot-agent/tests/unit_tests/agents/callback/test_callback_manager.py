@@ -55,6 +55,9 @@ async def test_callback_manager_hit():
     await callback_manager.on_tool_error(agent, tool, Exception())
     assert handler.tool_errors == 1
 
+    await callback_manager.on_run_error(agent, Exception())
+    assert handler.run_errors == 1
+
     await callback_manager.on_run_end(
         agent, AgentResponse(text="", chat_history=[], steps=[], status="FINISHED")
     )

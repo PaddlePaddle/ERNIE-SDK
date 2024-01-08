@@ -19,7 +19,7 @@ from typing import Any, Dict
 import anyio
 
 from erniebot_agent.file import protocol
-from erniebot_agent.file.base import File
+from erniebot_agent.file.base import BaseFile
 
 
 def create_local_file_from_path(
@@ -61,7 +61,7 @@ def create_local_file_from_path(
     return file
 
 
-class LocalFile(File):
+class LocalFile(BaseFile):
     """
     Represents a local file.
 

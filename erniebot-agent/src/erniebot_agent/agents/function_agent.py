@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import List, Optional, Tuple, Union
+from typing import Final, Iterable, List, Optional, Sequence, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -28,8 +28,7 @@ from erniebot_agent.agents.schema import (
     ToolStep,
 )
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.file.base import File
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import File, FileManager
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import (
     FunctionMessage,
@@ -40,7 +39,7 @@ from erniebot_agent.memory.messages import (
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
-_MAX_STEPS = 5
+_MAX_STEPS: Final[int] = 5
 _logger = logging.getLogger(__name__)
 
 
@@ -67,11 +66,11 @@ class FunctionAgent(Agent):
     def __init__(
         self,
         llm: BaseERNIEBot,
-        tools: Union[ToolManager, List[BaseTool]],
+        tools: Union[ToolManager, Iterable[BaseTool]],
         *,
         memory: Optional[Memory] = None,
         system_message: Optional[SystemMessage] = None,
-        callbacks: Optional[Union[CallbackManager, List[CallbackHandler]]] = None,
+        callbacks: Optional[Union[CallbackManager, Iterable[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
@@ -83,7 +82,7 @@ class FunctionAgent(Agent):
             llm: An LLM for the agent to use.
             tools: A list of tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
-                history.
+                history. If `None`, a `WholeMemory` object will be used.
             system_message: A message that tells the LLM how to interpret the
                 conversations. If `None`, the system message contained in
                 `memory` will be used.
@@ -124,7 +123,7 @@ class FunctionAgent(Agent):
         else:
             self._first_tools = []
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         steps_taken: List[AgentStep] = []
 
@@ -168,20 +167,14 @@ class FunctionAgent(Agent):
         input_messages = self.memory.get_messages() + chat_history
         if use_tool is not None:
             tool_choice = {"type": "function", "function": {"name": use_tool.tool_name}}
-            llm_resp = await self.run_llm(
+            llm_resp = await self._run_llm(
                 messages=input_messages,
                 functions=[use_tool.function_call_schema()],  # only regist one tool
-                system=self.system_message.content if self.system_message is not None else None,
-                plugins=self._plugins,
                 tool_choice=tool_choice,
             )
         else:
-            llm_resp = await self.run_llm(
-                messages=input_messages,
-                functions=self._tool_manager.get_tool_schemas(),
-                system=self.system_message.content if self.system_message is not None else None,
-                plugins=self._plugins,
-            )
+            llm_resp = await self._run_llm(messages=input_messages)
+
         output_message = llm_resp.message  # AIMessage
         new_messages.append(output_message)
         if output_message.function_call is not None:
@@ -199,7 +192,7 @@ class FunctionAgent(Agent):
                 new_messages,
             )
         elif output_message.plugin_info is not None:
-            file_manager = await self.get_file_manager()
+            file_manager = self.get_file_manager()
             return (
                 PluginStep(
                     info=output_message.plugin_info,

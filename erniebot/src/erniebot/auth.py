@@ -18,7 +18,7 @@ import json
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Dict, Hashable, Optional, Tuple
+from typing import Any, Callable, Dict, Final, Hashable, Optional, Tuple
 
 import requests
 
@@ -38,7 +38,7 @@ def build_auth_token_manager(manager_type: str, api_type: APIType, **kwargs: Any
 
 
 class _GlobalAuthTokenCache(metaclass=SingletonMeta):
-    _MIN_UPDATE_INTERVAL_SECS: ClassVar[float] = 3600
+    _MIN_UPDATE_INTERVAL_SECS: Final[float] = 3600
 
     @dataclass
     class _Record(object):
@@ -79,14 +79,14 @@ class _GlobalAuthTokenCache(metaclass=SingletonMeta):
                 record = self._cache[key_pair]
 
         with record.lock:
-            timestamp = time.time()
+            timestamp = time.monotonic()
             if record.updated_at is None or timestamp - record.updated_at > self._MIN_UPDATE_INTERVAL_SECS:
                 try:
                     auth_token = token_requestor()
                 except Exception as e:
                     raise errors.TokenUpdateFailedError from e
                 record.auth_token = auth_token
-                record.updated_at = time.time()
+                record.updated_at = time.monotonic()
                 upserted = True
             else:
                 assert record.auth_token is not None
