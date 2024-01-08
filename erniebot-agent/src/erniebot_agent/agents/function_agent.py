@@ -73,7 +73,7 @@ class FunctionAgent(Agent):
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
-        first_tools: Optional[List[BaseTool]] = None,
+        first_tools: Optional[List[BaseTool]] = [],
     ) -> None:
         """Initialize a function agent.
 
