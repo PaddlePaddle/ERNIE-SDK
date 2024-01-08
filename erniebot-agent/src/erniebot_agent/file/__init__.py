@@ -45,8 +45,8 @@ Examples:
     >>> from erniebot_agent.file import GlobalFileManagerHandler
     >>> async def demo_function():
     >>>     # need to use at the beginning of event loop
-    >>>     await GlobalFileManagerHandler().configure(save_dir='your_path')
-    >>>     file_manager = await GlobalFileManagerHandler().get()
+    >>>     GlobalFileManagerHandler().configure(save_dir='your_path')
+    >>>     file_manager = GlobalFileManagerHandler().get()
     >>>     local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
 
     >>>     file = file_manager.look_up_file_by_id(file_id='your_file_id')
@@ -54,5 +54,6 @@ Examples:
     >>>     await local_file.write_contents_to('your_willing_path') # save to location you want
 """
 
-from .global_file_manager_handler import GlobalFileManagerHandler
-from .remote_file import AIStudioFileClient
+from erniebot_agent.file.file_manager import File, FileManager, get_default_file_manager
+from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler
+from erniebot_agent.file.remote_file import AIStudioFileClient

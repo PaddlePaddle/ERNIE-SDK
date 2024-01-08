@@ -17,14 +17,24 @@ import datetime
 import hashlib
 import hmac
 import urllib.parse
-from typing import AsyncIterator, ClassVar, Dict, Iterator, List, Optional, Tuple, Union
+from typing import (
+    AsyncIterator,
+    ClassVar,
+    Dict,
+    Final,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import erniebot.errors as errors
 import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.auth import build_auth_token_manager
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 from erniebot.utils.url import add_query_params
 
 from .base import EBBackend
@@ -49,7 +59,6 @@ class _BCELegacyBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -57,7 +66,6 @@ class _BCELegacyBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         access_token = self._auth_manager.get_auth_token()
@@ -69,7 +77,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
@@ -85,7 +92,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
 
@@ -97,7 +103,6 @@ class _BCELegacyBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -105,7 +110,6 @@ class _BCELegacyBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
 
         loop = asyncio.get_running_loop()
@@ -119,7 +123,6 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
         except (errors.TokenExpiredError, errors.InvalidTokenError):
@@ -136,13 +139,12 @@ class _BCELegacyBackend(EBBackend):
                 stream,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
 
 
 class _BCEBackend(EBBackend):
-    _SIG_EXPIRATION_IN_SECS: ClassVar[int] = 1800
+    _SIG_EXPIRATION_IN_SECS: Final[float] = 1800
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
@@ -161,7 +163,6 @@ class _BCEBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -169,7 +170,6 @@ class _BCEBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_bce_fields_to_headers(headers, method, url)
         return self._client.send_request(
@@ -178,7 +178,6 @@ class _BCEBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
@@ -190,7 +189,6 @@ class _BCEBackend(EBBackend):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         url, headers, data = self._client.prepare_request(
@@ -198,7 +196,6 @@ class _BCEBackend(EBBackend):
             path,
             supplied_headers=headers,
             params=params,
-            files=files,
         )
         headers = self._add_bce_fields_to_headers(headers, method, url)
         return await self._client.asend_request(
@@ -207,7 +204,6 @@ class _BCEBackend(EBBackend):
             stream,
             data=data,
             headers=headers,
-            files=files,
             request_timeout=request_timeout,
         )
 
@@ -318,10 +314,11 @@ class _BCEBackend(EBBackend):
 
 
 class QianfanLegacyBackend(_BCELegacyBackend):
-    API_TYPE: ClassVar[APIType] = APIType.QIANFAN
-    BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
+    api_type: ClassVar[APIType] = APIType.QIANFAN
+    base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]
@@ -344,10 +341,11 @@ class QianfanLegacyBackend(_BCELegacyBackend):
 
 
 class YinianBackend(_BCELegacyBackend):
-    API_TYPE: ClassVar[APIType] = APIType.YINIAN
-    BASE_URL: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
+    api_type: ClassVar[APIType] = APIType.YINIAN
+    base_url: ClassVar[str] = "https://aip.baidubce.com/rpc/2.0/ernievilg/v1"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]
@@ -369,10 +367,11 @@ class YinianBackend(_BCELegacyBackend):
 
 
 class QianfanBackend(_BCEBackend):
-    API_TYPE: ClassVar[APIType] = APIType.QIANFAN
-    BASE_URL: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
+    api_type: ClassVar[APIType] = APIType.QIANFAN
+    base_url: ClassVar[str] = "https://qianfan.baidubce.com/wenxinworkshop"
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]

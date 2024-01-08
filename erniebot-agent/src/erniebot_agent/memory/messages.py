@@ -11,16 +11,15 @@
 # limitations under the License
 
 import logging
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional, Sequence, TypedDict
 
 import erniebot.utils.token_helper as token_helper
 from typing_extensions import Self
 
-from erniebot_agent.file import protocol
-from erniebot_agent.file.base import File
+from erniebot_agent.file import File, protocol
 from erniebot_agent.file.remote_file import RemoteFile
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class FunctionCall(TypedDict):
@@ -87,7 +86,7 @@ class Message:
     @token_count.setter
     def token_count(self, token_count: int):
         if self._token_count is not None:
-            logger.warning("The token count of the message has been set before")
+            _logger.warning("The token count of the message has been set before")
         self._token_count = token_count
 
     def to_dict(self) -> Dict[str, str]:
@@ -176,14 +175,14 @@ class HumanMessage(Message):
 
     @classmethod
     async def create_with_files(
-        cls, text: str, files: List[File], *, include_file_urls: bool = False
+        cls, text: str, files: Sequence[File], *, include_file_urls: bool = False
     ) -> Self:
         """
         create a Human Message with file input
 
         Args:
             text: content of the message.
-            files (List[File]): The file that the message contains.
+            files (Sequence[File]): The files that the message contains.
             include_file_urls: Whehter to include file URLs in the content of message.
 
         Returns:
@@ -193,13 +192,13 @@ class HumanMessage(Message):
             RuntimeError: Only `RemoteFile` objects can set include_file_urls as True.
         """
 
-        def _get_file_reprs(files: List[File]) -> List[str]:
-            file_reprs = []
+        def _get_file_reprs(files: Sequence[File]) -> List[str]:
+            file_reprs: List[str] = []
             for file in files:
                 file_reprs.append(file.get_file_repr())
             return file_reprs
 
-        async def _create_file_reprs_with_urls(files: List[File]) -> List[str]:
+        async def _create_file_reprs_with_urls(files: Sequence[File]) -> List[str]:
             file_reprs = []
             for file in files:
                 if not isinstance(file, RemoteFile):
@@ -214,7 +213,7 @@ class HumanMessage(Message):
 
         if len(files) > 0:
             if len(protocol.extract_file_ids(text)) > 0:
-                logger.warning("File IDs were found in the text. The provided files will be ignored.")
+                _logger.warning("File IDs were found in the text. The provided files will be ignored.")
             else:
                 if include_file_urls:
                     file_reprs = await _create_file_reprs_with_urls(files)

@@ -18,7 +18,7 @@ import tempfile
 from typing import Any, List
 
 from erniebot_agent.agents.base import BaseAgent
-from erniebot_agent.file.base import File
+from erniebot_agent.file import File
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML, ITEM_LIST_HTML
@@ -132,7 +132,7 @@ class GradioMixin:
 
         async def _upload(file, history):
             nonlocal _uploaded_file_cache
-            file_manager = await self.get_file_manager()
+            file_manager = self.get_file_manager()
             for single_file in file:
                 upload_file = await file_manager.create_file_from_path(single_file.name)
                 _uploaded_file_cache.append(upload_file)

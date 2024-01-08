@@ -28,7 +28,7 @@ class Queryable(Resource):
         """Queries a resource."""
         req = self._prepare_query(query_kwargs)
         resp = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
@@ -42,7 +42,7 @@ class Queryable(Resource):
         """Asynchronous version of `query_resource`."""
         req = self._prepare_query(query_kwargs)
         resp = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,

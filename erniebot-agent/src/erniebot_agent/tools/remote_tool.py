@@ -9,8 +9,11 @@ from typing import Any, Dict, List, Optional, Type
 
 import requests
 
-from erniebot_agent.file import GlobalFileManagerHandler
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import (
+    FileManager,
+    GlobalFileManagerHandler,
+    get_default_file_manager,
+)
 from erniebot_agent.memory.messages import Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
@@ -23,7 +26,7 @@ from erniebot_agent.tools.utils import (
 from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def check_json_length(value: Dict[str, Any]):
@@ -57,7 +60,7 @@ class RemoteTool(BaseTool):
         self.server_url = server_url
         self.headers = headers
         self.version = version
-        self.file_manager = file_manager
+        self.file_manager = file_manager or get_default_file_manager()
         self._examples = examples
         self.tool_name_prefix = tool_name_prefix
         # If `tool_name_prefix`` is provided, we prepend `tool_name_prefix`` to the `name` field of all tools
@@ -97,7 +100,7 @@ class RemoteTool(BaseTool):
                 byte_value = base64.b64encode(byte_value).decode()
             return byte_value
 
-        file_manager = await self._get_file_manager()
+        file_manager = self._get_file_manager()
 
         # 1. replace fileid with byte string
         parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
@@ -198,7 +201,7 @@ class RemoteTool(BaseTool):
             raise RemoteToolError(f"method<{self.tool_view.method}> is invalid", stage="Executing")
 
         if response.status_code != 200:
-            logger.debug(f"The resource requested returned the following headers: {response.headers}")
+            _logger.debug(f"The resource requested returned the following headers: {response.headers}")
             raise RemoteToolError(
                 f"The resource requested by `{self.tool_name}` "
                 f"returned {response.status_code}: {response.text}",
@@ -211,7 +214,7 @@ class RemoteTool(BaseTool):
         if len(returns_file_infos) == 0 and is_json_response(response):
             return response.json()
 
-        file_manager = await self._get_file_manager()
+        file_manager = self._get_file_manager()
 
         file_metadata = {"tool_name": self.tool_name}
         if is_json_response(response) and len(returns_file_infos) > 0:
@@ -320,9 +323,9 @@ class RemoteTool(BaseTool):
             tool_response.pop("log_id")
         return tool_response
 
-    async def _get_file_manager(self) -> FileManager:
+    def _get_file_manager(self) -> FileManager:
         if self.file_manager is None:
-            file_manager = await GlobalFileManagerHandler().get()
+            file_manager = GlobalFileManagerHandler().get()
         else:
             file_manager = self.file_manager
         return file_manager
