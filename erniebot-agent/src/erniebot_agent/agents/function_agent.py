@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Deque, List, Optional, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
@@ -115,7 +116,7 @@ class FunctionAgent(Agent):
             self.max_steps = max_steps
         else:
             self.max_steps = _MAX_STEPS
-        self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=3)
+        self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=5)
         self._snapshot_for_curr_run: Optional[FunctionAgentRunSnapshot] = None
 
     @property
@@ -269,4 +270,27 @@ class FunctionAgentRunSnapshot(object):
         self.chat_history.pop()
         self.chat_history.pop()
         self.chat_history.append(new_ai_message)
+        self.chat_history.append(new_function_message)
+
+    def update_last_tool_prompt(self, prompt: str) -> None:
+        tool_step = self.steps[-1]
+        if not isinstance(tool_step, ToolStep):
+            raise RuntimeError("The last step is not a tool step.")
+        function_message = self.chat_history[-1]
+        if not isinstance(function_message, FunctionMessage):
+            raise RuntimeError("The last message is not a function message.")
+
+        tool_ret_json = tool_step.result
+        tool_ret = json.loads(tool_ret_json)
+        if isinstance(tool_ret, dict):
+            raise ValueError("The return value of the tool could not be converted to a dict.")
+        tool_ret["prompt"] = prompt
+        updated_tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
+
+        new_function_message = FunctionMessage(name=function_message.name, content=updated_tool_ret_json)
+        new_tool_step = replace(tool_step, result=updated_tool_ret_json)
+
+        self.steps.pop()
+        self.steps.append(new_tool_step)
+        self.chat_history.pop()
         self.chat_history.append(new_function_message)
