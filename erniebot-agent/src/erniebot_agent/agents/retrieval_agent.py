@@ -43,12 +43,47 @@ CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答�
 >>>
 提取的相关部分:"""
 
+CONTEXT_PLANNING = """
+    {{context}} 请根据上述背景信息把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+    严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}。
+    问题：{{query}} 子问题：
+    """
+
+
+class FaissFewShotSearch:
+    def __init__(self, db):
+        self.db = db
+
+    def search(self, query: str, top_k: int = 10, **kwargs):
+        docs = self.db.similarity_search_with_relevance_scores(query, top_k)
+        retrieval_results = []
+        for doc, score in docs:
+            retrieval_results.append(
+                {"content": doc.page_content, "sub_queries": doc.metadata["sub_queries"], "score": score}
+            )
+        return retrieval_results
+
+
+class FaissAbstractSearch:
+    def __init__(self, db):
+        self.db = db
+
+    def search(self, query: str, top_k: int = 10, **kwargs):
+        docs = self.db.similarity_search_with_relevance_scores(query, top_k)
+        retrieval_results = []
+        for doc, score in docs:
+            retrieval_results.append(
+                {"content": doc.page_content, "title": doc.metadata["title"], "score": score}
+            )
+        return retrieval_results
+
 
 class RetrievalAgent(Agent):
     def __init__(
         self,
         knowledge_base,
-        few_shot_retriever,
+        few_shot_retriever: Optional[FaissFewShotSearch] = None,
+        context_retriever: Optional[FaissAbstractSearch] = None,
         top_k: int = 2,
         threshold: float = 0.1,
         use_compressor: bool = False,
@@ -60,6 +95,7 @@ class RetrievalAgent(Agent):
 
         self.knowledge_base = knowledge_base
         self.few_shot_retriever = few_shot_retriever
+        self.context_retriever = context_retriever
         if few_shot_retriever:
             self.query_transform = PromptTemplate(
                 FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]
@@ -69,6 +105,7 @@ class RetrievalAgent(Agent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.use_compressor = use_compressor
         self.compressor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
+        self.context_planning = PromptTemplate(CONTEXT_PLANNING, input_variables=["context", "query"])
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
@@ -78,12 +115,17 @@ class RetrievalAgent(Agent):
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=prompt, documents=few_shots)
             )
+        elif self.context_retriever:
+            res = self.context_retriever.search(prompt, 3)
+
+            context = [item["content"] for item in res]
+            context = "\n".join(context)
+            steps_input = HumanMessage(content=self.context_planning.format(query=prompt, context=context))
         else:
             steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
 
-        llm_resp = await self._run_llm(
+        llm_resp = await self.run_llm(
             messages=[steps_input],
-            system=self.system_message.content if self.system_message is not None else None,
         )
         output_message = llm_resp.message
         json_results = self._parse_results(output_message.content)
@@ -98,8 +140,7 @@ class RetrievalAgent(Agent):
                 docs = [item for item in documents["documents"]]
                 context = "\n".join([item["content"] for item in docs])
                 llm_resp = await self.run_llm(
-                    messages=[HumanMessage(content=self.compressor.format(query=query, context=context))],
-                    system=self.system_message.content if self.system_message is not None else None,
+                    messages=[HumanMessage(content=self.compressor.format(query=query, context=context))]
                 )
                 # Parse Compressed results
                 output_message = llm_resp.message
@@ -107,7 +148,6 @@ class RetrievalAgent(Agent):
                 compressed_data["sub_query"] = query
                 compressed_data["content"] = output_message.content
                 retrieval_results.append(compressed_data)
-
         else:
             duplicates = set()
             for query in sub_queries:
@@ -122,7 +162,6 @@ class RetrievalAgent(Agent):
         chat_history: List[Message] = [step_input]
         llm_resp = await self.run_llm(
             messages=chat_history,
-            system=self.system_message.content if self.system_message is not None else None,
         )
 
         output_message = llm_resp.message
