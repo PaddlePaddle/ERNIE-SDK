@@ -228,10 +228,15 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         raise NotImplementedError
 
     async def _run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
-        for reserved_opt in ("stream", "functions", "system", "plugins"):
+        for reserved_opt in ("stream", "system", "plugins"):
             if reserved_opt in opts:
                 raise TypeError(f"`{reserved_opt}` should not be set.")
-        functions = self._tool_manager.get_tool_schemas()
+
+        if "functions" not in opts:
+            functions = self._tool_manager.get_tool_schemas()
+        else:
+            functions = opts.pop("functions")
+
         if hasattr(self.llm, "system"):
             _logger.warning(
                 "The `system` message has already been set in the agent;"
