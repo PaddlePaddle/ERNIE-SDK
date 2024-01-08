@@ -85,6 +85,10 @@ class Memory:
 
     def __init__(self):
         self.msg_manager = MessageManager()
+    
+    def set_system_message(self, message: SystemMessage):
+        """Set the system message of a conversation."""
+        self.msg_manager.system_message = message
 
     def add_messages(self, messages: List[Message]):
         """Add a list of messages to memory."""
@@ -99,11 +103,10 @@ class Memory:
 
     def get_messages(self) -> List[Message]:
         """Get all the messages in memory."""
-        return self.msg_manager.retrieve_messages()
-
-    def get_system_message(self) -> SystemMessage:
-        """Get the system message in memory."""
-        return self.msg_manager.system_message
+        if self.msg_manager.system_message is not None:
+            return [self.msg_manager.system_message] + self.msg_manager.retrieve_messages()
+        else:
+            return self.msg_manager.retrieve_messages()
 
     def clear_chat_history(self):
         """Reset the memory."""

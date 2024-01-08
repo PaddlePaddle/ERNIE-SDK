@@ -112,7 +112,7 @@ class FunctionAgent(Agent):
             self.max_steps = _MAX_STEPS
 
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        chat_history: List[Message] = []
+        chat_history: List[Message] = self._init_chat_history()
         steps_taken: List[AgentStep] = []
 
         run_input = await HumanMessage.create_with_files(
@@ -175,6 +175,13 @@ class FunctionAgent(Agent):
             )
         else:
             return NO_ACTION_STEP, new_messages
+
+    def _init_chat_history(self) -> List[Message]:
+        chat_history: List[Message] = []
+        if self.system_message is not None:
+            chat_history.append(self.system_message)
+        
+        return chat_history
 
     def _create_finished_response(
         self,

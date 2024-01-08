@@ -1,5 +1,6 @@
 import abc
 import json
+import sys
 from typing import Any, Dict, List, NoReturn, Optional, Tuple, Union, final
 
 from erniebot_agent.agents.base import BaseAgent
@@ -77,11 +78,12 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             self.memory = WholeMemory()
         else:
             self.memory = memory
-
-        if system_message:
+        
+        if system_message is not None:
             self.system_message = system_message
-        else:
-            self.system_message = self.memory.get_system_message()
+            self.memory.set_system_message(self.system_message)
+            
+
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
