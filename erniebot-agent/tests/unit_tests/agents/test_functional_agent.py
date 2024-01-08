@@ -218,3 +218,32 @@ async def test_function_agent_max_steps(identity_tool):
     response = await agent.run("Run!")
 
     assert response.status == "STOPPED"
+
+
+@pytest.mark.asyncio
+async def test_function_agent_snapshot(identity_tool):
+    function_call = FunctionCall(
+        name=identity_tool.tool_name,
+        thoughts="",
+        arguments=json.dumps({"param": "test"}),
+    )
+    llm = FakeERNIEBotWithPresetResponses(
+        responses=[
+            AIMessage("", function_call=function_call),
+            AIMessage("", function_call=function_call),
+            AIMessage("Hello", function_call=None),
+            AIMessage("World", function_call=None),
+        ]
+    )
+    agent = FunctionAgent(
+        llm=llm,
+        tools=[identity_tool],
+        memory=FakeMemory(),
+    )
+
+    first_run_response = await agent.run("Run!")
+    snapshot = agent.pop_snapshot()
+    agent.restore_from_snapshot(snapshot)
+    second_run_response = await agent.run("Run!")
+    assert second_run_response.chat_history[:-1] == first_run_response.chat_history[:-1]
+    assert second_run_response.steps == first_run_response.steps

@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Tuple, Union
+from collections import deque
+from dataclasses import dataclass
+from typing import Deque, List, Optional, Tuple, Union
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -110,17 +112,34 @@ class FunctionAgent(Agent):
             self.max_steps = max_steps
         else:
             self.max_steps = _MAX_STEPS
+        self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=3)
+        self._snapshot_for_curr_run: Optional[FunctionAgentRunSnapshot] = None
+
+    def pop_snapshot(self) -> Optional["FunctionAgentRunSnapshot"]:
+        try:
+            return self._pop_snapshot()
+        except IndexError:
+            return None
+
+    def restore_from_snapshot(self, snapshot: "FunctionAgentRunSnapshot") -> None:
+        self._snapshot_for_curr_run = snapshot
 
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         steps_taken: List[AgentStep] = []
-
-        run_input = await HumanMessage.create_with_files(
-            prompt, files or [], include_file_urls=self.file_needs_url
-        )
-
         num_steps_taken = 0
-        chat_history.append(run_input)
+
+        if self._snapshot_for_curr_run is not None:
+            chat_history[:] = self._snapshot_for_curr_run.chat_history
+            steps_taken[:] = self._snapshot_for_curr_run.steps
+            num_steps_taken = len(steps_taken)
+            self._snapshot_for_curr_run = None
+        else:
+            run_input = await HumanMessage.create_with_files(
+                prompt, files or [], include_file_urls=self.file_needs_url
+            )
+            chat_history.append(run_input)
+
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
             chat_history.extend(new_messages)
@@ -131,6 +150,7 @@ class FunctionAgent(Agent):
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
                 return response
+            self._take_snapshot(chat_history, steps_taken)
             num_steps_taken += 1
         response = self._create_stopped_response(chat_history, steps_taken)
         return response
@@ -200,3 +220,16 @@ class FunctionAgent(Agent):
             steps=steps,
             status="STOPPED",
         )
+
+    def _take_snapshot(self, chat_history: List[Message], steps: List[AgentStep]) -> None:
+        snapshot = FunctionAgentRunSnapshot(chat_history=chat_history.copy(), steps=steps.copy())
+        self._snapshots.append(snapshot)
+
+    def _pop_snapshot(self) -> "FunctionAgentRunSnapshot":
+        return self._snapshots.pop()
+
+
+@dataclass
+class FunctionAgentRunSnapshot(object):
+    chat_history: List[Message]
+    steps: List[AgentStep]
