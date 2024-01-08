@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, Field, create_model, ConfigDict
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
@@ -224,9 +224,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 class ToolParameterView(BaseModel):
     __prompt__: Optional[str] = None
-
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
     def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
