@@ -106,7 +106,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
             try:
                 docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
-                chat_history: List[Message] = self._init_chat_history()
+                chat_history: List[Message] = []
                 chat_history.append(step_input)
                 steps_taken: List[AgentStep] = []
 
@@ -198,7 +198,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
-            chat_history: List[Message] = self._init_chat_history()
+            chat_history: List[Message] = []
             steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
@@ -302,7 +302,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
-            chat_history: List[Message] = self._init_chat_history()
+            chat_history: List[Message] = []
             steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)

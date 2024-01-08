@@ -93,7 +93,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         if memory is None:
             memory = self._create_default_memory()
         self.memory = memory
-        
+
         self.system = SystemMessage(system) if system is not None else system
         if self.system is not None:
             self.memory.set_system_message(self.system)
