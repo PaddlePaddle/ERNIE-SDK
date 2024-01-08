@@ -4,13 +4,25 @@ from typing import List, Optional
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse, AgentStep
 from erniebot_agent.file.base import File
-from erniebot_agent.memory.messages import HumanMessage, Message, SystemMessage
+from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 
-QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
-1.严格按照【JSON格式】的形式输出：{'子问题1':'具体子问题1','子问题2':'具体子问题2'}
-问题：{{prompt}} 子问题："""
+ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+1.严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}
+问题：{{query}} 子问题："""
 
+FEW_SHOT_QUERT_DECOMPOSITION = """请把下面的问题分解成子问题,
+严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}。
+示例:
+##
+{% for doc in documents %}
+ 问题：{{doc['content']}}
+ 子问题：{{doc['sub_queries']}}
+{% endfor %}
+##
+问题：{{query}}
+子问题:
+"""
 
 RAG_PROMPT = """检索结果:
 {% for doc in documents %}
@@ -34,32 +46,51 @@ CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答�
 
 class RetrievalAgent(Agent):
     def __init__(
-        self, knowledge_base, top_k: int = 2, threshold: float = 0.1, use_compressor: bool = False, **kwargs
+        self,
+        knowledge_base,
+        few_shot_retriever,
+        top_k: int = 2,
+        threshold: float = 0.1,
+        use_compressor: bool = False,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.top_k = top_k
         self.threshold = threshold
-        self.system_message = SystemMessage(content="您是一个智能体，旨在回答有关知识库的问题。")
-        self.query_transform = PromptTemplate(QUERY_DECOMPOSITION, input_variables=["prompt"])
+
         self.knowledge_base = knowledge_base
+        self.few_shot_retriever = few_shot_retriever
+        if few_shot_retriever:
+            self.query_transform = PromptTemplate(
+                FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]
+            )
+        else:
+            self.query_transform = PromptTemplate(ZERO_SHOT_QUERY_DECOMPOSITION, input_variables=["query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.use_compressor = use_compressor
         self.compressor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
 
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
-        return await self.plan_and_execute(prompt, steps_taken)
+        if self.few_shot_retriever is not None:
+            # Get few shot examples
+            few_shots = self.few_shot_retriever.search(prompt, 3)
+            steps_input = HumanMessage(
+                content=self.query_transform.format(query=prompt, documents=few_shots)
+            )
+        else:
+            steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
 
-    async def plan_and_execute(self, prompt, actions_taken):
         llm_resp = await self._run_llm(
-            messages=[HumanMessage(content=self.query_transform.format(prompt=prompt))],
-            functions=None,
+            messages=[steps_input],
             system=self.system_message.content if self.system_message is not None else None,
         )
         output_message = llm_resp.message
-
         json_results = self._parse_results(output_message.content)
         sub_queries = json_results.values()
+        return await self.execute(prompt, sub_queries, steps_taken)
+
+    async def execute(self, prompt, sub_queries, actions_taken):
         retrieval_results = []
         if self.use_compressor:
             for query in sub_queries:
@@ -67,7 +98,7 @@ class RetrievalAgent(Agent):
                 docs = [item for item in documents["documents"]]
                 context = "\n".join([item["content"] for item in docs])
                 llm_resp = await self.run_llm(
-                    messages=[HumanMessage(content=self.compressor.format(query=prompt, context=context))],
+                    messages=[HumanMessage(content=self.compressor.format(query=query, context=context))],
                     system=self.system_message.content if self.system_message is not None else None,
                 )
                 # Parse Compressed results
