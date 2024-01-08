@@ -2,7 +2,7 @@
 
 ERNIEBot Researcher是一个自主智能体（Autonomous Agent），旨在对各种任务进行全面的在线研究。
 
-ERNIEBot Researcher能够精心编撰内容详尽、真实可信且立场公正的中文研究报告，同时根据需求提供针对特定资源、结构化大纲以及宝贵经验教训的深度定制服务。汲取了近期备受瞩目的[Plan-and-Solve]((https://arxiv.org/abs/2305.04091) )技术的精髓，并结合当前流行的[RAG]((https://arxiv.org/abs/2005.11401))技术的优势，ERNIEBot Researcher通过多Agent协作和高效并行处理机制，有效攻克了速度瓶颈、决策确定性及成果可靠性等难题。
+ERNIEBot Researcher能够精心编撰内容详尽、真实可信且立场公正的中文研究报告，同时根据需求提供针对特定资源、结构化大纲以及宝贵经验教训的深度定制服务。汲取了近期备受瞩目的[Plan-and-Solve](https://arxiv.org/abs/2305.04091)技术的精髓，并结合当前流行的[RAG](https://arxiv.org/abs/2005.11401)技术的优势，ERNIEBot Researcher通过多Agent协作和高效并行处理机制，有效攻克了速度瓶颈、决策确定性及成果可靠性等难题。
 
 ## 为什么需要ERNIEBot Researcher？
 
@@ -49,8 +49,22 @@ cd ernie-agent/applications/erniebot_researcher
 ```
 pip install -r requirements.txt
 ```
+如果上面的命令失败，请运行下面的命令：
+
+```
+conda create -n researcher39 -y python=3.9 && conda activate researcher39
+pip install -r requirements.txt
+```
 
 > 第三步：运行
+
+首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后设置环境变量:
+
+```
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
+export EB_AGENT_LOGGING_LEVEL=INFO
+```
 
 Python脚本运行：
 

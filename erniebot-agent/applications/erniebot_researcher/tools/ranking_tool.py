@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import List, Type
-
-from pydantic import Field
+from typing import List
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 logger = logging.getLogger(__name__)
 MAX_RETRY = 10
@@ -37,18 +34,8 @@ def rank_report_prompt(report, query):
     return strs
 
 
-class TextRankingToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to ranking")
-
-
-class TextRankingToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
-
-
 class TextRankingTool(Tool):
     description: str = "text ranking tool"
-    input_type: Type[ToolParameterView] = TextRankingToolInputView
-    ouptut_type: Type[ToolParameterView] = TextRankingToolOutputView
 
     def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot) -> None:
         super().__init__()

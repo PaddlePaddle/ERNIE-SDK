@@ -1,14 +1,11 @@
 import logging
 import string
 from collections import OrderedDict
-from typing import Optional, Type
-
-from pydantic import Field
+from typing import Optional
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 
 def generate_reference(meta_dict):
@@ -29,18 +26,8 @@ from .utils import write_md_to_pdf
 logger = logging.getLogger(__name__)
 
 
-class SemanticCitationToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class SemanticCitationToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
-
-
 class SemanticCitationTool(Tool):
     description: str = "semantic citation tool"
-    input_type: Type[ToolParameterView] = SemanticCitationToolInputView
-    ouptut_type: Type[ToolParameterView] = SemanticCitationToolOutputView
 
     def is_punctuation(self, char: str):
         """判断一个字符是否是标点符号"""

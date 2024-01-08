@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 import json
-from typing import Type
-
-from pydantic import Field
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 
 def auto_agent_instructions():
@@ -41,18 +37,8 @@ def auto_agent_instructions():
     return PromptTemplate(agent_instructions, input_variables=["content"])
 
 
-class IntentDetectionToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class IntentDetectionToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
-
-
 class IntentDetectionTool(Tool):
     description: str = "query intent detection tool"
-    input_type: Type[ToolParameterView] = IntentDetectionToolInputView
-    ouptut_type: Type[ToolParameterView] = IntentDetectionToolOutputView
 
     def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()

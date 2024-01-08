@@ -30,8 +30,7 @@ class ResearchAgent(JsonUtil):
 
     def __init__(
         self,
-        name: str,
-        agent_name,
+        name,
         dir_path,
         report_type,
         retriever_abstract_tool,
@@ -55,8 +54,6 @@ class ResearchAgent(JsonUtil):
             report_type:
             ......
         """
-
-        self.name = name
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
@@ -71,7 +68,7 @@ class ResearchAgent(JsonUtil):
         self.summarize = summarize_tool
         self.use_context_planning = use_context_planning
         self.use_outline = use_outline
-        self.agent_name = agent_name
+        self.name = name
         self.use_context_planning = use_context_planning
         self.nums_queries = nums_queries
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
@@ -143,10 +140,6 @@ class ResearchAgent(JsonUtil):
                 ]
                 responese = await self.llm.chat(messages)
                 result = responese.content
-                # start_idx = result.index("[")
-                # end_idx = result.rindex("]")
-                # result = result[start_idx : end_idx + 1]
-                # sub_queries = json.loads(result)
                 sub_queries = self.parse_json(result, "[", "]")
         else:
             context = ""
@@ -200,7 +193,7 @@ class ResearchAgent(JsonUtil):
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
         await self._callback_manager.on_tool_end(
-            self, tool=self.report_writing, response={"report": report, "url_index": path}
+            self, tool=self.report_writing, response={"report": report, "file_path": path}
         )
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
         return report, meta_data, paragraphs

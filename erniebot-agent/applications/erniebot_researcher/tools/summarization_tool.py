@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Type
 
 from langchain.chains.combine_documents import collapse_docs, split_list_of_docs
 from langchain.prompts import PromptTemplate
@@ -9,27 +8,15 @@ from langchain.schema import Document, StrOutputParser
 from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
 from langchain.text_splitter import SpacyTextSplitter
-from pydantic import Field
 
 from erniebot_agent.extensions.langchain.llms import ErnieBot
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 TOKEN_MAX_LENGTH = 4800
 
 
-class TextSummarizationToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class TextSummarizationToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
-
-
 class TextSummarizationTool(Tool):
     description: str = "text summarization tool"
-    input_type: Type[ToolParameterView] = TextSummarizationToolInputView
-    ouptut_type: Type[ToolParameterView] = TextSummarizationToolOutputView
 
     def map_reduce(self, question: str = ""):
         llm = ErnieBot()

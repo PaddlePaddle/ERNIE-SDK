@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-from typing import Type
-
-from pydantic import Field
-
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 from .utils import write_md_to_pdf
 
@@ -104,18 +99,10 @@ TOKEN_MAX_LENGTH = 8000
 
 
 # TOKEN_MAX_LENGTH = 4800
-class ReportWritingToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class ReportWritingToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
 
 
 class ReportWritingTool(Tool):
     description: str = "report writing tool"
-    input_type: Type[ToolParameterView] = ReportWritingToolInputView
-    ouptut_type: Type[ToolParameterView] = ReportWritingToolOutputView
 
     def __init__(self, llm: BaseERNIEBot, llm_long: BaseERNIEBot) -> None:
         super().__init__()

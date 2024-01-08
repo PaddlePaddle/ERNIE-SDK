@@ -1,27 +1,14 @@
 from __future__ import annotations
 
-from typing import List, Type
-
-from pydantic import Field
+from typing import List
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
-
-
-class OutlineGenerationToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class OutlineGenerationToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
 
 
 class OutlineGenerationTool(Tool):
     description: str = "text outline generation tool"
-    input_type: Type[ToolParameterView] = OutlineGenerationToolInputView
-    ouptut_type: Type[ToolParameterView] = OutlineGenerationToolOutputView
 
     def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()

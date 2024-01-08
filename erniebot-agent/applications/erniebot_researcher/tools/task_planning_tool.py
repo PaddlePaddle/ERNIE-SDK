@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Optional, Type
-
-from pydantic import Field
+from typing import Optional
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.schema import ToolParameterView
 
 logger = logging.getLogger(__name__)
 
@@ -55,18 +52,8 @@ def generate_search_queries_with_context_comprehensive(context, question):
     return prompt.format(context=str(context), question=question)
 
 
-class TaskPlanningToolInputView(ToolParameterView):
-    query: str = Field(description="Chunk of text to summarize")
-
-
-class TaskPlanningToolOutputView(ToolParameterView):
-    document: str = Field(description="content")
-
-
 class TaskPlanningTool(Tool):
     description: str = "query task planning tool"
-    input_type: Type[ToolParameterView] = TaskPlanningToolInputView
-    ouptut_type: Type[ToolParameterView] = TaskPlanningToolOutputView
 
     def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()

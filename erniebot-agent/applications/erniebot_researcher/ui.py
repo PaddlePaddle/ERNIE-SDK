@@ -103,15 +103,14 @@ def generate_report(query, history=[]):
     task_planning_tool = TaskPlanningTool(llm=llm)
     semantic_citation_tool = SemanticCitationTool()
     dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
-    target_path = f"./outputsl/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
+    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
     os.makedirs(target_path, exist_ok=True)
     os.makedirs(dir_path, exist_ok=True)
     research_actor = []
     for i in range(args.num_research_agent):
         agents_name = "agent_" + str(i)
         research_agent = ResearchAgent(
-            name="generate_report",
-            agent_name=agents_name,
+            name=agents_name,
             system_message=SystemMessage("你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿"),
             dir_path=dir_path,
             report_type=args.report_type,
