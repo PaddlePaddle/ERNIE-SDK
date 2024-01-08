@@ -24,6 +24,8 @@ from openapi_spec_validator.readers import read_from_filename
 from pydantic import Field
 
 from erniebot_agent.tools import RemoteToolkit
+from erniebot_agent.tools.current_time_tool import CurrentTimeTool
+from erniebot_agent.tools.remote_tool import check_json_length
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_typing_list_type,
@@ -31,17 +33,12 @@ from erniebot_agent.tools.schema import (
     json_type,
 )
 from erniebot_agent.tools.utils import tool_response_contains_file
-from erniebot_agent.tools.remote_tool import check_json_length
 from erniebot_agent.utils.common import create_enum_class
 from erniebot_agent.utils.exceptions import RemoteToolError
-from erniebot_agent.tools.current_time_tool import CurrentTimeTool
-
 
 
 def test_check_json_length():
-    fake_json_data = {
-        "key": "1" * 4097
-    }
+    fake_json_data = {"key": "1" * 4097}
     with pytest.raises(RemoteToolError):
         check_json_length(fake_json_data)
 

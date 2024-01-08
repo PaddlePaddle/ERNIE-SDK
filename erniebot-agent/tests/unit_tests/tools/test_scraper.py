@@ -9,10 +9,9 @@ from erniebot_agent.tools.scraper import ScraperTool
 
 
 class TestScraper(unittest.IsolatedAsyncioTestCase):
-
     async def test_run(self):
         tool = ScraperTool("eb-agent")
-        
+
         content = await tool(
             urls=[
                 {"url": "https://ernie-bot-agent.readthedocs.io/zh-cn/latest/"},
