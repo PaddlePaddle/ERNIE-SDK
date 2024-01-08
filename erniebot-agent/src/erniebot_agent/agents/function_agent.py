@@ -26,6 +26,7 @@ from erniebot_agent.agents.schema import (
     NoActionStep,
     PluginStep,
     ToolInfo,
+    ToolResponse,
     ToolStep,
 )
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -33,6 +34,8 @@ from erniebot_agent.file.base import File
 from erniebot_agent.file.file_manager import FileManager
 from erniebot_agent.memory import Memory
 from erniebot_agent.memory.messages import (
+    AIMessage,
+    FunctionCall,
     FunctionMessage,
     HumanMessage,
     Message,
@@ -115,11 +118,9 @@ class FunctionAgent(Agent):
         self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=3)
         self._snapshot_for_curr_run: Optional[FunctionAgentRunSnapshot] = None
 
-    def pop_snapshot(self) -> Optional["FunctionAgentRunSnapshot"]:
-        try:
-            return self._pop_snapshot()
-        except IndexError:
-            return None
+    @property
+    def snapshots(self) -> Deque["FunctionAgentRunSnapshot"]:
+        return self._snapshots
 
     def restore_from_snapshot(self, snapshot: "FunctionAgentRunSnapshot") -> None:
         self._snapshot_for_curr_run = snapshot
@@ -225,11 +226,47 @@ class FunctionAgent(Agent):
         snapshot = FunctionAgentRunSnapshot(chat_history=chat_history.copy(), steps=steps.copy())
         self._snapshots.append(snapshot)
 
-    def _pop_snapshot(self) -> "FunctionAgentRunSnapshot":
-        return self._snapshots.pop()
-
 
 @dataclass
 class FunctionAgentRunSnapshot(object):
     chat_history: List[Message]
     steps: List[AgentStep]
+
+    def update_last_tool_call(self, tool_name: str, tool_args: str, tool_resp: ToolResponse) -> None:
+        tool_step = self.steps[-1]
+        if not isinstance(tool_step, ToolStep):
+            raise RuntimeError("The last step is not a tool step.")
+        ai_message = self.chat_history[-2]
+        function_message = self.chat_history[-1]
+        if (
+            not isinstance(ai_message, AIMessage)
+            or ai_message.function_call is None
+            or not isinstance(function_message, FunctionMessage)
+        ):
+            raise RuntimeError(
+                "The last two messages must be "
+                " an AI message containing a function call and a function message."
+            )
+
+        new_ai_message = AIMessage(
+            content="",
+            function_call=FunctionCall(
+                name=tool_name,
+                thoughts=f"我需要调用{tool_name}解决这个问题",
+                arguments=tool_args,
+            ),
+        )
+        new_function_message = FunctionMessage(name=tool_name, content=tool_resp.json)
+        new_tool_step = ToolStep(
+            info=ToolInfo(tool_name=tool_name, tool_args=tool_args),
+            result=tool_resp.json,
+            input_files=tool_resp.input_files,
+            output_files=tool_resp.output_files,
+        )
+
+        self.steps.pop()
+        self.steps.append(new_tool_step)
+        self.chat_history.pop()
+        self.chat_history.pop()
+        self.chat_history.append(new_ai_message)
+        self.chat_history.append(new_function_message)

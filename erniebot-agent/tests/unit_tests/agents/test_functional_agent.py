@@ -242,7 +242,7 @@ async def test_function_agent_snapshot(identity_tool):
     )
 
     first_run_response = await agent.run("Run!")
-    snapshot = agent.pop_snapshot()
+    snapshot = agent.snapshots.pop()
     agent.restore_from_snapshot(snapshot)
     second_run_response = await agent.run("Run!")
     assert second_run_response.chat_history[:-1] == first_run_response.chat_history[:-1]
