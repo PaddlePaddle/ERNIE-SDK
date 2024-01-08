@@ -1,9 +1,9 @@
 import json
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse, AgentStep
-from erniebot_agent.file.base import File
+from erniebot_agent.file import File
 from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 
@@ -70,7 +70,7 @@ class RetrievalAgent(Agent):
         self.use_compressor = use_compressor
         self.compressor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
         if self.few_shot_retriever is not None:
             # Get few shot examples
