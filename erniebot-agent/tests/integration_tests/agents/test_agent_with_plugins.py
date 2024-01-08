@@ -10,7 +10,6 @@ from erniebot_agent.file import GlobalFileManagerHandler
 from erniebot_agent.memory import AIMessage, HumanMessage, Message
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.tools.base import Tool
-from erniebot_agent.tools.calculator_tool import CalculatorTool
 from erniebot_agent.tools.schema import ToolParameterView
 
 
@@ -105,6 +104,7 @@ class TextRepeaterNoFileTool(Tool):
             ),
         ]
 
+
 class get_current_weatherInputView(ToolParameterView):
     location: str = Field(description="省，市名，例如：河北省，石家庄")
     unit: str = Field(description="重复次数")
@@ -114,7 +114,7 @@ class get_current_weather(Tool):
     description: str = "获得指定地点的天气"
     input_type: Type[ToolParameterView] = get_current_weatherInputView
 
-    async def __call__(self, location, unit: int=None) -> None:
+    async def __call__(self, location, unit: int = None) -> None:
         return None
 
 
@@ -125,7 +125,9 @@ plugins = ["ChatFile", "eChart"]
 # plugins: List[str] = []
 agent = FunctionAgent(
     llm=llm,
-    tools=[get_current_weather(), ],
+    tools=[
+        get_current_weather(),
+    ],
     memory=memory,
     callbacks=get_no_ellipsis_callback(),
     plugins=plugins,
@@ -133,8 +135,11 @@ agent = FunctionAgent(
 
 
 async def run_agent():
-    await GlobalFileManagerHandler().configure(enable_remote_file=True, access_token="your-access-token", )
-    file_manager = await GlobalFileManagerHandler().get()  
+    await GlobalFileManagerHandler().configure(
+        enable_remote_file=True,
+        access_token="your-access-token",
+    )
+    file_manager = await GlobalFileManagerHandler().get()
 
     docx_file = await file_manager.create_file_from_path(
         file_path="浅谈牛奶的营养与消费趋势.docx",
