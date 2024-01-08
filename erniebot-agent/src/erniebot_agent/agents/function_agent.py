@@ -135,7 +135,7 @@ class FunctionAgent(Agent):
     def snapshots(self) -> Deque["FunctionAgentRunSnapshot"]:
         return self._snapshots
 
-    def restore_from_snapshot(self, snapshot: "FunctionAgentRunSnapshot") -> None:
+    def restore(self, snapshot: "FunctionAgentRunSnapshot") -> None:
         self._snapshot_for_curr_run = snapshot
 
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
