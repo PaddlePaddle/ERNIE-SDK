@@ -180,7 +180,7 @@ class FunctionAgent(Agent):
         chat_history: List[Message] = []
         if self.system_message is not None:
             chat_history.append(self.system_message)
-        
+
         return chat_history
 
     def _create_finished_response(

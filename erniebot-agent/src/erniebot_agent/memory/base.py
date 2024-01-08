@@ -85,7 +85,7 @@ class Memory:
 
     def __init__(self):
         self.msg_manager = MessageManager()
-    
+
     def set_system_message(self, message: SystemMessage):
         """Set the system message of a conversation."""
         self.msg_manager.system_message = message
