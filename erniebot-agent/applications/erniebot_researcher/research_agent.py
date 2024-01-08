@@ -179,7 +179,7 @@ class ResearchAgent(JsonUtil):
                     report_type=self.report_type,
                     agent_role_prompt=self.role,
                     outline=outline,
-                    agent_name=self.agent_name,
+                    agent_name=self.name,
                     dir_path=self.dir_path,
                 )
                 break

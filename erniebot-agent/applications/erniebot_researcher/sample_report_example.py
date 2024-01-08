@@ -94,7 +94,7 @@ def get_tools(llm, llm_long):
     report_writing_tool = ReportWritingTool(llm=llm, llm_long=llm_long)
     summarization_tool = TextSummarizationTool()
     task_planning_tool = TaskPlanningTool(llm=llm)
-    semantic_citation_tool = SemanticCitationTool(llm=llm, theta_min=0.7)
+    semantic_citation_tool = SemanticCitationTool(theta_min=0.7)
 
     return {
         "intent_detection": intent_detection_tool,
