@@ -105,10 +105,6 @@ class EditorActorAgent(Agent, JsonUtil):
                 res = response.content
 
                 try:
-                    # start_idx = suggestions.index("{")
-                    # end_idx = suggestions.rindex("}")
-                    # suggestions = suggestions[start_idx : end_idx + 1]
-                    # suggestions = json.loads(suggestions)
                     suggestions = self.parse_json(res)
                 except Exception as e:
                     logger.error(e)
@@ -130,9 +126,5 @@ class EditorActorAgent(Agent, JsonUtil):
         messages = [HumanMessage("请纠正以下数据的json格式：%s" % json_data)]
         response = await self.llm.chat(messages)
         res = response.content
-        # start_idx = res.index("{")
-        # end_idx = res.rindex("}")
-        # corrected_data = res[start_idx : end_idx + 1]
-        # corrected_data = json.loads(corrected_data)
         corrected_data = self.parse_json(res)
         return corrected_data
