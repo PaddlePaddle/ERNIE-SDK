@@ -55,8 +55,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             memory: A memory object that equips the agent to remember chat
                 history. If not specified, a new WholeMemory object will be instantiated.
             system: A message that tells the LLM how to interpret the
-                conversations. If `None`, the system message contained in
-                `memory` will be used.
+                conversations.
             callbacks: A list of callback handlers for the agent to use. If
                 `None`, a default list of callbacks will be used.
             file_manager: A file manager for the agent to interact with files.
@@ -78,10 +77,8 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         else:
             self.memory = memory
 
-        if system:
-            self.system = SystemMessage(system)
-        else:
-            self.system = self.memory.get_system_message()
+        self.system = SystemMessage(system) if system is not None else system
+
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
