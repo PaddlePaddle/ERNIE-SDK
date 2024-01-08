@@ -68,7 +68,9 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         ]
         res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
-        self.assertIsNone(res.content)
+
+        content = res.content or None
+        self.assertIsNone(content)
         self.assertIsNotNone(res.function_call)
         self.assertEqual(res.function_call["name"], "get_current_temperature")
 
@@ -78,4 +80,6 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
         )
         res = await eb.chat(messages, functions=functions)
         self.assertTrue(isinstance(res, AIMessage))
-        self.assertIsNotNone(res.content)
+
+        content = res.content or None
+        self.assertIsNotNone(content)

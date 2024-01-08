@@ -35,26 +35,24 @@ class GlobalFileManagerHandler(object):
 
 
     Methods:
-        get: Asynchronously retrieves the global FileManager instance.
-        configure: Asynchronously configures the global FileManager
+        get: Retrieves the global FileManager instance.
+        configure: Configures the global FileManager
                    at the beginning of event loop.
-        set: Asynchronously sets the global FileManager explicitly.
+        set: Sets the global FileManager explicitly.
 
     """
 
-    _lock: asyncio.Lock
     _file_manager: Optional[FileManager]
 
     def __new__(cls) -> Self:
         loop = asyncio.get_running_loop()
         if loop not in _registry:
             handler = super().__new__(cls)
-            handler._lock = asyncio.Lock()
             handler._file_manager = None
             _registry[loop] = handler
         return _registry[loop]
 
-    async def get(self) -> FileManager:
+    def get(self) -> FileManager:
         """
         Retrieve the global FileManager instance.
 
@@ -66,17 +64,15 @@ class GlobalFileManagerHandler(object):
             FileManager: The global FileManager instance.
 
         """
+        if self._file_manager is None:
+            self._file_manager = self._create_default_file_manager(
+                access_token=None,
+                save_dir=None,
+                enable_remote_file=False,
+            )
+        return self._file_manager
 
-        async with self._lock:
-            if self._file_manager is None:
-                self._file_manager = await self._create_default_file_manager(
-                    access_token=None,
-                    save_dir=None,
-                    enable_remote_file=False,
-                )
-            return self._file_manager
-
-    async def configure(
+    def configure(
         self,
         *,
         access_token: Optional[str] = None,
@@ -104,17 +100,16 @@ class GlobalFileManagerHandler(object):
             RuntimeError: If the global FileManager is already set.
 
         """
-        async with self._lock:
-            if self._file_manager is not None:
-                self._raise_file_manager_already_set_error()
-            self._file_manager = await self._create_default_file_manager(
-                access_token=access_token,
-                save_dir=save_dir,
-                enable_remote_file=enable_remote_file,
-                **opts,
-            )
+        if self._file_manager is not None:
+            self._raise_file_manager_already_set_error()
+        self._file_manager = self._create_default_file_manager(
+            access_token=access_token,
+            save_dir=save_dir,
+            enable_remote_file=enable_remote_file,
+            **opts,
+        )
 
-    async def set(self, file_manager: FileManager) -> None:
+    def set(self, file_manager: FileManager) -> None:
         """
         Set the global FileManager explicitly.
 
@@ -130,12 +125,11 @@ class GlobalFileManagerHandler(object):
         Raises:
             RuntimeError: If the global FileManager is already set.
         """
-        async with self._lock:
-            if self._file_manager is not None:
-                self._raise_file_manager_already_set_error()
-            self._file_manager = file_manager
+        if self._file_manager is not None:
+            self._raise_file_manager_already_set_error()
+        self._file_manager = file_manager
 
-    async def _create_default_file_manager(
+    def _create_default_file_manager(
         self,
         access_token: Optional[str],
         save_dir: Optional[str],
@@ -163,7 +157,6 @@ class GlobalFileManagerHandler(object):
     def _raise_file_manager_already_set_error(self) -> NoReturn:
         raise RuntimeError(
             "The global file manager can only be set once."
-            " The setup can be done explicitly by calling"
-            " `GlobalFileManagerHandler.configure` or `GlobalFileManagerHandler.set`,"
-            " or implicitly by calling `GlobalFileManagerHandler.get`."
+            " The setup can be done explicitly by calling `configure` or `set`,"
+            " or implicitly by calling `get`."
         )
