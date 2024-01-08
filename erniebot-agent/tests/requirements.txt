@@ -6,3 +6,4 @@ uvicorn
 pymupdf
 beautifulsoup4
 lxml
+langchain-community
