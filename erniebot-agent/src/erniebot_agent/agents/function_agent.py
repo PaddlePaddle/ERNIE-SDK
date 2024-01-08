@@ -43,6 +43,7 @@ from erniebot_agent.tools.tool_manager import ToolManager
 _MAX_STEPS = 5
 _logger = logging.getLogger(__name__)
 
+
 class FunctionAgent(Agent):
     """An agent driven by function calling.
 
@@ -138,13 +139,12 @@ class FunctionAgent(Agent):
             curr_step, new_messages = await self._step(chat_history, use_tool=tool)
             chat_history.extend(new_messages)
             num_steps_taken += 1
-            if not isinstance(curr_step, NoActionStep):                
+            if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
             else:
                 # If tool choice not work, skip this round
                 _logger.warning(f"Selected tool [{tool.tool_name}] not work")
                 chat_history.pop()
-
 
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
