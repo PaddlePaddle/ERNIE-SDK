@@ -105,15 +105,27 @@ class TextRepeaterNoFileTool(Tool):
             ),
         ]
 
+class get_current_weatherInputView(ToolParameterView):
+    location: str = Field(description="省，市名，例如：河北省，石家庄")
+    unit: str = Field(description="重复次数")
+
+
+class get_current_weather(Tool):
+    description: str = "获得指定地点的天气"
+    input_type: Type[ToolParameterView] = get_current_weatherInputView
+
+    async def __call__(self, location, unit: int=None) -> None:
+        return None
+
 
 # TODO(shiyutang): replace this when model is online
-llm = ERNIEBot(model="ernie-3.5", api_type="custom")
+llm = ERNIEBot(model="ernie-3.5", api_type="custom", enable_multi_step_tool_call=True)
 memory = SlidingWindowMemory(max_round=1)
-# plugins = ["ChatFile", "eChart"]
-plugins: List[str] = []
+plugins = ["ChatFile", "eChart"]
+# plugins: List[str] = []
 agent = FunctionAgent(
     llm=llm,
-    tools=[TextRepeaterTool(), TextRepeaterNoFileTool(), CalculatorTool()],
+    tools=[get_current_weather(), ],
     memory=memory,
     callbacks=get_no_ellipsis_callback(),
     plugins=plugins,
@@ -121,7 +133,8 @@ agent = FunctionAgent(
 
 
 async def run_agent():
-    file_manager = await GlobalFileManagerHandler().get()
+    await GlobalFileManagerHandler().configure(enable_remote_file=True, access_token="your-access-token", )
+    file_manager = await GlobalFileManagerHandler().get()  
 
     docx_file = await file_manager.create_file_from_path(
         file_path="浅谈牛奶的营养与消费趋势.docx",
