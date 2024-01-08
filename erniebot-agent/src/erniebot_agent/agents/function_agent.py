@@ -141,6 +141,7 @@ class FunctionAgent(Agent):
     async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
         steps_taken: List[AgentStep] = []
+        num_steps_taken = 0
 
         if self._snapshot_for_curr_run is not None:
             chat_history[:] = self._snapshot_for_curr_run.chat_history
@@ -154,7 +155,7 @@ class FunctionAgent(Agent):
             chat_history.append(run_input)
 
         for tool in self._first_tools:
-            curr_step, new_messages = await self._step(chat_history, use_tool=tool)
+            curr_step, new_messages = await self._step(chat_history, tool_to_use=tool)
             chat_history.extend(new_messages)
             num_steps_taken += 1
             if not isinstance(curr_step, NoActionStep):
@@ -169,7 +170,6 @@ class FunctionAgent(Agent):
             chat_history.extend(new_messages)
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
-
             if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
                 response = self._create_finished_response(chat_history, steps_taken)
                 self.memory.add_message(chat_history[0])
@@ -181,15 +181,15 @@ class FunctionAgent(Agent):
         return response
 
     async def _step(
-        self, chat_history: List[Message], use_tool: Optional[BaseTool] = None
+        self, chat_history: List[Message], tool_to_use: Optional[BaseTool] = None
     ) -> Tuple[AgentStep, List[Message]]:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
-        if use_tool is not None:
-            tool_choice = {"type": "function", "function": {"name": use_tool.tool_name}}
+        if tool_to_use is not None:
+            tool_choice = {"type": "function", "function": {"name": tool_to_use.tool_name}}
             llm_resp = await self.run_llm(
                 messages=input_messages,
-                functions=[use_tool.function_call_schema()],  # only regist one tool
+                functions=[tool_to_use.function_call_schema()],  # only regist one tool
                 system=self.system_message.content if self.system_message is not None else None,
                 plugins=self._plugins,
                 tool_choice=tool_choice,
@@ -317,7 +317,7 @@ class FunctionAgentRunSnapshot(object):
 
         tool_ret_json = tool_step.result
         tool_ret = json.loads(tool_ret_json)
-        if isinstance(tool_ret, dict):
+        if not isinstance(tool_ret, dict):
             raise ValueError("The return value of the tool could not be converted to a dict.")
         tool_ret["prompt"] = prompt
         updated_tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
