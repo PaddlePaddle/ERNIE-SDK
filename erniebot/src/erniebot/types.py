@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import IO, Any, AsyncIterator, Dict, Iterator, Optional, TypeVar
+from typing import Any, AsyncIterator, Dict, Iterator, Optional, TypeVar
 
 from typing_extensions import TypeAlias
 
@@ -23,7 +23,6 @@ from .response import EBResponse
 
 __all__ = [
     "ConfigDictType",
-    "FilesType",
     "HeadersType",
     "ParamsType",
     "Request",
@@ -33,7 +32,6 @@ __all__ = [
 
 ConfigDictType: TypeAlias = Dict[str, Optional[Any]]
 
-FilesType: TypeAlias = Dict[str, IO]
 HeadersType: TypeAlias = Dict[str, str]
 ParamsType: TypeAlias = Dict[str, Any]
 
@@ -42,10 +40,10 @@ ResponseT = TypeVar("ResponseT", EBResponse, Iterator[EBResponse], AsyncIterator
 
 @dataclass
 class Request(object):
+    method: str
     path: str
     params: ParamsType
     headers: HeadersType
-    files: Optional[FilesType] = None
     timeout: Optional[float] = None
 
 

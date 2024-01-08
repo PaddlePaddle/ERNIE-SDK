@@ -25,11 +25,11 @@ from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.file.base import File
-from erniebot_agent.memory.messages import AIMessage, HumanMessage, SystemMessage
+from erniebot_agent.memory.messages import AIMessage, HumanMessage
 from erniebot_agent.memory.sliding_window_memory import SlidingWindowMemory
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.image_generation_tool import (
-    ImageGenerationTool,  # 目前为remotetool，如做直接展示可以替换为yinian
+    ImageGenerationTool,  # 目前为自己搭建的remotetool，待aistudio上线直接替换
 )
 from erniebot_agent.tools.tool_manager import ToolManager
 
@@ -72,7 +72,7 @@ class GameAgent(Agent):
         model: str,
         script: str,
         tools: Union[ToolManager, List[BaseTool]],
-        system_message: Optional[SystemMessage] = None,
+        system: Optional[str] = None,
         access_token: Union[str, None] = None,
         max_round: int = 3,
     ) -> None:
@@ -83,7 +83,7 @@ class GameAgent(Agent):
             llm=ERNIEBot(model, api_type="aistudio", access_token=access_token),
             memory=memory,
             tools=tools,
-            system_message=system_message,
+            system=system,
         )
 
     async def handle_tool(self, tool_name: str, tool_args: str) -> str:
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         model=args.model,
         script=args.game,
         tools=[ImageGenerationTool()],
-        system_message=SystemMessage(INSTRUCTION.format(SCRIPT=args.game)),
+        system=INSTRUCTION.format(SCRIPT=args.game),
         access_token=access_token,
     )
     game_system.launch_gradio_demo()

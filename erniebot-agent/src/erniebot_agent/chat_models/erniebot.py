@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -43,8 +42,6 @@ from erniebot_agent.memory.messages import (
 from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
-
-logger = logging.getLogger(__name__)
 
 
 class BaseERNIEBot(ChatModel):

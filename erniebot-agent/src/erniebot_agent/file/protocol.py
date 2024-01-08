@@ -14,15 +14,15 @@
 
 import datetime
 import re
-from typing import Generator, List, Literal, get_args
+from typing import Final, Generator, List, Literal, get_args
 
 from typing_extensions import TypeAlias
 
-_LOCAL_FILE_ID_PREFIX = "file-local-"
-_UUID_PATTERN = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-_LOCAL_FILE_ID_PATTERN = _LOCAL_FILE_ID_PREFIX + _UUID_PATTERN
-_REMOTE_FILE_ID_PREFIX = "file-"
-_REMOTE_FILE_ID_PATTERN = _REMOTE_FILE_ID_PREFIX + r"[0-9]{15}"
+_LOCAL_FILE_ID_PREFIX: Final[str] = "file-local-"
+_UUID_PATTERN: Final[str] = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+_LOCAL_FILE_ID_PATTERN: Final[str] = _LOCAL_FILE_ID_PREFIX + _UUID_PATTERN
+_REMOTE_FILE_ID_PREFIX: Final[str] = "file-"
+_REMOTE_FILE_ID_PATTERN: Final[str] = _REMOTE_FILE_ID_PREFIX + r"[0-9]{15}"
 
 FilePurpose: TypeAlias = Literal["assistants", "assistants_output"]
 

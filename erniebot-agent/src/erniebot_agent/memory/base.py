@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 
 from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class MessageManager:
@@ -43,7 +43,7 @@ class MessageManager:
     @system_message.setter
     def system_message(self, message: SystemMessage) -> None:
         if self._system_message is not None:
-            logger.warning("system message has been set, the previous one will be replaced")
+            _logger.warning("system message has been set, the previous one will be replaced")
 
         self._system_message = message
 

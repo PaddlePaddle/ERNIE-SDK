@@ -2,8 +2,7 @@ import unittest
 from typing import List, Literal
 
 from erniebot_agent.agents.schema import AgentResponse, ToolInfo, ToolStep
-from erniebot_agent.file.base import File
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import File, FileManager
 
 
 class TestAgentResponseAnnotations(unittest.IsolatedAsyncioTestCase):

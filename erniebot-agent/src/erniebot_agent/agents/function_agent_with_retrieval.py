@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Sequence, Type
 
 from pydantic import Field
 
@@ -28,8 +28,6 @@ from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-logger = logging.getLogger(__name__)
-
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content']}}
@@ -44,6 +42,9 @@ RAG_PROMPT = """检索结果:
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
+
+
+_logger = logging.getLogger(__name__)
 
 
 class KnowledgeBaseToolInputView(ToolParameterView):
@@ -93,7 +94,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -122,7 +123,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 llm_resp = await self._run_llm(
                     messages=chat_history,
                     functions=None,
-                    system=self.system_message.content if self.system_message is not None else None,
+                    system=self.system.content if self.system is not None else None,
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:
@@ -153,7 +154,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
             self.memory.add_message(chat_history[-1])
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt, files)
@@ -164,7 +165,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         for doc in results["documents"]:
             num_tokens = len(doc["content"])
             if token_count + num_tokens > self.token_limit:
-                logger.warning(
+                _logger.warning(
                     "Retrieval results exceed token limit. Truncating retrieval results to "
                     f"under {self.token_limit} tokens"
                 )
@@ -194,7 +195,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
@@ -260,7 +261,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             response = self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
@@ -298,7 +299,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
@@ -374,7 +375,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
