@@ -257,22 +257,7 @@ class FunctionAgentRunSnapshot(object):
     chat_history: List[Message]
     steps: List[AgentStep]
 
-    def update_last_tool_call(self, tool_name: str, tool_args: str, tool_resp: ToolResponse) -> None:
-        tool_step = self.steps[-1]
-        if not isinstance(tool_step, ToolStep):
-            raise RuntimeError("The last step is not a tool step.")
-        ai_message = self.chat_history[-2]
-        function_message = self.chat_history[-1]
-        if (
-            not isinstance(ai_message, AIMessage)
-            or ai_message.function_call is None
-            or not isinstance(function_message, FunctionMessage)
-        ):
-            raise RuntimeError(
-                "The last two messages must be "
-                " an AI message containing a function call and a function message."
-            )
-
+    def add_tool_call(self, tool_name: str, tool_args: str, tool_resp: ToolResponse) -> None:
         new_ai_message = AIMessage(
             content="",
             function_call=FunctionCall(
@@ -289,10 +274,7 @@ class FunctionAgentRunSnapshot(object):
             output_files=tool_resp.output_files,
         )
 
-        self.steps.pop()
         self.steps.append(new_tool_step)
-        self.chat_history.pop()
-        self.chat_history.pop()
         self.chat_history.append(new_ai_message)
         self.chat_history.append(new_function_message)
 
