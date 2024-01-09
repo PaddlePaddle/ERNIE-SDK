@@ -98,6 +98,11 @@ class FunctionAgent(Agent):
                 use a default value.
             first_tools: Tools scheduled to be called sequentially at the
                 beginning of each agent run.
+
+        Raises:
+            ValueError: if `max_steps` is non-positive. 
+            RuntimeError: if tools in first_tools but not in tools list.
+
         """
         super().__init__(
             llm=llm,
