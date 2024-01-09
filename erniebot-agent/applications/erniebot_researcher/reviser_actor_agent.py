@@ -4,7 +4,6 @@ from typing import Dict, Optional, Union
 from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
-from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
@@ -39,7 +38,7 @@ class ReviserActorAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, draft: Union[str, Dict], notes: str) -> AgentResponse:
+    async def run(self, draft: Union[str, Dict], notes: str) -> str:
         if isinstance(draft, dict):
             await self._callback_manager.on_run_start(agent=self, prompt=draft["report"])
         else:

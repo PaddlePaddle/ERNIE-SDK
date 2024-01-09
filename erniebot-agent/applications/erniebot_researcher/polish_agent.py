@@ -5,7 +5,6 @@ from typing import Optional
 from tools.utils import JsonUtil, ReportCallbackHandler, add_citation, write_md_to_pdf
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
-from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -62,7 +61,7 @@ class PolishAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: str, summarize=None) -> AgentResponse:
+    async def run(self, report: str, summarize=None):
         await self._callback_manager.on_run_start(agent=self, prompt=report)
         agent_resp = await self._run(report, summarize)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)

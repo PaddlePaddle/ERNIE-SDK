@@ -5,7 +5,6 @@ from typing import Optional, Union
 from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
-from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -74,7 +73,7 @@ class EditorActorAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: Union[str, dict]) -> AgentResponse:
+    async def run(self, report: Union[str, dict[str, str]]) -> dict:
         if isinstance(report, dict):
             report = report["report"]
         await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=report)

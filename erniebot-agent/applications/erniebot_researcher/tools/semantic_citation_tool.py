@@ -35,9 +35,9 @@ class SemanticCitationTool(Tool):
         self.theta_min = theta_min
         self.theta_max = theta_max
         self.citation_num = citation_num
-        self.recoder_cite_dict = {}
-        self.recoder_cite_list = []
-        self.recoder_cite_title = []
+        self.recoder_cite_dict: dict = {}
+        self.recoder_cite_list: list = []
+        self.recoder_cite_title: list = []
 
     def add_url_sentences(self, sententces: str, citation_faiss_research):
         sentence_splits = sententces.split("。")
