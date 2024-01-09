@@ -5,6 +5,7 @@ pytest-cov
 uvicorn
 pymupdf
 beautifulsoup4
+types-beautifulsoup4
 lxml
 langchain-community
 arxiv
