@@ -72,9 +72,7 @@ class FaissAbstractSearch:
         docs = self.db.similarity_search_with_relevance_scores(query, top_k)
         retrieval_results = []
         for doc, score in docs:
-            retrieval_results.append(
-                {"content": doc.page_content, "score": score}
-            )
+            retrieval_results.append({"content": doc.page_content, "score": score})
         return retrieval_results
 
 
