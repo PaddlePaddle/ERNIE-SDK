@@ -105,7 +105,6 @@ class EditorActorAgent(JsonUtil):
                 return suggestions
             except Exception as e:
                 logger.error(e)
-                breakpoint()
                 await self._callback_manager.on_llm_error(self, self.llm, error=e)
                 retry_count += 1
                 time.sleep(0.5)

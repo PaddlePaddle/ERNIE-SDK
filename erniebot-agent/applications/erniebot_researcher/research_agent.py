@@ -46,13 +46,6 @@ class ResearchAgent(JsonUtil):
         nums_queries: int = 4,
         callbacks=None,
     ):
-        """
-        Initialize the ResearchAgent class.
-        Args:
-            query:
-            report_type:
-            ......
-        """
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
