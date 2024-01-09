@@ -223,10 +223,13 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         raise NotImplementedError
 
     async def _run_llm(self, messages: List[Message], **opts: Any) -> LLMResponse:
-        for reserved_opt in ("stream", "functions", "system", "plugins"):
+        for reserved_opt in ("stream", "system", "plugins"):
             if reserved_opt in opts:
                 raise TypeError(f"`{reserved_opt}` should not be set.")
-        functions = self._tool_manager.get_tool_schemas()
+        if "functions" not in opts:
+            functions = self._tool_manager.get_tool_schemas()
+        else:
+            functions = opts.pop("functions")
         opts["system"] = self.system_message.content if self.system_message is not None else None
         opts["plugins"] = self._plugins
         llm_ret = await self.llm.chat(messages, stream=False, functions=functions, **opts)

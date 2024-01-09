@@ -80,7 +80,7 @@ class ToolResponse(object):
     output_files: List[File]
 
 
-_IT = TypeVar("_IT", bound=Dict)
+_IT = TypeVar("_IT")
 _RT = TypeVar("_RT")
 
 
@@ -114,7 +114,7 @@ class PluginStep(AgentStepWithFiles[PluginInfo, str]):
     """A step taken by an agent that calls a plugin."""
 
 
-class _NullInfo(Dict):
+class _NullInfo(TypedDict):
     pass
 
 

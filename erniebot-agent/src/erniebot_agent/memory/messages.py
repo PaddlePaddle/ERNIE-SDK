@@ -37,7 +37,7 @@ class TokenUsage(TypedDict):
     completion_tokens: int
 
 
-class PluginInfo(Dict):
+class PluginInfo(TypedDict):
     names: List[str]
 
 
