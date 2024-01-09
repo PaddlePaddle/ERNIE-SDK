@@ -117,7 +117,9 @@ class RetrievalAgent(Agent):
             res = self.context_retriever.search(prompt, 3)
 
             context = [item["content"] for item in res]
-            steps_input = HumanMessage(content=self.context_planning.format(query=prompt, context="\n".join(context)))
+            steps_input = HumanMessage(
+                content=self.context_planning.format(query=prompt, context="\n".join(context))
+            )
         else:
             steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
 
