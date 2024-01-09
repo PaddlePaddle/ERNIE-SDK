@@ -2,7 +2,7 @@ import json
 from typing import List, Optional, Sequence
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.agents.schema import AgentResponse, AgentStep
+from erniebot_agent.agents.schema import AgentResponse, AgentStep, RetrievalStep
 from erniebot_agent.file import File
 from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
@@ -113,6 +113,7 @@ class RetrievalAgent(Agent):
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=prompt, documents=few_shots)
             )
+            steps_taken.append(RetrievalStep(name="few shot retriever", info=prompt, result=few_shots))
         elif self.context_retriever:
             res = self.context_retriever.search(prompt, 3)
 
@@ -120,6 +121,7 @@ class RetrievalAgent(Agent):
             steps_input = HumanMessage(
                 content=self.context_planning.format(query=prompt, context="\n".join(context))
             )
+            steps_taken.append(RetrievalStep(name="context retriever", info=prompt, result=res))
         else:
             steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
         # Query planning
@@ -130,7 +132,7 @@ class RetrievalAgent(Agent):
         json_results = self._parse_results(output_message.content)
         sub_queries = json_results.values()
         # Sub query execution
-        retrieval_results = await self.execute(sub_queries)
+        retrieval_results = await self.execute(sub_queries, steps_taken)
 
         # Answer generation
         step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=retrieval_results))
@@ -146,10 +148,10 @@ class RetrievalAgent(Agent):
         response = self._create_finished_response(chat_history, steps_taken)
         return response
 
-    async def execute(self, sub_queries):
+    async def execute(self, sub_queries, steps_taken: List[AgentStep]):
         retrieval_results = []
         if self.use_compressor:
-            for query in sub_queries:
+            for idx, query in enumerate(sub_queries):
                 documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
                 docs = [item for item in documents["documents"]]
                 context = "\n".join([item["content"] for item in docs])
@@ -162,11 +164,17 @@ class RetrievalAgent(Agent):
                 compressed_data["sub_query"] = query
                 compressed_data["content"] = output_message.content
                 retrieval_results.append(compressed_data)
+                steps_taken.append(
+                    RetrievalStep(name=f"sub query compressor {idx}", info=query, result=compressed_data)
+                )
         else:
             duplicates = set()
-            for query in sub_queries:
+            for idx, query in enumerate(sub_queries):
                 documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
                 docs = [item for item in documents["documents"]]
+                steps_taken.append(
+                    RetrievalStep(name=f"sub query results {idx}", info=query, result=documents)
+                )
                 for doc in docs:
                     if doc["content"] not in duplicates:
                         duplicates.add(doc["content"])
@@ -177,12 +185,7 @@ class RetrievalAgent(Agent):
     def _parse_results(self, results):
         left_index = results.find("{")
         right_index = results.rfind("}")
-        if left_index == -1 or right_index == -1:
-            return {"is_relevant": False}
-        try:
-            return json.loads(results[left_index : right_index + 1])
-        except Exception:
-            return {"is_relevant": False}
+        return json.loads(results[left_index : right_index + 1])
 
     def _create_finished_response(
         self,
