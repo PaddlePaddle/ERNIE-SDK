@@ -2,5 +2,4 @@ gradio
 jsonlines
 md2pdf
 langchain
-md2pdf
 scikit-learn

@@ -57,7 +57,7 @@ parser.add_argument(
 parser.add_argument(
     "--index_name_citation", type=str, default="", help="The name of the citation base(faiss)"
 )
-
+parser.add_argument("--save_path", type=str, default="./output/erniebot", help="The report save path")
 parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
 parser.add_argument("--iterations", type=int, default=4, help="Maximum number of corrections")
 parser.add_argument(
@@ -166,9 +166,9 @@ def get_tools(llm, llm_long):
 
 
 def main(query):
-    dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
+    dir_path = f"{args.save_path}/{hashlib.sha1(query.encode()).hexdigest()}"
     os.makedirs(dir_path, exist_ok=True)
-    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
+    target_path = f"{args.save_path}/{hashlib.sha1(query.encode()).hexdigest()}/revised"
     os.makedirs(target_path, exist_ok=True)
     llm_long = ERNIEBot(model="ernie-longtext")
     llm = ERNIEBot(model="ernie-4.0")
