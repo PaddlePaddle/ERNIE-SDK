@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import List
+
 from tools.utils import JsonUtil
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 
@@ -46,7 +48,7 @@ class IntentDetectionTool(Tool, JsonUtil):
 
     async def __call__(self, content: str, **kwargs):
         prompt = auto_agent_instructions()
-        messages = [HumanMessage(prompt.format(content=content))]
+        messages: List[Message] = [HumanMessage(prompt.format(content=content))]
         response = await self.llm.chat(messages=messages)
         result = response.content
         result = self.parse_json(result)

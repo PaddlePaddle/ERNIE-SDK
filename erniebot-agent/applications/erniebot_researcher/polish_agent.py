@@ -4,7 +4,6 @@ from typing import Optional
 
 from tools.utils import JsonUtil, ReportCallbackHandler, add_citation, write_md_to_pdf
 
-from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
@@ -57,7 +56,7 @@ class PolishAgent(JsonUtil):
             template=self.template_polish, input_variables=["content"]
         )
         if callbacks is None:
-            self._callback_manager = CallbackManager([ReportCallbackHandler()])
+            self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
 

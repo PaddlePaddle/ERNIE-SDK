@@ -1,12 +1,11 @@
 import logging
 import time
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
-from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -69,7 +68,7 @@ class EditorActorAgent(JsonUtil):
         self.llm_long = llm_long
         self.prompt = PromptTemplate(" 草稿为:\n\n{{report}}", input_variables=["report"])
         if callbacks is None:
-            self._callback_manager = CallbackManager([ReportCallbackHandler()])
+            self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
 
@@ -85,7 +84,7 @@ class EditorActorAgent(JsonUtil):
         if isinstance(report, dict):
             report = report["report"]
         content = self.prompt.format(report=report)
-        messages = [HumanMessage(content)]
+        messages: List[Message] = [HumanMessage(content)]
         retry_count = 0
         while True:
             try:
@@ -106,6 +105,7 @@ class EditorActorAgent(JsonUtil):
                 return suggestions
             except Exception as e:
                 logger.error(e)
+                breakpoint()
                 await self._callback_manager.on_llm_error(self, self.llm, error=e)
                 retry_count += 1
                 time.sleep(0.5)

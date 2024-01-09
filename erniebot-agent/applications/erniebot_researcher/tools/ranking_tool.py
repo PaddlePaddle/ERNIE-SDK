@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 
@@ -57,7 +57,7 @@ class TextRankingTool(Tool, JsonUtil):
                     content = rank_report_prompt(report=item["report"], query=query)
                 else:
                     content = rank_report_prompt(report=item, query=query)
-                messages = [HumanMessage(content)]
+                messages: List[Message] = [HumanMessage(content)]
                 retry_count = 0
                 while True:
                     try:

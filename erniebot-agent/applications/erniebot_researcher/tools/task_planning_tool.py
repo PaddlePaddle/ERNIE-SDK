@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 
@@ -69,25 +69,17 @@ class TaskPlanningTool(Tool, JsonUtil):
         **kwargs,
     ):
         if not context:
-            messages = [HumanMessage(content=generate_search_queries_prompt(question))]
+            content = generate_search_queries_prompt(question)
+        elif not is_comprehensive:
+            content = generate_search_queries_with_context(context, question)
+        else:
+            content = generate_search_queries_with_context_comprehensive(context, question)
+        messages: List[Message] = [HumanMessage(content=content)]
+        try:
             response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
             result = response.content
-        else:
-            try:
-                if not is_comprehensive:
-                    messages = [
-                        HumanMessage(content=generate_search_queries_with_context(context, question))
-                    ]
-                else:
-                    messages = [
-                        HumanMessage(
-                            content=generate_search_queries_with_context_comprehensive(context, question)
-                        )
-                    ]
-                response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
-                result = response.content
-                plan = self.parse_json(result, "[", "]")
-            except Exception as e:
-                logger.error(e)
-                plan = []
+            plan = self.parse_json(result, "[", "]")
+        except Exception as e:
+            logger.error(e)
+            plan = []
         return plan

@@ -1,10 +1,9 @@
 from typing import Optional
 
-from erniebot_agent.agents.agent import Agent
 from erniebot_agent.memory import SystemMessage
 
 
-class UserProxyAgent(Agent):
+class UserProxyAgent:
     # refer to https://github.com/microsoft/autogen/blob/main/autogen/agentchat/user_proxy_agent.py
     DEFAULT_SYSTEM_MESSAGE = """你是一个有用的人工助手"""
 
