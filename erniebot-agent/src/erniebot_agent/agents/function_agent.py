@@ -167,13 +167,13 @@ class FunctionAgent(Agent):
         input_messages = self.memory.get_messages() + chat_history
         if use_tool is not None:
             tool_choice = {"type": "function", "function": {"name": use_tool.tool_name}}
-            llm_resp = await self._run_llm(
+            llm_resp = await self.run_llm(
                 messages=input_messages,
                 functions=[use_tool.function_call_schema()],  # only regist one tool
                 tool_choice=tool_choice,
             )
         else:
-            llm_resp = await self._run_llm(messages=input_messages)
+            llm_resp = await self.run_llm(messages=input_messages)
 
         output_message = llm_resp.message  # AIMessage
         new_messages.append(output_message)
