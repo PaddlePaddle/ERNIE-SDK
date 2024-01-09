@@ -72,7 +72,7 @@ parser.add_argument(
     default="openai_embedding",
     help="['openai_embedding','baizhong','ernie_embedding']",
 )
-
+parser.add_argument("--save_path", type=str, default="./output/erniebot", help="The report save path")
 parser.add_argument("--server_name", type=str, default="0.0.0.0", help="the host of server")
 parser.add_argument("--server_port", type=int, default=8878, help="the port of server")
 parser.add_argument("--log_path", type=str, default="log.txt", help="Log file name")
@@ -195,9 +195,9 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
 
 
 def generate_report(query, history=[]):
-    dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
+    dir_path = f"{args.save_path}/{hashlib.sha1(query.encode()).hexdigest()}"
     os.makedirs(dir_path, exist_ok=True)
-    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
+    target_path = f"{args.save_path}/{hashlib.sha1(query.encode()).hexdigest()}/revised"
     os.makedirs(target_path, exist_ok=True)
     llm = ERNIEBot(model="ernie-4.0")
     llm_long = ERNIEBot(model="ernie-longtext")
