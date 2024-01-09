@@ -31,10 +31,19 @@ class BaizhongSearchTool(Tool):
     ouptut_type: Type[ToolParameterView] = BaizhongSearchToolOutputView
 
     def __init__(
-        self, description, db, threshold: float = 0.0, input_type=None, output_type=None, examples=None
+        self,
+        description,
+        db,
+        threshold: float = 0.0,
+        input_type=None,
+        output_type=None,
+        examples=None,
+        name=None,
     ) -> None:
         super().__init__()
         self.db = db
+        if name is not None:
+            self.name = name
         self.description = description
         self.few_shot_examples = []
         if input_type is not None:
