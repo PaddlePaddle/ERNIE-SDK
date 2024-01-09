@@ -94,6 +94,8 @@ class RetrievalAgent(Agent):
         self.knowledge_base = knowledge_base
         self.few_shot_retriever = few_shot_retriever
         self.context_retriever = context_retriever
+        if self.few_shot_retriever and self.context_retriever:
+            raise Exception("Few shot retriever and context retriever shouldn't be used simutaneously")
         if few_shot_retriever:
             self.query_transform = PromptTemplate(
                 FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]

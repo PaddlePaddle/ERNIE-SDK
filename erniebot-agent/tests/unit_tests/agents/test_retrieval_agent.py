@@ -68,7 +68,7 @@ async def test_retrieval_agent_run_few_shot():
         tools=[],
         memory=FakeMemory(),
     )
-    # Test retrieval success
+
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         response = await agent.run("Hello, world!")
@@ -115,7 +115,7 @@ async def test_retrieval_agent_run_context_planning():
         tools=[],
         memory=FakeMemory(),
     )
-    # Test retrieval success
+
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         response = await agent.run("Hello, world!")
@@ -131,3 +131,48 @@ async def test_retrieval_agent_run_context_planning():
     assert response.steps[0].name == "context retriever"
     assert response.steps[1].name == "sub query results 0"
     assert response.steps[2].name == "sub query results 1"
+
+
+@pytest.mark.asyncio
+async def test_retrieval_agent_run_compressor():
+    knowledge_base_name = "test"
+    access_token = "your access token"
+    knowledge_base_id = 111
+    with mock.patch("requests.post") as my_mock:
+        baizhong_db = BaizhongSearch(
+            knowledge_base_name=knowledge_base_name,
+            access_token=access_token,
+            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+        )
+    search_tool = BaizhongSearchTool(
+        name="city_design_management", description="提供城市设计管理办法的信息", db=baizhong_db, threshold=0.0
+    )
+
+    llm = FakeERNIEBotWithPresetResponses(
+        responses=[
+            AIMessage('{"sub_query_":"具体子问题1","sub_query_2":"具体子问题2"}', function_call=None),
+            AIMessage("Sub query compress 1", function_call=None),
+            AIMessage("Sub query compress 2", function_call=None),
+            AIMessage("Text response", function_call=None),
+        ]
+    )
+    agent = RetrievalAgent(
+        knowledge_base=search_tool,
+        llm=llm,
+        tools=[],
+        use_compressor=True,
+        memory=FakeMemory(),
+    )
+
+    with mock.patch("requests.post") as my_mock:
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
+        response = await agent.run("Hello, world!")
+
+    assert response.text == "Text response"
+    assert (
+        response.chat_history[0].content == "检索结果:\n\n    第1个段落: Sub query compress 1\n\n    "
+        "第2个段落: Sub query compress 2\n\n检索语句: Hello, world!\n请根据以上检索结果回答检索语句的问题"
+    )
+    assert response.chat_history[1].content == "Text response"
+    assert response.steps[0].name == "sub query compressor 0"
+    assert response.steps[1].name == "sub query compressor 1"
