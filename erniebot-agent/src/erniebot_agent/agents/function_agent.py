@@ -81,7 +81,7 @@ class FunctionAgent(Agent):
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
-        first_tools: Optional[List[BaseTool]] = [],
+        first_tools: Optional[Sequence[BaseTool]] = [],
     ) -> None:
         """Initialize a function agent.
 
@@ -103,8 +103,13 @@ class FunctionAgent(Agent):
                 `plugins` to `[]` to disable the use of plugins.
             max_steps: The maximum number of steps in each agent run. If `None`,
                 use a default value.
-            first_tools: A list of tools scheduled to be called sequentially at
-                the beginning of each agent run.
+            first_tools: Tools scheduled to be called sequentially at the
+                beginning of each agent run.
+
+        Raises:
+            ValueError: If `max_steps` is not positive.
+            RuntimeError: If tools are found in `first_tools` but not in
+                `tools`.
         """
         super().__init__(
             llm=llm,
@@ -125,7 +130,7 @@ class FunctionAgent(Agent):
             self._first_tools = first_tools
             for tool in self._first_tools:
                 if tool not in self.get_tools():
-                    raise RuntimeError("The first tool must be in the tools list.")
+                    raise RuntimeError("The tool in `first_tools` must be in the tools list.")
         else:
             self._first_tools = []
         self._snapshots: Deque[FunctionAgentRunSnapshot] = deque(maxlen=5)
@@ -155,7 +160,7 @@ class FunctionAgent(Agent):
             chat_history.append(run_input)
 
         for tool in self._first_tools:
-            curr_step, new_messages = await self._step(chat_history, chosen_tool=tool)
+            curr_step, new_messages = await self._step(chat_history, selected_tool=tool)
             chat_history.extend(new_messages)
             num_steps_taken += 1
             if not isinstance(curr_step, NoActionStep):
@@ -181,15 +186,20 @@ class FunctionAgent(Agent):
         return response
 
     async def _step(
-        self, chat_history: List[Message], chosen_tool: Optional[BaseTool] = None
+        self, chat_history: List[Message], selected_tool: Optional[BaseTool] = None
     ) -> Tuple[AgentStep, List[Message]]:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
-        if chosen_tool is not None:
-            tool_choice = {"type": "function", "function": {"name": chosen_tool.tool_name}}
-            llm_resp = await self.run_llm(messages=input_messages, llm_opts={"tool_choice": tool_choice})
+        if selected_tool is not None:
+            tool_choice = {"type": "function", "function": {"name": selected_tool.tool_name}}
+            llm_resp = await self.run_llm(
+                messages=input_messages,
+                functions=[selected_tool.function_call_schema()],  # only regist one tool
+                tool_choice=tool_choice,
+            )
         else:
             llm_resp = await self.run_llm(messages=input_messages)
+
         output_message = llm_resp.message  # AIMessage
         new_messages.append(output_message)
         if output_message.function_call is not None:
