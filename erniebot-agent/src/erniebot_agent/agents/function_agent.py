@@ -124,7 +124,7 @@ class FunctionAgent(Agent):
             self._first_tools = first_tools
             for tool in self._first_tools:
                 if tool not in self.get_tools():
-                    raise RuntimeError("The first tool must be in the tools list.")
+                    raise RuntimeError("The tool in `first_tools` must be in the tools list.")
         else:
             self._first_tools = []
 
