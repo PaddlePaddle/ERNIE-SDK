@@ -1,6 +1,6 @@
 # ERNIEBot-Agent QA Bot
 
-ERNIEBot-Agent QA Bot是一个EB-Agent使用教学机器人，基于 `FunctionAgentWithRetrieval`，该工具旨在辅助用户解决与EB-Agent相关的问题，帮助用户更快的使用 `erniebot_agent`库，搭建属于自己的Agent。
+ERNIE Bot Agent QA Bot是一个ERNIE Bot Agent使用教学机器人，基于 `FunctionAgentWithRetrieval`，该工具旨在辅助用户解决与EB-Agent相关的问题，帮助用户更快的使用 `erniebot_agent`库，搭建属于自己的Agent。
 
 ## 架构
 
