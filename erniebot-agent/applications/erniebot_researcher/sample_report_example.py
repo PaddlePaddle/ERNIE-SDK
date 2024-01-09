@@ -6,8 +6,8 @@ import time
 
 from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
-from ranking_agent import RankingAgent
 from polish_agent import PolishAgent
+from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from research_team import ResearchTeam
 from reviser_actor_agent import ReviserActorAgent

@@ -1,7 +1,8 @@
 from typing import Optional
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import SystemMessage
+
 
 class UserProxyAgent(Agent):
     # refer to https://github.com/microsoft/autogen/blob/main/autogen/agentchat/user_proxy_agent.py

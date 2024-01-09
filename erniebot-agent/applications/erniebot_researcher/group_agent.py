@@ -213,7 +213,7 @@ class GroupChatManager:
         content = """你需要对生成的报告进行质量检测，请调用已有的各种助手完成这个任务,每次只调用1个助手。
             现在已经存在一份报告，你必须对它进行质量检测，检测后，如果你认为报告质量没有达到要求，你可以调用报告生成助手，重新生成报告。
             请你需要返回一个json格式的字符串,{"next_agent_name":"下一次调用助手的名字"}"""
-        messages:List[Union[HumanMessage,AIMessage]] = [HumanMessage(content)]
+        messages: List[Union[HumanMessage, AIMessage]] = [HumanMessage(content)]
         notes = ""
         for i in range(self.groupchat.max_round):
             if i == self.groupchat.max_round - 1:

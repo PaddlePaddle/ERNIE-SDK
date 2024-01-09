@@ -5,7 +5,6 @@ from typing import Optional
 from tools.utils import JsonUtil, ReportCallbackHandler, add_citation, write_md_to_pdf
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
-from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate

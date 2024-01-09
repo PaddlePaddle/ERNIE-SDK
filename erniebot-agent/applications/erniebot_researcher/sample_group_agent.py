@@ -3,7 +3,9 @@ import asyncio
 import hashlib
 import os
 import time
+
 from editor_actor_agent import EditorActorAgent
+from group_agent import GroupChat, GroupChatManager
 from langchain.embeddings.openai import OpenAIEmbeddings
 from polish_agent import PolishAgent
 from ranking_agent import RankingAgent
@@ -22,7 +24,7 @@ from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.memory import SystemMessage
 from erniebot_agent.retrieval import BaizhongSearch
-from group_agent import GroupChatManager, GroupChat
+
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
@@ -116,12 +118,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
         summarize_tool=tool_sets["text_summarization"],
         llm=llm,
     )
-    editor_actor = EditorActorAgent(
-        name="editor", llm=llm, llm_long=llm_long
-    )
-    reviser_actor = ReviserActorAgent(
-        name="reviser", llm=llm, llm_long=llm_long
-    )
+    editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
+    reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
     ranker_actor = RankingAgent(
         name="ranker",
         ranking_tool=tool_sets["ranking"],
@@ -180,13 +178,14 @@ def main(query):
     agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path)
     research_actor = agent_sets["research_agents"]
     report = asyncio.run(research_actor.run(query))
-    report = {'report': report[0], 'paragraphs': report[1]}
+    report = {"report": report[0], "paragraphs": report[1]}
     agent_list = [
         agent_sets["research_agents"],
         agent_sets["ranker"],
         agent_sets["editor"],
         agent_sets["reviser"],
-        agent_sets["polish"]]
+        agent_sets["polish"],
+    ]
     group_chat = GroupChat(agent_list, max_round=5, llm=llm, llm_long=llm_long)
     group_manager = GroupChatManager(group_chat)
     report = asyncio.run(group_manager.run(query=query, report=report, speaker=research_actor))
