@@ -39,7 +39,7 @@ class ReviserActorAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, draft: Union[str, Dict], notes: str) -> AgentResponse:
+    async def run(self, draft: Union[str, Dict], notes: str) -> str:
         if isinstance(draft, dict):
             await self._callback_manager.on_run_start(agent=self, prompt=draft["report"])
         else:

@@ -62,7 +62,7 @@ class PolishAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: str, summarize=None) -> AgentResponse:
+    async def run(self, report: str, summarize=None):
         await self._callback_manager.on_run_start(agent=self, prompt=report)
         agent_resp = await self._run(report, summarize)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)

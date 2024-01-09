@@ -74,7 +74,7 @@ class EditorActorAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: Union[str, dict]) -> AgentResponse:
+    async def run(self, report: Union[str, dict[str,str]]) -> dict:
         if isinstance(report, dict):
             report = report["report"]
         await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=report)

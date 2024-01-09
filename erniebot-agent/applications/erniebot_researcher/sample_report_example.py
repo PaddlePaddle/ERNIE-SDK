@@ -7,7 +7,7 @@ import time
 from editor_actor_agent import EditorActorAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
 from ranking_agent import RankingAgent
-from render_agent import RenderAgent
+from polish_agent import PolishAgent
 from research_agent import ResearchAgent
 from research_team import ResearchTeam
 from reviser_actor_agent import ReviserActorAgent
@@ -133,8 +133,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         research_actor.append(research_agent)
     editor_actor = EditorActorAgent(name="editor", llm=llm, llm_long=llm_long)
     reviser_actor = ReviserActorAgent(name="reviser", llm=llm, llm_long=llm_long)
-    render_actor = RenderAgent(
-        name="render",
+    polish_actor = PolishAgent(
+        name="polish",
         llm=llm,
         llm_long=llm_long,
         citation_tool=tool_sets["semantic_citation"],
@@ -154,7 +154,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         "editor": editor_actor,
         "reviser": reviser_actor,
         "ranker": ranker_actor,
-        "render": render_actor,
+        "polish": polish_actor,
     }
 
 
@@ -170,7 +170,7 @@ def main(query):
         ranker_actor=agent_sets["ranker"],
         editor_actor=agent_sets["editor"],
         reviser_actor=agent_sets["reviser"],
-        render_actor=agent_sets["render"],
+        polish_actor=agent_sets["polish"],
     )
 
     report, file_path = asyncio.run(research_team.run(query))

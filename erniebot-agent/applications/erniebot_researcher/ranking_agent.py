@@ -53,7 +53,7 @@ class RankingAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, list_reports: List[Union[str, dict]], query: str) -> AgentResponse:
+    async def run(self, list_reports: List[Union[str, dict]], query: str):
         await self._callback_manager.on_run_start(agent=self, agent_name=self.name, prompt=query)
         agent_resp = await self._run(query=query, list_reports=list_reports)
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
