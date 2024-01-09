@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import inspect
-from typing import Any, List, Union, final
+from typing import Any, Iterable, List, final
 
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback.event import EventType
@@ -28,11 +28,11 @@ from erniebot_agent.tools.base import BaseTool
 class CallbackManager(object):
     """The manager for callback handlers."""
 
-    def __init__(self, handlers: List[CallbackHandler]):
+    def __init__(self, handlers: Iterable[CallbackHandler]):
         """Initialize a callback manager.
 
         Args:
-            handlers: A list of callback handlers.
+            handlers: An iterable of callback handlers.
         """
         super().__init__()
         self._handlers: List[CallbackHandler] = []
@@ -51,7 +51,7 @@ class CallbackManager(object):
         """Remove a callback handler."""
         self._handlers.remove(handler)
 
-    def set_handlers(self, handlers: List[CallbackHandler]):
+    def set_handlers(self, handlers: Iterable[CallbackHandler]):
         """Set the callback handlers."""
         self._handlers[:] = handlers
 
@@ -68,9 +68,7 @@ class CallbackManager(object):
     async def on_llm_end(self, agent: BaseAgent, llm: ChatModel, response: LLMResponse) -> None:
         await self._handle_event(EventType.LLM_END, agent=agent, llm=llm, response=response)
 
-    async def on_llm_error(
-        self, agent: BaseAgent, llm: ChatModel, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
+    async def on_llm_error(self, agent: BaseAgent, llm: ChatModel, error: BaseException) -> None:
         await self._handle_event(EventType.LLM_ERROR, agent=agent, llm=llm, error=error)
 
     async def on_tool_start(self, agent: BaseAgent, tool: BaseTool, input_args: str) -> None:
@@ -79,13 +77,14 @@ class CallbackManager(object):
     async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
         await self._handle_event(EventType.TOOL_END, agent=agent, tool=tool, response=response)
 
-    async def on_tool_error(
-        self, agent: BaseAgent, tool: BaseTool, error: Union[Exception, KeyboardInterrupt]
-    ) -> None:
+    async def on_tool_error(self, agent: BaseAgent, tool: BaseTool, error: BaseException) -> None:
         await self._handle_event(EventType.TOOL_ERROR, agent=agent, tool=tool, error=error)
 
     async def on_run_end(self, agent: BaseAgent, response: AgentResponse, **kwargs) -> None:
         await self._handle_event(EventType.RUN_END, agent=agent, response=response, **kwargs)
+
+    async def on_run_error(self, agent: BaseAgent, error: BaseException) -> None:
+        await self._handle_event(EventType.RUN_ERROR, agent=agent, error=error)
 
     async def _handle_event(self, event_type: EventType, *args: Any, **kwargs: Any) -> None:
         callback_name = "on_" + event_type.value

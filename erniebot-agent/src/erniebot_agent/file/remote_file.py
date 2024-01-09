@@ -17,17 +17,17 @@ import inspect
 import json
 import os
 import pathlib
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, Dict, Final, List, Optional
 
 import aiohttp
 
 from erniebot_agent.file import protocol
-from erniebot_agent.file.base import File
+from erniebot_agent.file.base import BaseFile
 from erniebot_agent.utils.exceptions import FileError
 from erniebot_agent.utils.mixins import Closeable
 
 
-class RemoteFile(File):
+class RemoteFile(BaseFile):
     """
     Represents a remote file.
 
@@ -139,11 +139,11 @@ class AIStudioFileClient(RemoteFileClient):
 
     """
 
-    _BASE_URL: ClassVar[str] = "https://sandbox-aistudio.baidu.com"
-    _UPLOAD_ENDPOINT: ClassVar[str] = "/llm/lmapp/files"
-    _RETRIEVE_ENDPOINT: ClassVar[str] = "/llm/lmapp/files/{file_id}"
-    _RETRIEVE_CONTENTS_ENDPOINT: ClassVar[str] = "/llm/lmapp/files/{file_id}/content"
-    _LIST_ENDPOINT: ClassVar[str] = "/llm/lmapp/files"
+    _BASE_URL: Final[str] = "https://sandbox-aistudio.baidu.com"
+    _UPLOAD_ENDPOINT: Final[str] = "/llm/lmapp/files"
+    _RETRIEVE_ENDPOINT: Final[str] = "/llm/lmapp/files/{file_id}"
+    _RETRIEVE_CONTENTS_ENDPOINT: Final[str] = "/llm/lmapp/files/{file_id}/content"
+    _LIST_ENDPOINT: Final[str] = "/llm/lmapp/files"
 
     def __init__(
         self, access_token: str, *, aiohttp_session: Optional[aiohttp.ClientSession] = None

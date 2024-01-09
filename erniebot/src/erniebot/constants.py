@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGGER_NAME: str = "erniebot"
+from typing import Final
 
-STREAM_RESPONSE_PREFIX: bytes = b"data: "
+LOGGER_NAME: Final[str] = "erniebot"
 
-DEFAULT_REQUEST_TIMEOUT_SECS: float = 600
+STREAM_RESPONSE_PREFIX: Final[bytes] = b"data: "
 
-POLLING_INTERVAL_SECS: float = 5
-POLLING_TIMEOUT_SECS: float = 20
+DEFAULT_REQUEST_TIMEOUT_SECS: Final[float] = 600
+
+POLLING_INTERVAL_SECS: Final[float] = 5
+POLLING_TIMEOUT_SECS: Final[float] = 20

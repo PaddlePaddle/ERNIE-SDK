@@ -67,7 +67,7 @@ class Embedding(EBResource, Creatable):
             model: Name of the model to use.
             input: Input texts to embed.
             user_id: ID for the end user.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -105,7 +105,7 @@ class Embedding(EBResource, Creatable):
             model: Name of the model to use.
             input: Input texts to embed.
             user_id: ID for the end user.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -173,12 +173,17 @@ class Embedding(EBResource, Creatable):
             _set_val_if_key_exists(kwargs, params, "user_id")
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = {}
+        if self.api_type is APIType.AISTUDIO:
+            headers["Content-Type"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,

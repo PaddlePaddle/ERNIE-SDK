@@ -4,12 +4,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from erniebot_agent.agents import FunctionAgentWithRetrievalScoreTool
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.agents import FunctionAgentWithRetrievalTool
+from erniebot_agent.memory import AIMessage, HumanMessage
 from erniebot_agent.retrieval import BaizhongSearch
 from tests.unit_tests.agents.common_util import EXAMPLE_RESPONSE
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
-from tests.unit_tests.testing_utils.mocks.mock_chat_models import FakeSimpleChatModel
+from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
+    FakeERNIEBotWithPresetResponses,
+    FakeSimpleChatModel,
+)
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
 
@@ -53,21 +56,19 @@ def no_input_no_output_tool():
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(identity_tool):
+async def test_functional_agent_with_retrieval_tool_tool_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
-    with mock.patch("requests.post") as my_mock:
-        search_db = BaizhongSearch(
-            knowledge_base_name=knowledge_base_name,
-            access_token=access_token,
-            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
-        )
-    agent = FunctionAgentWithRetrievalScoreTool(
+    search_db = BaizhongSearch(
+        knowledge_base_name=knowledge_base_name,
+        access_token=access_token,
+        knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+    )
+    agent = FunctionAgentWithRetrievalTool(
         knowledge_base=search_db,
         llm=FakeSimpleChatModel(),
-        threshold=0.0,
         tools=[identity_tool],
         memory=FakeMemory(),
         callbacks=[callback_handler],
@@ -82,19 +83,40 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
     assert callback_handler.tool_starts == 1
     assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
+
+    # Add new callback
+    callback_handler = CountingCallbackHandler()
+    llm = FakeERNIEBotWithPresetResponses(
+        responses=[
+            AIMessage('{"is_relevant":true}', function_call=None),
+            AIMessage("Text response", function_call=None),
+        ]
+    )
+    agent = FunctionAgentWithRetrievalTool(
+        knowledge_base=search_db,
+        llm=llm,
+        tools=[identity_tool],
+        memory=FakeMemory(),
+        callbacks=[callback_handler],
+    )
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         await agent.run("Hello, world!")
     assert callback_handler.run_starts == 1
     assert callback_handler.run_ends == 1
-    # call retrieval tool
-    assert callback_handler.tool_starts == 2
-    assert callback_handler.tool_ends == 2
+    assert callback_handler.run_errors == 0
+
+    # relevent judge
+    assert callback_handler.llm_starts == 1
+    assert callback_handler.llm_ends == 1
+    # call identity_tool, KnowledgeBaseTool tool
+    assert callback_handler.tool_starts == 1
+    assert callback_handler.tool_ends == 1
     assert callback_handler.tool_errors == 0
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieval(identity_tool):
+async def test_functional_agent_with_retrieval_tool_run_retrieval_tool(identity_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
@@ -104,12 +126,14 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
         access_token=access_token,
         knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
     )
-    agent = FunctionAgentWithRetrievalScoreTool(
-        knowledge_base=search_db,
-        llm=FakeSimpleChatModel(),
-        threshold=0.0,
-        tools=[identity_tool],
-        memory=FakeMemory(),
+    llm = FakeERNIEBotWithPresetResponses(
+        responses=[
+            AIMessage('{"is_relevant":true}', function_call=None),
+            AIMessage("Text response", function_call=None),
+        ]
+    )
+    agent = FunctionAgentWithRetrievalTool(
+        knowledge_base=search_db, llm=llm, tools=[identity_tool], memory=FakeMemory()
     )
 
     # Test retrieval success
@@ -126,8 +150,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
         "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
         "arguments": '{"query": "Hello, world!"}',
     }
-
-    # FunctionMessag
+    # FunctionMessage
     assert response.chat_history[2].name == "KnowledgeBaseTool"
     assert (
         response.chat_history[2].content
@@ -135,23 +158,22 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
         '"document": "住房和城乡建设部规章城市管理执法办法"}, {"id": "495735246643270", '
         '"title": "城市管理执法办法.pdf", "document": "城市管理执法主管部门应当定期开展执法人员的培训和考核。"}]}'
     )
-
     # AIMessage
     assert response.chat_history[3].content == "Text response"
 
-    # Test retrieval failed
-
-    agent = FunctionAgentWithRetrievalScoreTool(
-        knowledge_base=search_db,
-        llm=FakeSimpleChatModel(),
-        threshold=0.1,
-        tools=[identity_tool],
-        memory=FakeMemory(),
+    llm = FakeERNIEBotWithPresetResponses(
+        responses=[
+            AIMessage('{"is_relevant":false}', function_call=None),
+            AIMessage("Text response", function_call=None),
+        ]
     )
+    agent = FunctionAgentWithRetrievalTool(
+        knowledge_base=search_db, llm=llm, tools=[identity_tool], memory=FakeMemory()
+    )
+    # Test retrieval failed
     with mock.patch("requests.post") as my_mock:
         my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
         response = await agent.run("Hello, world!")
-
     assert response.text == "Text response"
     # HumanMessage
     assert response.chat_history[0].content == "Hello, world!"
