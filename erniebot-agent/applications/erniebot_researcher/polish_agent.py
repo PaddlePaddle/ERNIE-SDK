@@ -22,7 +22,7 @@ class PolishAgent(JsonUtil):
         llm_long: BaseERNIEBot,
         citation_tool,
         embeddings,
-        faiss_name_citation: str,
+        citation_db: str,
         dir_path: str,
         report_type: str,
         system_message: Optional[SystemMessage] = None,
@@ -35,7 +35,7 @@ class PolishAgent(JsonUtil):
         self.dir_path = dir_path
         self.embeddings = embeddings
         self.citation = citation_tool
-        self.faiss_name_citation = faiss_name_citation
+        self.citation_db = citation_db
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
@@ -133,7 +133,7 @@ class PolishAgent(JsonUtil):
             final_report = report
         await self._callback_manager.on_tool_start(self, tool=self.citation, input_args=final_report)
         if summarize is not None:
-            citation_search = add_citation(summarize, self.faiss_name_citation, self.embeddings)
+            citation_search = add_citation(summarize, self.citation_db, self.embeddings)
             final_report, path = await self.citation(
                 report=final_report,
                 agent_name=self.name,

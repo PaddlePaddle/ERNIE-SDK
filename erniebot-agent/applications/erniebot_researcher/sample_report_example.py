@@ -28,15 +28,33 @@ from erniebot_agent.retrieval import BaizhongSearch
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
 
-parser.add_argument("--knowledge_base_name_paper", type=str, default="", help="")
-parser.add_argument("--knowledge_base_name_abstract", type=str, default="", help="")
-parser.add_argument("--knowledge_base_id_paper", type=str, default="", help="")
-parser.add_argument("--knowledge_base_id_abstract", type=str, default="", help="")
-
-parser.add_argument("--faiss_name_paper", type=str, default="", help="")
-parser.add_argument("--faiss_name_abstract", type=str, default="", help="")
-parser.add_argument("--faiss_name_citation", type=str, default="", help="")
-
+parser.add_argument(
+    "--knowledge_base_name_full_text",
+    type=str,
+    default="",
+    help="The name of the full-text knowledge base(baizhong)",
+)
+parser.add_argument(
+    "--knowledge_base_name_abstract", type=str, default="", help="The name of the abstract base(baizhong)"
+)
+parser.add_argument(
+    "--knowledge_base_id_full_text",
+    type=str,
+    default="",
+    help="The id of the full-text knowledge base(baizhong)",
+)
+parser.add_argument(
+    "--knowledge_base_id_abstract", type=str, default="", help="The id of the abstract base(baizhong)"
+)
+parser.add_argument(
+    "--index_name_full_text", type=str, default="", help="The name of the full-text knowledge base(faiss)"
+)
+parser.add_argument(
+    "--index_name_abstract", type=str, default="", help="The name of the abstract base(faiss)"
+)
+parser.add_argument(
+    "--index_name_citation", type=str, default="", help="The name of the citation base(faiss)"
+)
 parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
 parser.add_argument("--iterations", type=int, default=4, help="")
 parser.add_argument(
@@ -52,8 +70,6 @@ parser.add_argument(
     help="['open_embedding','baizhong','ernie_embedding']",
 )
 
-parser.add_argument("--server_name", type=str, default="0.0.0.0")
-parser.add_argument("--server_port", type=int, default=8878)
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
@@ -62,22 +78,22 @@ access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 def get_retrievers():
     if args.embedding_type == "open_embedding":
         embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
-        paper_db = build_index(faiss_name=args.faiss_name_paper, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.faiss_name_abstract, embeddings=embeddings)
+        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
         abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
         retriever_search = FaissSearch(paper_db, embeddings=embeddings)
     elif args.embedding_type == "ernie_embedding":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
-        paper_db = build_index(faiss_name=args.faiss_name_paper, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.faiss_name_abstract, embeddings=embeddings)
+        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
         abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
         retriever_search = FaissSearch(paper_db, embeddings=embeddings)
     elif args.embedding_type == "baizhong":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
         retriever_search = BaizhongSearch(
             access_token=access_token,
-            knowledge_base_name=args.knowledge_base_name_paper,
-            knowledge_base_id=args.knowledge_base_id_paper,
+            knowledge_base_name=args.knowledge_base_name_full_text,
+            knowledge_base_id=args.knowledge_base_id_full_text,
         )
         abstract_search = BaizhongSearch(
             access_token=access_token,
@@ -138,7 +154,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         llm=llm,
         llm_long=llm_long,
         citation_tool=tool_sets["semantic_citation"],
-        faiss_name_citation=args.faiss_name_citation,
+        citation_db=args.index_name_citation,
         embeddings=retriever_sets["embeddings"],
         dir_path=target_path,
         report_type=args.report_type,
