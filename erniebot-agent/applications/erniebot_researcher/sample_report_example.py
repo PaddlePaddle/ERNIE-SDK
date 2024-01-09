@@ -108,11 +108,6 @@ def get_tools(llm, llm_long):
 
 
 def get_agents(retriever_sets, tool_sets, llm, llm_long):
-    dir_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}"
-    os.makedirs(dir_path, exist_ok=True)
-
-    target_path = f"./outputs/erniebot/{hashlib.sha1(query.encode()).hexdigest()}/revised"
-    os.makedirs(target_path, exist_ok=True)
     research_actor = []
     for i in range(args.num_research_agent):
         agents_name = "agent_" + str(i)
@@ -143,11 +138,24 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         dir_path=target_path,
         report_type=args.report_type,
     )
-    ranker_actor = RankingAgent(
+    polish_actor = PolishAgent(
+        name="render",
         llm=llm,
         llm_long=llm_long,
-        name="ranker",
-        ranking_tool=tool_sets["ranking"],
+        faiss_name_citation=args.faiss_name_citation,
+        embeddings=embeddings,
+        dir_path=target_path,
+        report_type=args.report_type,
+        citation_tool=tool_sets["semantic_citation"],
+        callbacks=ReportCallbackHandler(logger=logger),
+    )
+    team_actor = ResearchTeam(
+        ranker_actor=ranker_actor,
+        research_actor=research_actor,
+        editor_actor=editor_actor,
+        reviser_actor=reviser_actor,
+        polish_actor=polish_actor,
+        use_reflection=True,
     )
     return {
         "research_agents": research_actor,

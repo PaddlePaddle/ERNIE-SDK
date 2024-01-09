@@ -4,7 +4,6 @@ from typing import Optional, Union
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
-from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -12,21 +11,6 @@ from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
-
-EB_EDIT_TEMPLATE = """你是一名编辑。
-你被指派任务编辑以下草稿，该草稿由一名非专家撰写。
-如果这份草稿足够好以供发布，请接受它，或者将它发送进行修订，同时附上指导修订的笔记。
-你应该检查以下事项：
-- 这份草稿第一行必须是题目，第二行是一级标题。
-- 这份草稿的题目前面必须要有#，保证markdown格式正确。
-- 这份草稿必须充分回答原始问题。
-- 这份草稿必须按照APA格式编写。
-- 这份草稿必须不包含低级的句法错误。
-- 这份草稿的标题不能包含任何引用
-如果不符合以上所有标准，你应该发送适当的修订笔记，请以json的格式输出：
-如果需要进行修订，则按照下面的格式输出：{"accept": false,"notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": true,"notes":""}
-"""
-
 eb_functions = [
     {
         "name": "revise",
@@ -55,8 +39,20 @@ MAX_RETRY = 10
 TOKEN_MAX_LENGTH = 4200
 
 
-class EditorActorAgent(Agent, JsonUtil):
-    DEFAULT_SYSTEM_MESSAGE = EB_EDIT_TEMPLATE
+class EditorActorAgent(JsonUtil):
+    DEFAULT_SYSTEM_MESSAGE = """你是一名编辑。
+你被指派任务编辑以下草稿，该草稿由一名非专家撰写。
+如果这份草稿足够好以供发布，请接受它，或者将它发送进行修订，同时附上指导修订的笔记。
+你应该检查以下事项：
+- 这份草稿第一行必须是题目，第二行是一级标题。
+- 这份草稿的题目前面必须要有#，保证markdown格式正确。
+- 这份草稿必须充分回答原始问题。
+- 这份草稿必须按照APA格式编写。
+- 这份草稿必须不包含低级的句法错误。
+- 这份草稿的标题不能包含任何引用
+如果不符合以上所有标准，你应该发送适当的修订笔记，请以json的格式输出：
+如果需要进行修订，则按照下面的格式输出：{"accept": false,"notes": "分条列举出来所给的修订建议。"} 否则输出： {"accept": true,"notes":""}
+"""
 
     def __init__(
         self,
@@ -95,13 +91,9 @@ class EditorActorAgent(Agent, JsonUtil):
         while True:
             try:
                 if len(content) < TOKEN_MAX_LENGTH:
-                    response = await self.llm.chat(
-                        messages, functions=eb_functions, system=self.system_message
-                    )
+                    response = await self.llm.chat(messages, system=self.system_message)
                 else:
-                    response = await self.llm_long.chat(
-                        messages, functions=eb_functions, system=self.system_message
-                    )
+                    response = await self.llm_long.chat(messages, system=self.system_message)
                 res = response.content
 
                 try:

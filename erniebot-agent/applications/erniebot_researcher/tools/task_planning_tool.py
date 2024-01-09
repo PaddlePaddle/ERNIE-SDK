@@ -78,17 +78,14 @@ class TaskPlanningTool(Tool, JsonUtil):
                     messages = [
                         HumanMessage(content=generate_search_queries_with_context(context, question))
                     ]
-                    response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
-                    result = response.content
                 else:
                     messages = [
                         HumanMessage(
                             content=generate_search_queries_with_context_comprehensive(context, question)
                         )
                     ]
-                    response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
-                    result = response.content
-
+                response = await self.llm.chat(messages, system=agent_role_prompt, temperature=0.7)
+                result = response.content
                 plan = self.parse_json(result, "[", "]")
             except Exception as e:
                 logger.error(e)

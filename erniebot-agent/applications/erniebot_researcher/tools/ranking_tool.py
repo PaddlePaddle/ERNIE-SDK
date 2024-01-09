@@ -17,7 +17,7 @@ TOKEN_MAX_LENGTH = 4200
 
 def rank_report_prompt(report, query):
     prompt = """现在给你1篇报告，现在你需要严格按照以下的标准，对这个报告进行打分，越符合标准得分越高，打分区间在0-10之间，
-    你输出的应该是一个json格式，json中的键值为"打分理由"和"报告总得分"，{'打分理由':...,'报告总得分':...}
+    你输出的应该是一个json格式，json中的键值为"reasons"和"total_score"，{"reasons":...,"total_score":...}
     对报告进行打分,打分标准如下：
     1.仔细检查报告格式，报告必须是完整的，包括标题、摘要、正文、参考文献等，完整性越高，得分越高，这一点最高给4分。
     3.仔细检查报告内容，报告内容与{{query}}问题相关性越高得分越高，这一点最高给4分。
@@ -70,7 +70,7 @@ class TextRankingTool(Tool, JsonUtil):
                             )
                         result = response.content
                         result_dict = self.parse_json(result)
-                        socre = int(result_dict["报告总得分"])
+                        socre = int(result_dict["total_score"])
                         scores_all.append(socre)
                         break
                     except Exception as e:

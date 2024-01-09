@@ -29,9 +29,9 @@ class ResearchAgent(JsonUtil):
 
     def __init__(
         self,
-        name,
-        dir_path,
-        report_type,
+        name: str,
+        dir_path: str,
+        report_type: str,
         retriever_abstract_tool,
         retriever_tool,
         intent_detection_tool,
@@ -41,9 +41,9 @@ class ResearchAgent(JsonUtil):
         summarize_tool,
         llm: BaseERNIEBot,
         system_message: Optional[SystemMessage] = None,
-        use_outline=True,
-        use_context_planning=True,
-        nums_queries=4,
+        use_outline: bool = True,
+        use_context_planning: bool = True,
+        nums_queries: int = 4,
         callbacks=None,
     ):
         """
