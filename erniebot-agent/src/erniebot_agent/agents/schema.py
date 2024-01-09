@@ -93,12 +93,10 @@ class AgentStep(Generic[_IT, _RT]):
 
 
 @dataclass
-class RetrievalStep(Generic[_IT, _RT]):
+class RetrievalStep(AgentStep):
     """A step taken by an agent."""
 
     name: str
-    info: _IT
-    result: _RT
 
 
 @dataclass
