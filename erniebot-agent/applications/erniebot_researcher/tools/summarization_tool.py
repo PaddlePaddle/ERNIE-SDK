@@ -73,7 +73,7 @@ class TextSummarizationTool(Tool):
             | llm
             | StrOutputParser()
         ).with_config(run_name="Reduce")
-        map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain).with_config( # type: ignore
+        map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain).with_config(  # type: ignore
             run_name="Map reduce"
         )  # type: ignore
         return map_reduce
