@@ -1,7 +1,8 @@
 import logging
 import time
-from typing import Optional
+from typing import Any, Optional
 
+from tools.semantic_citation_tool import SemanticCitationTool
 from tools.utils import JsonUtil, ReportCallbackHandler, add_citation, write_md_to_pdf
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -20,9 +21,9 @@ class PolishAgent(JsonUtil):
         name: str,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
-        citation_tool,
-        embeddings,
-        citation_db: str,
+        citation_tool: SemanticCitationTool,
+        embeddings: Any,
+        citation_index_name: str,
         dir_path: str,
         report_type: str,
         system_message: Optional[SystemMessage] = None,
@@ -34,8 +35,8 @@ class PolishAgent(JsonUtil):
         self.report_type = report_type
         self.dir_path = dir_path
         self.embeddings = embeddings
-        self.citation = citation_tool
-        self.citation_db = citation_db
+        self.citation_tool = citation_tool
+        self.citation_index_name = citation_index_name
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
@@ -131,10 +132,10 @@ class PolishAgent(JsonUtil):
         else:
             logging.error("Report format error, unable to add abstract and keywords")
             final_report = report
-        await self._callback_manager.on_tool_start(self, tool=self.citation, input_args=final_report)
+        await self._callback_manager.on_tool_start(self, tool=self.citation_tool, input_args=final_report)
         if summarize is not None:
-            citation_search = add_citation(summarize, self.citation_db, self.embeddings)
-            final_report, path = await self.citation(
+            citation_search = add_citation(summarize, self.citation_index_name, self.embeddings)
+            final_report, path = await self.citation_tool(
                 report=final_report,
                 agent_name=self.name,
                 report_type=self.report_type,
@@ -142,5 +143,7 @@ class PolishAgent(JsonUtil):
                 citation_faiss_research=citation_search,
             )
         path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
-        await self._callback_manager.on_tool_end(self, tool=self.citation, response={"report": final_report})
+        await self._callback_manager.on_tool_end(
+            self, tool=self.citation_tool, response={"report": final_report}
+        )
         return final_report, path

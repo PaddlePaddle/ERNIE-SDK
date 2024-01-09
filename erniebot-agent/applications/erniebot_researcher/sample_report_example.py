@@ -154,7 +154,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         llm=llm,
         llm_long=llm_long,
         citation_tool=tool_sets["semantic_citation"],
-        citation_db=args.index_name_citation,
+        citation_index_name=args.index_name_citation,
         embeddings=retriever_sets["embeddings"],
         dir_path=target_path,
         report_type=args.report_type,
@@ -166,11 +166,11 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         ranking_tool=tool_sets["ranking"],
     )
     return {
-        "research_agents": research_actor,
-        "editor": editor_actor,
-        "reviser": reviser_actor,
-        "ranker": ranker_actor,
-        "polish": polish_actor,
+        "research_actor": research_actor,
+        "editor_actor": editor_actor,
+        "reviser_actor": reviser_actor,
+        "ranker_actor": ranker_actor,
+        "polish_actor": polish_actor,
     }
 
 
@@ -181,13 +181,7 @@ def main(query):
     retriever_sets = get_retrievers()
     tool_sets = get_tools(llm, llm_long)
     agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long)
-    research_team = ResearchTeam(
-        research_actor=agent_sets["research_agents"],
-        ranker_actor=agent_sets["ranker"],
-        editor_actor=agent_sets["editor"],
-        reviser_actor=agent_sets["reviser"],
-        polish_actor=agent_sets["polish"],
-    )
+    research_team = ResearchTeam(**agent_sets)
 
     report, file_path = asyncio.run(research_team.run(query))
     print(file_path)
