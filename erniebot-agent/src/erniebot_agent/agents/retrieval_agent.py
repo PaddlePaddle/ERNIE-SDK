@@ -122,16 +122,31 @@ class RetrievalAgent(Agent):
             )
         else:
             steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
-
+        # Query planning
         llm_resp = await self.run_llm(
             messages=[steps_input],
         )
         output_message = llm_resp.message
         json_results = self._parse_results(output_message.content)
         sub_queries = json_results.values()
-        return await self.execute(prompt, sub_queries, steps_taken)
+        # Sub query execution
+        retrieval_results = await self.execute(sub_queries)
 
-    async def execute(self, prompt, sub_queries, actions_taken):
+        # Answer generation
+        step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=retrieval_results))
+        chat_history: List[Message] = [step_input]
+        llm_resp = await self.run_llm(
+            messages=chat_history,
+        )
+
+        output_message = llm_resp.message
+        chat_history.append(output_message)
+        self.memory.add_message(chat_history[0])
+        self.memory.add_message(chat_history[-1])
+        response = self._create_finished_response(chat_history, steps_taken)
+        return response
+
+    async def execute(self, sub_queries):
         retrieval_results = []
         if self.use_compressor:
             for query in sub_queries:
@@ -157,18 +172,7 @@ class RetrievalAgent(Agent):
                         duplicates.add(doc["content"])
                         retrieval_results.append(doc)
             retrieval_results = retrieval_results[:3]
-        step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=retrieval_results))
-        chat_history: List[Message] = [step_input]
-        llm_resp = await self.run_llm(
-            messages=chat_history,
-        )
-
-        output_message = llm_resp.message
-        chat_history.append(output_message)
-        self.memory.add_message(chat_history[0])
-        self.memory.add_message(chat_history[-1])
-        response = self._create_finished_response(chat_history, actions_taken)
-        return response
+        return retrieval_results
 
     def _parse_results(self, results):
         left_index = results.find("{")
