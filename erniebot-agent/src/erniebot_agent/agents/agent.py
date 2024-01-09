@@ -137,8 +137,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     async def run_llm(
         self,
         messages: List[Message],
-        *,
-        llm_opts: Optional[Mapping[str, Any]] = None,
+        **llm_opts: Mapping[str, Any],
     ) -> LLMResponse:
         """Run the LLM asynchronously.
 
