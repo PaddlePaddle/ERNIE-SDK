@@ -1,6 +1,11 @@
 import logging
-from typing import Optional
+from typing import Any, Optional
 
+from tools.intent_detection_tool import IntentDetectionTool
+from tools.outline_generation_tool import OutlineGenerationTool
+from tools.report_writing_tool import ReportWritingTool
+from tools.summarization_tool import TextSummarizationTool
+from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
@@ -32,13 +37,13 @@ class ResearchAgent(JsonUtil):
         name: str,
         dir_path: str,
         report_type: str,
-        retriever_abstract_tool,
-        retriever_tool,
-        intent_detection_tool,
-        task_planning_tool,
-        report_writing_tool,
-        outline_tool,
-        summarize_tool,
+        retriever_abstract_db: Any,
+        retriever_fulltext_db: Any,
+        intent_detection_tool: IntentDetectionTool,
+        task_planning_tool: TaskPlanningTool,
+        report_writing_tool: ReportWritingTool,
+        outline_tool: OutlineGenerationTool,
+        summarize_tool: TextSummarizationTool,
         llm: BaseERNIEBot,
         system_message: Optional[SystemMessage] = None,
         use_outline: bool = True,
@@ -49,19 +54,18 @@ class ResearchAgent(JsonUtil):
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
+        self.name = name
         self.dir_path = dir_path
         self.report_type = report_type
-        self.retriever = retriever_tool
-        self.retriever_abstract = retriever_abstract_tool
-        self.intent_detection = intent_detection_tool
-        self.task_planning = task_planning_tool
-        self.report_writing = report_writing_tool
-        self.outline = outline_tool
-        self.summarize = summarize_tool
+        self.retriever_fulltext_db = retriever_fulltext_db
+        self.retriever_abstract_db = retriever_abstract_db
+        self.intent_detection_tool = intent_detection_tool
+        self.task_planning_tool = task_planning_tool
+        self.report_writing_tool = report_writing_tool
+        self.outline_tool = outline_tool
+        self.summarize_tool = summarize_tool
         self.use_context_planning = use_context_planning
         self.use_outline = use_outline
-        self.name = name
-        self.use_context_planning = use_context_planning
         self.nums_queries = nums_queries
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
         self.llm = llm
@@ -73,11 +77,11 @@ class ResearchAgent(JsonUtil):
     async def run_search_summary(self, query):
         responses = []
         url_dict = {}
-        results = self.retriever.search(query, top_k=3)
+        results = self.retriever_fulltext_db.search(query, top_k=3)
         length_limit = 0
-        await self._callback_manager.on_tool_start(agent=self, tool=self.summarize, input_args=query)
+        await self._callback_manager.on_tool_start(agent=self, tool=self.summarize_tool, input_args=query)
         for doc in results:
-            res = await self.summarize(doc["content"], query)
+            res = await self.summarize_tool(doc["content"], query)
             # Add reference to avoid hallucination
             data = {"summary": res, "url": doc["url"], "name": doc["title"]}
             length_limit += len(res)
@@ -89,7 +93,7 @@ class ResearchAgent(JsonUtil):
             else:
                 logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
-        await self._callback_manager.on_tool_end(self, tool=self.summarize, response=responses)
+        await self._callback_manager.on_tool_end(self, tool=self.summarize_tool, response=responses)
         return responses, url_dict
 
     async def run(self, query):
@@ -102,25 +106,31 @@ class ResearchAgent(JsonUtil):
             agent=self, agent_name=self.name, prompt=f"🔎 Running research for '{query}'..."
         )
         # Generate Agent
-        await self._callback_manager.on_tool_start(agent=self, tool=self.intent_detection, input_args=query)
-        result = await self.intent_detection(query)
+        await self._callback_manager.on_tool_start(
+            agent=self, tool=self.intent_detection_tool, input_args=query
+        )
+        result = await self.intent_detection_tool(query)
         self.agent, self.role = result["agent"], result["agent_role_prompt"]
 
-        await self._callback_manager.on_tool_end(agent=self, tool=self.intent_detection, response=result)
+        await self._callback_manager.on_tool_end(
+            agent=self, tool=self.intent_detection_tool, response=result
+        )
 
-        await self._callback_manager.on_tool_start(agent=self, tool=self.task_planning, input_args=query)
         if self.use_context_planning:
             sub_queries = []
-            res = self.retriever_abstract.search(query, top_k=3)
+            res = self.retriever_abstract_db.search(query, top_k=3)
             context = [item["content"] for item in res]
             context_content = ""
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.task_planning_tool, input_args=query
+            )
             for index, item in enumerate(context):
-                sub_queries_item = await self.task_planning(
+                sub_queries_item = await self.task_planning_tool(
                     question=query, agent_role_prompt=self.role, context=item
                 )
                 sub_queries.extend(sub_queries_item)
                 context_content += "第" + str(index + 1) + "篇：\n" + item + "\n"
-            sub_queries_all = await self.task_planning(
+            sub_queries_all = await self.task_planning_tool(
                 question=query, agent_role_prompt=self.role, context=context_content, is_comprehensive=True
             )
             sub_queries.extend(sub_queries_all)
@@ -133,13 +143,21 @@ class ResearchAgent(JsonUtil):
                 responese = await self.llm.chat(messages)
                 result = responese.content
                 sub_queries = self.parse_json(result, "[", "]")
+            await self._callback_manager.on_tool_end(
+                self, tool=self.task_planning_tool, response=sub_queries
+            )
         else:
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.task_planning_tool, input_args=query
+            )
             context = ""
             # Generate Sub-Queries including original query
-            sub_queries = await self.task_planning(
+            sub_queries = await self.task_planning_tool(
                 question=query, agent_role_prompt=self.role, context=context
             )
-        await self._callback_manager.on_tool_end(self, tool=self.task_planning, response=sub_queries)
+            await self._callback_manager.on_tool_end(
+                self, tool=self.task_planning_tool, response=sub_queries
+            )
         # Run Sub-Queries
         paragraphs_item = []
         for sub_query in sub_queries:
@@ -153,20 +171,24 @@ class ResearchAgent(JsonUtil):
         # 1. 摘要 ==> 1.摘要 for avoiding erniebot request error
         research_summary = "\n\n".join([str(i) for i in paragraphs]).replace(". ", ".")
 
-        await self._callback_manager.on_tool_start(agent=self, tool=self.outline, input_args=sub_queries)
+        await self._callback_manager.on_tool_start(
+            agent=self, tool=self.outline_tool, input_args=sub_queries
+        )
         # Generate Outline
         outline = None
         if self.use_outline:
-            outline = await self.outline(sub_queries, query)
+            outline = await self.outline_tool(sub_queries, query)
 
-        await self._callback_manager.on_tool_end(self, tool=self.outline, response=outline)
+        await self._callback_manager.on_tool_end(self, tool=self.outline_tool, response=outline)
 
-        await self._callback_manager.on_tool_start(agent=self, tool=self.report_writing, input_args=query)
+        await self._callback_manager.on_tool_start(
+            agent=self, tool=self.report_writing_tool, input_args=query
+        )
         # Conduct Research
         retry_count = 0
         while True:
             try:
-                report, path = await self.report_writing(
+                report, path = await self.report_writing_tool(
                     question=query,
                     research_summary=research_summary,
                     report_type=self.report_type,
@@ -177,13 +199,13 @@ class ResearchAgent(JsonUtil):
                 )
                 break
             except Exception as e:
-                await self._callback_manager.on_tool_error(self, tool=self.report_writing, error=e)
+                await self._callback_manager.on_tool_error(self, tool=self.report_writing_tool, error=e)
                 retry_count += 1
                 if retry_count > MAX_RETRY:
                     raise Exception(f"Failed to conduct research for {query} after {MAX_RETRY} times.")
                 continue
         await self._callback_manager.on_tool_end(
-            self, tool=self.report_writing, response={"report": report, "file_path": path}
+            self, tool=self.report_writing_tool, response={"report": report, "file_path": path}
         )
         await self._callback_manager.on_run_end(agent=self, agent_name=self.name, response=f"报告存储在{path}")
         return report, paragraphs
