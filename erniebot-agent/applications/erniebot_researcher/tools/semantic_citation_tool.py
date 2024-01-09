@@ -1,6 +1,6 @@
 import logging
 import string
-from typing import Optional
+from typing import Dict, List, Optional
 
 from erniebot_agent.tools.base import Tool
 
@@ -35,9 +35,9 @@ class SemanticCitationTool(Tool):
         self.theta_min = theta_min
         self.theta_max = theta_max
         self.citation_num = citation_num
-        self.recoder_cite_dict: dict = {}
-        self.recoder_cite_list: list = []
-        self.recoder_cite_title: list = []
+        self.recoder_cite_dict: Dict = {}
+        self.recoder_cite_list: List = []
+        self.recoder_cite_title: List = []
 
     def add_url_sentences(self, sententces: str, citation_faiss_research):
         sentence_splits = sententces.split("。")

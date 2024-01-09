@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 from builtins import dict
+from typing import List
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage
+from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.base import Tool
 
@@ -127,7 +128,7 @@ class ReportWritingTool(Tool):
     ):
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
         report_type_func = get_report_by_type(report_type)
-        messages = [HumanMessage(report_type_func(question, research_summary, outline))]
+        messages: List[Message] = [HumanMessage(report_type_func(question, research_summary, outline))]
         response = await self.llm_long.chat(messages, system=agent_role_prompt)
         final_report = response.content
         if final_report == "":

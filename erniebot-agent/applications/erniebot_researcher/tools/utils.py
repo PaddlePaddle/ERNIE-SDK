@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import urllib.parse
-from typing import Union
+from typing import Any, Union
 
 import jsonlines
 from langchain.docstore.document import Document
@@ -14,7 +14,6 @@ from langchain.vectorstores import FAISS
 from md2pdf.core import md2pdf
 from sklearn.metrics.pairwise import cosine_similarity
 
-from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.agents.callback import LoggingHandler
 from erniebot_agent.agents.schema import ToolResponse
 from erniebot_agent.tools.base import BaseTool
@@ -25,7 +24,7 @@ default_logger = logging.getLogger(__name__)
 
 
 class ReportCallbackHandler(LoggingHandler):
-    async def on_run_start(self, agent: BaseAgent, prompt, **kwargs):
+    async def on_run_start(self, agent: Any, prompt, **kwargs):
         agent_name = kwargs.get("agent_name", None)
         if isinstance(prompt, (dict, list, tuple)):
             prompt = json.dumps(prompt, ensure_ascii=False)
@@ -38,13 +37,13 @@ class ReportCallbackHandler(LoggingHandler):
             state="Start",
         )
 
-    async def on_run_end(self, agent: BaseAgent, response, **kwargs):
+    async def on_run_end(self, agent: Any, response, **kwargs):
         agent_name = kwargs.get("agent_name", None)
         self._agent_info(
             "%s %s finished running.", agent.__class__.__name__, agent_name, subject="Run", state="End"
         )
 
-    async def on_tool_start(self, agent: BaseAgent, tool: Union[BaseTool, str], input_args: str) -> None:
+    async def on_tool_start(self, agent: Any, tool: Union[BaseTool, str], input_args: str) -> None:
         if isinstance(input_args, (dict, list, tuple)):
             js_inputs = json.dumps(input_args, ensure_ascii=False)
         elif isinstance(input_args, str):
@@ -63,9 +62,7 @@ class ReportCallbackHandler(LoggingHandler):
             state="Start",
         )
 
-    async def on_tool_end(
-        self, agent: BaseAgent, tool: Union[BaseTool, str], response: ToolResponse
-    ) -> None:
+    async def on_tool_end(self, agent: Any, tool: Union[BaseTool, str], response: ToolResponse) -> None:
         """Called to log when a tool ends running."""
         if isinstance(response, (dict, list, tuple)):
             js_inputs = json.dumps(response, ensure_ascii=False)
@@ -89,6 +86,9 @@ class ReportCallbackHandler(LoggingHandler):
     def _agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:
         msg = f"[{subject}][{state}] {msg}"
         self.logger.info(msg, *args, **kwargs)
+
+    def on_llm_error(self, agent: Any, llm, error):
+        self.logger.error(f"LLM调用失败，错误信息:{error}")
 
 
 class FaissSearch:

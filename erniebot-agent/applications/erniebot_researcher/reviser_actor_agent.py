@@ -3,7 +3,6 @@ from typing import Dict, Optional, Union
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
-from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.memory import HumanMessage, SystemMessage
 from erniebot_agent.prompt.prompt_template import PromptTemplate
@@ -34,7 +33,7 @@ class ReviserActorAgent(JsonUtil):
         self.template = "现在给你草稿的内容\n草稿：\n{{draft}}" + "\n请你按照编辑的备注来修改下面的草稿，现在给你编辑的备注：\n{{notes}}"
         self.prompt_template = PromptTemplate(template=self.template, input_variables=["draft", "notes"])
         if callbacks is None:
-            self._callback_manager = CallbackManager([ReportCallbackHandler()])
+            self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
 

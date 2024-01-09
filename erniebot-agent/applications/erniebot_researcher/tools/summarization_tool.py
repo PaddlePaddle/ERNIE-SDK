@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import Any
 
 from langchain.chains.combine_documents import collapse_docs, split_list_of_docs
 from langchain.prompts import PromptTemplate
@@ -29,7 +30,7 @@ class TextSummarizationTool(Tool):
             + question
             + '—— 如果无法使用文本回答问题，请简要总结文本，不要胡编乱造。"包括所有的事实信息、数字、统计数据等（如果有的话）。字数控制在350字以内。文本内容：\n\n{context}'
         )
-        map_chain = (
+        map_chain: Any = (
             {"context": partial_format_document}
             | PromptTemplate.from_template(prompt)
             | llm
@@ -43,7 +44,7 @@ class TextSummarizationTool(Tool):
         def format_docs(docs):
             return "\n\n".join(partial_format_document(doc) for doc in docs)
 
-        collapse_chain = (
+        collapse_chain: Any = (
             {"context": format_docs} | PromptTemplate.from_template(prompt) | llm | StrOutputParser()
         )
 
@@ -64,7 +65,7 @@ class TextSummarizationTool(Tool):
                 collapse_ct += 1
             return docs
 
-        reduce_chain = (
+        reduce_chain: Any = (
             {"context": format_docs}
             | PromptTemplate.from_template(
                 "请你基于提供的内容，合并这些总结，不要额外使用自己的知识库对内容进行胡编乱造，不可以胡说八道，数字和事实必须准确。:\n\n{context}"
@@ -72,7 +73,9 @@ class TextSummarizationTool(Tool):
             | llm
             | StrOutputParser()
         ).with_config(run_name="Reduce")
-        map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain).with_config(run_name="Map reduce")
+        map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain).with_config(  # type: ignore
+            run_name="Map reduce"
+        )  # type: ignore
         return map_reduce
 
     async def __call__(
