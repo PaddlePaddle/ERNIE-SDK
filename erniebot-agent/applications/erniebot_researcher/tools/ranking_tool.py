@@ -31,8 +31,7 @@ def rank_report_prompt(report, query):
     1) 是否包含标题、摘要、正文、参考文献等，3) 内容与问题的相关性，4) 标题是否有"#"标注，5) 标题是否有中文符号。
     """
     prompt_socre = PromptTemplate(prompt, input_variables=["query", "content"])
-    strs = prompt_socre.format(content=report, query=query)
-    return strs
+    return prompt_socre.format(content=report, query=query)
 
 
 class TextRankingTool(Tool, JsonUtil):
