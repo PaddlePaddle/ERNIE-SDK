@@ -14,7 +14,7 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, TypeVar, Union, TypedDict
+from typing import Any, Dict, Generic, List, TypedDict, TypeVar, Union
 
 from typing_extensions import Literal
 
