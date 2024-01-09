@@ -1,9 +1,8 @@
 import logging
 from typing import Dict, Optional, Union
 
-from tools.utils import ReportCallbackHandler
+from tools.utils import JsonUtil, ReportCallbackHandler
 
-from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.schema import AgentResponse
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
@@ -15,7 +14,7 @@ MAX_RETRY = 10
 TOKEN_MAX_LENGTH = 4200
 
 
-class ReviserActorAgent(Agent):
+class ReviserActorAgent(JsonUtil):
     DEFAULT_SYSTEM_MESSAGE = """你是一名专业作家。你已经受到编辑的指派，需要修订以下草稿，该草稿由一名非专家撰写。你可以选择是否遵循编辑的备注，视情况而定。
     使用中文输出，只允许对草稿进行局部修改，不允许对草稿进行胡编乱造。url链接需要保留，不应该改变"""
 

@@ -8,6 +8,7 @@ from typing import Union
 import jsonlines
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain.output_parsers.json import parse_json_markdown
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
 from md2pdf.core import md2pdf
@@ -207,8 +208,11 @@ def add_citation(paragraphs, faiss_name, embeddings):
 
 class JsonUtil:
     def parse_json(self, json_str, start_indicator: str = "{", end_indicator: str = "}"):
-        start_idx = json_str.index(start_indicator)
-        end_idx = json_str.rindex(end_indicator)
-        corrected_data = json_str[start_idx : end_idx + 1]
-        response = json.loads(corrected_data)
+        if start_indicator == "{":
+            response = parse_json_markdown(json_str)
+        else:
+            start_idx = json_str.index(start_indicator)
+            end_idx = json_str.rindex(end_indicator)
+            corrected_data = json_str[start_idx : end_idx + 1]
+            response = json.loads(corrected_data)
         return response

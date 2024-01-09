@@ -21,7 +21,7 @@ def generate_report_prompt(question, research_summary, outline=None):
         outline = json.dumps(outline, ensure_ascii=False)
     if outline is None:
         prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
-        现在给你一些信息，帮助你进行报告生成任务
+        现在给你一些信息，帮助你进行报告生成任务，你生成的报告必须基于给出的信息，不可以胡说八道，数字和事实必须准确。
         信息：{{information}}
         使用上述信息，详细报告回答以下问题或主题{{question}}
         -----
@@ -38,7 +38,7 @@ def generate_report_prompt(question, research_summary, outline=None):
         # remove spaces
         outline = outline.replace(" ", "")
         prompt = """你是任务是生成一份满足要求的报告，报告的格式必须是markdown格式，注意报告标题前面必须有'#'
-        现在给你一些信息，帮助你进行报告生成任务
+        现在给你一些信息，帮助你进行报告生成任务，你生成的报告必须基于给出的信息，不可以胡说八道，数字和事实必须准确。
         信息：{{information}}
         使用上述信息，根据设定好的大纲{{outline}}
         详细报告回答以下问题或主题{{question}}
