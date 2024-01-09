@@ -14,7 +14,7 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, TypeVar, Union
+from typing import Any, Dict, Generic, List, TypeVar, Union, TypedDict
 
 from typing_extensions import Literal
 
@@ -39,7 +39,7 @@ class PluginAction(object):  # save for plugins that can be planned
     finish_reason: str
 
 
-class ToolInfo(Dict):
+class ToolInfo(TypedDict):
     tool_name: str
     tool_args: str
 

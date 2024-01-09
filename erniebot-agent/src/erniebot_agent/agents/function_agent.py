@@ -158,6 +158,7 @@ class FunctionAgent(Agent):
                 prompt, files or [], include_file_urls=self.file_needs_url
             )
             chat_history.append(run_input)
+            self._take_snapshot(chat_history, steps_taken)
 
         for tool in self._first_tools:
             curr_step, new_messages = await self._step(chat_history, selected_tool=tool)
@@ -272,7 +273,7 @@ class FunctionAgentRunSnapshot(object):
             content="",
             function_call=FunctionCall(
                 name=tool_name,
-                thoughts=f"我需要调用{tool_name}解决这个问题",
+                thoughts=f"我需要调用[{tool_name}]工具",
                 arguments=tool_args,
             ),
         )
