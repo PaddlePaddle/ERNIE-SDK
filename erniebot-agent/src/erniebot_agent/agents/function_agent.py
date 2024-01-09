@@ -100,7 +100,7 @@ class FunctionAgent(Agent):
                 beginning of each agent run.
 
         Raises:
-            ValueError: if `max_steps` is non-positive. 
+            ValueError: if `max_steps` is non-positive.
             RuntimeError: if tools in first_tools but not in tools list.
 
         """
