@@ -36,5 +36,20 @@ class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
 
 
 class FakeERNIEBotWithAllInput(ERNIEBot):
-    def __init__(self, model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs):
-        super().__init__(model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs)
+    def __init__(
+        self,
+        model,
+        api_type,
+        access_token,
+        enable_multi_step_tool_call,
+        enable_human_clarify,
+        **default_chat_kwargs,
+    ):
+        super().__init__(
+            model,
+            api_type,
+            access_token,
+            enable_multi_step_tool_call,
+            enable_human_clarify,
+            **default_chat_kwargs,
+        )
