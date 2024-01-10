@@ -99,13 +99,14 @@ class RetrievalAgent(Agent):
                 FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]
             )
         elif self.context_retriever:
-            self.query_transform = PromptTemplate(CONTEXT_QUERY_DECOMPOSITION, input_variables=["context", "query"])
+            self.query_transform = PromptTemplate(
+                CONTEXT_QUERY_DECOMPOSITION, input_variables=["context", "query"]
+            )
         else:
             self.query_transform = PromptTemplate(ZERO_SHOT_QUERY_DECOMPOSITION, input_variables=["query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.use_compressor = use_compressor
         self.compressor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
-        
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
