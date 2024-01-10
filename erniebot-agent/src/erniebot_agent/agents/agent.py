@@ -1,5 +1,6 @@
 import abc
 import json
+import logging
 from typing import (
     Any,
     Dict,
@@ -35,6 +36,8 @@ from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Final[Tuple[str]] = ("eChart",)
 
+_logger = logging.getLogger(__name__)
+
 
 class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
     """The base class for agents.
@@ -57,7 +60,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         tools: Union[ToolManager, Iterable[BaseTool]],
         *,
         memory: Optional[Memory] = None,
-        system_message: Optional[SystemMessage] = None,
+        system: Optional[str] = None,
         callbacks: Optional[Union[CallbackManager, Iterable[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
@@ -68,12 +71,11 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             llm: An LLM for the agent to use.
             tools: Tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
-                history. If `None`, a `WholeMemory` object will be used.
-            system_message: A message that tells the LLM how to interpret the
-                conversations. If `None`, the system message contained in
-                `memory` will be used.
-            callbacks: Callback handlers for the agent to use. If `None`, a
-                default list of callbacks will be used.
+                history. If not specified, a new WholeMemory object will be instantiated.
+            system: A message that tells the LLM how to interpret the
+                conversations.
+            callbacks: A list of callback handlers for the agent to use. If
+                `None`, a default list of callbacks will be used.
             file_manager: A file manager for the agent to interact with files.
                 If `None`, a global file manager that can be shared among
                 different components will be implicitly created and used.
@@ -90,10 +92,11 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         if memory is None:
             memory = self._create_default_memory()
         self.memory = memory
-        if system_message:
-            self.system_message = system_message
-        else:
-            self.system_message = self.memory.get_system_message()
+
+        self.system = SystemMessage(system) if system is not None else system
+        if self.system is not None:
+            self.memory.set_system_message(self.system)
+
         if callbacks is None:
             callbacks = get_default_callbacks()
         if isinstance(callbacks, CallbackManager):
@@ -226,11 +229,18 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         for reserved_opt in ("stream", "system", "plugins"):
             if reserved_opt in opts:
                 raise TypeError(f"`{reserved_opt}` should not be set.")
+
         if "functions" not in opts:
             functions = self._tool_manager.get_tool_schemas()
         else:
             functions = opts.pop("functions")
-        opts["system"] = self.system_message.content if self.system_message is not None else None
+
+        if hasattr(self.llm, "system"):
+            _logger.warning(
+                "The `system` message has already been set in the agent;"
+                "the `system` message configured in ERNIEBot will become ineffective."
+            )
+        opts["system"] = self.system.content if self.system is not None else None
         opts["plugins"] = self._plugins
         llm_ret = await self.llm.chat(messages, stream=False, functions=functions, **opts)
         return LLMResponse(message=llm_ret)
