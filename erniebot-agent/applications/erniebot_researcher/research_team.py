@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Optional
 
 from editor_actor_agent import EditorActorAgent
@@ -29,15 +30,9 @@ class ResearchTeam:
         self.use_reflection = use_reflection
 
     async def run(self, query, iterations=3):
-        list_reports = []
-        for researcher in self.research_actor_instance:
-            report, paragraphs = await researcher.run(query)
-            list_reports.append(
-                {
-                    "report": report,
-                    "paragraphs": paragraphs,
-                }
-            )
+        tasks_researchers = [researcher.run(query) for researcher in self.research_actor_instance]
+        result_researchers = await asyncio.gather(*tasks_researchers)
+        list_reports = [{"report": result[0], "paragraphs": result[1]} for result in result_researchers]
         if self.user_agent is not None:
             prompt = (
                 f"请你从{list_reports}个待选的多个报告草稿中，选择一个合适的报告,"
