@@ -16,7 +16,6 @@ from __future__ import annotations
 import functools
 import json
 import types
-from dataclasses import asdict
 from typing import Callable, Dict, Iterable, List, final
 
 from erniebot_agent.tools.base import BaseTool, Tool
@@ -111,7 +110,7 @@ class ToolManager(object):
                 return await __tool__()
 
             async def create_tool_endpoint(__tool__, inputs):
-                data = asdict(inputs)
+                data = inputs.model_dump(mode="json")
                 return await __tool__(**data)
 
             if tool.input_type is not None:
@@ -127,6 +126,7 @@ class ToolManager(object):
                 response_model=tool.ouptut_type,
                 description=tool.description,
                 operation_id=tool.tool_name,
+                methods=["POST"],
             )
 
         @app.get("/.well-known/openapi.yaml")
