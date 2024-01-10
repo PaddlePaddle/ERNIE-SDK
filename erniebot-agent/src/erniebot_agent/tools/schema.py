@@ -460,7 +460,7 @@ class RemoteToolView:
                 returns_description = list(path_info["responses"].values())[0].get("description", None)
 
         return RemoteToolView(
-            name=path_info["operationId"],
+            name=path_info.get("operationId", uri.replace("/", "-")),
             parameters=parameters,
             version=version,
             parameters_description=parameters_description,

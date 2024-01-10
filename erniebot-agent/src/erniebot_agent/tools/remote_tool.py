@@ -116,7 +116,7 @@ class RemoteTool(BaseTool):
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
-            tool_arguments = dict(self.tool_view.parameters(**tool_arguments))
+            tool_arguments = self.tool_view.parameters(**tool_arguments).model_dump(mode="json")
 
         return tool_arguments
 
