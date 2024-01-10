@@ -41,7 +41,7 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
 > 第一步：下载项目源代码
 
 ```
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
+git https://github.com/PaddlePaddle/ERNIE-SDK.git
 cd ernie-agent/applications/erniebot_researcher
 ```
 
@@ -67,7 +67,7 @@ export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=INFO
 ```
 
-Python脚本运行：
+Base版本示例运行：
 
 ```
 python sample_report_example.py --num_research_agent 2 \
@@ -75,10 +75,19 @@ python sample_report_example.py --num_research_agent 2 \
                                 --faiss_name_abstract <your abstract text> 
 ```
 
-WebUI运行：
+Base版本WebUI运行：
 
 ```
-python ui.py --access_token <aistudio-access-token>
+python ui.py --num_research_agent 2 \
+             --faiss_name_paper <your full text> \
+             --faiss_name_abstract <your abstract text> 
+```
+
+高阶版本多智能体自动调度示例脚本运行：
+
+```
+python sample_group_agent.py --faiss_name_paper <your full text> \
+                             --faiss_name_abstract <your abstract text> 
 ```
 
 ## Reference

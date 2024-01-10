@@ -55,7 +55,7 @@ parser.add_argument(
     "--index_name_abstract", type=str, default="", help="The name of the abstract base(faiss)"
 )
 parser.add_argument(
-    "--index_name_citation", type=str, default="", help="The name of the citation base(faiss)"
+    "--index_name_citation", type=str, default="citation_index", help="The name of the citation base(faiss)"
 )
 
 parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
@@ -80,8 +80,6 @@ args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 os.environ["EB_AGENT_LOGGING_FILE"] = args.log_path
-# sh = logging.StreamHandler()
-# logging.basicConfig(filename=args.log_path, level=logging.INFO)
 logger = setup_logging(use_fileformatter=False)
 
 

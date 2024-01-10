@@ -53,7 +53,7 @@ parser.add_argument(
     "--index_name_abstract", type=str, default="", help="The name of the abstract base(faiss)"
 )
 parser.add_argument(
-    "--index_name_citation", type=str, default="", help="The name of the citation base(faiss)"
+    "--index_name_citation", type=str, default="citation_index", help="The name of the citation base(faiss)"
 )
 parser.add_argument("--num_research_agent", type=int, default=2, help="The number of research agent")
 parser.add_argument("--save_path", type=str, default="./output/erniebot", help="The report save path")
