@@ -18,13 +18,12 @@ from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, ReportCallbackHandler, build_index
+from tools.utils import FaissSearch, ReportCallbackHandler, build_index, setup_logging
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
 from erniebot_agent.memory import SystemMessage
 from erniebot_agent.retrieval import BaizhongSearch
-from erniebot_agent.utils.logging import setup_logging
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_type", type=str, default="aistudio")
@@ -79,10 +78,10 @@ parser.add_argument("--log_path", type=str, default="log.txt", help="Log file na
 args = parser.parse_args()
 os.environ["api_type"] = args.api_type
 access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
-os.environ["EB_AGENT_LOGGING_FILE"] = args.log_path
+# os.environ["EB_AGENT_LOGGING_FILE"] = args.log_path
 # sh = logging.StreamHandler()
 # logging.basicConfig(filename=args.log_path, level=logging.INFO)
-logger = setup_logging(use_fileformatter=False)
+logger = setup_logging(args.log_path)
 
 
 def get_logs(path=args.log_path):
@@ -148,8 +147,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
             system_message=SystemMessage("你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿"),
             dir_path=dir_path,
             report_type=args.report_type,
-            retriever_abstract_tool=retriever_sets["abstract"],
-            retriever_tool=retriever_sets["full_text"],
+            retriever_abstract_db=retriever_sets["abstract"],
+            retriever_fulltext_db=retriever_sets["full_text"],
             intent_detection_tool=tool_sets["intent_detection"],
             task_planning_tool=tool_sets["task_planning"],
             report_writing_tool=tool_sets["report_writing"],
@@ -176,22 +175,20 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
         name="polish",
         llm=llm,
         llm_long=llm_long,
-        faiss_name_citation=args.index_name_citation,
+        citation_index_name=args.index_name_citation,
         embeddings=retriever_sets["embeddings"],
         dir_path=target_path,
         report_type=args.report_type,
         citation_tool=tool_sets["semantic_citation"],
         callbacks=ReportCallbackHandler(logger=logger),
     )
-    team_actor = ResearchTeam(
-        ranker_actor=ranker_actor,
-        research_actor=research_actor,
-        editor_actor=editor_actor,
-        reviser_actor=reviser_actor,
-        polish_actor=polish_actor,
-        use_reflection=True,
-    )
-    return team_actor
+    return {
+        "research_actor": research_actor,
+        "editor_actor": editor_actor,
+        "reviser_actor": reviser_actor,
+        "ranker_actor": ranker_actor,
+        "polish_actor": polish_actor,
+    }
 
 
 def generate_report(query, history=[]):
@@ -203,7 +200,8 @@ def generate_report(query, history=[]):
     llm_long = ERNIEBot(model="ernie-longtext")
     retriever_sets = get_retrievers()
     tool_sets = get_tools(llm, llm_long)
-    team_actor = get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path)
+    agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path)
+    team_actor = ResearchTeam(**agent_sets, use_reflection=True)
     report, path = asyncio.run(team_actor.run(query, args.iterations))
     return report, path
 
