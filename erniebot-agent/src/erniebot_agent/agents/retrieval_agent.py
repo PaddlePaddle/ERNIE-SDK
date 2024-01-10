@@ -8,11 +8,11 @@ from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 
 ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
-1.严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}
+1.严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 问题：{{query}} 子问题："""
 
 FEW_SHOT_QUERT_DECOMPOSITION = """请把下面的问题分解成子问题,
-严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}。
+严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 示例:
 ##
 {% for doc in documents %}
@@ -44,13 +44,13 @@ CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答�
 提取的相关部分:"""
 
 CONTEXT_PLANNING = """
-    {{context}} 请根据上述背景信息把下面的问题分解成子问题，每个子问题必须足够简单，要求：
-    严格按照【JSON格式】的形式输出：{'sub_query_1':'具体子问题1','sub_query_2':'具体子问题2'}。
-    问题：{{query}} 子问题：
-    """
+{{context}} 请根据上述背景信息把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
+问题：{{query}} 子问题：
+"""
 
 
-class FaissFewShotSearch:
+class FewShotSearch:
     def __init__(self, db):
         self.db = db
 
@@ -64,7 +64,7 @@ class FaissFewShotSearch:
         return retrieval_results
 
 
-class FaissAbstractSearch:
+class ContextSearch:
     def __init__(self, db):
         self.db = db
 
@@ -80,8 +80,8 @@ class RetrievalAgent(Agent):
     def __init__(
         self,
         knowledge_base,
-        few_shot_retriever: Optional[FaissFewShotSearch] = None,
-        context_retriever: Optional[FaissAbstractSearch] = None,
+        few_shot_retriever: Optional[FewShotSearch] = None,
+        context_retriever: Optional[ContextSearch] = None,
         top_k: int = 2,
         threshold: float = 0.1,
         use_compressor: bool = False,
@@ -109,7 +109,7 @@ class RetrievalAgent(Agent):
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
-        if self.few_shot_retriever is not None:
+        if self.few_shot_retriever:
             # Get few shot examples
             few_shots = self.few_shot_retriever.search(prompt, 3)
             steps_input = HumanMessage(
