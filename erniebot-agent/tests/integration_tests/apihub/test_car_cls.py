@@ -16,5 +16,5 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("这张照片中 车是什么牌子的车", files=[file])
-        self.assertEqual(len(result.files), 1)
+        self.assertEqual(len(result.steps[0].input_files), 1)
         self.assertIn("比亚迪", result.text)

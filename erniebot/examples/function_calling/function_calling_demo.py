@@ -42,9 +42,9 @@ def parse_setup_args():
 
 def create_ui_and_launch(args):
     with gr.Blocks(
-        title="ERNIE Bot SDK Function Calling Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
+        title="ERNIE Bot Function Calling Demo", theme=gr.themes.Soft(spacing_size="sm", text_size="md")
     ) as blocks:
-        gr.Markdown("# ERNIE Bot SDK函数调用功能演示")
+        gr.Markdown("# ERNIE Bot 函数调用功能演示")
         create_components(functions=get_predefined_functions())
 
     blocks.queue(api_open=False, concurrency_count=8).launch(server_name="0.0.0.0", server_port=args.port)

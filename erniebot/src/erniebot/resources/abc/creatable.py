@@ -28,12 +28,11 @@ class Creatable(Resource):
         """Creates a resource."""
         req = self._prepare_create(create_kwargs)
         resp = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=req.timeout,
         )
         resp = self._postprocess_create(resp)
@@ -43,12 +42,11 @@ class Creatable(Resource):
         """Asynchronous version of `create_resource`."""
         req = self._prepare_create(create_kwargs)
         resp = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=req.timeout,
         )
         resp = self._postprocess_create(resp)
@@ -67,12 +65,11 @@ class CreatableWithStreaming(Resource):
         """Creates a resource."""
         req = self._prepare_create(create_kwargs)
         resp = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=req.stream,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=req.timeout,
         )
         if isinstance(resp, EBResponse):
@@ -85,12 +82,11 @@ class CreatableWithStreaming(Resource):
         """Asynchronous version of `create_resource`."""
         req = self._prepare_create(create_kwargs)
         resp = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=req.stream,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=req.timeout,
         )
         if isinstance(resp, EBResponse):

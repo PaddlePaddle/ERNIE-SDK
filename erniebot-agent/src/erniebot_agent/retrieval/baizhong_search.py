@@ -8,7 +8,7 @@ import requests
 from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.exceptions import BaizhongError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class BaizhongSearch:
@@ -53,9 +53,8 @@ class BaizhongSearch:
                 "Please ensure that either an access_token is provided or "
                 "the EB_AGENT_ACCESS_TOKEN is set up as an environment variable."
             )
-
         if knowledge_base_id is not None:
-            logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
+            _logger.info(f"Loading existing project with `knowledge_base_id={knowledge_base_id}`")
             self.knowledge_base_id = knowledge_base_id
         elif knowledge_base_name is not None:
             self.knowledge_base_id = self.create_knowledge_base(knowledge_base_name)
@@ -77,7 +76,7 @@ class BaizhongSearch:
         """
         json_data = {"knowledgeBaseName": knowledge_base_name}
         res = requests.post(
-            f"{self.base_url}/llm/knowledge/create",
+            f"{self._base_url}/llm/knowledge/create",
             json=json_data,
             headers=self._get_authorization_headers(access_token=self.access_token),
         )
@@ -101,7 +100,7 @@ class BaizhongSearch:
         """
         headers = {"Content-Type": "application/json"}
         if access_token is None:
-            logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
+            _logger.warning("access_token is NOT provided, this may cause 403 HTTP error..")
         else:
             headers["Authorization"] = f"token {access_token}"
         return headers
@@ -128,7 +127,7 @@ class BaizhongSearch:
             filterConditions = {"filterConditions": {"bool": {"filter": filter_terms}}}
             json_data.update(filterConditions)
         res = requests.post(
-            f"{self.base_url}/llm/knowledge/search",
+            f"{self._base_url}/llm/knowledge/search",
             json=json_data,
             headers=self._get_authorization_headers(access_token=self.access_token),
         )

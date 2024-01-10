@@ -5,11 +5,11 @@
 **ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 [![Downloads](https://pepy.tech/badge/erniebot-agent)](https://pepy.tech/project/erniebot-agent)
-[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK)
+[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK)
 
 </div>
 
@@ -32,10 +32,10 @@
 执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
-cd ERNIE-Bot-SDK
+git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
+cd ERNIE-SDK
 
-# 首先安装Ernie Bot SDK
+# 首先安装Ernie Bot
 pip install ./erniebot
 
 # 然后安装ERNIE Bot Agent
@@ -43,7 +43,7 @@ pip install ./erniebot-agent            # 安装核心模块
 # pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
 
-### 快速安装（暂不支持）
+### 快速安装
 
 执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
@@ -54,6 +54,7 @@ pip install --upgrade erniebot-agent
 # 安装所有模块
 pip install --upgrade erniebot-agent[all]
 ```
+。
 
 ## 快速体验
 
@@ -61,7 +62,6 @@ pip install --upgrade erniebot-agent[all]
 
 ```python
 import asyncio
-import os
 
 from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot

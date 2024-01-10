@@ -1,0 +1,17 @@
+{
+    "schema_version": "v1",
+    "name_for_human": "单词本_386",
+    "name_for_model": "wordbook_386",
+    "description_for_human": "个性化的英文单词本，可以增加、删除和浏览单词本中的单词，并可以按要求从单词本中随机抽取单词生成句子或段落",
+    "description_for_model": "帮助用户管理单词本，可以增加、删除、浏览单词本，背单词时可以指定随机抽取单词本中若干个单词，生成句子会段落",
+    "auth": {
+        "type": "none"
+    },
+    "api":{
+        "type": "openapi",
+        "url": "http://127.0.0.1:8081/.well-known/openapi.yaml"
+    },
+    "logo_url": "http://127.0.0.1:8081/logo.png",
+    "contact_email": "support@example.com",
+    "legal_info_url": "http://www.example.com/legal"
+}

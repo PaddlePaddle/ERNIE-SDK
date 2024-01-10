@@ -49,7 +49,7 @@ from typing import (
     AsyncGenerator,
     AsyncIterator,
     Callable,
-    ClassVar,
+    Final,
     Generator,
     Iterator,
     Mapping,
@@ -65,7 +65,7 @@ import erniebot
 
 from . import constants, errors
 from .response import EBResponse
-from .types import FilesType, HeadersType, ParamsType
+from .types import HeadersType, ParamsType
 from .utils import logging
 from .utils.url import add_query_params
 
@@ -75,7 +75,7 @@ __all__ = ["EBClient"]
 class EBClient(object):
     """Provides low-level APIs to send HTTP requests and handle responses."""
 
-    DEFAULT_REQUEST_TIMEOUT_SECS: ClassVar[float] = constants.DEFAULT_REQUEST_TIMEOUT_SECS
+    DEFAULT_REQUEST_TIMEOUT_SECS: Final[float] = constants.DEFAULT_REQUEST_TIMEOUT_SECS
 
     _session: Optional[requests.Session]
     _asession: Optional[aiohttp.ClientSession]
@@ -102,22 +102,19 @@ class EBClient(object):
         path: str,
         supplied_headers: Optional[HeadersType],
         params: Optional[ParamsType],
-        files: Optional[FilesType],
     ) -> Tuple[str, HeadersType, Optional[bytes]]:
         url = f"{self._base_url}{path}"
-        headers = self._validate_headers(supplied_headers)
+        headers = self._get_request_headers(method, supplied_headers)
         data = None
         method = method.upper()
         if method == "GET" or method == "DELETE":
             if params:
                 url = add_query_params(url, [(str(k), str(v)) for k, v in params.items() if v is not None])
-        elif method in {"POST", "PUT"}:
-            if params and not files:
+        elif method == "POST" or method == "PUT":
+            if params:
                 data = json.dumps(params).encode()
-                headers["Content-Type"] = "application/json"
         else:
             raise errors.ConnectionError(f"Unrecognized HTTP method: {repr(method)}")
-        headers = self.get_request_headers(method, headers)
 
         logging.debug("Method: %s", method)
         logging.debug("URL: %s", url)
@@ -134,7 +131,6 @@ class EBClient(object):
         *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         ctx = self._make_requests_session_context_manager()
@@ -144,11 +140,10 @@ class EBClient(object):
         try:
             result = self.send_request_raw(
                 session,
-                method.lower(),
+                method.upper(),
                 url,
                 data=data,
                 headers=headers,
-                files=files,
                 stream=stream,
                 request_timeout=request_timeout,
             )
@@ -194,7 +189,6 @@ class EBClient(object):
         *,
         data: Optional[bytes] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
         ctx = self._make_aiohttp_session_context_manager()
@@ -204,11 +198,10 @@ class EBClient(object):
         try:
             result = await self.asend_request_raw(
                 session,
-                method.lower(),
+                method.upper(),
                 url,
                 data=data,
                 headers=headers,
-                files=files,
                 request_timeout=request_timeout,
             )
             should_clean_up_result = True
@@ -244,16 +237,6 @@ class EBClient(object):
 
         return resp
 
-    def get_request_headers(self, method: str, extra: HeadersType) -> HeadersType:
-        headers = {}
-
-        headers["User-Agent"] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
-        # TODO: Add other headers
-
-        headers.update(extra)
-
-        return headers
-
     def send_request_raw(
         self,
         session: requests.Session,
@@ -261,7 +244,6 @@ class EBClient(object):
         url: str,
         data: Optional[bytes],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         stream: bool,
         request_timeout: Optional[float],
     ) -> requests.Response:
@@ -271,7 +253,6 @@ class EBClient(object):
                 url,
                 headers=headers,
                 data=data,
-                files=files,
                 stream=stream,
                 timeout=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS,
                 proxies=session.proxies,
@@ -290,12 +271,8 @@ class EBClient(object):
         url: str,
         data: Optional[bytes],
         headers: Optional[HeadersType],
-        files: Optional[FilesType],
         request_timeout: Optional[float],
     ) -> aiohttp.ClientResponse:
-        if files is not None:
-            raise ValueError("`files` is currently not supported.")
-
         timeout = aiohttp.ClientTimeout(
             total=request_timeout if request_timeout else self.DEFAULT_REQUEST_TIMEOUT_SECS
         )
@@ -315,12 +292,19 @@ class EBClient(object):
 
         return result
 
-    def _validate_headers(self, supplied_headers: Optional[HeadersType]) -> HeadersType:
-        headers: dict = {}
+    def _get_request_headers(self, method: str, supplied_headers: Optional[HeadersType]) -> HeadersType:
+        headers = {}
 
-        if supplied_headers is None:
-            return headers
+        headers["User-Agent"] = f"ERNIE-SDK/{erniebot.__version__}"
+        # TODO: Add other default headers
 
+        if supplied_headers is not None:
+            self._validate_headers(supplied_headers)
+            headers.update(supplied_headers)
+
+        return headers
+
+    def _validate_headers(self, supplied_headers: HeadersType) -> None:
         if not isinstance(supplied_headers, dict):
             raise TypeError("`supplied_headers` must be a dictionary.")
 
@@ -329,31 +313,6 @@ class EBClient(object):
                 raise TypeError("Header keys must be strings.")
             if not isinstance(v, str):
                 raise TypeError("Header values must be strings.")
-            headers[k] = v
-
-        return headers
-
-    def _parse_line(self, line: bytes) -> Optional[str]:
-        if line:
-            if line.startswith(constants.STREAM_RESPONSE_PREFIX):
-                line = line[len(constants.STREAM_RESPONSE_PREFIX) :]
-                return line.decode("utf-8")
-            else:
-                # Filter out other lines
-                return None
-        return None
-
-    def _parse_stream(self, rbody: Iterator[bytes]) -> Iterator[str]:
-        for line in rbody:
-            _line = self._parse_line(line)
-            if _line is not None:
-                yield _line
-
-    async def _parse_async_stream(self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
-        async for line in rbody:
-            _line = self._parse_line(line)
-            if _line is not None:
-                yield _line
 
     def _interpret_response(
         self, response: requests.Response
@@ -449,6 +408,8 @@ class EBClient(object):
                 rheaders=rheaders,
             )
 
+        logging.debug("Decoded response body: %r", decoded_rbody)
+
         response = EBResponse(rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
 
         if rcode != http.HTTPStatus.OK:
@@ -462,6 +423,28 @@ class EBClient(object):
         if self._resp_handler is not None:
             response = self._resp_handler(response)
         return response
+
+    def _parse_stream(self, rbody: Iterator[bytes]) -> Iterator[str]:
+        for line in rbody:
+            _line = self._parse_line(line)
+            if _line is not None:
+                yield _line
+
+    async def _parse_async_stream(self, rbody: aiohttp.StreamReader) -> AsyncIterator[str]:
+        async for line in rbody:
+            _line = self._parse_line(line)
+            if _line is not None:
+                yield _line
+
+    def _parse_line(self, line: bytes) -> Optional[str]:
+        if line:
+            if line.startswith(constants.STREAM_RESPONSE_PREFIX):
+                line = line[len(constants.STREAM_RESPONSE_PREFIX) :]
+                return line.decode("utf-8")
+            else:
+                # Filter out other lines
+                return None
+        return None
 
     @contextmanager
     def _make_requests_session_context_manager(self) -> Generator[requests.Session, None, None]:
