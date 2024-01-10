@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import urllib.parse
-from typing import Any, Union
+from typing import Any, Dict, List, Union
 
 import jsonlines
 from langchain.docstore.document import Document
@@ -15,7 +15,6 @@ from md2pdf.core import md2pdf
 from sklearn.metrics.pairwise import cosine_similarity
 
 from erniebot_agent.agents.callback import LoggingHandler
-from erniebot_agent.agents.schema import ToolResponse
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.json import to_pretty_json
@@ -45,7 +44,9 @@ class ReportCallbackHandler(LoggingHandler):
             "%s %s finished running.", agent.__class__.__name__, agent_name, subject="Run", state="End"
         )
 
-    async def on_tool_start(self, agent: Any, tool: Union[BaseTool, str], input_args: str) -> None:
+    async def on_tool_start(
+        self, agent: Any, tool: Union[BaseTool, str], input_args: Union[str, Dict, List]
+    ) -> None:
         if isinstance(input_args, (dict, list, tuple)):
             js_inputs = json.dumps(input_args, ensure_ascii=False)
         elif isinstance(input_args, str):
@@ -64,7 +65,7 @@ class ReportCallbackHandler(LoggingHandler):
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Any, tool: Union[BaseTool, str], response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: Any, tool: Union[BaseTool, str], response: Any) -> None:
         """Called to log when a tool ends running."""
         if isinstance(response, (dict, list, tuple)):
             js_inputs = json.dumps(response, ensure_ascii=False)
@@ -91,6 +92,9 @@ class ReportCallbackHandler(LoggingHandler):
 
     async def on_llm_error(self, agent: Any, llm, error):
         self.logger.error(f"LLM调用失败，错误信息:{error}")
+
+    async def on_tool_error(self, agent: Any, tool, error):
+        self.logger.error(f"Tool调用失败，错误信息:{error}")
 
 
 class FaissSearch:

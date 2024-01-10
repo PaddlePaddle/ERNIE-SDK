@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 from tools.utils import JsonUtil, ReportCallbackHandler
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class RankingAgent(JsonUtil):
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    async def _run(self, query, list_reports):
+    async def _run(self, query: str, list_reports: List[Union[str, dict]]):
         await self._callback_manager.on_tool_start(
             agent=self, tool=self.ranking_tool, input_args=list_reports
         )
@@ -79,12 +79,12 @@ class RankingAgent(JsonUtil):
         await self._callback_manager.on_tool_end(agent=self, tool=self.ranking_tool, response=response)
         return reports, response
 
-    async def check_format(self, report):
+    async def check_format(self, report: str):
         retry_count = 0
         while True:
             try:
                 content = get_markdown_check_prompt(report)
-                messages = [HumanMessage(content=content)]
+                messages: List[Message] = [HumanMessage(content=content)]
                 if len(content) < TOKEN_MAX_LENGTH:
                     response = await self.llm.chat(messages=messages, temperature=0.001)
                 else:
