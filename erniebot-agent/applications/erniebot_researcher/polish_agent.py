@@ -16,6 +16,18 @@ TOKEN_MAX_LENGTH = 4200
 class PolishAgent(JsonUtil):
     DEFAULT_SYSTEM_MESSAGE = "你是一个报告润色助手，你的主要工作是报告进行内容上的润色"
 
+    template_abstract = """
+        请你总结报告并给出报告的摘要和关键词，摘要在100-200字之间，关键词不超过5个词。
+        你需要输出一个json形式的字符串，内容为{"abstract":...,"keywords":...}。
+        现在给你报告的内容：
+        {{report}}"""
+
+    template_polish = """你的任务是扩写和润色相关内容，
+        你需要把相关内容扩写到300-400字之间，扩写的内容必须与给出的内容相关。
+        下面给出内容:
+        {{content}}
+        扩写并润色内容为:"""
+
     def __init__(
         self,
         name: str,
@@ -40,19 +52,9 @@ class PolishAgent(JsonUtil):
         self.system_message = (
             system_message.content if system_message is not None else self.DEFAULT_SYSTEM_MESSAGE
         )
-        self.template_abstract = """
-        请你总结报告并给出报告的摘要和关键词，摘要在100-200字之间，关键词不超过5个词。
-        你需要输出一个json形式的字符串，内容为{"abstract":...,"keywords":...}。
-        现在给你报告的内容：
-        {{report}}"""
         self.prompt_template_abstract = PromptTemplate(
             template=self.template_abstract, input_variables=["report"]
         )
-        self.template_polish = """你的任务是扩写和润色相关内容，
-        你需要把相关内容扩写到300-400字之间，扩写的内容必须与给出的内容相关。
-        下面给出内容:
-        {{content}}
-        扩写并润色内容为:"""
         self.prompt_template_polish = PromptTemplate(
             template=self.template_polish, input_variables=["content"]
         )

@@ -82,13 +82,13 @@ def generate_outline_report_prompt(question, research_summary, **kwargs):
             research_summary (str): The research summary to generate the outline report prompt for
     Returns: str: The outline report prompt for the given question and research summary
     """
-    report_prompt = """{{information}}使用上述信息，为以下问题或主题：
+    prompt = """{{information}}使用上述信息，为以下问题或主题：
     "{{question}}". 生成一个Markdown语法的研究报告大纲。
     大纲应为研究报告提供一个良好的结构框架，包括主要部分、子部分和要涵盖的关键要点。
     研究报告应详细、信息丰富、深入，至少1,200字。使用适当的Markdown语法来格式化大纲，确保可读性。
     """
-    Report_prompt = PromptTemplate(report_prompt, input_variables=["information", "question"])
-    strs = Report_prompt.format(information=research_summary, question=question)
+    report_prompt = PromptTemplate(prompt, input_variables=["information", "question"])
+    strs = report_prompt.format(information=research_summary, question=question)
     return strs.replace(". ", ".")
 
 
