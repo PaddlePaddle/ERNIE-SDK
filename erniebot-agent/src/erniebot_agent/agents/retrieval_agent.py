@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional, Sequence
 import json
+from typing import Dict, List, Optional, Sequence
+
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse, AgentStep
 from erniebot_agent.file import File
@@ -31,7 +32,7 @@ query_graph:
 
 
 RAG_PROMPT = """
-先验信息: 
+先验信息:
 {% for doc in pre_context %}
     {{doc}}
 {% endfor %}
@@ -41,6 +42,7 @@ RAG_PROMPT = """
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
+
 
 class DAGRetrievalAgent(Agent):
     def __init__(
@@ -60,9 +62,7 @@ class DAGRetrievalAgent(Agent):
         steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
         chat_history: List[Message] = [steps_input]
         # Query planning
-        llm_resp = await self.run_llm(
-            messages=[steps_input]
-        )
+        llm_resp = await self.run_llm(messages=[steps_input])
         output_message = llm_resp.message
         query_graph = self._parse_results(output_message.content)
         retrieval_results = await self.execute(query_graph)
@@ -81,31 +81,29 @@ class DAGRetrievalAgent(Agent):
         return response
 
     async def execute(self, query_graph: Dict):
-        retrieval_results = []
         contexts = {}
-        for item in query_graph['query_graph']:
-            sub_query = item['question']
+        for item in query_graph["query_graph"]:
+            sub_query = item["question"]
             idx = item["id"]
             dependencies = item["dependencies"]
             # sub query search
             documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
-            
+
             # SubQuery Answer generation
             cur_contexts = []
             for dp in dependencies:
                 cur_context = contexts[dp]
                 cur_contexts.append(cur_context)
-            step_input = HumanMessage(content=self.rag_prompt.format(query=sub_query, 
-                                    pre_context=cur_context,
-                                    documents=documents))
+            step_input = HumanMessage(
+                content=self.rag_prompt.format(query=sub_query, pre_context=cur_context, documents=documents)
+            )
             chat_history: List[Message] = [step_input]
             llm_resp = await self.run_llm(
                 messages=chat_history,
             )
-            contexts[idx] = {'query':sub_query, 'response': llm_resp.context}
 
-        
-
+            contexts[idx] = {"query": sub_query, "response": llm_resp.context}
+        return contexts.values()
 
     def _create_finished_response(
         self,
