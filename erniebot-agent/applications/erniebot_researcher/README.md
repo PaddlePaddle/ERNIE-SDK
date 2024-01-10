@@ -18,7 +18,7 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
 
 
 <div align="center">
-    <img src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/12107462/12b43239-6166-4c66-a260-33ab795901d7" width="500px">
+    <img src="https://github.com/PaddlePaddle/ERNIE-SDK/assets/12107462/fd491179-3f95-4fba-b885-b71adfd431d0" width="500px">
 </div>
 
 ## 应用特色
