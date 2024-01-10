@@ -42,7 +42,7 @@ class BaizhongSearch:
             BaizhongError: If neither knowledge_base_name nor knowledge_base_id is provided.
 
         """
-        self.base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
+        self._base_url = os.getenv("AISTUDIO_BASE_URL", self._AISTUDIO_BASE_URL)
         self.access_token: Optional[str] = None
         if access_token is not None:
             self.access_token = access_token
