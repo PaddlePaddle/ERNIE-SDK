@@ -110,7 +110,7 @@ class ToolManager(object):
                 return await __tool__()
 
             async def create_tool_endpoint(__tool__, inputs):
-                data = inputs.model_dump(mode='json')
+                data = inputs.model_dump(mode="json")
                 return await __tool__(**data)
 
             if tool.input_type is not None:
@@ -127,7 +127,6 @@ class ToolManager(object):
                 description=tool.description,
                 operation_id=tool.tool_name,
                 methods=["POST"],
-
             )
 
         @app.get("/.well-known/openapi.yaml")
