@@ -20,7 +20,6 @@ class OutlineGenerationTool(Tool, JsonUtil):
         self,
         queries: List[str],
         question: str,
-        **kwargs,
     ):
         ques = ""
         for i, query in enumerate(queries):

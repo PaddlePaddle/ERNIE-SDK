@@ -82,7 +82,6 @@ class TextSummarizationTool(Tool):
         self,
         text: str,
         question: str,
-        **kwargs,
     ):
         if not text:
             return "Error: No text to summarize"

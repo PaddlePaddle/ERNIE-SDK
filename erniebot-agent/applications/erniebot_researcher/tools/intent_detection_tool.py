@@ -45,10 +45,10 @@ class IntentDetectionTool(Tool, JsonUtil):
     def __init__(self, llm: BaseERNIEBot) -> None:
         super().__init__()
         self.llm = llm
+        self.prompt = auto_agent_instructions()
 
-    async def __call__(self, content: str, **kwargs):
-        prompt = auto_agent_instructions()
-        messages: List[Message] = [HumanMessage(prompt.format(content=content))]
+    async def __call__(self, content: str):
+        messages: List[Message] = [HumanMessage(self.prompt.format(content=content))]
         response = await self.llm.chat(messages=messages)
         result = response.content
         result = self.parse_json(result)
