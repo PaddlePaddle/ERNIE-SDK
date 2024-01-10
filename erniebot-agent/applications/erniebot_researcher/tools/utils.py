@@ -89,7 +89,7 @@ class ReportCallbackHandler(LoggingHandler):
         msg = f"[{subject}][{state}] {msg}"
         self.logger.info(msg, *args, **kwargs)
 
-    def on_llm_error(self, agent: Any, llm, error):
+    async def on_llm_error(self, agent: Any, llm, error):
         self.logger.error(f"LLM调用失败，错误信息:{error}")
 
 

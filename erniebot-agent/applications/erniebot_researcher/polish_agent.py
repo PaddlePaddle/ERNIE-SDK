@@ -1,12 +1,12 @@
 import logging
 import time
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.utils import JsonUtil, ReportCallbackHandler, add_citation, write_md_to_pdf
 
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -69,11 +69,11 @@ class PolishAgent(JsonUtil):
         await self._callback_manager.on_run_end(agent=self, response=agent_resp)
         return agent_resp
 
-    async def _run(self, report, summarize=None):
+    async def add_abstract(self, report: str):
         while True:
             try:
                 content = self.prompt_template_abstract.format(report=report)
-                messages = [HumanMessage(content)]
+                messages: List[Message] = [HumanMessage(content)]
                 if len(content) > TOKEN_MAX_LENGTH:
                     reponse = await self.llm_long.chat(messages)
                 else:
@@ -84,10 +84,12 @@ class PolishAgent(JsonUtil):
                 key = abstract_json["keywords"]
                 if type(key) is list:
                     key = "，".join(key)
-                break
+                return abstract, key
             except Exception as e:
                 await self._callback_manager.on_llm_error(self, self.llm, e)
                 continue
+
+    async def polish_paragraph(self, report: str, abstract: str, key: str):
         report_list = [item for item in report.split("\n\n") if item.strip() != ""]
         if "#" in report_list[0]:
             paragraphs = [report_list[0]]
@@ -101,13 +103,13 @@ class PolishAgent(JsonUtil):
                     content += item + "\n"
                 # Title
                 else:
-                    # Not to render
+                    # Not to polish
                     if len(content) > 300:
                         paragraphs.append(content)
-                    # Rendering
+                    # Polishing
                     elif len(content) > 0:
                         content = self.prompt_template_polish.format(content=content)
-                        messages = [HumanMessage(content)]
+                        messages: List[Message] = [HumanMessage(content)]
                         try:
                             reponse = await self.llm.chat(messages)
                         except Exception as e:
@@ -134,6 +136,11 @@ class PolishAgent(JsonUtil):
         else:
             logging.error("Report format error, unable to add abstract and keywords")
             final_report = report
+        return final_report
+
+    async def _run(self, report, summarize=None):
+        abstract, key = await self.add_abstract(report)
+        final_report = await self.polish_paragraph(report, abstract, key)
         await self._callback_manager.on_tool_start(self, tool=self.citation_tool, input_args=final_report)
         if summarize is not None:
             citation_search = add_citation(summarize, self.citation_index_name, self.embeddings)
