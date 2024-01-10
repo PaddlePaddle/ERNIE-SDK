@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
@@ -8,9 +8,8 @@ from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
 from tools.utils import JsonUtil, ReportCallbackHandler
 
-from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
-from erniebot_agent.memory import HumanMessage, SystemMessage
+from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -70,11 +69,11 @@ class ResearchAgent(JsonUtil):
         self.select_prompt = PromptTemplate(SELECT_PROMPT, input_variables=["queries", "question"])
         self.llm = llm
         if callbacks is None:
-            self._callback_manager = CallbackManager([ReportCallbackHandler()])
+            self._callback_manager = ReportCallbackHandler()
         else:
             self._callback_manager = callbacks
 
-    async def run_search_summary(self, query):
+    async def run_search_summary(self, query: str):
         responses = []
         url_dict = {}
         results = self.retriever_fulltext_db.search(query, top_k=3)
@@ -96,7 +95,7 @@ class ResearchAgent(JsonUtil):
         await self._callback_manager.on_tool_end(self, tool=self.summarize_tool, response=responses)
         return responses, url_dict
 
-    async def run(self, query):
+    async def run(self, query: str):
         """
         Runs the ResearchAgent
         Returns:
@@ -137,7 +136,7 @@ class ResearchAgent(JsonUtil):
             sub_queries = list(set(sub_queries))
             # Sampling 4 sub-queries
             if len(sub_queries) > self.nums_queries:
-                messages = [
+                messages: List[Message] = [
                     HumanMessage(content=self.select_prompt.format(queries=str(sub_queries), question=query))
                 ]
                 responese = await self.llm.chat(messages)
@@ -150,10 +149,9 @@ class ResearchAgent(JsonUtil):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.task_planning_tool, input_args=query
             )
-            context = ""
             # Generate Sub-Queries including original query
             sub_queries = await self.task_planning_tool(
-                question=query, agent_role_prompt=self.role, context=context
+                question=query, agent_role_prompt=self.role, context=""
             )
             await self._callback_manager.on_tool_end(
                 self, tool=self.task_planning_tool, response=sub_queries
