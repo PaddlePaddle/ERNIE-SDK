@@ -9,29 +9,6 @@ from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
-eb_functions = [
-    {
-        "name": "revise",
-        "description": "发送草稿以进行修订",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "notes": {
-                    "type": "string",
-                    "description": "编辑的中文备注，用于指导修订。",
-                },
-            },
-        },
-    },
-    {
-        "name": "accept",
-        "description": "接受草稿",
-        "parameters": {
-            "type": "object",
-            "properties": {"ready": {"const": True}},
-        },
-    },
-]
 
 MAX_RETRY = 10
 TOKEN_MAX_LENGTH = 4200

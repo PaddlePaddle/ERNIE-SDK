@@ -81,7 +81,6 @@ access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 logger = setup_logging(args.log_path)
 
 
-
 def get_logs(path=args.log_path):
     file = open(path, "r")
     content = file.read()
