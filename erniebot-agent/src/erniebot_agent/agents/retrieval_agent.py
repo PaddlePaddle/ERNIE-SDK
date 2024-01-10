@@ -6,6 +6,7 @@ from erniebot_agent.agents.schema import AgentResponse, AgentStep
 from erniebot_agent.file import File
 from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
+from erniebot_agent.tools.langchain_retrieval_tool import LangChainRetrievalTool
 
 ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
 1.严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
@@ -48,38 +49,12 @@ CONTEXT_QUERY_DECOMPOSITION = """
 """
 
 
-class FewShotSearch:
-    def __init__(self, db):
-        self.db = db
-
-    def search(self, query: str, top_k: int = 10, **kwargs):
-        docs = self.db.similarity_search_with_relevance_scores(query, top_k)
-        retrieval_results = []
-        for doc, score in docs:
-            retrieval_results.append(
-                {"content": doc.page_content, "sub_queries": doc.metadata["sub_queries"], "score": score}
-            )
-        return retrieval_results
-
-
-class ContextSearch:
-    def __init__(self, db):
-        self.db = db
-
-    def search(self, query: str, top_k: int = 10, **kwargs):
-        docs = self.db.similarity_search_with_relevance_scores(query, top_k)
-        retrieval_results = []
-        for doc, score in docs:
-            retrieval_results.append({"content": doc.page_content, "score": score})
-        return retrieval_results
-
-
 class RetrievalAgent(Agent):
     def __init__(
         self,
         knowledge_base,
-        few_shot_retriever: Optional[FewShotSearch] = None,
-        context_retriever: Optional[ContextSearch] = None,
+        few_shot_retriever: Optional[LangChainRetrievalTool] = None,
+        context_retriever: Optional[LangChainRetrievalTool] = None,
         top_k: int = 2,
         threshold: float = 0.1,
         use_compressor: bool = False,
@@ -112,7 +87,16 @@ class RetrievalAgent(Agent):
         steps_taken: List[AgentStep] = []
         if self.few_shot_retriever:
             # Get few shot examples
-            few_shots = self.few_shot_retriever.search(prompt, 3)
+            docs = await self.few_shot_retriever(prompt, 3)
+            few_shots = []
+            for doc in docs["documents"]:
+                few_shots.append(
+                    {
+                        "content": doc["content"],
+                        "sub_queries": doc["meta"]["sub_queries"],
+                        "score": doc["score"],
+                    }
+                )
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=prompt, documents=few_shots)
             )
@@ -120,9 +104,8 @@ class RetrievalAgent(Agent):
                 AgentStep(info={"query": prompt, "name": "few shot retriever"}, result=few_shots)
             )
         elif self.context_retriever:
-            res = self.context_retriever.search(prompt, 3)
-
-            context = [item["content"] for item in res]
+            res = await self.context_retriever(prompt, 3)
+            context = [item["content"] for item in res["documents"]]
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=prompt, context="\n".join(context))
             )
