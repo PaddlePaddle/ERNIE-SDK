@@ -1,6 +1,3 @@
-from erniebot_agent.memory import SystemMessage
-
-
 class FakeMemory(object):
     def __init__(self):
         super().__init__()
