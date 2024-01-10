@@ -92,7 +92,6 @@ class AgentStep(Generic[_IT, _RT]):
     result: _RT
 
 
-
 @dataclass
 class AgentStepWithFiles(AgentStep[_IT, _RT]):
     """A step taken by an agent involving file input and output."""
