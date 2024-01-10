@@ -71,23 +71,23 @@ Base版本示例运行：
 
 ```
 python sample_report_example.py --num_research_agent 2 \
-                                --faiss_name_paper <your full text> \
-                                --faiss_name_abstract <your abstract text> 
+                                --index_name_full_text <your full text> \
+                                --index_name_abstract <your abstract text> 
 ```
 
 Base版本WebUI运行：
 
 ```
 python ui.py --num_research_agent 2 \
-             --faiss_name_paper <your full text> \
-             --faiss_name_abstract <your abstract text> 
+             --index_name_full_text <your full text> \
+             --index_name_abstract <your abstract text> 
 ```
 
 高阶版本多智能体自动调度示例脚本运行：
 
 ```
-python sample_group_agent.py --faiss_name_paper <your full text> \
-                             --faiss_name_abstract <your abstract text> 
+python sample_group_agent.py --index_name_full_text <your full text> \
+                             --index_name_abstract <your abstract text> 
 ```
 
 ## Reference
