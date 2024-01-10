@@ -16,7 +16,6 @@ import json
 from typing import (
     Any,
     AsyncIterator,
-    Dict,
     List,
     Literal,
     Optional,
@@ -128,7 +127,7 @@ class ERNIEBot(BaseERNIEBot):
         self.access_token = access_token
         self._maybe_validate_qianfan_auth()
 
-        self.extra_data: Dict[str, bool] = {}
+        self.extra_data = {}
         self.extra_data["multi_step_tool_call_close"] = not enable_multi_step_tool_call
         self.extra_data["chat_with_human_close"] = not enable_human_clarify
 
