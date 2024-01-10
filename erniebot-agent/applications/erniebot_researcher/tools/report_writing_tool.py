@@ -104,9 +104,6 @@ def get_report_by_type(report_type):
 TOKEN_MAX_LENGTH = 8000
 
 
-# TOKEN_MAX_LENGTH = 4800
-
-
 class ReportWritingTool(Tool):
     description: str = "report writing tool"
 
@@ -124,7 +121,6 @@ class ReportWritingTool(Tool):
         agent_name: str,
         dir_path: str,
         outline=None,
-        **kwargs,
     ):
         research_summary = research_summary[: TOKEN_MAX_LENGTH - 600]
         report_type_func = get_report_by_type(report_type)

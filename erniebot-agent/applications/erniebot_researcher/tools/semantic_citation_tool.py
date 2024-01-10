@@ -2,6 +2,8 @@ import logging
 import string
 from typing import Dict, List, Optional
 
+from zhon import hanzi
+
 from erniebot_agent.tools.base import Tool
 
 from .utils import write_md_to_pdf
@@ -28,7 +30,7 @@ class SemanticCitationTool(Tool):
 
     def is_punctuation(self, char: str):
         """判断一个字符是否是标点符号"""
-        return char in string.punctuation
+        return char in string.punctuation or char in hanzi.punctuation
 
     def __init__(self, theta_min=0.4, theta_max=0.95, citation_num=5) -> None:
         super().__init__()
@@ -133,7 +135,6 @@ class SemanticCitationTool(Tool):
         citation_num: Optional[int] = None,
         theta_min: Optional[float] = None,
         theta_max: Optional[float] = None,
-        **kwargs,
     ):
         if theta_min:
             self.theta_min = theta_min

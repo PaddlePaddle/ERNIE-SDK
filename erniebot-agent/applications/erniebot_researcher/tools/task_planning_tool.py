@@ -66,7 +66,6 @@ class TaskPlanningTool(Tool, JsonUtil):
         agent_role_prompt: str,
         context: Optional[str] = None,
         is_comprehensive: bool = False,
-        **kwargs,
     ):
         if not context:
             content = generate_search_queries_prompt(question)
