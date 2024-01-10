@@ -2,13 +2,13 @@
 
 ## 1. 模块简介
 
-文件管理模块提供了用于管理文件的一系列类，方便用户与Agent进行交互，其中包括 `File` 基类及其子类、`FileManager`类 、`GlobalFileManagerHandler`类以及与远程文件服务器交互的 `RemoteFileClient`类。
+文件管理模块提供了用于管理文件的一系列类，方便用户与Agent进行交互，其中包括 `BaseFile` 基类及其子类、`FileManager` 、`GlobalFileManagerHandler`以及与远程文件服务器交互的  `RemoteFileClient`。
 
 在异步函数中，推荐使用 `GlobalFileManagerHandler`获取一个全局的 `FileManager`，之后只需通过这个全局的 `FileManager`即可对文件进行增、删、查等操作以及获取Agent产生的文件。
 
 !!! notes 注意
 
-    - **不推荐**用户自行操作 `File`类以免造成资源泄露。
+    - **不推荐**用户自行操作 `BaseFile` 及其子类以免造成资源泄露。
 
     - `FileManager`操作文件主要用于异步函数中，在同步函数中使用可能会无效。
 
@@ -16,13 +16,13 @@
 
 ## 2. 核心类
 
-下面简单介绍 `File` 模块的核心类，详细接口请参考[API文档](../package/erniebot_agent/file.md)。
+下面简单介绍 `BaseFile` 模块的核心类，详细接口请参考[API文档](../package/erniebot_agent/file.md)。
 
 ### 2.1 File 基类
 
-`File` 类是文件管理模块的基础类，用于表示通用的文件对象（不建议自行创建 `File` 类以免无法被 `Agent`识别使用以及无法被回收）。它包含文件的基本属性，如文件ID、文件名、文件大小、创建时间、文件用途和文件元数据。
+`BaseFile` 类是文件管理模块的基础类，用于表示通用的文件对象（不建议自行创建 `BaseFile` 类以免无法被 `Agent`识别使用以及无法被回收）。它包含文件的基本属性，如文件ID、文件名、文件大小、创建时间、文件用途和文件元数据。
 
-此外， `File`类还定义了一系列抽象方法，比较常用的有：
+此外， `BaseFile`类还定义了一系列抽象方法，比较常用的有：
 
 * 异步读取文件内容的 `read_contents`方法
 * 将文件内容写入本地路径的 `write_contents_to`方法
@@ -34,7 +34,7 @@
 
 在File类的内部，其主要有两个继承子类：一个是 `Local File`，一个是 `Remote File`。
 
-以下是 `File` 基类的属性以及方法介绍：
+以下是 `BaseFile` 基类的属性以及方法介绍：
 
 | 属性       | 类型           | 描述                                                      |
 | ---------- | -------------- | --------------------------------------------------------- |
@@ -50,17 +50,17 @@
 | read_contents     | 异步读取文件内容               |
 | write_contents_to | 异步将文件内容写入本地路径     |
 | get_file_repr     | 返回用于特定上下文的字符串表示 |
-| to_dict           | 将File对象转换为字典           |
+| to_dict           | 将BaseFile对象转换为字典           |
 
 ### 2.2 File 子类
 
 #### 2.2.1 LocalFile 类
 
-`LocalFile` 是 `File` 的子类，表示本地文件。除了继承自基类的属性外，它还添加了文件路径属性 `path`，用于表示文件在本地文件系统中的路径。
+`LocalFile` 是 `BaseFile` 的子类，表示本地文件。除了继承自基类的属性外，它还添加了文件路径属性 `path`，用于表示文件在本地文件系统中的路径。
 
 #### 2.2.2 RemoteFile 类
 
-`RemoteFile` 也是 `File` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。
+`RemoteFile` 也是 `BaseFile` 的子类，表示远程文件。它与 `LocalFile` 不同之处在于，它的文件内容存储在远程文件服务器交。`RemoteFile` 类还包含与远程文件服务器交互的相关逻辑。
 
 ### 2.3 FileManager 类
 
@@ -109,25 +109,20 @@
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
-    # 获取全局的FileManager，通过它来与Agent交互
-    file_manager = await GlobalFileManagerHandler().get()  
+    file_manager = GlobalFileManagerHandler().get()  
 ```
-2. 通过 `GlobalFileManagerHandler`创建 `LocalFile`
+2. 通过 `GlobalFileManagerHandler`创建 File
 
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
-    file_manager = await GlobalFileManagerHandler().get()
-    # 从文件路径创建File, file_type可选择local或者remote，file_path需要具体到文件名，此处为local的示例
-    local_file = await file_manager.create_file_from_path(file_path='your_file_path', file_type='local')
-    # 获取File的id，用于以后的查找
-    print(local_file.id)
+    file_manager = GlobalFileManagerHandler().get()
+    # 从路径创建File, file_type可选择local或者remote file_purpose='assistant'代表用于给LLM输入使用
+    local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
 ```
-3. 通过 `GlobalFileManagerHandler`创建 `RemoteFile`
+3. 通过 `GlobalFileManagerHandler`搜索以及保存 File
 ```python
-from erniebot_agent.file import GlobalFileManagerHandler
-
 async def demo_function():
     # 需要在事件循环最开始配置，打开远程文件开关，注意需配置access token
     await GlobalFileManagerHandler().configure(enable_remote_file=True)
@@ -144,8 +139,8 @@ async def demo_function():
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
-    file_manager = await GlobalFileManagerHandler().get()
-    # 通过fileid搜索已注册过的文件，此处file id为创建过的File类的属性id，不可以随意填写
+    file_manager = GlobalFileManagerHandler().get()
+    # 通过fileid搜索文件
     file = file_manager.look_up_file_by_id(file_id='your_file_id')
     # 读取file内容(bytes)
     file_content = await file.read_contents()
@@ -158,7 +153,7 @@ async def demo_function():
 from erniebot_agent.file import GlobalFileManagerHandler
 
 async def demo_function():
-    await GlobalFileManagerHandler().configure(save_dir='your_path') # 需要在事件循环最开始配置
+    GlobalFileManagerHandler().configure(save_dir='your_path') # 需要在事件循环最开始配置
     ... # 此处省略agent创建过程
     response = await agent.async_run('请帮我画一张北京市的图')
     # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件

@@ -19,7 +19,7 @@ from typing import Any, Dict, Union
 import anyio
 
 
-class File(metaclass=abc.ABCMeta):
+class BaseFile(metaclass=abc.ABCMeta):
     """
     Abstract base class representing a generic file.
 
@@ -72,7 +72,7 @@ class File(metaclass=abc.ABCMeta):
         self._param_names = ["id", "filename", "byte_size", "created_at", "purpose", "metadata"]
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, File):
+        if isinstance(other, BaseFile):
             return self.id == other.id
         else:
             return NotImplemented

@@ -44,7 +44,7 @@ erniebot.ChatCompletion.create(
 | user_id | str | 否 | 终端用户的唯一标识符，可以监视和检测滥用行为，防止接口被恶意调用。 |
 | stream | bool | 否 | 如果设置此参数为`True`，则流式返回数据。默认为`False`。 |
 | validate_functions | bool | 否 | 是否对`functions`进行格式校验。 |
-| headers | dict | 否 | 附加的HTTP请求头。 |
+| headers | dict | 否 | 自定义HTTP请求头。 |
 | request_timeout | float | 否 | 单个HTTP请求的超时时间，单位为秒。 |
 | \_config\_ | dict | 否 | 用于覆盖全局配置。 |
 

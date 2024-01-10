@@ -214,7 +214,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             user_id: ID for the end user.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -370,7 +370,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             user_id: ID for the end user.
             stream: Whether to enable response streaming.
             validate_functions: Whether to validate the function descriptions.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -504,7 +504,11 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             params.update(kwargs["extra_params"])
 
         # headers
-        headers = kwargs.get("headers", None)
+        headers: HeadersType = {}
+        if self.api_type is APIType.AISTUDIO:
+            headers["Content-Type"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
@@ -513,6 +517,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         stream = kwargs.get("stream", False)
 
         return RequestWithStream(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
