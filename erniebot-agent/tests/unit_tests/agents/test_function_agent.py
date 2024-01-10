@@ -8,6 +8,7 @@ from erniebot_agent.memory.messages import FunctionCall
 from tests.unit_tests.testing_utils.components import CountingCallbackHandler
 from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
     FakeERNIEBotWithPresetResponses,
+    FakeSimpleChatModel,
 )
 from tests.unit_tests.testing_utils.mocks.mock_memory import FakeMemory
 from tests.unit_tests.testing_utils.mocks.mock_tool import FakeTool
@@ -219,3 +220,14 @@ async def test_function_agent_max_steps(identity_tool):
     response = await agent.run("Run!")
 
     assert response.status == "STOPPED"
+
+
+@pytest.mark.asyncio
+async def test_function_agent_system():
+    agent = FunctionAgent(
+        llm=FakeSimpleChatModel(),
+        tools=[],
+        system="You are a helpful bot.",
+    )
+    response = await agent.run("Run!")
+    assert "Recieved system message" in response.text
