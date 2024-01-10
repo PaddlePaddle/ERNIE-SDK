@@ -72,7 +72,7 @@ class RemoteTool(BaseTool):
 
     async def __pre_process__(self, tool_arguments: Dict[str, Any]) -> dict:
         async def fileid_to_byte(file_id, file_manager):
-            file = file_manager.look_up_file_by_id(file_id)
+            file = await file_manager.look_up_file_by_id(file_id)
             byte_str = await file.read_contents()
             return byte_str
 

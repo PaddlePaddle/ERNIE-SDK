@@ -167,7 +167,7 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
             self.assertIn("response_file", result)
             file_id = result["response_file"]
 
-            file = self.file_manager.look_up_file_by_id(file_id=file_id)
+            file = await self.file_manager.look_up_file_by_id(file_id=file_id)
             content = await file.read_contents()
             self.assertEqual(content.decode("utf-8"), self.content)
 

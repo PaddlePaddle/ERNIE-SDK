@@ -7,7 +7,6 @@ from typing import (
     Final,
     Iterable,
     List,
-    NoReturn,
     Optional,
     Sequence,
     Tuple,
@@ -32,7 +31,6 @@ from erniebot_agent.memory import Memory, WholeMemory
 from erniebot_agent.memory.messages import Message, SystemMessage
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
-from erniebot_agent.utils.exceptions import FileError
 
 _PLUGINS_WO_FILE_IO: Final[Tuple[str]] = ("eChart",)
 
@@ -110,6 +108,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         if plugins is not None:
             raise NotImplementedError("The use of plugins is not supported yet.")
         self._init_file_needs_url()
+        self._is_running = False
 
     @final
     async def run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
@@ -123,8 +122,9 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         Returns:
             Response from the agent.
         """
-        if files:
-            await self._ensure_managed_files(files)
+        if self._is_running:
+            raise RuntimeError("The agent is already running.")
+        self._is_running = True
         await self._callback_manager.on_run_start(agent=self, prompt=prompt)
         try:
             agent_resp = await self._run(prompt, files)
@@ -133,6 +133,8 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
             raise e
         else:
             await self._callback_manager.on_run_end(agent=self, response=agent_resp)
+        finally:
+            self._is_running = False
         return agent_resp
 
     @final
@@ -251,10 +253,10 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         # XXX: Sniffing is less efficient and probably unnecessary.
         # Can we make a protocol to statically recognize file inputs and outputs
         # or can we have the tools introspect about this?
-        input_files = file_manager.sniff_and_extract_files_from_list(list(parsed_tool_args.values()))
+        input_files = await file_manager.sniff_and_extract_files_from_obj(parsed_tool_args)
         tool_ret = await tool(**parsed_tool_args)
         if isinstance(tool_ret, dict):
-            output_files = file_manager.sniff_and_extract_files_from_list(list(tool_ret.values()))
+            output_files = await file_manager.sniff_and_extract_files_from_obj(tool_ret.values())
         else:
             output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)
@@ -279,16 +281,3 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         if not isinstance(args_dict, dict):
             raise ValueError(f"`tool_args` cannot be interpreted as a dict. `tool_args`: {tool_args}")
         return args_dict
-
-    async def _ensure_managed_files(self, files: Sequence[File]) -> None:
-        def _raise_exception(file: File) -> NoReturn:
-            raise FileError(f"{repr(file)} is not managed by the file manager of the agent.")
-
-        file_manager = self.get_file_manager()
-        for file in files:
-            try:
-                managed_file = file_manager.look_up_file_by_id(file.id)
-            except FileError:
-                _raise_exception(file)
-            if file is not managed_file:
-                _raise_exception(file)
