@@ -17,7 +17,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from erniebot_agent.agents.callback import LoggingHandler
 from erniebot_agent.agents.schema import ToolResponse
 from erniebot_agent.tools.base import BaseTool
+from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.json import to_pretty_json
+from erniebot_agent.utils.logging import ColorFormatter, set_role_color
 from erniebot_agent.utils.output_style import ColoredContent
 
 default_logger = logging.getLogger(__name__)
@@ -216,3 +218,22 @@ class JsonUtil:
             corrected_data = json_str[start_idx : end_idx + 1]
             response = json.loads(corrected_data)
         return response
+
+
+def setup_logging(log_file_path: str):
+    logger = logging.getLogger("generate_report")
+    verbosity = C.get_logging_level()
+    if verbosity:
+        numeric_level = getattr(logging, verbosity.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError(f"Invalid logging level: {verbosity}")
+        logger.setLevel(numeric_level)
+        logger.propagate = False
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
+    logger.addHandler(console_handler)
+    set_role_color()
+    file_handler = logging.FileHandler(log_file_path)
+    file_handler.setFormatter(ColorFormatter("%(levelname)s - %(message)s"))
+    logger.addHandler(file_handler)
+    return logger

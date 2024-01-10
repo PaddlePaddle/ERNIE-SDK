@@ -67,8 +67,8 @@ parser.add_argument(
 parser.add_argument(
     "--embedding_type",
     type=str,
-    default="open_embedding",
-    help="['open_embedding','baizhong','ernie_embedding']",
+    default="openai_embedding",
+    help="['openai_embedding','baizhong','ernie_embedding']",
 )
 
 args = parser.parse_args()
@@ -77,7 +77,7 @@ access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 
 
 def get_retrievers():
-    if args.embedding_type == "open_embedding":
+    if args.embedding_type == "openai_embedding":
         embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
         paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
         abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
