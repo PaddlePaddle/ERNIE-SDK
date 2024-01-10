@@ -267,7 +267,6 @@ class ERNIEBot(BaseERNIEBot):
                 },
             )
         else:
-            # breakpoint()
             response = await erniebot.ChatCompletion.acreate(
                 stream=stream,
                 extra_params={
