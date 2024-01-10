@@ -20,7 +20,6 @@ def test_schema(tool):
 async def test_tool(tool):
     cur_time = await tool()
     print(cur_time)
-    print(tool)
     assert len(cur_time["current_time"]) > 6
 
 
