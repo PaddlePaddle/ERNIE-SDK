@@ -7,8 +7,8 @@
 执行如下命令，使用源码安装ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
-cd ERNIE-Bot-SDK
+git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
+cd ERNIE-SDK
 
 # 切换到特定分支，默认是develop分支
 # git checkout -b xxx origin/xxx

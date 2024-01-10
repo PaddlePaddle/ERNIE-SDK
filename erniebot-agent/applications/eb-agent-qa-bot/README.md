@@ -25,8 +25,8 @@ class FaissSearch:
 > 第一步：下载项目源代码，请确保您已经安装了erniebot_agent以及erniebot
 
 ```bash
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
-cd ERNIE-Bot-SDK
+git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
+cd ERNIE-SDK
 pip install ernie_agent
 ```
 

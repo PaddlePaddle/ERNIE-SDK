@@ -1,5 +1,5 @@
 site_name: ERNIE Bot Agent
-repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
+repo_url: https://github.com/PaddlePaddle/ERNIE-SDK/
 repo_name: ERNIE-Bot-Agent
 site_url: https://ernie-bot-agent.readthedocs.io/zh-cn/latest/
 site_description: provides an easy-to-use Chinese agent builder tool suite.

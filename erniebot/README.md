@@ -5,7 +5,7 @@
 ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
@@ -179,7 +179,7 @@ response = erniebot.Image.create(
 print(response.get_result())
 ```
 
-<img width="512" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
+<img width="512" src="https://github.com/PaddlePaddle/ERNIE-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
 
 我们推荐两个撰写文生图提示词的文档，大家可以组合使用，创作出更加精美的图片。
 

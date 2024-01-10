@@ -9,8 +9,8 @@ pip install --upgrade erniebot
 如果希望自源码安装，可以执行如下命令：
 
 ```{.sh .copy}
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK
-cd ERNIE-Bot-SDK
+git clone https://github.com/PaddlePaddle/ERNIE-SDK
+cd ERNIE-SDK
 pip install --upgrade setuptools
 pip install .
 ```
