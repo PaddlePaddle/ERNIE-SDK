@@ -150,9 +150,7 @@ class ResearchAgent(JsonUtil):
                 agent=self, tool=self.task_planning_tool, input_args=query
             )
             # Generate Sub-Queries including original query
-            sub_queries = await self.task_planning_tool(
-                question=query, agent_role_prompt=self.role, context=""
-            )
+            sub_queries = await self.task_planning_tool(question=query, agent_role_prompt=self.role)
             await self._callback_manager.on_tool_end(
                 self, tool=self.task_planning_tool, response=sub_queries
             )
