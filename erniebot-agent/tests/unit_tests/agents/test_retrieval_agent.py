@@ -80,10 +80,9 @@ async def test_retrieval_agent_run_few_shot():
         "检索语句: Hello, world!\n请根据以上检索结果回答检索语句的问题"
     )
     assert response.chat_history[1].content == "Text response"
-
-    assert response.steps[0].name == "few shot retriever"
-    assert response.steps[1].name == "sub query results 0"
-    assert response.steps[2].name == "sub query results 1"
+    assert response.steps[0].info == {'query': 'Hello, world!', 'name': 'few shot retriever'}
+    assert response.steps[1].info == {'query': '具体子问题1', 'name': 'sub query results 0'}
+    assert response.steps[2].info== {'query': '具体子问题2', 'name': 'sub query results 1'}
 
 
 @pytest.mark.asyncio
@@ -127,10 +126,10 @@ async def test_retrieval_agent_run_context_planning():
         "检索语句: Hello, world!\n请根据以上检索结果回答检索语句的问题"
     )
     assert response.chat_history[1].content == "Text response"
-
-    assert response.steps[0].name == "context retriever"
-    assert response.steps[1].name == "sub query results 0"
-    assert response.steps[2].name == "sub query results 1"
+    
+    assert response.steps[0].info == {'query': 'Hello, world!', 'name': 'context retriever'}
+    assert response.steps[1].info == {'query': '具体子问题1', 'name': 'sub query results 0'}
+    assert response.steps[2].info == {'query': '具体子问题2', 'name': 'sub query results 1'}
 
 
 @pytest.mark.asyncio
@@ -174,5 +173,5 @@ async def test_retrieval_agent_run_compressor():
         "第2个段落: Sub query compress 2\n\n检索语句: Hello, world!\n请根据以上检索结果回答检索语句的问题"
     )
     assert response.chat_history[1].content == "Text response"
-    assert response.steps[0].name == "sub query compressor 0"
-    assert response.steps[1].name == "sub query compressor 1"
+    assert response.steps[0].info == {'query': '具体子问题1', 'name': 'sub query compressor 0'}
+    assert response.steps[1].info == {'query': '具体子问题2', 'name': 'sub query compressor 1'}

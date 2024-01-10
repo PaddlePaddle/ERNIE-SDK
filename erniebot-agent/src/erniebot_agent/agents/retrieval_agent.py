@@ -2,7 +2,7 @@ import json
 from typing import List, Optional, Sequence
 
 from erniebot_agent.agents.agent import Agent
-from erniebot_agent.agents.schema import AgentResponse, AgentStep, RetrievalStep
+from erniebot_agent.agents.schema import AgentResponse, AgentStep
 from erniebot_agent.file import File
 from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
@@ -115,7 +115,7 @@ class RetrievalAgent(Agent):
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=prompt, documents=few_shots)
             )
-            steps_taken.append(RetrievalStep(name="few shot retriever", info=prompt, result=few_shots))
+            steps_taken.append(AgentStep(info={'query':prompt, 'name': "few shot retriever"}, result=few_shots))
         elif self.context_retriever:
             res = self.context_retriever.search(prompt, 3)
 
@@ -123,7 +123,7 @@ class RetrievalAgent(Agent):
             steps_input = HumanMessage(
                 content=self.context_planning.format(query=prompt, context="\n".join(context))
             )
-            steps_taken.append(RetrievalStep(name="context retriever", info=prompt, result=res))
+            steps_taken.append(AgentStep(info={'query':prompt, 'name': "context retriever"}, result=res))
         else:
             steps_input = HumanMessage(content=self.query_transform.format(query=prompt))
         # Query planning
@@ -167,7 +167,7 @@ class RetrievalAgent(Agent):
                 compressed_data["content"] = output_message.content
                 retrieval_results.append(compressed_data)
                 steps_taken.append(
-                    RetrievalStep(name=f"sub query compressor {idx}", info=query, result=compressed_data)
+                    AgentStep(info={'query':query, 'name': f"sub query compressor {idx}"}, result=compressed_data)
                 )
         else:
             duplicates = set()
@@ -175,7 +175,7 @@ class RetrievalAgent(Agent):
                 documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
                 docs = [item for item in documents["documents"]]
                 steps_taken.append(
-                    RetrievalStep(name=f"sub query results {idx}", info=query, result=documents)
+                    AgentStep(info={'query':query, 'name': f"sub query results {idx}"}, result=documents)
                 )
                 for doc in docs:
                     if doc["content"] not in duplicates:
