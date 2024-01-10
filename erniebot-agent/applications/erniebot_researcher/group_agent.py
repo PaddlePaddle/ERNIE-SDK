@@ -1,7 +1,7 @@
 import logging
 import random
 import sys
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from editor_actor_agent import EditorActorAgent
 from polish_agent import PolishAgent
@@ -20,7 +20,7 @@ _VALID_SPEAKER_SELECTION_METHODS = ["auto", "manual", "random", "round_robin"]
 class GroupChat(JsonUtil):
     def __init__(
         self,
-        agents,
+        agents: Any,
         llm: BaseERNIEBot,
         llm_long: BaseERNIEBot,
         max_round: int = 10,
@@ -205,11 +205,11 @@ class GroupChatManager:
     async def run(
         self,
         query: str,
-        report,
-        speaker,
+        report: Union[Dict, str],
+        speaker: Any,
     ):
         """Run a group chat."""
-        report_list = [report]
+        report_list: List[Union[Dict, str]] = [report]
         content = """你需要对生成的报告进行质量检测，请调用已有的各种助手完成这个任务,每次只调用1个助手。
             现在已经存在一份报告，你必须对它进行质量检测，检测后，如果你认为报告质量没有达到要求，你可以调用报告生成助手，重新生成报告。
             请你需要返回一个json格式的字符串,{"next_agent_name":"下一次调用助手的名字"}"""
@@ -247,8 +247,8 @@ class GroupChatManager:
                 report_list, report = await speaker.run(report_list, query)
                 messages.append(AIMessage("调用" + speaker.name + "对多个报告进行了排序，得到最优的报告"))
             elif isinstance(speaker, PolishAgent):
-                report_str, _ = await speaker.run(report["report"], report["paragraphs"])
-                report = {"report": report_str, "paragraphs": report["paragraphs"]}
+                response = await speaker.run(report["report"], report["paragraphs"])  # type: ignore
+                report: Dict = {"report": response[0], "paragraphs": report["paragraphs"]}  # type: ignore
                 report_list.append(report)
 
             if self.human_input_mode:
