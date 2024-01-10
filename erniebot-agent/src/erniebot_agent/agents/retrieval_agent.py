@@ -33,9 +33,7 @@ RAG_PROMPT = """检索结果:
 
 
 CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答问题相关的任何部分，并原样保留。如果背景中没有与问题相关的部分，则返回{no_output_str}。
-
 记住，不要编辑提取的背景部分。
-
 > 问题: {{query}}
 > 背景:
 >>>
@@ -43,7 +41,7 @@ CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答�
 >>>
 提取的相关部分:"""
 
-CONTEXT_PLANNING = """
+CONTEXT_QUERY_DECOMPOSITION = """
 {{context}} 请根据上述背景信息把下面的问题分解成子问题，每个子问题必须足够简单，要求：
 严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 问题：{{query}} 子问题：
@@ -100,12 +98,14 @@ class RetrievalAgent(Agent):
             self.query_transform = PromptTemplate(
                 FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]
             )
+        elif self.context_retriever:
+            self.query_transform = PromptTemplate(CONTEXT_QUERY_DECOMPOSITION, input_variables=["context", "query"])
         else:
             self.query_transform = PromptTemplate(ZERO_SHOT_QUERY_DECOMPOSITION, input_variables=["query"])
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.use_compressor = use_compressor
         self.compressor = PromptTemplate(CONTENT_COMPRESSOR, input_variables=["context", "query"])
-        self.context_planning = PromptTemplate(CONTEXT_PLANNING, input_variables=["context", "query"])
+        
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
@@ -123,7 +123,7 @@ class RetrievalAgent(Agent):
 
             context = [item["content"] for item in res]
             steps_input = HumanMessage(
-                content=self.context_planning.format(query=prompt, context="\n".join(context))
+                content=self.query_transform.format(query=prompt, context="\n".join(context))
             )
             steps_taken.append(AgentStep(info={"query": prompt, "name": "context retriever"}, result=res))
         else:
