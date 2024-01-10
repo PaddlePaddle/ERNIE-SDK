@@ -35,7 +35,6 @@ class LangChainRetrievalTool(Tool):
         super().__init__()
         self.db = db
         self.return_meta_data = return_meta_data
-        self.few_shot_examples = []
         if input_type is not None:
             self.input_type = input_type
         if output_type is not None:
