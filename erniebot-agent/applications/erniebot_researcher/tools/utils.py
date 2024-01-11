@@ -3,19 +3,20 @@ import logging
 import os
 import shutil
 import urllib.parse
-from typing import Any, Union
+from typing import Any, Dict, List, Union
 
 import jsonlines
+import markdown  # type: ignore
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.output_parsers.json import parse_json_markdown
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
-from md2pdf.core import md2pdf
 from sklearn.metrics.pairwise import cosine_similarity
+from weasyprint import CSS, HTML
+from weasyprint.fonts import FontConfiguration
 
 from erniebot_agent.agents.callback import LoggingHandler
-from erniebot_agent.agents.schema import ToolResponse
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.json import to_pretty_json
@@ -45,7 +46,9 @@ class ReportCallbackHandler(LoggingHandler):
             "%s %s finished running.", agent.__class__.__name__, agent_name, subject="Run", state="End"
         )
 
-    async def on_tool_start(self, agent: Any, tool: Union[BaseTool, str], input_args: str) -> None:
+    async def on_tool_start(
+        self, agent: Any, tool: Union[BaseTool, str], input_args: Union[str, Dict, List]
+    ) -> None:
         if isinstance(input_args, (dict, list, tuple)):
             js_inputs = json.dumps(input_args, ensure_ascii=False)
         elif isinstance(input_args, str):
@@ -64,7 +67,7 @@ class ReportCallbackHandler(LoggingHandler):
             state="Start",
         )
 
-    async def on_tool_end(self, agent: Any, tool: Union[BaseTool, str], response: ToolResponse) -> None:
+    async def on_tool_end(self, agent: Any, tool: Union[BaseTool, str], response: Any) -> None:
         """Called to log when a tool ends running."""
         if isinstance(response, (dict, list, tuple)):
             js_inputs = json.dumps(response, ensure_ascii=False)
@@ -91,6 +94,9 @@ class ReportCallbackHandler(LoggingHandler):
 
     async def on_llm_error(self, agent: Any, llm, error):
         self.logger.error(f"LLM调用失败，错误信息:{error}")
+
+    async def on_tool_error(self, agent: Any, tool, error):
+        self.logger.error(f"Tool调用失败，错误信息:{error}")
 
 
 class FaissSearch:
@@ -169,16 +175,31 @@ def write_to_file(filename: str, text: str) -> None:
         file.write(text)
 
 
-def md_to_pdf(input_file, output_file):
-    md2pdf(output_file, md_content=None, md_file_path=input_file, css_file_path=None, base_url=None)
+def convert_markdown_to_pdf(markdown_content: str, output_pdf_file: str):
+    font_config = FontConfiguration()
+    local_font_path = "SimSun.ttf"
+    if not os.path.exists(local_font_path):
+        raise RuntimeError("""SimSun.ttf not found, please download it""")
+    local_font_path = os.path.abspath(local_font_path)
+    css_str = f"""
+        @font-face {{
+            font-family: 'CustomFont';
+            src: local('Custom Font'), url('file://{local_font_path}') format('truetype');
+        }}
+        body {{
+            font-family: 'CustomFont';
+        }}
+    """
+    css = CSS(string=css_str, font_config=font_config)
+    html_content = markdown.markdown(markdown_content)
+    HTML(string=html_content).write_pdf(output_pdf_file, stylesheets=[css], font_config=font_config)
 
 
 def write_md_to_pdf(task: str, path: str, text: str) -> str:
     file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
-    # TODO：seeking better markdown to pdf converter
-    # encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
-    encoded_file_path = urllib.parse.quote(f"{file_path}.md")
+    convert_markdown_to_pdf(text, f"{file_path}.pdf")
+    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
     return encoded_file_path
 
 

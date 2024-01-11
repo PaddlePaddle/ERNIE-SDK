@@ -1,5 +1,6 @@
 gradio
 jsonlines
-md2pdf
 langchain
 scikit-learn
+markdown
+WeasyPrint==52.5
