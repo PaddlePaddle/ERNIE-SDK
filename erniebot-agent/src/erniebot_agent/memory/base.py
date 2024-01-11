@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 
 from erniebot_agent.memory.messages import AIMessage, Message, SystemMessage
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class MessageManager:
@@ -43,7 +43,7 @@ class MessageManager:
     @system_message.setter
     def system_message(self, message: SystemMessage) -> None:
         if self._system_message is not None:
-            logger.warning("system message has been set, the previous one will be replaced")
+            _logger.warning("system message has been set, the previous one will be replaced")
 
         self._system_message = message
 
@@ -86,6 +86,10 @@ class Memory:
     def __init__(self):
         self.msg_manager = MessageManager()
 
+    def set_system_message(self, message: SystemMessage):
+        """Set the system message of a conversation."""
+        self.msg_manager.system_message = message
+
     def add_messages(self, messages: List[Message]):
         """Add a list of messages to memory."""
         for message in messages:
@@ -99,11 +103,10 @@ class Memory:
 
     def get_messages(self) -> List[Message]:
         """Get all the messages in memory."""
-        return self.msg_manager.retrieve_messages()
-
-    def get_system_message(self) -> SystemMessage:
-        """Get the system message in memory."""
-        return self.msg_manager.system_message
+        if self.msg_manager.system_message is not None:
+            return [self.msg_manager.system_message] + self.msg_manager.retrieve_messages()
+        else:
+            return self.msg_manager.retrieve_messages()
 
     def clear_chat_history(self):
         """Reset the memory."""

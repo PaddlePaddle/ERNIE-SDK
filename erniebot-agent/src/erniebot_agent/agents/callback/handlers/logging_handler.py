@@ -24,7 +24,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.utils.json import to_pretty_json
 from erniebot_agent.utils.output_style import ColoredContent
 
-default_logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class LoggingHandler(CallbackHandler):
@@ -44,7 +44,7 @@ class LoggingHandler(CallbackHandler):
         super().__init__()
 
         if logger is None:
-            self.logger = default_logger
+            self.logger = _logger
         else:
             self.logger = logger
 
@@ -70,7 +70,7 @@ class LoggingHandler(CallbackHandler):
         )
 
     async def on_llm_end(self, agent: BaseAgent, llm: ChatModel, response: LLMResponse) -> None:
-        """Called to log when the LLM ends running."""
+        """Called to log when the LLM successfully ends running."""
         self._agent_info(
             "%s finished running with output:\n%s",
             llm.__class__.__name__,
@@ -91,7 +91,7 @@ class LoggingHandler(CallbackHandler):
         )
 
     async def on_tool_end(self, agent: BaseAgent, tool: BaseTool, response: ToolResponse) -> None:
-        """Called to log when a tool ends running."""
+        """Called to log when a tool successfully ends running."""
         js_inputs = to_pretty_json(response.json, from_json=True)
         self._agent_info(
             "%s finished running with output:\n%s",
@@ -102,7 +102,7 @@ class LoggingHandler(CallbackHandler):
         )
 
     async def on_run_end(self, agent: BaseAgent, response: AgentResponse) -> None:
-        """Called to log when the agent ends running."""
+        """Called to log when the agent successfully ends running."""
         self._agent_info("%s finished running.", agent.__class__.__name__, subject="Run", state="End")
 
     def _agent_info(self, msg: str, *args, subject, state, **kwargs) -> None:

@@ -36,11 +36,11 @@ class TestToolManagerServe(unittest.IsolatedAsyncioTestCase):
         raise ValueError("can not get valiable port in [8000, 8200]")
 
     def setUp(self) -> None:
-        from multiprocessing import Process
+        from threading import Thread
 
         self.port = self.avaliable_free_port()
         self.tool_manager = ToolManager([CurrentTimeTool(), CalculatorTool()])
-        p = Process(target=self.tool_manager.serve, args=(self.port,))
+        p = Thread(target=self.tool_manager.serve, args=(self.port,))
         p.daemon = True
         p.start()
 

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, ConfigDict, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
@@ -28,7 +28,7 @@ from erniebot_agent.utils.exceptions import RemoteToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def is_optional_type(type: Optional[Type]):
@@ -224,9 +224,7 @@ def get_field_openapi_property(field_info: FieldInfo) -> OpenAPIProperty:
 
 class ToolParameterView(BaseModel):
     __prompt__: Optional[str] = None
-
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
     def from_openapi_dict(cls, schema: dict) -> Type[ToolParameterView]:
@@ -263,10 +261,10 @@ class ToolParameterView(BaseModel):
             # TODO(wj-Mcat): remove supporting for `summary` field
             if "summary" in field_dict:
                 description = field_dict["summary"]
-                logger.info("`summary` field will be deprecated, please use `description`")
+                _logger.info("`summary` field will be deprecated, please use `description`")
 
                 if "description" in field_dict:
-                    logger.info("`description` field will be used instead of `summary`")
+                    _logger.info("`description` field will be used instead of `summary`")
                     description = field_dict["description"]
             else:
                 description = field_dict.get("description", None)
@@ -436,7 +434,7 @@ class RemoteToolView:
         """
         parameters_ref_uri, returns_ref_uri = None, None
         parameters, parameters_description = None, None
-        parameters_content_type, returns_content_type = None, None
+        parameters_content_type, returns_content_type = "application/json", None
         if "requestBody" in path_info:
             request_content = path_info["requestBody"]["content"]
             assert len(request_content.keys()) == 1
@@ -452,11 +450,14 @@ class RemoteToolView:
             response_content = list(path_info["responses"].values())[0]["content"]
             assert len(response_content.keys()) == 1
             returns_content_type = list(response_content.keys())[0]
-            response_ref = response_content[returns_content_type]["schema"]["$ref"]
-            returns_ref_uri = response_ref.split("/")[-1]
-            assert returns_ref_uri in parameters_views
-            returns = parameters_views[returns_ref_uri]
-            returns_description = list(path_info["responses"].values())[0].get("description", None)
+
+            # support ref in components.schemas
+            if "$ref" in response_content[returns_content_type]["schema"]:
+                response_ref = response_content[returns_content_type]["schema"]["$ref"]
+                returns_ref_uri = response_ref.split("/")[-1]
+                assert returns_ref_uri in parameters_views
+                returns = parameters_views[returns_ref_uri]
+                returns_description = list(path_info["responses"].values())[0].get("description", None)
 
         return RemoteToolView(
             name=path_info["operationId"],

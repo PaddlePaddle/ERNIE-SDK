@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -43,8 +42,6 @@ from erniebot_agent.memory.messages import (
 from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
-
-logger = logging.getLogger(__name__)
 
 
 class BaseERNIEBot(ChatModel):
@@ -215,7 +212,7 @@ class ERNIEBot(BaseERNIEBot):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins", "tool_choice"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
@@ -223,6 +220,10 @@ class ERNIEBot(BaseERNIEBot):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
+        if "tool_choice" in cfg_dict:
+            # rm blank dict
+            if not cfg_dict["tool_choice"]:
+                cfg_dict.pop("tool_choice")
         return cfg_dict
 
     def _maybe_validate_qianfan_auth(self) -> None:

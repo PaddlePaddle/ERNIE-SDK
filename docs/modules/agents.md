@@ -150,13 +150,11 @@ async with aiohttp.ClientSession() as session:
             f.write(await response.read())
 
 # 获取file manager，并使用其创建file
-file_manager = await GlobalFileManagerHandler().get()
+file_manager = GlobalFileManagerHandler().get()
 input_file = await file_manager.create_file_from_path("example.png")
 
-# （推荐）通过`files`参数在agent运行输入中包含file
+# 通过`files`参数在agent运行输入中包含file
 response = await agent.run("请识别这张图片中的文字。", files=[input_file])
-# 或者，可以将file ID手动注入到输入文本中
-# response = await agent.run(f"请识别图片{input_file.id}中的文字。")
 
 print(response.text)
 # 打印结果可能如下：
@@ -202,6 +200,7 @@ RNIEBot-Agent框架定义了以下事件：
 - `tool_start`：Agent对tool的调用开始。
 - `tool_end`：Agent对tool的调用成功结束。
 - `tool_error`：Agent对tool的调用发生错误。
+- `run_error`：Agent的运行发生错误。
 - `run_end`：Agent的运行成功结束。
 
 #### 2.3.2 默认回调函数

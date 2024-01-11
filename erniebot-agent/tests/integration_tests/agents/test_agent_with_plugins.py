@@ -31,7 +31,7 @@ class TextRepeaterTool(Tool):
         if "<split>" in input_file_id:
             input_file_id = input_file_id.split("<split>")[0]
 
-        file_manager = await GlobalFileManagerHandler().get()
+        file_manager = GlobalFileManagerHandler().get()
         input_file = file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")

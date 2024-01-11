@@ -2,7 +2,7 @@
 
 # import pytest
 
-# from erniebot_agent.file.file_manager import FileManager
+# from erniebot_agent.file import FileManager
 # from erniebot_agent.tools import RemoteToolkit
 
 # from .base import RemoteToolTesting

@@ -28,7 +28,7 @@ class Cancellable(Resource):
         """Cancels a long-running operation."""
         req = self._prepare_cancel(cancel_kwargs)
         resp = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
@@ -42,7 +42,7 @@ class Cancellable(Resource):
         """Asynchronous version of `cancel_resource`."""
         req = self._prepare_cancel(cancel_kwargs)
         resp = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,

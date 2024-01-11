@@ -16,8 +16,7 @@ from erniebot_agent.agents.schema import (
     NoActionStep,
 )
 from erniebot_agent.chat_models import ERNIEBot
-from erniebot_agent.file.base import File
-from erniebot_agent.file.file_manager import FileManager
+from erniebot_agent.file import File, FileManager
 from erniebot_agent.memory import WholeMemory
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.tool_manager import ToolManager

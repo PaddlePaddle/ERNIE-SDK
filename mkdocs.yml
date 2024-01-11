@@ -1,5 +1,5 @@
 site_name: ERNIE Bot Agent
-repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
+repo_url: https://github.com/PaddlePaddle/ERNIE-SDK/
 repo_name: ERNIE-Bot-Agent
 site_url: https://ernie-bot-agent.readthedocs.io/zh-cn/latest/
 site_description: provides an easy-to-use Chinese agent builder tool suite.
@@ -22,7 +22,7 @@ nav:
     - 模型(Chat Models): "cookbooks/agent/chat_models.ipynb"
     - 工具(Tools): "cookbooks/agent/tools_intro.ipynb"
     - 自定义本地工具(Local Tool): "cookbooks/agent/local_tool.ipynb"
-    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote-tool/remote_tool.ipynb"
+    - 自定义远程工具(Remote Tool): "cookbooks/agent/remote_tool.ipynb"
     - 记忆(Memory)机制详解: "cookbooks/agent/memory.ipynb"
     - 智能体(Agent)运行流程详解: "cookbooks/agent/function_agent.ipynb"
     - 在智能体中使用langchain: "cookbooks/agent/langchain_function_agent_with_retrieval.ipynb"

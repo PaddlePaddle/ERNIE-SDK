@@ -32,19 +32,18 @@ class _Image(EBResource):
         req = self._prepare_paint(create_kwargs)
         timeout = req.timeout
         resp_p = self.request(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=timeout,
         )
 
         req = self._prepare_fetch(resp_p)
         resp_f = self.poll(
             until=self._check_status,
-            method="POST",
+            method=req.method,
             path=req.path,
             params=req.params,
             headers=req.headers,
@@ -60,19 +59,18 @@ class _Image(EBResource):
         req = self._prepare_paint(create_kwargs)
         timeout = req.timeout
         resp_p = await self.arequest(
-            method="POST",
+            method=req.method,
             path=req.path,
             stream=False,
             params=req.params,
             headers=req.headers,
-            files=req.files,
             request_timeout=timeout,
         )
 
         req = self._prepare_fetch(resp_p)
         resp_f = await self.apoll(
             until=self._check_status,
-            method="POST",
+            method=req.method,
             path=req.path,
             params=req.params,
             headers=req.headers,
@@ -189,7 +187,6 @@ class ImageV1(_Image):
         style = kwargs["style"]
 
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/txt2img"
         else:
@@ -205,12 +202,17 @@ class ImageV1(_Image):
         _set_val_if_key_exists(kwargs, params, "num")
 
         # headers
-        headers = kwargs.get("headers", {"Accept": "application/json"})
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -219,7 +221,6 @@ class ImageV1(_Image):
 
     def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/getImg"
         else:
@@ -232,9 +233,12 @@ class ImageV1(_Image):
         params["taskId"] = resp_p.data["taskId"]
 
         # headers
-        headers = {"Accept": "application/json"}
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -275,7 +279,7 @@ class ImageV2(_Image):
             height: Height of the image(s).
             version: Version of the model.
             image_num: Number of images to generate.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -322,7 +326,7 @@ class ImageV2(_Image):
             height: Height of the image(s).
             version: Version of the model.
             image_num: Number of images to generate.
-            headers: Additional headers to send with the request.
+            headers: Custom headers to send with the request.
             request_timeout: Timeout for a single request.
             _config_: Overrides the global settings.
 
@@ -388,7 +392,6 @@ class ImageV2(_Image):
         height = kwargs["height"]
 
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/txt2imgv2"
             if model != "ernie-vilg-v2":
@@ -407,12 +410,17 @@ class ImageV2(_Image):
         _set_val_if_key_exists(kwargs, params, "image_num")
 
         # headers
-        headers = kwargs.get("headers", {"Accept": "application/json"})
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
@@ -421,7 +429,6 @@ class ImageV2(_Image):
 
     def _prepare_fetch(self, resp_p: EBResponse) -> Request:
         # path
-        assert self.SUPPORTED_API_TYPES == (APIType.YINIAN,)
         if self.api_type is APIType.YINIAN:
             path = "/getImgv2"
         else:
@@ -434,9 +441,12 @@ class ImageV2(_Image):
         params["task_id"] = resp_p.data["task_id"]
 
         # headers
-        headers = {"Accept": "application/json"}
+        headers: HeadersType = {}
+        if self.api_type is APIType.YINIAN:
+            headers["Accept"] = "application/json"
 
         return Request(
+            method="POST",
             path=path,
             params=params,
             headers=headers,
