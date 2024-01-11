@@ -13,7 +13,8 @@ from langchain.output_parsers.json import parse_json_markdown
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
 from sklearn.metrics.pairwise import cosine_similarity
-from weasyprint import HTML
+from weasyprint import CSS, HTML
+from weasyprint.fonts import FontConfiguration
 
 from erniebot_agent.agents.callback import LoggingHandler
 from erniebot_agent.tools.base import BaseTool
@@ -175,8 +176,20 @@ def write_to_file(filename: str, text: str) -> None:
 
 
 def convert_markdown_to_pdf(markdown_content: str, output_pdf_file: str):
+    font_config = FontConfiguration()
+    local_font_path = "SimSun.ttf"
+    css_str = f"""
+        @font-face {{
+            font-family: 'CustomFont';
+            src: local('Custom Font'), url('file://{local_font_path}') format('truetype');
+        }}
+        body {{
+            font-family: 'CustomFont';
+        }}
+    """
+    css = CSS(string=css_str, font_config=font_config)
     html_content = markdown.markdown(markdown_content)
-    HTML(string=html_content).write_pdf(output_pdf_file)
+    HTML(string=html_content).write_pdf(output_pdf_file, stylesheets=[css], font_config=font_config)
 
 
 def write_md_to_pdf(task: str, path: str, text: str) -> str:
