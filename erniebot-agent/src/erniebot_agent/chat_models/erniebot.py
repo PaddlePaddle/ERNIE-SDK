@@ -278,6 +278,11 @@ class ERNIEBot(BaseERNIEBot):
 
 
 def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
+    clarify = False
+    if response["finish_reason"] == "plugin_clarify":
+        # clarify would not occur in function call
+        clarify = True
+
     if hasattr(response, "function_call"):
         function_call = FunctionCall(
             name=response.function_call["name"],
@@ -289,6 +294,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             function_call=function_call,
             plugin_info=None,
             search_info=None,
+            clarify=clarify,
             token_usage=response.usage,
         )
     elif hasattr(response, "plugin_info"):
@@ -305,6 +311,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=plugin_info,
             search_info=None,
             token_usage=response.usage,
+            clarify=clarify,
         )
     elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
         search_info = SearchInfo(
@@ -316,6 +323,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=None,
             search_info=search_info,
             token_usage=response.usage,
+            clarify=clarify,
         )
     else:
         return output_type(
@@ -324,4 +332,5 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=None,
             search_info=None,
             token_usage=response.usage,
+            clarify=clarify,
         )

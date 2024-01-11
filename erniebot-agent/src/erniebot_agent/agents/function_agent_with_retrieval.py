@@ -6,6 +6,7 @@ from pydantic import Field
 
 from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.agents.schema import (
+    NO_ACTION_STEP,
     AgentResponse,
     AgentStep,
     File,
@@ -148,7 +149,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
                 raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            response = self._create_finished_response(chat_history, steps_taken)
+            response = self._create_finished_response(chat_history, steps_taken, curr_step=NO_ACTION_STEP)
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
             return response
@@ -252,7 +253,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
                 if not isinstance(curr_step, NoActionStep):
                     steps_taken.append(curr_step)
                 if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
@@ -354,7 +355,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
                 if not isinstance(curr_step, NoActionStep):
                     steps_taken.append(curr_step)
                 if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step=curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response

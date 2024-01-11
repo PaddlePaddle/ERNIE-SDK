@@ -22,7 +22,9 @@ from erniebot_agent.agents.schema import (
     NO_ACTION_STEP,
     AgentResponse,
     AgentStep,
+    EndInfo,
     NoActionStep,
+    NullResult,
     PluginStep,
     ToolInfo,
     ToolStep,
@@ -147,11 +149,12 @@ class FunctionAgent(Agent):
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
             chat_history.extend(new_messages)
+            breakpoint()
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
 
             if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                response = self._create_finished_response(chat_history, steps_taken)
+                response = self._create_finished_response(chat_history, steps_taken, curr_step)
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
                 return response
@@ -204,20 +207,33 @@ class FunctionAgent(Agent):
                 new_messages,
             )
         else:
+            if output_message.clarify:
+                # `clarify` and [`function_call`, `plugin`(directly end)] will not appear at the same time
+                return NoActionStep(info=EndInfo(end_reason="CLARIFY"), result=NullResult()), new_messages
             return NO_ACTION_STEP, new_messages
 
     def _create_finished_response(
         self,
         chat_history: List[Message],
         steps: List[AgentStep],
+        curr_step: AgentStep,
     ) -> AgentResponse:
         last_message = chat_history[-1]
-        return AgentResponse(
-            text=last_message.content,
-            chat_history=chat_history,
-            steps=steps,
-            status="FINISHED",
-        )
+        if isinstance(curr_step, NoActionStep):
+            return AgentResponse(
+                text=last_message.content,
+                chat_history=chat_history,
+                steps=steps,
+                status=curr_step.info["end_reason"],
+            )
+        else:
+            # plugin end
+            return AgentResponse(
+                text=last_message.content,
+                chat_history=chat_history,
+                steps=steps,
+                status="FINISHED",
+            )
 
     def _create_stopped_response(
         self,

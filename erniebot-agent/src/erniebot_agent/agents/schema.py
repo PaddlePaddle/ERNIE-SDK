@@ -114,20 +114,20 @@ class PluginStep(AgentStepWithFiles[PluginInfo, str]):
     """A step taken by an agent that calls a plugin."""
 
 
-class _NullInfo(Dict):
-    pass
+class EndInfo(Dict):
+    end_reason: str
 
 
-class _NullResult(object):
+class NullResult(object):
     pass
 
 
 @dataclass
-class NoActionStep(AgentStep[_NullInfo, _NullResult]):
+class NoActionStep(AgentStep[EndInfo, NullResult]):
     """A step taken by an agent that performs no action and gives no result."""
 
 
-NO_ACTION_STEP = NoActionStep(info=_NullInfo(), result=_NullResult())
+NO_ACTION_STEP = NoActionStep(info=EndInfo(end_reason="FINISHED"), result=NullResult())
 
 
 @dataclass
