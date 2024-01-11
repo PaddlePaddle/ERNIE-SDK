@@ -184,6 +184,7 @@ class ERNIEBot(BaseERNIEBot):
         cfg_dict = self._generate_config(messages, functions=functions, **kwargs)
 
         response = await self._generate_response(cfg_dict, stream, functions)
+
         if not stream:
             assert isinstance(response, ChatCompletionResponse)
             return convert_response_to_output(response, AIMessage)
@@ -279,8 +280,8 @@ class ERNIEBot(BaseERNIEBot):
 
 def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
     clarify = False
-    if response["finish_reason"] == "plugin_clarify":
-        # clarify would not occur in function call
+    # ernie-turbo has no `finish_reason`
+    if hasattr(response, "finish_reason") and response["finish_reason"] == "plugin_clarify":
         clarify = True
 
     if hasattr(response, "function_call"):
