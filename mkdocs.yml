@@ -3,7 +3,6 @@ repo_url: https://github.com/PaddlePaddle/ERNIE-Bot-SDK/
 repo_name: ERNIE-Bot-Agent
 site_url: https://ernie-bot-agent.readthedocs.io/zh-cn/latest/
 site_description: provides an easy-to-use Chinese agent builder tool suite.
-copyright: '@PaddlePaddle community'
 nav:
   - 快速开始:
     - 安装和鉴权: 'quickstart/preparation.md'
@@ -101,12 +100,12 @@ markdown_extensions:
 plugins:
   - blog
   - rss:
-      match_path: blog/posts/.* 
+      match_path: blog/posts/.*
       date_from_meta:
         as_creation: date
       categories:
         - categories
-        - tags 
+        - tags
   - search
   - mkdocs-jupyter:
       ignore_h1_titles: True
