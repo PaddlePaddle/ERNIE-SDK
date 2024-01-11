@@ -119,7 +119,7 @@ class get_current_weather(Tool):
 
 
 # TODO(shiyutang): replace this when model is online
-llm = ERNIEBot(model="ernie-3.5", api_type="custom", enable_multi_step_tool_call=True)
+llm = ERNIEBot(model="ernie-3.5", api_type="qianfan", enable_multi_step_tool_call=True)
 memory = SlidingWindowMemory(max_round=1)
 plugins = ["ChatFile", "eChart"]
 # plugins: List[str] = []
@@ -135,11 +135,11 @@ agent = FunctionAgent(
 
 
 async def run_agent():
-    await GlobalFileManagerHandler().configure(
+    GlobalFileManagerHandler().configure(
         enable_remote_file=True,
         access_token="your-access-token",
     )
-    file_manager = await GlobalFileManagerHandler().get()
+    file_manager = GlobalFileManagerHandler().get()
 
     docx_file = await file_manager.create_file_from_path(
         file_path="浅谈牛奶的营养与消费趋势.docx",
