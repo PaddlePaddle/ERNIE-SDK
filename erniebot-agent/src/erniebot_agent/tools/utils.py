@@ -8,6 +8,8 @@ from typing import Any, Dict, Optional, Type
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
+from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 
 from erniebot_agent.file import File, FileManager
 from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
@@ -241,3 +243,45 @@ async def parse_file_from_response(
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",
         stage="Output parsing",
     )
+
+
+def custom_openapi(app: FastAPI):
+    """get openapi dict of fastapi application
+
+    refer to: https://github.com/tiangolo/fastapi/issues/3424#issuecomment-1283484665
+
+    Args:
+        app (FastAPI): the instance of fastapi application
+    """
+    if not app.openapi_schema:
+        app.openapi_schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            openapi_version=app.openapi_version,
+            description=app.description,
+            terms_of_service=app.terms_of_service,
+            contact=app.contact,
+            license_info=app.license_info,
+            routes=app.routes,
+            tags=app.openapi_tags,
+            servers=app.servers,
+        )
+
+        # remove validation response
+        for _, method_item in app.openapi_schema.get("paths", {}).items():
+            for _, param in method_item.items():
+                responses = param.get("responses")
+                # remove 422 response, also can remove other status code
+                if "422" in responses:
+                    del responses["422"]
+        
+        # remove Validation Schema
+        schemas = deepcopy(app.openapi_schema["components"]["schemas"])
+        for key in list(schemas.keys()):
+            if "ValidationError" in key:
+                schemas.pop(key)
+            
+        app.openapi_schema["components"]["schemas"] = schemas
+
+        print("--------------------------------------------------------------------")
+        print("app-openapi-schema", app.openapi_schema)

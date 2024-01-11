@@ -19,6 +19,7 @@ import types
 from typing import Callable, Dict, Iterable, List, final
 
 from erniebot_agent.tools.base import BaseTool, Tool
+from erniebot_agent.tools.utils import custom_openapi
 
 
 @final
@@ -127,11 +128,13 @@ class ToolManager(object):
                 description=tool.description,
                 operation_id=tool.tool_name,
                 methods=["POST"],
+                responses={}
             )
 
-        @app.get("/.well-known/openapi.yaml")
+        @app.get("/.well-known/openapi.yaml", responses={})
         def get_openapi_yaml():
             """get openapi json schema from fastapi"""
             return app.openapi()
 
+        custom_openapi(app)
         uvicorn.run(app, host="0.0.0.0", port=port)
