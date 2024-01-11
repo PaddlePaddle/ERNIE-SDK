@@ -122,7 +122,7 @@ async def demo_function():
     local_file = await file_manager.create_file_from_path(file_path='your_path', file_type='local')
 ```
 3. 通过 `GlobalFileManagerHandler`搜索以及保存 File
-
+```python
 async def demo_function():
     # 需要在事件循环最开始配置，打开远程文件开关，注意需配置access token
     await GlobalFileManagerHandler().configure(enable_remote_file=True)

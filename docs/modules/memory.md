@@ -22,7 +22,7 @@
     * add_messages(self, messages): 批量地增加message。
     * add_message(self, message): 增加一条message。
     * get_messages(self): 获取Memory中的所有messages。
-    * get_system_message(self): 获取Memory中的系统消息，Memory中有且仅有一条系统信息，可以传入LLM的* * system接口，用于建立LLM的特性。
+    * set_system_message(self): 设置Memory中的系统消息，Memory中有且仅有一条系统信息，通过Agent中system的接口进行同步，用于建立LLM的特性。
     * clear_chat_history(self): 清除memory中所有message的历史。
 * 关系：Memory的基类，关联到MessageManager类。
 

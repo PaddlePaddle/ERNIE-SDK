@@ -106,7 +106,8 @@ class FunctionAgentWithRetrieval(FunctionAgent):
             try:
                 docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
-                chat_history: List[Message] = [step_input]
+                chat_history: List[Message] = []
+                chat_history.append(step_input)
                 steps_taken: List[AgentStep] = []
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
@@ -121,6 +122,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 )
                 llm_resp = await self._run_llm(
                     messages=chat_history,
+                    functions=None,
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:

@@ -30,12 +30,7 @@ from erniebot_agent.agents.schema import (
 from erniebot_agent.chat_models.erniebot import BaseERNIEBot
 from erniebot_agent.file import File, FileManager
 from erniebot_agent.memory import Memory
-from erniebot_agent.memory.messages import (
-    FunctionMessage,
-    HumanMessage,
-    Message,
-    SystemMessage,
-)
+from erniebot_agent.memory.messages import FunctionMessage, HumanMessage, Message
 from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
@@ -69,7 +64,7 @@ class FunctionAgent(Agent):
         tools: Union[ToolManager, Iterable[BaseTool]],
         *,
         memory: Optional[Memory] = None,
-        system_message: Optional[SystemMessage] = None,
+        system: Optional[str] = None,
         callbacks: Optional[Union[CallbackManager, Iterable[CallbackHandler]]] = None,
         file_manager: Optional[FileManager] = None,
         plugins: Optional[List[str]] = None,
@@ -83,7 +78,7 @@ class FunctionAgent(Agent):
             tools: A list of tools for the agent to use.
             memory: A memory object that equips the agent to remember chat
                 history. If `None`, a `WholeMemory` object will be used.
-            system_message: A message that tells the LLM how to interpret the
+            system: A message that tells the LLM how to interpret the
                 conversations. If `None`, the system message contained in
                 `memory` will be used.
             callbacks: A list of callback handlers for the agent to use. If
@@ -108,7 +103,7 @@ class FunctionAgent(Agent):
             llm=llm,
             tools=tools,
             memory=memory,
-            system_message=system_message,
+            system=system,
             callbacks=callbacks,
             file_manager=file_manager,
             plugins=plugins,

@@ -14,6 +14,9 @@ class FakeSimpleChatModel(ChatModel):
     async def chat(self, messages, *, stream=False, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
+        if "system" in kwargs and kwargs["system"] is not None:
+            response = f"Recieved system message: {kwargs['system']}"
+            return AIMessage(content=response, function_call=None, token_usage=None)
         return self.response
 
 

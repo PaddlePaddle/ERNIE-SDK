@@ -295,7 +295,7 @@ class EBClient(object):
     def _get_request_headers(self, method: str, supplied_headers: Optional[HeadersType]) -> HeadersType:
         headers = {}
 
-        headers["User-Agent"] = f"ERNIE-Bot-SDK/{erniebot.__version__}"
+        headers["User-Agent"] = f"ERNIE-SDK/{erniebot.__version__}"
         # TODO: Add other default headers
 
         if supplied_headers is not None:
