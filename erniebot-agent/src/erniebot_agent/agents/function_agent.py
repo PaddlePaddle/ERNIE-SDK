@@ -215,7 +215,7 @@ class FunctionAgent(Agent):
         self,
         chat_history: List[Message],
         steps: List[AgentStep],
-        curr_step: AgentStep,
+        curr_step: Union[NoActionStep, PluginStep],
     ) -> AgentResponse:
         last_message = chat_history[-1]
         if isinstance(curr_step, NoActionStep):
