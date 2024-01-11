@@ -120,8 +120,8 @@ class TestChatModel(unittest.IsolatedAsyncioTestCase):
             HumanMessage(content="这个地方今天天气如何？"),
         ]
         res = await eb.chat(messages, functions=functions)
-
         self.assertTrue(isinstance(res, AIMessage))
+        self.assertTrue(res.clarify)
 
         messages.append(res)
         messages.append(HumanMessage(content="深圳"))
