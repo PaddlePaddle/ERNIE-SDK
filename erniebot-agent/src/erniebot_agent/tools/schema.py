@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.utils.exceptions import RemoteToolError
+from erniebot_agent.utils.exceptions import RemoteToolError, ToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -240,8 +240,11 @@ class ToolParameterView(BaseModel):
         fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
             # skip loading invalid field to improve compatibility
-            if "type" not in field_dict or "description" not in field_dict:
-                continue
+            if "type" not in field_dict:
+                raise ToolError(f"`type` field not found in `{field_name}` property", stage="Loading")
+
+            if "description" not in field_dict:
+                raise ToolError(f"`description` field not found in `{field_name}` property", stage="Loading")
 
             if field_name.startswith("__"):
                 continue
