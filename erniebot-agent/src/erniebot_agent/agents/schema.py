@@ -132,13 +132,15 @@ NO_ACTION_STEP = NoActionStep(info=_NullInfo(), result=_NullResult())
 
 class EndInfo(Dict):
     end_reason: str
-    extra_info: str # json format
+    extra_info: str  # json format
+
 
 @dataclass
 class EndStep(AgentStep[EndInfo, None]):
     """A step taken by an agent that ends whole run."""
 
-DEFAULT_FINISH_STEP = EndStep(info=EndInfo(end_reason='FINISHED'), result=None)
+
+DEFAULT_FINISH_STEP = EndStep(info=EndInfo(end_reason="FINISHED"), result=None)
 
 
 @dataclass

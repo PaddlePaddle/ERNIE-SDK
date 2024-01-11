@@ -157,8 +157,8 @@ class FunctionAgent(Agent):
 
                 # 此处为调用了Plugin之后直接结束的Plugin
                 curr_step = DEFAULT_FINISH_STEP
-                
-            if isinstance(curr_step, EndStep):  
+
+            if isinstance(curr_step, EndStep):
                 response = self._create_finished_response(chat_history, steps_taken, curr_step)
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
@@ -230,7 +230,6 @@ class FunctionAgent(Agent):
             steps=steps,
             status=curr_step.info["end_reason"],
         )
-
 
     def _create_stopped_response(
         self,
