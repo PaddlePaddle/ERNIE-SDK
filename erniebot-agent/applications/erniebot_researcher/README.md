@@ -1,4 +1,4 @@
-# ERNIEBot Researcher 
+# ERNIEBot Researcher
 
 ERNIEBot Researcher是一个自主智能体（Autonomous Agent），旨在对各种任务进行全面的在线研究。
 
@@ -32,7 +32,7 @@ Agents利用ernie-4.0和ernie-longtext来完成研究任务， ernie-4.0主要�
 + 使用反思机制对报告进行修订和完善。
 + 使用润色机制提升报告的整体可读性，融合更多的细节描述。
 
-**注意** 
+**注意**
 1. 生成一次报告需要花费10min以上，并且research agent设置的越多，消耗的时间越长，同时会消耗大量的Tokens。
 2. 报告生成的质量与输入给应用的文档的质量有关，适合网页，期刊，企业办公文档等场景，不适合文本比较少，无用信息过多的文档报告生成场景。
 
@@ -57,7 +57,13 @@ conda create -n researcher39 -y python=3.9 && conda activate researcher39
 pip install -r requirements.txt
 ```
 
-> 第三步：运行
+> 第三步：下载中文字体
+
+```
+wget https://paddlenlp.bj.bcebos.com/pipelines/fonts/SimSun.ttf
+```
+
+> 第四步：运行
 
 首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后设置环境变量:
 
@@ -72,7 +78,7 @@ Base版本示例运行：
 ```
 python sample_report_example.py --num_research_agent 2 \
                                 --index_name_full_text <your full text> \
-                                --index_name_abstract <your abstract text> 
+                                --index_name_abstract <your abstract text>
 ```
 
 Base版本WebUI运行：
@@ -80,14 +86,14 @@ Base版本WebUI运行：
 ```
 python ui.py --num_research_agent 2 \
              --index_name_full_text <your full text> \
-             --index_name_abstract <your abstract text> 
+             --index_name_abstract <your abstract text>
 ```
 
 高阶版本多智能体自动调度示例脚本运行：
 
 ```
 python sample_group_agent.py --index_name_full_text <your full text> \
-                             --index_name_abstract <your abstract text> 
+                             --index_name_abstract <your abstract text>
 ```
 
 ## Reference

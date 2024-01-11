@@ -178,6 +178,9 @@ def write_to_file(filename: str, text: str) -> None:
 def convert_markdown_to_pdf(markdown_content: str, output_pdf_file: str):
     font_config = FontConfiguration()
     local_font_path = "SimSun.ttf"
+    if not os.path.exists(local_font_path):
+        raise RuntimeError("""SimSun.ttf not found, please download it""")
+    local_font_path = os.path.abspath(local_font_path)
     css_str = f"""
         @font-face {{
             font-family: 'CustomFont';
