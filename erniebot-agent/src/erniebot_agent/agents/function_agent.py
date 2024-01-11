@@ -149,7 +149,6 @@ class FunctionAgent(Agent):
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
             chat_history.extend(new_messages)
-            breakpoint()
             if not isinstance(curr_step, NoActionStep):
                 steps_taken.append(curr_step)
 
