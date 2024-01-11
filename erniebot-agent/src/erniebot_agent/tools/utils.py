@@ -5,11 +5,11 @@ import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
 
+from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
 
 from erniebot_agent.file import File, FileManager
 from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
@@ -274,14 +274,11 @@ def custom_openapi(app: FastAPI):
                 # remove 422 response, also can remove other status code
                 if "422" in responses:
                     del responses["422"]
-        
+
         # remove Validation Schema
         schemas = deepcopy(app.openapi_schema["components"]["schemas"])
         for key in list(schemas.keys()):
             if "ValidationError" in key:
                 schemas.pop(key)
-            
-        app.openapi_schema["components"]["schemas"] = schemas
 
-        print("--------------------------------------------------------------------")
-        print("app-openapi-schema", app.openapi_schema)
+        app.openapi_schema["components"]["schemas"] = schemas

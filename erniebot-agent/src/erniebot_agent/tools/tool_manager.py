@@ -128,7 +128,7 @@ class ToolManager(object):
                 description=tool.description,
                 operation_id=tool.tool_name,
                 methods=["POST"],
-                responses={}
+                responses={},
             )
 
         @app.get("/.well-known/openapi.yaml", responses={})
