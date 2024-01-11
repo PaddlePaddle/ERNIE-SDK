@@ -128,10 +128,9 @@ class ToolManager(object):
                 description=tool.description,
                 operation_id=tool.tool_name,
                 methods=["POST"],
-                responses={},
             )
 
-        @app.get("/.well-known/openapi.yaml", responses={})
+        @app.get("/.well-known/openapi.yaml")
         def get_openapi_yaml():
             """get openapi json schema from fastapi"""
             return app.openapi()
