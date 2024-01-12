@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.schema import AgentResponse, AgentStep
@@ -88,16 +88,16 @@ class DAGRetrievalAgent(Agent):
         llm_resp = await self.run_llm(
             messages=chat_history,
         )
-        response = llm_resp.message
-        chat_history.append(response)
+        output_message = llm_resp.message
+        chat_history.append(output_message)
         self.memory.add_message(chat_history[0])
         self.memory.add_message(chat_history[-1])
         response = self._create_finished_response(chat_history, steps_taken)
         return response
 
     async def execute(self, query_graph: Dict, steps_taken: List[AgentStep]):
-        contexts = {}
-        for idx, item in enumerate(query_graph["query_graph"]):
+        contexts: Dict[str, Any] = {}
+        for index, item in enumerate(query_graph["query_graph"]):
             sub_query = item["question"]
             idx = item["id"]
             dependencies = item["dependencies"]
@@ -108,8 +108,6 @@ class DAGRetrievalAgent(Agent):
             for dp in dependencies:
                 cur_context = contexts[dp]
                 cur_contexts.append(cur_context)
-            if len(cur_contexts) == 0:
-                cur_contexts = " "
             step_input = HumanMessage(
                 content=self.sub_rag_prompt.format(
                     query=sub_query, pre_context=cur_contexts, documents=documents["documents"]
@@ -123,7 +121,9 @@ class DAGRetrievalAgent(Agent):
 
             contexts[idx] = {"query": sub_query, "response": response.content}
             steps_taken.append(
-                AgentStep(info={"query": item, "name": f"sub query results {idx}"}, result=response.content)
+                AgentStep(
+                    info={"query": item, "name": f"sub query results {index}"}, result=response.content
+                )
             )
         return list(contexts.values())
 
