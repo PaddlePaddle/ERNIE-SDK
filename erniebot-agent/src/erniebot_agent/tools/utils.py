@@ -254,7 +254,7 @@ def get_fastapi_openapi(app):
     fastapi = import_module(
         "fastapi",
         "Could not import fastapi or uvicorn python package. Please install it "
-        "with `pip install uvicorn fastapi`.",
+        "with `pip install fastapi`.",
     )
 
     if not app.openapi_schema:
