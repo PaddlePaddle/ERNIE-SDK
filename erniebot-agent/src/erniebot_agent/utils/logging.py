@@ -98,33 +98,18 @@ class FileFormatter(logging.Formatter):
             log_message += to_pretty_json(output)
         return log_message
 
-    def extract_content(self, text: Union[List[Message], Message, str], output: list) -> List[dict]:
+    def extract_content(self, text: Union[Message, str], output: list) -> List[dict]:
         """Extract the content from message and convert to json format."""
-        if isinstance(text, list):
-            # List of messages
-            chat_lis = []
-            func_lis = []
-            for i in range(len(text)):
-                if isinstance(text[i], Message):
-                    chat_res, func_res = self.handle_message(text[i])
-                    chat_lis.append(chat_res)
-                    if func_res:
-                        func_lis.append(func_res)
-            output += [{"conversation": chat_lis.copy()}]
-            if func_lis:
-                output += [{"function_call": func_lis.copy()}]
-            return output
-
-        elif isinstance(text, str):
-            # Only handle Message Type
-            return []
-        else:
+        if isinstance(text, Message):
             # Message type
             chat_res, func_res = self.handle_message(text)
-            output += [{"conversation": [chat_res]}]
+            output += [chat_res]
             if func_res:
                 output += [{"function_call": [func_res]}]
             return output
+        elif isinstance(text, str):
+            # Only handle Message Type
+            return []
 
     def handle_message(self, message):
         if isinstance(message, FunctionMessage):
@@ -190,9 +175,9 @@ def setup_logging(
             set_role_color()
 
         log_file_path = C.get_logging_file_path()
-        if log_file_path is None:
-            log_file_path = "erniebot-agent.log"
         if use_file_handler or log_file_path:
+            if log_file_path is None:
+                log_file_path = "erniebot-agent.log"
             file_handler = logging.FileHandler(log_file_path)
             file_handler.setFormatter(FileFormatter("%(message)s"))
             logger.addHandler(file_handler)
