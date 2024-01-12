@@ -245,7 +245,7 @@ async def parse_file_from_response(
     )
 
 
-def custom_openapi(app: FastAPI):
+def get_fastapi_openapi(app: FastAPI):
     """get openapi dict of fastapi application
 
     refer to: https://github.com/tiangolo/fastapi/issues/3424#issuecomment-1283484665
