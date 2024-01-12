@@ -1,12 +1,14 @@
 import json
 import logging
 import os
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Dict, List, Optional
 
 import requests
 
 from erniebot_agent.utils import config_from_environ as C
 from erniebot_agent.utils.exceptions import BaizhongError
+
+from .document import Document
 
 _logger = logging.getLogger(__name__)
 
@@ -149,3 +151,19 @@ class BaizhongSearch:
             return list_data
         else:
             raise BaizhongError(message=f"request error: {res.text}", error_code=res.status_code)
+
+    def add_documents(self, documents: List[Document], batch_size: int = 1, thread_count: int = 1):
+        """
+        Add a batch of documents to the Baizhong system using multi-threading.
+        Args:
+            documents (List[Document]): A list of Document objects to be added.
+            batch_size (int, optional): The size of each batch of documents (defaults to 1).
+            thread_count (int, optional): The number of threads to use for concurrent document addition
+            (defaults to 1).
+        Returns:
+            List[Union[None, Exception]]: A list of results from the document addition process.
+        Note:
+            This function uses multi-threading to improve the efficiency of adding a large number of
+            documents.
+        """
+        raise NotImplementedError
