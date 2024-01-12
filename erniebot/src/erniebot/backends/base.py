@@ -17,28 +17,24 @@ from typing import AsyncIterator, ClassVar, Iterator, Optional, Union
 from erniebot.api_types import APIType
 from erniebot.http_client import EBClient
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 
 
 class EBBackend(object):
-    API_TYPE: ClassVar[APIType]
-    BASE_URL: ClassVar[str]
+    api_type: ClassVar[APIType]
+    base_url: ClassVar[str]
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__()
-        self.api_type = self.API_TYPE
-        self.base_url = config_dict.get("api_base_url", None) or self.BASE_URL
+        self._base_url = config_dict.get("api_base_url", None) or type(self).base_url
         self._cfg = config_dict
         self._client = EBClient(
-            self.base_url,
+            self._base_url,
             session=self._cfg.get("requests_session", None),
             asession=self._cfg.get("aiohttp_session", None),
             response_handler=self.handle_response,
             proxy=self._cfg.get("proxy", None),
         )
-
-    def handle_response(self, resp: EBResponse) -> EBResponse:
-        raise NotImplementedError
 
     def request(
         self,
@@ -48,7 +44,6 @@ class EBBackend(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, Iterator[EBResponse]]:
         raise NotImplementedError
@@ -61,7 +56,10 @@ class EBBackend(object):
         *,
         params: Optional[ParamsType] = None,
         headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
         request_timeout: Optional[float] = None,
     ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        raise NotImplementedError
+
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         raise NotImplementedError

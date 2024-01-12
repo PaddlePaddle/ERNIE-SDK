@@ -14,12 +14,11 @@
 
 import functools
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, TypeVar, Union
 
 from typing_extensions import Literal
 
-from erniebot_agent.file import protocol
-from erniebot_agent.file.base import File
+from erniebot_agent.file import File, protocol
 from erniebot_agent.memory import AIMessage, Message
 from erniebot_agent.memory.messages import PluginInfo
 
@@ -62,7 +61,7 @@ PlanableAgentAction = Union[ToolAction, PluginAction]
 class AgentPlan(object):
     """A plan that contains a list of actions."""
 
-    actions: Sequence[PlanableAgentAction]
+    actions: List[PlanableAgentAction]
 
 
 @dataclass
@@ -77,8 +76,8 @@ class ToolResponse(object):
     """A response from a tool."""
 
     json: str
-    input_files: Sequence[File]
-    output_files: Sequence[File]
+    input_files: List[File]
+    output_files: List[File]
 
 
 _IT = TypeVar("_IT", bound=Dict)
@@ -97,8 +96,8 @@ class AgentStep(Generic[_IT, _RT]):
 class AgentStepWithFiles(AgentStep[_IT, _RT]):
     """A step taken by an agent involving file input and output."""
 
-    input_files: Sequence[File]
-    output_files: Sequence[File]
+    input_files: List[File]
+    output_files: List[File]
 
     @property
     def files(self) -> List[File]:
@@ -131,13 +130,26 @@ class NoActionStep(AgentStep[_NullInfo, _NullResult]):
 NO_ACTION_STEP = NoActionStep(info=_NullInfo(), result=_NullResult())
 
 
+class EndInfo(Dict):
+    end_reason: str
+    extra_info: str  # json format
+
+
+@dataclass
+class EndStep(AgentStep[EndInfo, None]):
+    """A step taken by an agent that ends whole run."""
+
+
+DEFAULT_FINISH_STEP = EndStep(info=EndInfo(end_reason="FINISHED"), result=None)
+
+
 @dataclass
 class AgentResponse(object):
     """The final response from an agent."""
 
     text: str
-    chat_history: Sequence[Message]
-    steps: Sequence[AgentStep]
+    chat_history: List[Message]
+    steps: List[AgentStep]
     status: Union[Literal["FINISHED"], Literal["STOPPED"]]
 
     @functools.cached_property  # lazy and prevent extra fime from multiple calls

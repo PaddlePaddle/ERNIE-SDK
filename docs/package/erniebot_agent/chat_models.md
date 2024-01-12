@@ -1,5 +1,4 @@
-
-# Memory Module
+# Chat Models Module
 
 ::: erniebot_agent.chat_models.base
     options:

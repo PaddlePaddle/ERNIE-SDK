@@ -1,4 +1,5 @@
 from erniebot_agent.chat_models.base import ChatModel
+from erniebot_agent.chat_models.erniebot import BaseERNIEBot, ERNIEBot
 from erniebot_agent.memory import AIMessage
 
 
@@ -13,10 +14,13 @@ class FakeSimpleChatModel(ChatModel):
     async def chat(self, messages, *, stream=False, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
+        if "system" in kwargs and kwargs["system"] is not None:
+            response = f"Recieved system message: {kwargs['system']}"
+            return AIMessage(content=response, function_call=None, token_usage=None)
         return self.response
 
 
-class FakeERNIEBotWithPresetResponses(ChatModel):
+class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
     def __init__(self, responses):
         super().__init__("erniebot_with_preset_responses")
         self.responses = responses
@@ -29,3 +33,23 @@ class FakeERNIEBotWithPresetResponses(ChatModel):
         response = self.responses[self._counter]
         self._counter += 1
         return response
+
+
+class FakeERNIEBotWithAllInput(ERNIEBot):
+    def __init__(
+        self,
+        model,
+        api_type,
+        access_token,
+        enable_multi_step_tool_call,
+        enable_human_clarify,
+        **default_chat_kwargs,
+    ):
+        super().__init__(
+            model,
+            api_type,
+            access_token,
+            enable_multi_step_tool_call,
+            enable_human_clarify,
+            **default_chat_kwargs,
+        )

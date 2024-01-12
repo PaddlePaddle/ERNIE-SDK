@@ -22,7 +22,7 @@
     * add_messages(self, messages): 批量地增加message。
     * add_message(self, message): 增加一条message。
     * get_messages(self): 获取Memory中的所有messages。
-    * get_system_message(self): 获取Memory中的系统消息，Memory中有且仅有一条系统信息，可以传入LLM的* * system接口，用于建立LLM的特性。
+    * set_system_message(self): 设置Memory中的系统消息，Memory中有且仅有一条系统信息，通过Agent中system的接口进行同步，用于建立LLM的特性。
     * clear_chat_history(self): 清除memory中所有message的历史。
 * 关系：Memory的基类，关联到MessageManager类。
 
@@ -94,6 +94,7 @@ print(memory.get_messages())
 ```python
 memory.clear_chat_history()
 print(memory.get_messages())
+>>> []
 ```
 
 ### 4.2 LimitTokensMemory   
@@ -154,3 +155,8 @@ print("裁剪后的消息为：", memory.get_messages())
 >>>裁剪前的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '请问现在我的单词本中都有什么单词呢？', token_count: 18>, <AIMessage role: 'assistant', content: '单词中目前有单词：meticulous', token_count: 9>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
 裁剪后的消息为： [<HumanMessage role: 'user', content: '请帮我把这个单词meticulous存储到单词本中', token_count: 25>, <AIMessage role: 'assistant', content: '好的，单词meticulous已经存储到单词本中', token_count: 14>, <HumanMessage role: 'user', content: '我想对单词本中的单词全部打印出对应的中文含义用于记忆', token_count: 26>, <AIMessage role: 'assistant', content: '好的，单词本中包括：meticulous的意思是挑剔的，关注细节的', token_count: 21>]
 ```
+
+## 5. 总结
+综上，我们展示了Memory的设计出发点，并展示了三种Memory的使用方法和裁剪效果。
+
+可以看到，我们讲到了两种memory的设计出发点，但是并未考虑第二点语义信息，因此后续我们还会持续补充更多的memory满足不同应用和效果的需求。

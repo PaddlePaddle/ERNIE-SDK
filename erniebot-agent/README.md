@@ -5,11 +5,11 @@
 **ERNIE Bot Agent** 是由百度飞桨全新推出的大模型智能体(agent)开发框架。基于文心大模型强大的编排能力，并结合飞桨星河社区提供的丰富预置平台化功能，**ERNIE Bot Agent** 旨在成为功能全面且高度可定制的一站式大模型智能体和应用开发框架。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 [![Downloads](https://pepy.tech/badge/erniebot-agent)](https://pepy.tech/project/erniebot-agent)
-[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-Bot-SDK)
+[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK)
 
 </div>
 
@@ -22,10 +22,26 @@
     - **文心一言插件**：未来将支持通过调用文心一言插件商城中的插件（开发中）
 - **低开发门槛**
     - **零代码界面**：依托星河社区提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
-    - **简洁的代码**：不到10行代码就可以快速开发一个智能体应用。
+    - **简洁的代码**：10行代码就可以快速开发一个智能体应用。
     - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
 
 ## 安装
+
+### 源码安装
+
+执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
+
+```shell
+git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
+cd ERNIE-SDK
+
+# 首先安装Ernie Bot
+pip install ./erniebot
+
+# 然后安装ERNIE Bot Agent
+pip install ./erniebot-agent            # 安装核心模块
+# pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
+```
 
 ### 快速安装
 
@@ -38,22 +54,7 @@ pip install --upgrade erniebot-agent
 # 安装所有模块
 pip install --upgrade erniebot-agent[all]
 ```
-
-### 源码安装
-
-执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
-
-```shell
-git clone https://github.com/PaddlePaddle/ERNIE-Bot-SDK.git
-cd ERNIE-Bot-SDK
-
-# 首先安装Ernie Bot SDK
-pip install ./erniebot
-
-# 然后安装ERNIE Bot Agent
-pip install ./erniebot-agent            # 安装核心模块
-# pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
-```
+。
 
 ## 快速体验
 
@@ -61,7 +62,6 @@ pip install ./erniebot-agent            # 安装核心模块
 
 ```python
 import asyncio
-import os
 
 from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.chat_models import ERNIEBot
@@ -92,12 +92,17 @@ async def main():
 asyncio.run(main())
 ```
 
-在运行代码前，我们需要先从获取[AI Studio access token](https://aistudio.baidu.com/index/accessToken)，然后执行以下命令:
+运行上述代码，大家首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后执行以下命令:
 ```shell
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export EB_AGENT_LOGGING_LEVEL=info
 python quick_start.py
 ```
+
+## 详细教程
+
+教程[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
+
 
 ## License
 

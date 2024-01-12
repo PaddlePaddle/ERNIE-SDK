@@ -19,14 +19,14 @@ import erniebot.errors as errors
 import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
-from erniebot.types import ConfigDictType, FilesType, HeadersType, ParamsType
+from erniebot.types import ConfigDictType, HeadersType, ParamsType
 
 from .base import EBBackend
 
 
 class AIStudioBackend(EBBackend):
-    API_TYPE: ClassVar[APIType] = APIType.AISTUDIO
-    BASE_URL: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
+    api_type: ClassVar[APIType] = APIType.AISTUDIO
+    base_url: ClassVar[str] = "https://aistudio.baidu.com/llm/lmapi/v1"
 
     def __init__(self, config_dict: ConfigDictType) -> None:
         super().__init__(config_dict=config_dict)
@@ -37,7 +37,60 @@ class AIStudioBackend(EBBackend):
                 raise RuntimeError("No access token is configured.")
         self._access_token = access_token
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
+    def request(
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, Iterator[EBResponse]]:
+        url, headers, data = self._client.prepare_request(
+            method,
+            path,
+            supplied_headers=headers,
+            params=params,
+        )
+        headers = self._add_aistudio_fields_to_headers(headers)
+        return self._client.send_request(
+            method,
+            url,
+            stream,
+            data=data,
+            headers=headers,
+            request_timeout=request_timeout,
+        )
+
+    async def arequest(
+        self,
+        method: str,
+        path: str,
+        stream: bool,
+        *,
+        params: Optional[ParamsType] = None,
+        headers: Optional[HeadersType] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
+        url, headers, data = self._client.prepare_request(
+            method,
+            path,
+            supplied_headers=headers,
+            params=params,
+        )
+        headers = self._add_aistudio_fields_to_headers(headers)
+        return await self._client.asend_request(
+            method,
+            url,
+            stream,
+            data=data,
+            headers=headers,
+            request_timeout=request_timeout,
+        )
+
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
         if resp["errorCode"] != 0:
             ecode = resp["errorCode"]
             emsg = resp["errorMsg"]
@@ -57,64 +110,6 @@ class AIStudioBackend(EBBackend):
                 raise errors.APIError(emsg, ecode=ecode)
         else:
             return EBResponse(resp.rcode, resp.result, resp.rheaders)
-
-    def request(
-        self,
-        method: str,
-        path: str,
-        stream: bool,
-        *,
-        params: Optional[ParamsType] = None,
-        headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
-        request_timeout: Optional[float] = None,
-    ) -> Union[EBResponse, Iterator[EBResponse]]:
-        url, headers, data = self._client.prepare_request(
-            method,
-            path,
-            supplied_headers=headers,
-            params=params,
-            files=files,
-        )
-        headers = self._add_aistudio_fields_to_headers(headers)
-        return self._client.send_request(
-            method,
-            url,
-            stream,
-            data=data,
-            headers=headers,
-            files=files,
-            request_timeout=request_timeout,
-        )
-
-    async def arequest(
-        self,
-        method: str,
-        path: str,
-        stream: bool,
-        *,
-        params: Optional[ParamsType] = None,
-        headers: Optional[HeadersType] = None,
-        files: Optional[FilesType] = None,
-        request_timeout: Optional[float] = None,
-    ) -> Union[EBResponse, AsyncIterator[EBResponse]]:
-        url, headers, data = self._client.prepare_request(
-            method,
-            path,
-            supplied_headers=headers,
-            params=params,
-            files=files,
-        )
-        headers = self._add_aistudio_fields_to_headers(headers)
-        return await self._client.asend_request(
-            method,
-            url,
-            stream,
-            data=data,
-            headers=headers,
-            files=files,
-            request_timeout=request_timeout,
-        )
 
     def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
         if "Authorization" in headers:

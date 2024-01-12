@@ -15,6 +15,7 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("请将：”我爱中国“ 翻译成英语")
-        self.assertGreater(len(result.actions), 0)
+        action_steps = self.get_action_steps(result)
+        self.assertGreater(len(action_steps), 0)
         text = result.text.lower()
         self.assertIn("i love china", text)

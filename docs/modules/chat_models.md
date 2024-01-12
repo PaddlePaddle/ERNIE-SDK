@@ -4,7 +4,7 @@
 
 文心一言是百度研发的知识增强大语言模型，能够与人对话互动，回答问题，协助创作，高效便捷地帮助人们获取信息、知识和灵感。
 
-大家通过`ERNIE Bot SDK`可以调用文心一言模型完成简单的AI任务，但是如果面对复杂的场景应用，可能需要基于`ERNIE Bot SDK`开发较多的功能模块。
+大家通过`ERNIE Bot`可以调用文心一言模型完成简单的AI任务，但是如果面对复杂的场景应用，可能需要基于`ERNIE Bot`开发较多的功能模块。
 
 为了降低使用门槛和开发工作，我们推荐通过`ERNIE Bot Agent`来调用文心一言模型，助力大家快速开发出AI应用。
 
@@ -26,7 +26,7 @@
 | 属性       | 类型           | 描述                                                      |
 | ---------- | -------------- | ------------------------------------------------------- |
 | model         | str          | 文心一言模型的名称，支持"ernie-3.5", "ernie-turbo", "ernie-4.0", "ernie-longtext"   |
-| default_chat_kwargs | Dict[str, Any] | 设置调用文心一言模型的默认参数，支持`temperature`,`top_p`等，具体参考[文档](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/blob/develop/erniebot/docs/api_reference/chat_completion.md)|
+| default_chat_kwargs | Dict[str, Any] | 设置调用文心一言模型的默认参数，支持`temperature`,`top_p`等，具体参考[文档](https://github.com/PaddlePaddle/ERNIE-SDK/blob/develop/docs/sdk/api_reference/chat_completion.md)|
 
 | 方法              | 描述                                                                  |
 | ----------------- | -------------------------------------------------------------------- |
@@ -41,7 +41,7 @@
 | api_type   | str          | 文心一言模型的后端，支持"aistudio"和"qianfan"，默认是"aistudio"。                    |
 | access_token | Optional[str]  | 文心一言模型的鉴权access token，不同后端需要使用对应的access token                |
 | enable_multi_step_tool_call | bool  | 设置是否开启多工具规划连续调用的功能，默认为False                            |
-| default_chat_kwargs | Dict[str, Any] | 设置调用文心一言模型的默认参数，支持`temperature`,`top_p`等等，具体参考[文档](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/blob/develop/erniebot/docs/api_reference/chat_completion.md)  |
+| default_chat_kwargs | Dict[str, Any] | 设置调用文心一言模型的默认参数，支持`temperature`,`top_p`等等，具体参考[文档](https://github.com/PaddlePaddle/ERNIE-SDK/blob/develop/docs/sdk/api_reference/chat_completion.md)  |
 
 | 方法               | 描述                                                                  |
 | ----------------- | --------------------------------------------------------------------  |

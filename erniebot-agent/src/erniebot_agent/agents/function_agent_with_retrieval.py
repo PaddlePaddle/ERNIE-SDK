@@ -1,15 +1,16 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Sequence, Type
 
 from pydantic import Field
 
 from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.agents.schema import (
+    DEFAULT_FINISH_STEP,
     AgentResponse,
     AgentStep,
+    EndStep,
     File,
-    NoActionStep,
     PluginStep,
     ToolAction,
     ToolInfo,
@@ -28,8 +29,6 @@ from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
 from erniebot_agent.tools.schema import ToolParameterView
 
-logger = logging.getLogger(__name__)
-
 INTENT_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content']}}
@@ -44,6 +43,9 @@ RAG_PROMPT = """检索结果:
 {% endfor %}
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题"""
+
+
+_logger = logging.getLogger(__name__)
 
 
 class KnowledgeBaseToolInputView(ToolParameterView):
@@ -93,7 +95,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -105,7 +107,8 @@ class FunctionAgentWithRetrieval(FunctionAgent):
             try:
                 docs = self._enforce_token_limit(results)
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
-                chat_history: List[Message] = [step_input]
+                chat_history: List[Message] = []
+                chat_history.append(step_input)
                 steps_taken: List[AgentStep] = []
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
@@ -121,7 +124,6 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 llm_resp = await self._run_llm(
                     messages=chat_history,
                     functions=None,
-                    system=self.system_message.content if self.system_message is not None else None,
                 )
                 output_message = llm_resp.message
                 if output_message.search_info is None:
@@ -147,12 +149,14 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
                 raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            response = self._create_finished_response(chat_history, steps_taken)
+            response = self._create_finished_response(
+                chat_history, steps_taken, curr_step=DEFAULT_FINISH_STEP
+            )
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt, files)
@@ -163,7 +167,7 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         for doc in results["documents"]:
             num_tokens = len(doc["content"])
             if token_count + num_tokens > self.token_limit:
-                logger.warning(
+                _logger.warning(
                     "Retrieval results exceed token limit. Truncating retrieval results to "
                     f"under {self.token_limit} tokens"
                 )
@@ -193,7 +197,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
@@ -248,10 +252,18 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             while num_steps_taken < self.max_steps:
                 curr_step, new_messages = await self._step(chat_history)
                 chat_history.extend(new_messages)
-                if not isinstance(curr_step, NoActionStep):
+                if isinstance(curr_step, ToolStep):
                     steps_taken.append(curr_step)
-                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+
+                elif isinstance(curr_step, PluginStep):
+                    steps_taken.append(curr_step)
+                    # 预留 调用了Plugin之后不结束的接口
+
+                    # 此处为调用了Plugin之后直接结束的Plugin
+                    curr_step = DEFAULT_FINISH_STEP
+
+                if isinstance(curr_step, EndStep):
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
@@ -259,7 +271,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             response = self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)
@@ -297,7 +309,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
@@ -350,10 +362,18 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             while num_steps_taken < self.max_steps:
                 curr_step, new_messages = await self._step(chat_history)
                 chat_history.extend(new_messages)
-                if not isinstance(curr_step, NoActionStep):
+                if isinstance(curr_step, ToolStep):
                     steps_taken.append(curr_step)
-                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+
+                elif isinstance(curr_step, PluginStep):
+                    steps_taken.append(curr_step)
+                    # 预留 调用了Plugin之后不结束的接口
+
+                    # 此处为调用了Plugin之后直接结束的Plugin
+                    curr_step = DEFAULT_FINISH_STEP
+
+                if isinstance(curr_step, EndStep):  # plugin with action
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step=curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
@@ -373,7 +393,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt)

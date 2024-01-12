@@ -15,6 +15,8 @@ class TestRemoteTool(RemoteToolTesting):
         agent = self.get_agent(toolkit)
 
         result = await agent.run("请把：“我爱中国”转化为语音")
-        self.assertGreater(len(result.actions), 0)
-        self.assertEqual(len(result.files), 1)
-        self.assertIn(".wav", result.files[0].file.filename)
+        files = self.get_files(result)
+        action_steps = self.get_action_steps(result)
+        self.assertGreater(len(action_steps), 0)
+        self.assertEqual(len(files), 1)
+        self.assertIn(".wav", files[0].filename)

@@ -31,8 +31,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r erniebot-agent/dev-requirements.txt
-          python -m pip install ./erniebot
-          python -m pip install ./erniebot-agent[all]
+          python -m pip install ./erniebot ./erniebot-agent[all]
       - name: Show make version
         run: make --version
       - name: Perform format checks on Python code
