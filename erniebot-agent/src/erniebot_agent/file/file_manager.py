@@ -412,9 +412,7 @@ class FileManager(Closeable, Noncopyable):
         self.ensure_not_closed()
         file = self._file_registry.look_up_file(file_id)
         if file is None:
-            raise FileError(
-                f"File with ID {repr(file_id)} not found. Please check if `file_id` is correct."
-            )
+            raise FileError(f"File with ID {repr(file_id)} not found. Please check if `file_id` is correct.")
         return file
 
     async def list_registered_files(self) -> List[File]:
