@@ -102,7 +102,6 @@ class FileFormatter(logging.Formatter):
         """Extract the content from message and convert to json format."""
         if isinstance(text, Message):
             # Message type
-            # breakpoint()
             chat_res, func_res = self.handle_message(text)
             output += [chat_res]
             if func_res:
