@@ -76,6 +76,7 @@ def import_module(module_name: str, error_message: str):
         module_name (str): the name of module
     """
     from importlib import import_module as _import_module
+
     try:
         module = _import_module(module_name)
         return module

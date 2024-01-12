@@ -16,7 +16,7 @@ from erniebot_agent.tools.schema import (
     get_args,
     get_typing_list_type,
 )
-from erniebot_agent.utils.common import get_file_suffix, is_json_response, import_module
+from erniebot_agent.utils.common import get_file_suffix, import_module, is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
 _logger = logging.getLogger(__name__)
@@ -254,7 +254,7 @@ def get_fastapi_openapi(app):
     fastapi = import_module(
         "fastapi",
         "Could not import fastapi or uvicorn python package. Please install it "
-        "with `pip install uvicorn fastapi`."
+        "with `pip install uvicorn fastapi`.",
     )
 
     if not app.openapi_schema:
