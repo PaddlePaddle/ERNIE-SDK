@@ -406,13 +406,16 @@ class FileManager(Closeable, Noncopyable):
 
         """
         async with self._lock:
-            self.ensure_not_closed()
-            file = self._file_registry.look_up_file(file_id)
-            if file is None:
-                raise FileError(
-                    f"File with ID {repr(file_id)} not found. Please check if `file_id` is correct."
-                )
-            return file
+            return self.look_up_file_by_id_unsafe(file_id)
+
+    def look_up_file_by_id_unsafe(self, file_id: str) -> File:
+        self.ensure_not_closed()
+        file = self._file_registry.look_up_file(file_id)
+        if file is None:
+            raise FileError(
+                f"File with ID {repr(file_id)} not found. Please check if `file_id` is correct."
+            )
+        return file
 
     async def list_registered_files(self) -> List[File]:
         """
