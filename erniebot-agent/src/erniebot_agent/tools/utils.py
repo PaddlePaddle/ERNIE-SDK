@@ -5,8 +5,6 @@ import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type
 
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
@@ -18,7 +16,7 @@ from erniebot_agent.tools.schema import (
     get_args,
     get_typing_list_type,
 )
-from erniebot_agent.utils.common import get_file_suffix, is_json_response
+from erniebot_agent.utils.common import get_file_suffix, is_json_response, import_module
 from erniebot_agent.utils.exceptions import RemoteToolError
 
 _logger = logging.getLogger(__name__)
@@ -245,7 +243,7 @@ async def parse_file_from_response(
     )
 
 
-def get_fastapi_openapi(app: FastAPI):
+def get_fastapi_openapi(app):
     """get openapi dict of fastapi application
 
     refer to: https://github.com/tiangolo/fastapi/issues/3424#issuecomment-1283484665
@@ -253,8 +251,14 @@ def get_fastapi_openapi(app: FastAPI):
     Args:
         app (FastAPI): the instance of fastapi application
     """
+    fastapi = import_module(
+        "fastapi",
+        "Could not import fastapi or uvicorn python package. Please install it "
+        "with `pip install uvicorn fastapi`."
+    )
+
     if not app.openapi_schema:
-        app.openapi_schema = get_openapi(
+        app.openapi_schema = fastapi.openapi.utils.get_openapi(
             title=app.title,
             version=app.version,
             openapi_version=app.openapi_version,
