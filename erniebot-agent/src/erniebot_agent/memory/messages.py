@@ -269,6 +269,7 @@ class AIMessage(Message):
         token_usage: Optional[TokenUsage] = None,
         plugin_info: Optional[PluginInfo] = None,
         search_info: Optional[SearchInfo] = None,
+        clarify: Optional[bool] = False,
     ):
         if token_usage is None:
             prompt_tokens = 0
@@ -280,6 +281,7 @@ class AIMessage(Message):
         self.query_tokens_count = prompt_tokens
         self.plugin_info = plugin_info
         self.search_info = search_info
+        self.clarify = clarify
         self._to_dict_keys = ["role", "content", "function_call", "plugin_info", "search_info"]
 
     def _parse_token_count(self, token_usage: TokenUsage):

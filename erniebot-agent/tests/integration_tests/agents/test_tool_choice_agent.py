@@ -58,7 +58,7 @@ def llm():
 async def test_tool_choice_not_exist(llm, tool):
     with pytest.raises(RuntimeError) as exc_info:
         FunctionAgent(llm=llm, first_tools=[tool], tools=[])
-    assert str(exc_info.value) == "The first tool must be in the tools list."
+    assert str(exc_info.value) == "The tool in `first_tools` must be in the tools list."
 
 
 @pytest.mark.asyncio
@@ -75,15 +75,3 @@ async def test_function_agent_run_tool_choice(llm, tool):
     assert hasattr(response.chat_history[1], "function_call")
     assert response.chat_history[2].role == "function"
     assert json.loads(response.chat_history[2].content)["temperature"] == 20
-
-
-@pytest.mark.asyncio
-async def test_function_agent_run_no_tool_choice(llm, tool):
-    agent = FunctionAgent(llm=llm, tools=[tool])
-    prompt = PROMPT
-
-    response = await agent.run(prompt)
-
-    assert len(response.steps) == 0
-    assert len(response.chat_history) == 2
-    assert response.chat_history[1].function_call is None

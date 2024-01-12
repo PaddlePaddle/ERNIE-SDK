@@ -10,10 +10,11 @@ from tests.unit_tests.testing_utils.mocks.mock_chat_models import (
 @pytest.fixture
 def fake_erniebot_with_aistudio_backend_with_atoken():
     fake_erniebot = FakeERNIEBotWithAllInput(
-        model="ernie-bot-3.5",
+        model="ernie-3.5",
         api_type="aistudio",
         access_token="access_token",
         enable_multi_step_tool_call=False,
+        enable_human_clarify=False,
     )
     return fake_erniebot
 
@@ -21,7 +22,11 @@ def fake_erniebot_with_aistudio_backend_with_atoken():
 @pytest.fixture
 def fake_erniebot_with_aistudio_backend_wo_atoken():
     fake_erniebot = FakeERNIEBotWithAllInput(
-        model="ernie-bot-3.5", api_type="aistudio", access_token=None, enable_multi_step_tool_call=False
+        model="ernie-3.5",
+        api_type="aistudio",
+        access_token=None,
+        enable_multi_step_tool_call=False,
+        enable_human_clarify=False,
     )
     return fake_erniebot
 
@@ -29,12 +34,13 @@ def fake_erniebot_with_aistudio_backend_wo_atoken():
 @pytest.fixture
 def fake_erniebot_with_qianfan_backend_aksk():
     fake_erniebot = FakeERNIEBotWithAllInput(
-        model="ernie-bot-3.5",
+        model="ernie-3.5",
         api_type="qianfan",
         access_token="access_token",
         ak="ak",
         sk="sk",
         enable_multi_step_tool_call=False,
+        enable_human_clarify=False,
     )
     return fake_erniebot
 
@@ -42,12 +48,13 @@ def fake_erniebot_with_qianfan_backend_aksk():
 @pytest.fixture
 def fake_erniebot_with_qianfan_no_access_token_backend_aksk():
     fake_erniebot = FakeERNIEBotWithAllInput(
-        model="ernie-bot-3.5",
+        model="ernie-3.5",
         api_type="qianfan",
         access_token=None,
         ak="ak",
         sk="sk",
         enable_multi_step_tool_call=False,
+        enable_human_clarify=False,
     )
     return fake_erniebot
 
@@ -55,10 +62,11 @@ def fake_erniebot_with_qianfan_no_access_token_backend_aksk():
 @pytest.fixture
 def fake_erniebot_with_qianfan_no_access_token_backend():
     fake_erniebot = FakeERNIEBotWithAllInput(
-        model="ernie-bot-3.5",
+        model="ernie-3.5",
         api_type="qianfan",
         access_token="access_token",
         enable_multi_step_tool_call=False,
+        enable_human_clarify=False,
     )
     return fake_erniebot
 
@@ -81,7 +89,7 @@ async def test_erniebot_aistudio_backend_with_atoken_base(fake_erniebot_with_ais
     assert ("ak" in cfg_dict["_config_"]) is False
     assert ("sk" in cfg_dict["_config_"]) is False
     assert cfg_dict["_config_"]["access_token"] == "access_token"
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
@@ -110,7 +118,7 @@ async def test_erniebot_aistudio_backend_with_atoken_no_plugin(
     assert ("ak" in cfg_dict["_config_"]) is False
     assert ("sk" in cfg_dict["_config_"]) is False
     assert cfg_dict["_config_"]["access_token"] == "access_token"
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
@@ -137,7 +145,7 @@ async def test_erniebot_aistudio_backend_wo_atoken_base(fake_erniebot_with_aistu
     assert ("ak" in cfg_dict["_config_"]) is False
     assert ("sk" in cfg_dict["_config_"]) is False
     assert cfg_dict["_config_"]["access_token"] is None
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
@@ -164,7 +172,7 @@ async def test_erniebot_qianfan_backend_with_atoken_base(fake_erniebot_with_qian
     assert cfg_dict["_config_"]["ak"] == "ak"
     assert cfg_dict["_config_"]["sk"] == "sk"
     assert cfg_dict["_config_"]["access_token"] == "access_token"
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
@@ -193,7 +201,7 @@ async def test_erniebot_qianfan_backend_wo_atoken_base(
     assert cfg_dict["_config_"]["ak"] == "ak"
     assert cfg_dict["_config_"]["sk"] == "sk"
     assert cfg_dict["_config_"]["access_token"] is None
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
@@ -222,7 +230,7 @@ async def test_erniebot_qianfan_backend_with_atoken_noaksk(
     assert ("ak" in cfg_dict["_config_"]) is False
     assert ("sk" in cfg_dict["_config_"]) is False
     assert cfg_dict["_config_"]["access_token"] == "access_token"
-    assert cfg_dict["model"] == "ernie-bot-3.5"
+    assert cfg_dict["model"] == "ernie-3.5"
     assert cfg_dict["top_p"] == 5
     assert cfg_dict["temperature"] == 0.8
     assert cfg_dict["penalty_score"] == 10
