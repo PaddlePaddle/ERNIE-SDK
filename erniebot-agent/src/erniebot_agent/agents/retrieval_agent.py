@@ -8,11 +8,11 @@ from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.tools.langchain_retrieval_tool import LangChainRetrievalTool
 
-ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题,子问题的数量不超过5个，每个子问题必须足够简单。要求：
 1.严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 问题：{{query}} 子问题："""
 
-FEW_SHOT_QUERT_DECOMPOSITION = """请把下面的问题分解成子问题,
+FEW_SHOT_QUERT_DECOMPOSITION = """请把下面的问题分解成子问题,子问题的数量不超过5个，每个子问题必须足够简单。要求：
 严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 示例:
 ##
@@ -43,7 +43,7 @@ CONTENT_COMPRESSOR = """针对以下问题和背景，提取背景中与回答�
 提取的相关部分:"""
 
 CONTEXT_QUERY_DECOMPOSITION = """
-{{context}} 请根据上述背景信息把下面的问题分解成子问题，每个子问题必须足够简单，要求：
+{{context}} 请把下面的问题分解成子问题,子问题的数量不超过5个，每个子问题必须足够简单。要求：
 严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 问题：{{query}} 子问题：
 """
