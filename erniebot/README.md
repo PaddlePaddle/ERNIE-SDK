@@ -19,25 +19,7 @@ ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，�
 
 ## 教程与文档
 
-<details>
-<summary>详情</summary>
-
-* **预备步骤**
-  * [安装](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/installation/)
-  * [认证鉴权](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/authentication/)
-  * [参数配置](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/configuration/)
-  * [模型总览](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/models/)
-* **使用指南**
-  * [对话补全（Chat Completion）](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/guides/chat_completion/)
-  * [语义向量（Embedding）](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/guides/embedding/)
-  * [文生图（Image Generation）](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/guides/image/)
-  * [函数调用（Function Calling）](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/guides/function_calling/)
-* **API文档**
-  * [ChatCompletion](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/api_reference/chat_completion/)
-  * [Embedding](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/api_reference/embedding/)
-  * [Image](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/api_reference/image/)
-
-</details>
+请阅读[ERNIE Bot文档](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/)。
 
 ## 快速安装
 
@@ -49,7 +31,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/authentication/)。
+使用ERNIE Bot之前，请首先申请用户凭证并设置鉴权参数。
 
 ### Python接口
 
