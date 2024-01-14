@@ -16,7 +16,7 @@ from erniebot_agent.tools.schema import (
     get_args,
     get_typing_list_type,
 )
-from erniebot_agent.utils.common import get_file_suffix, is_json_response
+from erniebot_agent.utils.common import get_file_suffix, import_module, is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
 _logger = logging.getLogger(__name__)
@@ -241,3 +241,48 @@ async def parse_file_from_response(
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",
         stage="Output parsing",
     )
+
+
+def get_fastapi_openapi(app):
+    """get openapi dict of fastapi application
+
+    refer to: https://github.com/tiangolo/fastapi/issues/3424#issuecomment-1283484665
+
+    Args:
+        app (FastAPI): the instance of fastapi application
+    """
+    fastapi = import_module(
+        "fastapi",
+        "Could not import fastapi or uvicorn python package. Please install it "
+        "with `pip install fastapi`.",
+    )
+
+    if not app.openapi_schema:
+        app.openapi_schema = fastapi.openapi.utils.get_openapi(
+            title=app.title,
+            version=app.version,
+            openapi_version=app.openapi_version,
+            description=app.description,
+            terms_of_service=app.terms_of_service,
+            contact=app.contact,
+            license_info=app.license_info,
+            routes=app.routes,
+            tags=app.openapi_tags,
+            servers=app.servers,
+        )
+
+        # remove validation response
+        for _, method_item in app.openapi_schema.get("paths", {}).items():
+            for _, param in method_item.items():
+                responses = param.get("responses")
+                # remove 422 response, also can remove other status code
+                if "422" in responses:
+                    del responses["422"]
+
+        # remove Validation Schema
+        schemas = deepcopy(app.openapi_schema["components"]["schemas"])
+        for key in list(schemas.keys()):
+            if "ValidationError" in key:
+                schemas.pop(key)
+
+        app.openapi_schema["components"]["schemas"] = schemas
