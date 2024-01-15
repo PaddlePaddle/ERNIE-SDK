@@ -21,7 +21,6 @@ from erniebot_agent.tools.utils import (
     parse_response,
     tool_response_contains_file,
 )
-from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
 _logger = logging.getLogger(__name__)
@@ -196,7 +195,7 @@ class RemoteTool(BaseTool):
             response=response,
             tool_parameter_view=self.tool_view.returns,
             file_manager=file_manager,
-            file_metadata=file_metadata
+            file_metadata=file_metadata,
         )
 
     def function_call_schema(self) -> dict:

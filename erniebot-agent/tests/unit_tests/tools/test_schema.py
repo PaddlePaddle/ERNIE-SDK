@@ -14,20 +14,20 @@
 
 from __future__ import annotations
 
+import base64
 import unittest
 from enum import Enum
 from inspect import isclass
 from typing import List, Optional, Type, get_args
-import base64
+from uuid import uuid4
 
-import responses
 import requests
-from requests import Response
+import responses
 from openapi_spec_validator.readers import read_from_filename
 from pydantic import Field
-from uuid import uuid4
-from erniebot_agent.file.file_manager import File
 
+from erniebot_agent.file.file_manager import File
+from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler
 from erniebot_agent.tools import RemoteToolkit
 from erniebot_agent.tools.schema import (
     ToolParameterView,
@@ -35,15 +35,8 @@ from erniebot_agent.tools.schema import (
     is_optional_type,
     json_type,
 )
-from erniebot_agent.file.global_file_manager_handler import GlobalFileManagerHandler
+from erniebot_agent.tools.utils import parse_json_response, tool_response_contains_file
 from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.tools.utils import (
-    get_file_info_from_param_view,
-    parse_file_from_json_response,
-    parse_json_response,
-    parse_response,
-    tool_response_contains_file,
-)
 
 
 class TestToolSchema(unittest.TestCase):
@@ -296,22 +289,20 @@ class TestResponseContainsFile(unittest.TestCase):
         self._test_nested_file(filename="file-123456789012345")
 
 
-
 class TestArraySchema(unittest.IsolatedAsyncioTestCase):
-
     def setUp(self) -> None:
         self.toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapis/array.yaml")
 
     def test_array_v1(self):
         tool = self.toolkit.get_tool("array_int_v1")
-        
+
         array_init_field = tool.tool_view.returns.model_fields["array_init"]
         self.assertEqual(array_init_field.annotation, List[str])
         self.assertEqual(array_init_field.description, "array_init_v1")
 
     def test_array_v2(self):
         tool = self.toolkit.get_tool("array_int_v2")
-        
+
         array_init_field = tool.tool_view.returns.model_fields["array_init"]
         self.assertTrue(issubclass(array_init_field.annotation, ToolParameterView))
 
@@ -323,7 +314,7 @@ class TestArraySchema(unittest.IsolatedAsyncioTestCase):
 
     def test_array_v4(self):
         tool = self.toolkit.get_tool("array_int_v4")
-        
+
         array_init_field = tool.tool_view.returns.model_fields["array_init"]
         array_class: Type[ToolParameterView] = get_typing_list_type(array_init_field.annotation)
         self.assertEqual(array_class, "object")
@@ -332,13 +323,12 @@ class TestArraySchema(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(issubclass(sub_array_class, ToolParameterView))
         self.assertIn("a", sub_array_class.model_fields)
         self.assertEqual(sub_array_class.model_fields["a"].annotation, str)
-        
+
         self.assertIn("b", sub_array_class.model_fields)
         self.assertEqual(sub_array_class.model_fields["b"].annotation, float)
-        
+
 
 class TestFileSchema(unittest.IsolatedAsyncioTestCase):
-
     def setUp(self) -> None:
         self.toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapis/file.yaml")
 
@@ -352,8 +342,8 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
             json={
                 "file": [file_content_0, file_content_1],
                 "not_file_field": "file_v1",
-                "not_in_yaml_field": "not_in_yaml_value"
-            }
+                "not_in_yaml_field": "not_in_yaml_value",
+            },
         )
 
         file_manager = GlobalFileManagerHandler().get()
@@ -361,10 +351,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         tool_response = requests.post("http://example.com/file_v1")
 
         result = await parse_json_response(
-            tool.tool_view.returns, 
-            tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
 
         self.assertEqual(len(result["file"]), 2)
@@ -390,79 +377,56 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_content = str(uuid4())
         responses.post(
             "http://example.com/file_v2",
-            json={
-                "file": file_content,
-                "level_0": {
-                    "level_1": {
-                        "level_2": "level_2"
-                    }
-                }
-            }
+            json={"file": file_content, "level_0": {"level_1": {"level_2": "level_2"}}},
         )
 
         file_manager = GlobalFileManagerHandler().get()
 
         tool_response = requests.post("http://example.com/file_v2")
         result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
-        
+
         file: File = file_manager.look_up_file_by_id(result["file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        self.assertEqual(
-            result["level_0"]["level_1"]["level_2"],
-            "level_2"
-        )
+        self.assertEqual(result["level_0"]["level_1"]["level_2"], "level_2")
 
     @responses.activate
     async def test_file_v3(self):
         tool = self.toolkit.get_tool("file_v3")
 
         file_content = str(uuid4())
-        responses.post(
-            "http://example.com/file_v3",
-            json={
-                "file": {"file": file_content}
-            }
-        )
+        responses.post("http://example.com/file_v3", json={"file": {"file": file_content}})
 
         file_manager = GlobalFileManagerHandler().get()
 
         tool_response = requests.post("http://example.com/file_v3")
         result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
-        
+
         file: File = file_manager.look_up_file_by_id(result["file"]["file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content)
         self.assertEqual(file_content, file_content_from_file_manager)
+
     @responses.activate
     async def test_file_v4(self):
         tool = self.toolkit.get_tool("file_v4")
 
         file_content_0, file_content_1 = str(uuid4()), str(uuid4())
         responses.post(
-            "http://example.com/file_v4",
-            json={
-                "file": [{"file": file_content_0}, {"file": file_content_1}]
-            }
+            "http://example.com/file_v4", json={"file": [{"file": file_content_0}, {"file": file_content_1}]}
         )
 
         file_manager = GlobalFileManagerHandler().get()
 
         tool_response = requests.post("http://example.com/file_v4")
         result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
 
         file_0, file_1 = result["file"][0]["file"], result["file"][1]["file"]
@@ -485,17 +449,20 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         responses.post(
             "http://example.com/file_v5",
             json={
-                "file": {"file": [{"file": file_content_0, "not_file_field": "file_0"}, {"file": file_content_1, "not_file_field": "file_1"}]}
-            }
+                "file": {
+                    "file": [
+                        {"file": file_content_0, "not_file_field": "file_0"},
+                        {"file": file_content_1, "not_file_field": "file_1"},
+                    ]
+                }
+            },
         )
 
         file_manager = GlobalFileManagerHandler().get()
 
         tool_response = requests.post("http://example.com/file_v5")
         result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
 
         file_0, file_1 = result["file"]["file"][0]["file"], result["file"]["file"][1]["file"]
@@ -510,14 +477,8 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        self.assertEqual(
-            result["file"]["file"][0]["not_file_field"],
-            "file_0"
-        )
-        self.assertEqual(
-            result["file"]["file"][1]["not_file_field"],
-            "file_1"
-        )
+        self.assertEqual(result["file"]["file"][0]["not_file_field"], "file_0")
+        self.assertEqual(result["file"]["file"][1]["not_file_field"], "file_1")
 
     @responses.activate
     async def test_file_v6(self):
@@ -525,11 +486,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_content_0, file_content_1 = str(uuid4()), str(uuid4())
         responses.post(
-            "http://example.com/file_v6",
-            json={
-                "first_file": file_content_0,
-                "second_file": file_content_1
-            }
+            "http://example.com/file_v6", json={"first_file": file_content_0, "second_file": file_content_1}
         )
 
         file_manager = GlobalFileManagerHandler().get()
@@ -537,11 +494,9 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         tool_response = requests.post("http://example.com/file_v6")
 
         result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(),
-            file_manager=file_manager,
-            file_metadata={}
+            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
         )
-        
+
         file: File = file_manager.look_up_file_by_id(result["first_file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_0)
