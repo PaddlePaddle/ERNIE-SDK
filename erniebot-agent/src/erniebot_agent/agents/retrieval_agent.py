@@ -145,3 +145,74 @@ class DAGRetrievalAgent(Agent):
         left_index = results.find("{")
         right_index = results.rfind("}")
         return json.loads(results[left_index : right_index + 1])
+
+
+SELF_ASK_RAG_PROMPT = """
+检索结果:
+{% for doc in documents %}
+    第{{loop.index}}个段落: {{doc['content']}}
+{% endfor %}
+检索语句：{{query}}
+请根据检索结果回答检索语句的问题.如果不能回答，请给出理由，并生成一个新的子问题用于检索更多的信息。
+按照下面的格式输出：{"reason":"不能回答的理由","accept": false,"sub query": "生成新的子问题"}
+否则输出： {"reason":"","accept": true,"notes":"检索问题的答案"}
+"""
+
+MAX_RETRY = 5
+
+
+class SelfAskRetrievalAgent(Agent):
+    def __init__(
+        self,
+        knowledge_base,
+        top_k: int = 2,
+        threshold: float = 0.1,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.knowledge_base = knowledge_base
+        self.top_k = top_k
+        self.threshold = threshold
+        self.query_transform = PromptTemplate(SELF_ASK_RAG_PROMPT, input_variables=["query", "documents"])
+
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+        steps_taken: List[AgentStep] = []
+        chat_history: List[Message] = []
+        run_count = 0
+        while True:
+            documents = await self.knowledge_base(prompt, top_k=self.top_k, filters=None)
+            steps_input = HumanMessage(
+                content=self.query_transform.format(query=prompt, documents=documents["documents"])
+            )
+            # Query planning
+            llm_resp = await self.run_llm(messages=[steps_input])
+            output_message = llm_resp.message
+            chat_history.append(steps_input)
+            results = self._parse_results(output_message.content)
+            run_count += 1
+            if results["accept"] or run_count >= MAX_RETRY:
+                chat_history.append(output_message)
+                break
+
+        self.memory.add_message(chat_history[0])
+        self.memory.add_message(chat_history[-1])
+        response = self._create_finished_response(chat_history, steps_taken)
+        return response
+
+    def _create_finished_response(
+        self,
+        chat_history: List[Message],
+        steps: List[AgentStep],
+    ) -> AgentResponse:
+        last_message = chat_history[-1]
+        return AgentResponse(
+            text=last_message.content,
+            chat_history=chat_history,
+            steps=steps,
+            status="FINISHED",
+        )
+
+    def _parse_results(self, results):
+        left_index = results.find("{")
+        right_index = results.rfind("}")
+        return json.loads(results[left_index : right_index + 1])

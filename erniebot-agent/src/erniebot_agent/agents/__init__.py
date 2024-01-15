@@ -19,4 +19,7 @@ from erniebot_agent.agents.function_agent_with_retrieval import (
     FunctionAgentWithRetrievalScoreTool,
     FunctionAgentWithRetrievalTool,
 )
-from erniebot_agent.agents.retrieval_agent import DAGRetrievalAgent
+from erniebot_agent.agents.retrieval_agent import (
+    DAGRetrievalAgent,
+    SelfAskRetrievalAgent,
+)
