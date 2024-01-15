@@ -1,0 +1,18 @@
+task_name: "Instruction_following"
+task_id: 1000
+task_weight: 1
+prompt: "Write a 300+ word summary of the wikipedia page \"https://en.wikipedia.org/wiki/Raymond_III_Count_of_Tripoli\". Do not use any commas and highlight at least 3 sections that has titles in markdown format for example *highlighted section part 1* *highlighted section part 2* *highlighted section part 3*."
+answer: ""  # func type will not have answer
+eval:
+  eval_type: "func"
+  funcs: 
+      - name: "punctuation:no_comma" # funcs can be registerd
+        kwargs: Null
+      - name: "detectable_format:number_highlighted_sections"
+        kwargs: 
+          num_highlights: 3
+          
+        name: "detectable_format:titled_sections"
+        kwargs: 
+          relation: 'at least' 
+          num_words: 300
