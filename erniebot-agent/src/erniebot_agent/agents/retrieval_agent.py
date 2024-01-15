@@ -189,8 +189,6 @@ class SelfAskRetrievalAgent(Agent):
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
-        # self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT,
-        #  input_variables=["query", "documents", 'history'])
         self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT, input_variables=["query", "documents"])
         self.final_rag_prompt = PromptTemplate(
             FINAL_SELFASK_RAG_PROMPT, input_variables=["documents", "query"]
