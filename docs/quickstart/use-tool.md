@@ -1,10 +1,10 @@
 
-`erniebot-agent` 支持 LocalTool 和 RemoteTool的开发，使用方法如下所示：
+`ERNIE Bot Agent` 支持 LocalTool 和 RemoteTool的开发，使用方法如下所示：
 
 
 ## 使用 LocalTool
 
-顾名思义，LocalTool 是一个运行在本地的工具，提供了与 EB 进行交互的能力，接下来展示如何使用  `CurrentTimeTool` 来获取当前的准确时间：、。
+顾名思义，LocalTool 是一个运行在本地的工具，提供了与 EB 进行交互的能力，接下来展示如何使用  `CurrentTimeTool` 来获取当前的准确时间：
 
 !!! tips
 
@@ -25,7 +25,7 @@ async def main():
 asyncio.run(main())
 ```
 
-以上示例展示了如何使用内置的 `CurrentTimeTool` 获取当前时间，开发者也可以自定义 LocalTool，具体请参考 [自定义工具](../modules/tools/create-tool.md) 文档。
+以上示例展示了如何使用内置的 `CurrentTimeTool` 获取当前时间，开发者也可以自定义 LocalTool，具体请参考 [自定义工具](../modules/tools.md) 文档。
 
 
 ## 使用 RemoteTool
@@ -55,4 +55,4 @@ asyncio.run(main())
 toolkit = RemoteToolkit.from_url("http://127.0.0.1:8000")
 ```
 
-自定义RemoteTool请参考 [自定义工具](../modules/tools/create-remote-tool.md) 文档。
+自定义RemoteTool请参考 [自定义远程工具教程](../cookbooks/agent/remote_tool.ipynb) 文档。

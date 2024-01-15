@@ -101,6 +101,7 @@ class ERNIEBot(BaseERNIEBot):
         api_type: str = "aistudio",
         access_token: Optional[str] = None,
         enable_multi_step_tool_call: bool = False,
+        enable_human_clarify: bool = False,
         **default_chat_kwargs: Any,
     ) -> None:
         """Initializes an instance of the `ERNIEBot` class.
@@ -114,6 +115,7 @@ class ERNIEBot(BaseERNIEBot):
                 If access_token is None, the global access_token will be used.
             enable_multi_step_tool_call (bool): Whether to enable the multi-step tool call.
                 Defaults to False.
+            enable_human_clarify (bool): Whether to enable the human clarify. Defaults to False.
             **default_chat_kwargs: Keyword arguments, such as `_config_`, `top_p`, `temperature`,
                 `penalty_score`, and `system`.
         """
@@ -125,9 +127,9 @@ class ERNIEBot(BaseERNIEBot):
         self.access_token = access_token
         self._maybe_validate_qianfan_auth()
 
-        self.enable_multi_step_json = json.dumps(
-            {"multi_step_tool_call_close": not enable_multi_step_tool_call}
-        )
+        self.extra_data = {}
+        self.extra_data["multi_step_tool_call_close"] = not enable_multi_step_tool_call
+        self.extra_data["chat_with_human_close"] = not enable_human_clarify
 
     @overload
     async def chat(
@@ -178,6 +180,7 @@ class ERNIEBot(BaseERNIEBot):
             If `stream` is False, returns a single message.
             If `stream` is True, returns an asynchronous iterator of message chunks.
         """
+
         cfg_dict = self._generate_config(messages, functions=functions, **kwargs)
 
         response = await self._generate_response(cfg_dict, stream, functions)
@@ -212,7 +215,7 @@ class ERNIEBot(BaseERNIEBot):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins"]
+        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins", "tool_choice"]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
@@ -220,6 +223,10 @@ class ERNIEBot(BaseERNIEBot):
         if "plugins" in cfg_dict and (cfg_dict["plugins"] is None or len(cfg_dict["plugins"]) == 0):
             cfg_dict.pop("plugins")
 
+        if "tool_choice" in cfg_dict:
+            # rm blank dict
+            if not cfg_dict["tool_choice"]:
+                cfg_dict.pop("tool_choice")
         return cfg_dict
 
     def _maybe_validate_qianfan_auth(self) -> None:
@@ -256,14 +263,14 @@ class ERNIEBot(BaseERNIEBot):
                 _config_=cfg_dict["_config_"],
                 functions=functions,  # type: ignore
                 extra_params={
-                    "extra_data": self.enable_multi_step_json,
+                    "extra_data": json.dumps(self.extra_data),
                 },
             )
         else:
             response = await erniebot.ChatCompletion.acreate(
                 stream=stream,
                 extra_params={
-                    "extra_data": self.enable_multi_step_json,
+                    "extra_data": json.dumps(self.extra_data),
                 },
                 **cfg_dict,
             )
@@ -272,6 +279,11 @@ class ERNIEBot(BaseERNIEBot):
 
 
 def convert_response_to_output(response: ChatCompletionResponse, output_type: Type[_T]) -> _T:
+    clarify = False
+    # ernie-turbo has no `finish_reason`
+    if hasattr(response, "finish_reason") and response["finish_reason"] == "plugin_clarify":
+        clarify = True
+
     if hasattr(response, "function_call"):
         function_call = FunctionCall(
             name=response.function_call["name"],
@@ -283,6 +295,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             function_call=function_call,
             plugin_info=None,
             search_info=None,
+            clarify=clarify,
             token_usage=response.usage,
         )
     elif hasattr(response, "plugin_info"):
@@ -299,6 +312,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=plugin_info,
             search_info=None,
             token_usage=response.usage,
+            clarify=clarify,
         )
     elif hasattr(response, "search_info") and len(response.search_info.items()) > 0:
         search_info = SearchInfo(
@@ -310,6 +324,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=None,
             search_info=search_info,
             token_usage=response.usage,
+            clarify=clarify,
         )
     else:
         return output_type(
@@ -318,4 +333,5 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=None,
             search_info=None,
             token_usage=response.usage,
+            clarify=clarify,
         )

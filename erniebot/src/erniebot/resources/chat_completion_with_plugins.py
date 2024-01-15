@@ -42,13 +42,17 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
     SUPPORTED_API_TYPES: ClassVar[Tuple[APIType, ...]] = (
         APIType.QIANFAN,
         APIType.CUSTOM,
+        APIType.AISTUDIO,
     )
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
-            "path": "/erniebot/plugins",
+            "path": "/erniebot/plugin",
         },
         APIType.CUSTOM: {
             "path": "/erniebot/plugins_v3",
+        },
+        APIType.AISTUDIO: {
+            "path": "/erniebot/plugin",
         },
     }
 
@@ -261,13 +265,18 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         params["messages"] = messages
         params["plugins"] = plugins
         _set_val_if_key_exists(kwargs, params, "functions")
-        _set_val_if_key_exists(kwargs, params, "user_id")
+        if self.api_type is not APIType.AISTUDIO:
+            _set_val_if_key_exists(kwargs, params, "user_id")
         _set_val_if_key_exists(kwargs, params, "stream")
         if "extra_params" in kwargs:
             params.update(kwargs["extra_params"])
 
         # headers
-        headers: HeadersType = kwargs.get("headers", {})
+        headers: HeadersType = {}
+        if self.api_type is APIType.AISTUDIO:
+            headers["Content-Type"] = "application/json"
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
 
         # request_timeout
         request_timeout = kwargs.get("request_timeout", None)

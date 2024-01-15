@@ -14,6 +14,9 @@ class FakeSimpleChatModel(ChatModel):
     async def chat(self, messages, *, stream=False, **kwargs):
         if stream:
             raise ValueError("Streaming is not supported.")
+        if "system" in kwargs and kwargs["system"] is not None:
+            response = f"Recieved system message: {kwargs['system']}"
+            return AIMessage(content=response, function_call=None, token_usage=None)
         return self.response
 
 
@@ -33,5 +36,20 @@ class FakeERNIEBotWithPresetResponses(BaseERNIEBot):
 
 
 class FakeERNIEBotWithAllInput(ERNIEBot):
-    def __init__(self, model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs):
-        super().__init__(model, api_type, access_token, enable_multi_step_tool_call, **default_chat_kwargs)
+    def __init__(
+        self,
+        model,
+        api_type,
+        access_token,
+        enable_multi_step_tool_call,
+        enable_human_clarify,
+        **default_chat_kwargs,
+    ):
+        super().__init__(
+            model,
+            api_type,
+            access_token,
+            enable_multi_step_tool_call,
+            enable_human_clarify,
+            **default_chat_kwargs,
+        )

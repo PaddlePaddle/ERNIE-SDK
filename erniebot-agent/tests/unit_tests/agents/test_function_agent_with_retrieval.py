@@ -138,3 +138,24 @@ async def test_functional_agent_with_retrieval_run_retrieval(identity_tool):
     assert response.chat_history[0].content == "Hello, world!"
     # AIMessage
     assert response.chat_history[1].content == "Text response"
+
+
+@pytest.mark.asyncio
+async def test_function_agent_with_retrieval_system():
+    knowledge_base_name = "test"
+    access_token = "your access token"
+    knowledge_base_id = 111
+    with mock.patch("requests.post") as my_mock:
+        search_db = BaizhongSearch(
+            knowledge_base_name=knowledge_base_name,
+            access_token=access_token,
+            knowledge_base_id=knowledge_base_id if knowledge_base_id != "" else None,
+        )
+    agent = FunctionAgentWithRetrieval(
+        llm=FakeSimpleChatModel(), tools=[], system="You are a helpful bot.", knowledge_base=search_db
+    )
+    with mock.patch("requests.post") as my_mock:
+        my_mock.return_value = MagicMock(status_code=200, json=lambda: EXAMPLE_RESPONSE)
+        response = await agent.run("Run!")
+
+    assert "Recieved system message" in response.text

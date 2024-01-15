@@ -21,3 +21,10 @@ async def test_tool(tool):
     cur_time = await tool()
     print(cur_time)
     assert len(cur_time["current_time"]) > 6
+
+
+@pytest.mark.asyncio
+async def test_tool_string_format(tool):
+    string = str(tool)
+    assert tool.tool_name in string
+    assert tool.description in string

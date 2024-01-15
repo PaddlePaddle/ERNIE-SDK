@@ -4,7 +4,7 @@ ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，�
 
 ## 快速安装
 
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot（要求Python >= 3.8)。
+执行如下命令，快速安装最新版本的ERNIE Bot（要求Python >= 3.8)。
 
 ```{.sh .copy}
 pip install --upgrade erniebot
@@ -142,7 +142,7 @@ response = erniebot.Image.create(
 print(response.get_result())
 ```
 
-<img width="512" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
+<img width="512" src="https://github.com/PaddlePaddle/ERNIE-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
 
 我们推荐两个撰写文生图提示词的文档，大家可以组合使用，创作出更加精美的图片。
 
@@ -219,7 +219,7 @@ print(response.get_result())
 
 ## Gradio Demos
 
-为了让用户更全面、更直观地了解ERNIE Bot的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/tree/develop/examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
+为了让用户更全面、更直观地了解ERNIE Bot的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](https://github.com/PaddlePaddle/ERNIE-SDK/tree/develop/examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
 
 <img width="1296" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif" />
 

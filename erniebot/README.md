@@ -5,7 +5,7 @@
 ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
@@ -19,29 +19,11 @@ ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，�
 
 ## 教程与文档
 
-<details>
-<summary>详情</summary>
-
-* **预备步骤**
-  * [安装](./docs/installation.md)
-  * [认证鉴权](./docs/authentication.md)
-  * [参数配置](./docs/configuration.md)
-  * [模型总览](./docs/models.md)
-* **使用指南**
-  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
-  * [语义向量（Embedding）](./docs/guides/embedding.md)
-  * [文生图（Image Generation）](./docs/guides/image.md)
-  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
-* **API文档**
-  * [ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [Embedding](./docs/api_reference/embedding.md)
-  * [Image](./docs/api_reference/image.md)
-
-</details>
+请阅读[ERNIE Bot文档](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/)。
 
 ## 快速安装
 
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot（要求Python >= 3.8)。
+执行如下命令，快速安装最新版本的ERNIE Bot（要求Python >= 3.8)。
 
 ```shell
 pip install --upgrade erniebot
@@ -49,7 +31,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
+使用ERNIE Bot之前，请首先申请用户凭证并设置鉴权参数。
 
 ### Python接口
 
@@ -179,7 +161,7 @@ response = erniebot.Image.create(
 print(response.get_result())
 ```
 
-<img width="512" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
+<img width="512" src="https://github.com/PaddlePaddle/ERNIE-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
 
 我们推荐两个撰写文生图提示词的文档，大家可以组合使用，创作出更加精美的图片。
 

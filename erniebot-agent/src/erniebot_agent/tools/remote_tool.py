@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import dataclasses
-import json
 import logging
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
@@ -27,22 +26,6 @@ from erniebot_agent.utils.common import is_json_response
 from erniebot_agent.utils.exceptions import RemoteToolError
 
 _logger = logging.getLogger(__name__)
-
-
-def check_json_length(value: Dict[str, Any]):
-    """check the dict contains base64 string
-
-    Args:
-        value (Dict[str, Any]): the source of json data
-    """
-    json_string = json.dumps(value)
-    if len(json_string) > 4096:
-        raise RemoteToolError(
-            "The length of json response is greater than 4096, please "
-            "check whether `format:byte` is missing in openapi.yaml or "
-            "the tool returned too much information.",
-            stage="Output parsing",
-        )
 
 
 class RemoteTool(BaseTool):
@@ -133,13 +116,12 @@ class RemoteTool(BaseTool):
 
         # 2. call tool get response
         if self.tool_view.parameters is not None:
-            tool_arguments = dict(self.tool_view.parameters(**tool_arguments))
+            tool_arguments = self.tool_view.parameters(**tool_arguments).model_dump(mode="json")
 
         return tool_arguments
 
     async def __post_process__(self, tool_response: dict) -> dict:
         tool_response = self.__adhoc_post_process__(tool_response)
-        check_json_length(tool_response)
         if self.response_prompt is not None:
             tool_response["prompt"] = self.response_prompt
         elif self.tool_view.returns is not None and self.tool_view.returns.__prompt__ is not None:

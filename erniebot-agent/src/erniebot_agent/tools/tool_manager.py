@@ -16,10 +16,10 @@ from __future__ import annotations
 import functools
 import json
 import types
-from dataclasses import asdict
 from typing import Callable, Dict, Iterable, List, final
 
 from erniebot_agent.tools.base import BaseTool, Tool
+from erniebot_agent.tools.utils import get_fastapi_openapi
 
 
 @final
@@ -111,7 +111,7 @@ class ToolManager(object):
                 return await __tool__()
 
             async def create_tool_endpoint(__tool__, inputs):
-                data = asdict(inputs)
+                data = inputs.model_dump(mode="json")
                 return await __tool__(**data)
 
             if tool.input_type is not None:
@@ -127,6 +127,7 @@ class ToolManager(object):
                 response_model=tool.ouptut_type,
                 description=tool.description,
                 operation_id=tool.tool_name,
+                methods=["POST"],
             )
 
         @app.get("/.well-known/openapi.yaml")
@@ -134,4 +135,5 @@ class ToolManager(object):
             """get openapi json schema from fastapi"""
             return app.openapi()
 
+        get_fastapi_openapi(app)
         uvicorn.run(app, host="0.0.0.0", port=port)
