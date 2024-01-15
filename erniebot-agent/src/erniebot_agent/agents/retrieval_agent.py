@@ -147,16 +147,47 @@ class DAGRetrievalAgent(Agent):
         return json.loads(results[left_index : right_index + 1])
 
 
-SELF_ASK_RAG_PROMPT = """
+# SELFASK_RAG_PROMPT = """
+# 检索的历史：
+# {% for message in history %}
+#     {{message}}
+# {% endfor %}
+# 检索结果:
+# {% for doc in documents %}
+#     第{{loop.index}}个段落: {{doc['content']}}
+# {% endfor %}
+# 检索问题：{{query}}
+# 请根据检索结果回答检索语句的问题.如果不能回答，请总结文档中涉及的事实和观点，并根据给出的利用生成一个新的简单子问题用于检索更多的信息帮助回答检索问题。
+# 按照下面的格式输出：{"info":"抽取检索结果中涉及的事实和观点，不要改变原文","accept": false,"sub query": "生成新的简单子问题"}
+# 否则输出： {"info":"","accept": true,"notes":"抽取检索结果中与问题相关的片段"}
+# """
+
+SELFASK_RAG_PROMPT = """
 检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
-检索语句：{{query}}
-请根据检索结果回答检索语句的问题.如果不能回答，请给出理由，并生成一个新的子问题用于检索更多的信息。
-按照下面的格式输出：{"reason":"不能回答的理由","accept": false,"sub query": "生成新的子问题"}
-否则输出： {"reason":"","accept": true,"notes":"检索问题的答案"}
+检索问题：{{query}}
+请根据检索结果回答检索语句的问题.
+
 """
+
+EVALUATE_PROMPT = """
+问题：{{query}}
+回答：{{answer}}
+请判断上面的答案是否能回答该问题. 如果不能回答，请给出理由，并生成一个新的简单子问题用于检索更多的信息帮助回答检索问题。
+按照下面的格式输出：{"info":"理由","accept": false,"sub query": "子问题"}
+否则输出： {"info":"","accept": true}
+"""
+
+
+FINAL_SELFASK_RAG_PROMPT = """
+检索结果:
+{% for doc in documents %}
+    第{{loop.index}}个子query: {{doc['query']}}, 搜索结果：{{doc['info']}}
+{% endfor %}
+检索语句: {{query}}
+请根据以上子query的搜索结果提供的信息回答检索语句的问题."""
 
 MAX_RETRY = 5
 
@@ -173,27 +204,57 @@ class SelfAskRetrievalAgent(Agent):
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
-        self.query_transform = PromptTemplate(SELF_ASK_RAG_PROMPT, input_variables=["query", "documents"])
+        # self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT,
+        #  input_variables=["query", "documents", 'history'])
+        self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT, input_variables=["query", "documents"])
+        self.final_rag_prompt = PromptTemplate(
+            FINAL_SELFASK_RAG_PROMPT, input_variables=["documents", "query"]
+        )
+        self.evaluate_prompt = PromptTemplate(EVALUATE_PROMPT, input_variables=["query", "answer"])
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
         chat_history: List[Message] = []
+        sub_query = prompt
+        history = []
         run_count = 0
         while True:
-            documents = await self.knowledge_base(prompt, top_k=self.top_k, filters=None)
+            documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
+
+            # steps_input = HumanMessage(
+            #     content=self.query_transform.format(query=prompt, documents=documents["documents"],
+            #  history=history)
+            # )
+            # pre answer generation
             steps_input = HumanMessage(
-                content=self.query_transform.format(query=prompt, documents=documents["documents"])
+                content=self.query_transform.format(query=sub_query, documents=documents["documents"])
             )
-            # Query planning
             llm_resp = await self.run_llm(messages=[steps_input])
             output_message = llm_resp.message
-            chat_history.append(steps_input)
+            result = output_message.content
+
+            # check if the answer is acceptable
+            steps_input = HumanMessage(content=self.evaluate_prompt.format(query=sub_query, answer=result))
+            llm_resp = await self.run_llm(messages=[steps_input])
+            output_message = llm_resp.message
             results = self._parse_results(output_message.content)
+
+            # decide if to continue to do query decomposition or not
+            history.append({"query": sub_query, "info": result})
             run_count += 1
             if results["accept"] or run_count >= MAX_RETRY:
-                chat_history.append(output_message)
                 break
+            else:
+                sub_query = results["sub query"]
 
+        # Final answer generation
+        step_input = HumanMessage(content=self.final_rag_prompt.format(query=prompt, documents=history))
+        chat_history: List[Message] = [step_input]
+        llm_resp = await self.run_llm(
+            messages=chat_history,
+        )
+        output_message = llm_resp.message
+        chat_history.append(output_message)
         self.memory.add_message(chat_history[0])
         self.memory.add_message(chat_history[-1])
         response = self._create_finished_response(chat_history, steps_taken)
