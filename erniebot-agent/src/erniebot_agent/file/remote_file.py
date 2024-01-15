@@ -139,7 +139,7 @@ class AIStudioFileClient(RemoteFileClient):
 
     """
 
-    _BASE_URL: Final[str] = "https://sandbox-aistudio.baidu.com"
+    _BASE_URL: Final[str] = "https://aistudio.baidu.com"
     _UPLOAD_ENDPOINT: Final[str] = "/llm/lmapp/files"
     _RETRIEVE_ENDPOINT: Final[str] = "/llm/lmapp/files/{file_id}"
     _RETRIEVE_CONTENTS_ENDPOINT: Final[str] = "/llm/lmapp/files/{file_id}/content"
