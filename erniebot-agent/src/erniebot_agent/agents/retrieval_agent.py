@@ -197,7 +197,6 @@ class SelfAskRetrievalAgent(Agent):
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
-        chat_history: List[Message] = []
         sub_query = prompt
         history = []
         run_count = 0
