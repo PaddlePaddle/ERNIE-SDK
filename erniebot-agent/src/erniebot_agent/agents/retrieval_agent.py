@@ -147,21 +147,6 @@ class DAGRetrievalAgent(Agent):
         return json.loads(results[left_index : right_index + 1])
 
 
-# SELFASK_RAG_PROMPT = """
-# 检索的历史：
-# {% for message in history %}
-#     {{message}}
-# {% endfor %}
-# 检索结果:
-# {% for doc in documents %}
-#     第{{loop.index}}个段落: {{doc['content']}}
-# {% endfor %}
-# 检索问题：{{query}}
-# 请根据检索结果回答检索语句的问题.如果不能回答，请总结文档中涉及的事实和观点，并根据给出的利用生成一个新的简单子问题用于检索更多的信息帮助回答检索问题。
-# 按照下面的格式输出：{"info":"抽取检索结果中涉及的事实和观点，不要改变原文","accept": false,"sub query": "生成新的简单子问题"}
-# 否则输出： {"info":"","accept": true,"notes":"抽取检索结果中与问题相关的片段"}
-# """
-
 SELFASK_RAG_PROMPT = """
 检索结果:
 {% for doc in documents %}
@@ -220,11 +205,6 @@ class SelfAskRetrievalAgent(Agent):
         run_count = 0
         while True:
             documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
-
-            # steps_input = HumanMessage(
-            #     content=self.query_transform.format(query=prompt, documents=documents["documents"],
-            #  history=history)
-            # )
             # pre answer generation
             steps_input = HumanMessage(
                 content=self.query_transform.format(query=sub_query, documents=documents["documents"])
