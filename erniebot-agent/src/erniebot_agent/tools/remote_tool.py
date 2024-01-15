@@ -18,8 +18,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
-    parse_file_from_json_response,
-    parse_file_from_response,
+    parse_response,
     tool_response_contains_file,
 )
 from erniebot_agent.utils.common import is_json_response
@@ -190,44 +189,14 @@ class RemoteTool(BaseTool):
                 stage="Executing",
             )
 
-        # parse the file from response
-        returns_file_infos = get_file_info_from_param_view(self.tool_view.returns)
-
-        if len(returns_file_infos) == 0 and is_json_response(response):
-            return response.json()
-
         file_manager = self._get_file_manager()
-
         file_metadata = {"tool_name": self.tool_name}
-        if is_json_response(response) and len(returns_file_infos) > 0:
-            response_json = response.json()
-            file_info = await parse_file_from_json_response(
-                response_json,
-                file_manager=file_manager,
-                param_view=self.tool_view.returns,  # type: ignore
-                tool_name=self.tool_name,
-            )
-            response_json.update(file_info)
-            return response_json
-        file = await parse_file_from_response(
-            response, file_manager, file_infos=returns_file_infos, file_metadata=file_metadata
-        )
 
-        if file is not None:
-            if len(returns_file_infos) == 0:
-                return {self.tool_view.returns_ref_uri: file.id}
-
-            file_name = list(returns_file_infos.keys())[0]
-            return {file_name: file.id}
-
-        if len(returns_file_infos) == 0:
-            return response.json()
-
-        raise RemoteToolError(
-            f"<{list(returns_file_infos.keys())}> are defined but cannot be processed from the "
-            "response. Please ensure that the response headers contain either the Content-Disposition "
-            "or Content-Type field.",
-            stage="Output parsing",
+        return await parse_response(
+            response=response,
+            tool_parameter_view=self.tool_view.returns,
+            file_manager=file_manager,
+            file_metadata=file_metadata
         )
 
     def function_call_schema(self) -> dict:

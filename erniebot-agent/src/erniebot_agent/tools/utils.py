@@ -3,14 +3,14 @@ import inspect
 import logging
 import typing
 from copy import deepcopy
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, List
 
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 from requests import Response
 
 from erniebot_agent.file import File, FileManager
-from erniebot_agent.file.protocol import is_local_file_id, is_remote_file_id
+from erniebot_agent.file.protocol import FilePurpose, is_local_file_id, is_remote_file_id
 from erniebot_agent.tools.schema import (
     ToolParameterView,
     get_args,
@@ -51,6 +51,10 @@ def validate_openapi_yaml(yaml_file: str) -> bool:
         return True
     except Exception as e:  # type: ignore
         _logger.error(e)
+        _logger.error(
+            "You can edit your openapi.yaml file in https://editor.swagger.io/ "
+            "which is more friendly for you to find the issue."
+        )
         return False
 
 
@@ -180,12 +184,87 @@ async def parse_file_from_json_response(
     return file_infos
 
 
-async def parse_file_from_response(
+async def create_file_from_data(
+        content, format: str, mime_type: str, file_manager: FileManager,
+        file_purpose: FilePurpose ="assistants_output",
+        file_metadata={},
+    ) -> File:
+
+    file_suffix = get_file_suffix(mime_type)
+    if format == "byte":
+        content = base64.b64decode(content)
+
+    return await file_manager.create_file_from_bytes(
+        content,
+        f"tool-{file_suffix}",
+        file_purpose=file_purpose,
+        file_metadata=file_metadata,
+    )
+
+async def parse_json_response(view: Type[ToolParameterView], json_dict, file_manager: FileManager, file_metadata: Dict[str, str]) -> Dict[Any, Any]:
+    result = {}
+    for field_name, model_field in view.model_fields.items():
+        list_type = get_typing_list_type(model_field.annotation)
+        if list_type is None:
+            if model_field.annotation == str and model_field.json_schema_extra.get("x-ebagent-file-mime-type", None):
+                format = model_field.json_schema_extra["format"]
+                mime_type = model_field.json_schema_extra["x-ebagent-file-mime-type"]
+                file = await create_file_from_data(
+                    json_dict[field_name], format=format, mime_type=mime_type,
+                    file_manager=file_manager,
+                    file_metadata=file_metadata
+                )
+                result[field_name] = file.id
+            elif issubclass(model_field.annotation, ToolParameterView):
+                files = await parse_json_response(
+                    model_field.annotation, json_dict[field_name], file_manager=file_manager, file_metadata=file_metadata
+                )
+                if len(files) > 0:
+                    result[field_name] = files
+
+        else:
+            array_json_schema = model_field.json_schema_extra.get("array_items_schema", None)
+            sub_class = get_args(model_field.annotation)[0]
+            if list_type == "string" and array_json_schema is not None and array_json_schema.get("x-ebagent-file-mime-type", None):
+                format = array_json_schema["format"]
+                mime_type = array_json_schema["x-ebagent-file-mime-type"]
+                files = []
+                for file_content in json_dict[field_name]:
+                    file = await create_file_from_data(
+                        file_content, format=format, mime_type=mime_type,
+                        file_manager=file_manager,
+                        file_metadata=file_metadata
+                    )
+                    files.append(file.id)
+                result[field_name] = files
+            elif list_type == "object":
+                sub_file_result = []
+                for file_dict in json_dict[field_name]:
+                    sub_file = await parse_json_response(
+                        sub_class,
+                        file_dict,
+                        file_manager,
+                        file_metadata
+                    )
+                    if len(sub_file) > 0:
+                        sub_file_result.append(sub_file)
+                if len(sub_file_result) > 0:
+                    result[field_name] = sub_file_result
+        if field_name in result:
+            json_dict.pop(field_name, None)
+        elif field_name not in result and field_name in json_dict:
+            result[field_name] = json_dict.pop(field_name)
+
+    result.update(json_dict)
+    return result
+    
+
+async def parse_response(
     response: Response,
     file_manager: FileManager,
-    file_infos: Dict[str, Dict[str, str]],
-    file_metadata: Dict[str, str],
-) -> Optional[File]:
+    file_metadata: Dict[str, str] = {},
+    tool_parameter_view: Optional[Type[ToolParameterView]] = None,
+) -> Dict[str, Any]:
     # 1. parse file by `Content-Disposition`
     content_disposition = response.headers.get("Content-Disposition", None)
     if content_disposition is not None:
@@ -193,49 +272,32 @@ async def parse_file_from_response(
         local_file = await file_manager.create_file_from_bytes(
             response.content, file_name, file_purpose="assistants_output", file_metadata=file_metadata
         )
-        return local_file
+        return {"file": local_file.id}
 
-    # 2. parse file from file_mimetypes
-    if len(file_infos) > 1:
-        raise RemoteToolError(
-            "Multiple file MIME types are defined in the Response Schema. Currently, only single "
-            "file output is supported. Please ensure that only one file MIME type is defined in "
-            "the Response Schema.",
-            stage="Output parsing",
+    if is_json_response(response):
+
+        if tool_parameter_view is None:
+            return response.json()
+
+        return await parse_json_response(
+            tool_parameter_view,
+            response.json(),
+            file_manager=file_manager,
+            file_metadata=file_metadata
         )
-
-    if len(file_infos) == 1:
-        file_name = list(file_infos.keys())[0]
-        file_mimetype = file_infos[file_name].get("x-ebagent-file-mime-type", None)
-        if file_mimetype is not None:
-            file_suffix = get_file_suffix(file_mimetype)
-            content = response.content
-            if file_infos[file_name].get("format", None) == "byte":
-                content = base64.b64decode(content)
-
-            return await file_manager.create_file_from_bytes(
-                content,
-                f"tool-{file_suffix}",
-                file_purpose="assistants_output",
-                file_metadata=file_metadata,
-            )
 
     # 3. parse file by content_type
     content_type = response.headers.get("Content-Type", None)
     if content_type is not None:
         file_suffix = get_file_suffix(content_type)
-        return await file_manager.create_file_from_bytes(
+        local_file = await file_manager.create_file_from_bytes(
             response.content,
             f"tool-{file_suffix}",
             file_purpose="assistants_output",
             file_metadata=file_metadata,
         )
+        return {"file": local_file}
 
-    if is_json_response(response):
-        raise RemoteToolError(
-            "Can not parse file from response: the type of data from response is json",
-            stage="Output parsing",
-        )
     raise RemoteToolError(
         "Can not parse file from response: the type of data from response is not json, "
         "and can not find `Content-Disposition` or `Content-Type` field from response header.",

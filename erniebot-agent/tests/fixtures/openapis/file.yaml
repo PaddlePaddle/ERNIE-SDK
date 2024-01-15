@@ -1,0 +1,160 @@
+openapi: 3.0.1
+info:
+    title: title
+    description: description
+    version: "v1"
+servers:
+    - url: http://127.0.0.1:8081
+paths:
+    /file_v1:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v1"
+    /file_v2:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v2"
+    /file_v3:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v3"
+    /file_v4:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v4"
+    /file_v5:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v5"
+    /file_v6:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v6"
+components:
+    schemas:
+        # {file: ["base64", "base64-string"]}
+        file_v1:
+            type: object
+            properties:
+                file:
+                    type: array
+                    items:
+                        type: string
+                        format: byte
+                        x-ebagent-file-mime-type: image/png
+                    description: 单词本单词列表
+                not_file_field:
+                    type: string
+                    description: not_file_field
+        # {file: "base64-string"}
+        file_v2:
+            type: object
+            properties:
+                file:
+                    type: string
+                    description: file-content
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
+
+        # {file: {file: "base64-string"}}
+        file_v3:
+            type: object
+            properties:
+                file:
+                    type: object
+                    description: 单词本单词列表
+                    properties:
+                        file:
+                            type: string
+                            description: file-value
+                            format: byte
+                            x-ebagent-file-mime-type: image/png
+        # {file: [{file: "base64-string"}, ...]}
+        file_v4:
+            type: object
+            properties:
+                file:
+                    type: array
+                    description: 单词本单词列表
+                    items:
+                        type: object
+                        description: 单词本单词列表
+                        properties:
+                            file:
+                                type: string
+                                description: file-content
+                                format: byte
+                                x-ebagent-file-mime-type: image/png
+                            not_file_field: 
+                                type: string
+                                description: not-file-content
+
+        # {file: {file: [{file: "base64-string"}, ...]}}
+        file_v5:
+            type: object
+            properties:
+                file:
+                    type: object
+                    description: 单词本单词列表
+                    properties:
+                        file:
+                            type: array
+                            description: 单词本单词列表
+                            items:
+                                type: object
+                                description: 单词本单词列表
+                                properties:
+                                    file:
+                                        type: string
+                                        description: file-content
+                                        format: byte
+                                        x-ebagent-file-mime-type: image/png
+
+                                    not_file_field: 
+                                        type: string
+                                        description: not-file-content
+
+        # {first_file: "base64-string", second_file: "base64-string"}
+        file_v6:
+            type: object
+            properties:
+                first_file:
+                    type: string
+                    description: string
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
+                second_file:
+                    type: string
+                    description: string
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
