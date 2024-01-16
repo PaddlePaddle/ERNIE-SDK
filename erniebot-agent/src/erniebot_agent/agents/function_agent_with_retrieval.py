@@ -9,6 +9,7 @@ from erniebot_agent.agents.schema import (
     DEFAULT_FINISH_STEP,
     AgentResponse,
     AgentStep,
+    AgentStepWithFiles,
     EndStep,
     File,
     PluginStep,
@@ -24,14 +25,7 @@ from erniebot_agent.memory.messages import (
     Message,
     SearchInfo,
 )
-from erniebot_agent.file_io.base import File
-from erniebot_agent.messages import (
-    AIMessage,
-    FunctionMessage,
-    HumanMessage,
-    Message,
-    SystemMessage,
-)
+from erniebot_agent.messages import SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
@@ -343,24 +337,34 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             # Direct Prompt
             next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作,并且检索只允许调用一次")
+            chat_history.append(next_step_input)
             tool_resp = ToolResponse(json=tool_ret_json, files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
-                curr_step_output = await self._async_step(
-                    next_step_input, chat_history, actions_taken, files_involved
-                )
-                if curr_step_output is None:
-                    response = self._create_finished_response(chat_history, actions_taken, files_involved)
+                curr_step, new_messages = await self._step(chat_history)
+                chat_history.extend(new_messages)
+                if isinstance(curr_step, ToolStep):
+                    steps_taken.append(curr_step)
+
+                elif isinstance(curr_step, PluginStep):
+                    steps_taken.append(curr_step)
+                    # 预留 调用了Plugin之后不结束的接口
+
+                    # 此处为调用了Plugin之后直接结束的Plugin
+                    curr_step = DEFAULT_FINISH_STEP
+
+                if isinstance(curr_step, EndStep):  # plugin with action
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step=curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
                 num_steps_taken += 1
-            response = self._create_stopped_response(chat_history, actions_taken, files_involved)
+            response = self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
-            logger.info(
+            _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
             return await super().run(prompt, files)
@@ -376,7 +380,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         return results
 
 
-class ContextAugmentedFunctionalAgent(FunctionalAgent):
+class ContextAugmentedFunctionalAgent(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
@@ -385,13 +389,12 @@ class ContextAugmentedFunctionalAgent(FunctionalAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
             chat_history: List[Message] = []
-            actions_taken: List[AgentAction] = []
-            files_involved: List[AgentFile] = []
+            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -494,7 +497,7 @@ OPENAI_RAG_PROMPT = """检索结果:
 请根据以上检索结果回答检索语句的问题"""
 
 
-class FunctionalAgentWithQueryPlanning(FunctionalAgent):
+class FunctionalAgentWithQueryPlanning(FunctionAgent):
     def __init__(self, knowledge_base, top_k: int = 2, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.top_k = top_k
@@ -504,33 +507,42 @@ class FunctionalAgentWithQueryPlanning(FunctionalAgent):
         self.knowledge_base = knowledge_base
         self.rag_prompt = PromptTemplate(OPENAI_RAG_PROMPT, input_variables=["documents", "query"])
 
-    async def _run(self, prompt: str, files: Optional[List[File]] = None) -> AgentResponse:
-        # chat_history: List[Message] = []
-        actions_taken: List[AgentAction] = []
-        files_involved: List[AgentFile] = []
+    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         chat_history: List[Message] = []
+        steps_taken: List[AgentStep] = []
 
         # 会有无限循环调用工具的问题
         # next_step_input = HumanMessage(
         #     content=f"请选择合适的工具来回答：{prompt}，如果需要的话，可以对把问题分解成子问题，然后每个子问题选择合适的工具回答。"
         # )
-        next_step_input = HumanMessage(content=prompt)
+        run_input = await HumanMessage.create_with_files(
+            prompt, files or [], include_file_urls=self.file_needs_url
+        )
+        chat_history.append(run_input)
         num_steps_taken = 0
         while num_steps_taken < self.max_steps:
-            curr_step_output = await self._async_step(
-                next_step_input, chat_history, actions_taken, files_involved
-            )
-            if curr_step_output is None:
-                response = self._create_finished_response(chat_history, actions_taken, files_involved)
+            curr_step, new_messages = await self._step(chat_history)
+            chat_history.extend(new_messages)
+            if isinstance(curr_step, ToolStep):
+                steps_taken.append(curr_step)
+
+            elif isinstance(curr_step, PluginStep):
+                steps_taken.append(curr_step)
+                # 预留 调用了Plugin之后不结束的接口
+
+                # 此处为调用了Plugin之后直接结束的Plugin
+                curr_step = DEFAULT_FINISH_STEP
+
+            if isinstance(curr_step, EndStep):
+                response = self._create_finished_response(chat_history, steps_taken, curr_step)
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
                 return response
             num_steps_taken += 1
         # TODO(wugaosheng): Add manual planning and execute
-        # response = self._create_stopped_response(chat_history, actions_taken, files_involved)
-        return await self.plan_and_execute(prompt, actions_taken, files_involved)
+        return await self.plan_and_execute(prompt, steps_taken, curr_step)
 
-    async def plan_and_execute(self, prompt, actions_taken, files_involved):
+    async def plan_and_execute(self, prompt, steps_taken: List[AgentStep], curr_step: AgentStepWithFiles):
         step_input = HumanMessage(content=self.query_transform.format(prompt=prompt))
         fake_chat_history: List[Message] = [step_input]
         llm_resp = await self._async_run_llm_without_hooks(
@@ -563,7 +575,7 @@ class FunctionalAgentWithQueryPlanning(FunctionalAgent):
 
         output_message = llm_resp.message
         chat_history.append(output_message)
-        response = self._create_finished_response(chat_history, actions_taken, files_involved)
+        response = self._create_finished_response(chat_history, steps_taken, curr_step)
         self.memory.add_message(chat_history[0])
         self.memory.add_message(chat_history[-1])
         return response
