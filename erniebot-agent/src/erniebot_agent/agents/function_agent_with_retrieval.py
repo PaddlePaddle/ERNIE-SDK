@@ -25,7 +25,6 @@ from erniebot_agent.memory.messages import (
     Message,
     SearchInfo,
 )
-from erniebot_agent.messages import SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 from erniebot_agent.retrieval import BaizhongSearch
 from erniebot_agent.tools.base import Tool
@@ -338,7 +337,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             # Direct Prompt
             next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作,并且检索只允许调用一次")
             chat_history.append(next_step_input)
-            tool_resp = ToolResponse(json=tool_ret_json, files=[])
+            tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
 
             num_steps_taken = 0
@@ -405,10 +404,8 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
-            llm_resp = await self._async_run_llm_without_hooks(
-                messages=fake_chat_history,
-                functions=None,
-                system=self.system_message.content if self.system_message is not None else None,
+            llm_resp = await self.run_llm(
+                messages=fake_chat_history
             )
 
             # Get RAG results
@@ -428,12 +425,13 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             next_step_input = HumanMessage(
                 content=f"背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
             )
+            chat_history.append(next_step_input)
             # Knowledge Retrieval Tool
             action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
-            chat_history.append(next_step_input)
+            # next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            
             tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
             steps_taken.append(
                 ToolStep(
@@ -502,7 +500,6 @@ class FunctionalAgentWithQueryPlanning(FunctionAgent):
         super().__init__(**kwargs)
         self.top_k = top_k
         self.threshold = threshold
-        self.system_message = SystemMessage(content="您是一个智能体，旨在回答有关知识库的查询。请始终使用提供的工具回答问题。不要依赖先验知识。")
         self.query_transform = PromptTemplate(QUERY_DECOMPOSITION, input_variables=["prompt"])
         self.knowledge_base = knowledge_base
         self.rag_prompt = PromptTemplate(OPENAI_RAG_PROMPT, input_variables=["documents", "query"])
@@ -542,13 +539,11 @@ class FunctionalAgentWithQueryPlanning(FunctionAgent):
         # TODO(wugaosheng): Add manual planning and execute
         return await self.plan_and_execute(prompt, steps_taken, curr_step)
 
-    async def plan_and_execute(self, prompt, steps_taken: List[AgentStep], curr_step: AgentStepWithFiles):
+    async def plan_and_execute(self, prompt, steps_taken: List[AgentStep], curr_step: AgentStep):
         step_input = HumanMessage(content=self.query_transform.format(prompt=prompt))
         fake_chat_history: List[Message] = [step_input]
-        llm_resp = await self._async_run_llm_without_hooks(
+        llm_resp = await self.run_llm(
             messages=fake_chat_history,
-            functions=None,
-            system=self.system_message.content if self.system_message is not None else None,
         )
         output_message = llm_resp.message
 
@@ -567,15 +562,19 @@ class FunctionalAgentWithQueryPlanning(FunctionAgent):
             content=self.rag_prompt.format(query=prompt, documents=retrieval_results[:3])
         )
         chat_history: List[Message] = [step_input]
-        llm_resp = await self._async_run_llm_without_hooks(
-            messages=chat_history,
-            functions=None,
-            system=self.system_message.content if self.system_message is not None else None,
+        llm_resp = await self.run_llm(
+            messages=chat_history
         )
 
         output_message = llm_resp.message
         chat_history.append(output_message)
-        response = self._create_finished_response(chat_history, steps_taken, curr_step)
+        last_message = chat_history[-1]
+        response = AgentResponse(
+            text=last_message.content,
+            chat_history=chat_history,
+            steps=steps_taken,
+            status="FINISHED",
+        )
         self.memory.add_message(chat_history[0])
         self.memory.add_message(chat_history[-1])
         return response
