@@ -148,28 +148,43 @@ class DAGRetrievalAgent(Agent):
 
 
 SELFASK_RAG_PROMPT = """
+检索的历史：
+{% for message in history %}
+    {{message}}
+{% endfor %}
 检索结果:
 {% for doc in documents %}
     第{{loop.index}}个段落: {{doc['content']}}
 {% endfor %}
 检索问题：{{query}}
-请根据检索结果回答检索语句的问题.
-
+请根据检索结果回答检索语句的问题，如果不能回答，则输出对检索结果的总结。
 """
 
 EVALUATE_PROMPT = """
+检索的历史问题：
+{% for message in history %}
+   第{{loop.index}}个问题: {{message['query']}}
+{% endfor %}
 问题：{{query}}
 回答：{{answer}}
-请判断上面的答案是否能回答该问题. 如果不能回答，请给出理由，并生成一个新的简单子问题用于检索更多的信息帮助回答检索问题。
-按照下面的格式输出：{"info":"理由","accept": false,"sub query": "子问题"}
+请判断上面的答案是否能回答该问题. 如果不能回答，请给出理由，并根据检索的历史问题进一步细化问题，用于检索更多的信息帮助回答检索问题。
+按照下面的格式输出：{"info":"理由","accept": false,"sub query": ["子问题1","子问题2","子问题3"]}
 否则输出： {"info":"","accept": true}
 """
 
 
+# FINAL_SELFASK_RAG_PROMPT = """
+# 检索结果:
+# {% for doc in documents %}
+#     第{{loop.index}}个子query: {{doc['query']}}, 搜索结果：{{doc['info']}}
+# {% endfor %}
+# 检索语句: {{query}}
+# 请根据以上子query的搜索结果提供的信息回答检索语句的问题."""
+
 FINAL_SELFASK_RAG_PROMPT = """
 检索结果:
 {% for doc in documents %}
-    第{{loop.index}}个子query: {{doc['query']}}, 搜索结果：{{doc['info']}}
+    {{doc['info']}}
 {% endfor %}
 检索语句: {{query}}
 请根据以上子query的搜索结果提供的信息回答检索语句的问题."""
@@ -189,41 +204,15 @@ class SelfAskRetrievalAgent(Agent):
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
-        self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT, input_variables=["query", "documents"])
+        self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT, input_variables=["query", "documents","history"])
         self.final_rag_prompt = PromptTemplate(
             FINAL_SELFASK_RAG_PROMPT, input_variables=["documents", "query"]
         )
-        self.evaluate_prompt = PromptTemplate(EVALUATE_PROMPT, input_variables=["query", "answer"])
+        self.evaluate_prompt = PromptTemplate(EVALUATE_PROMPT, input_variables=["query", "answer", "history"])
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
-        sub_query = prompt
-        history = []
-        run_count = 0
-        while True:
-            documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
-            # pre answer generation
-            steps_input = HumanMessage(
-                content=self.query_transform.format(query=sub_query, documents=documents["documents"])
-            )
-            llm_resp = await self.run_llm(messages=[steps_input])
-            output_message = llm_resp.message
-            result = output_message.content
-
-            # check if the answer is acceptable
-            steps_input = HumanMessage(content=self.evaluate_prompt.format(query=sub_query, answer=result))
-            llm_resp = await self.run_llm(messages=[steps_input])
-            output_message = llm_resp.message
-            results = self._parse_results(output_message.content)
-
-            # decide if to continue to do query decomposition or not
-            history.append({"query": sub_query, "info": result})
-            run_count += 1
-            if results["accept"] or run_count >= MAX_RETRY:
-                break
-            else:
-                sub_query = results["sub query"]
-
+        history = await self.execute(prompt, steps_taken)
         # Final answer generation
         step_input = HumanMessage(content=self.final_rag_prompt.format(query=prompt, documents=history))
         chat_history: List[Message] = [step_input]
@@ -236,6 +225,43 @@ class SelfAskRetrievalAgent(Agent):
         self.memory.add_message(chat_history[-1])
         response = self._create_finished_response(chat_history, steps_taken)
         return response
+
+    async def execute(self, query: str, steps_taken: List[AgentStep]):
+        history = []
+        queries = [query]
+        run_count = 0
+        while True:
+            # pre answer generation
+            retrieval_results = []
+            for sub_query in queries:
+                documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
+                steps_input = HumanMessage(
+                    content=self.query_transform.format(query=sub_query, documents=documents["documents"], history=history)
+                )
+                llm_resp = await self.run_llm(messages=[steps_input])
+                output_message = llm_resp.message
+                result = output_message.content
+                retrieval_results.append(result)
+                history.append({"query": sub_query, "info": result})
+
+            # SelfAsk check if the answer is acceptable
+            steps_input = HumanMessage(content=self.evaluate_prompt.format(query=query, answer='\n'.join(retrieval_results), history=history))
+            llm_resp = await self.run_llm(messages=[steps_input])
+            output_message = llm_resp.message
+            verify_results = self._parse_results(output_message.content)
+            
+            # decide if to continue to do query decomposition or not
+            steps_taken.append(
+                AgentStep(
+                    info={"query": queries, "name": f"sub query results {run_count}"}, result=retrieval_results
+                )
+            )
+            run_count += 1
+            if verify_results["accept"] or run_count >= MAX_RETRY:
+                break
+            else:
+                queries = verify_results["sub query"]
+        return history
 
     def _create_finished_response(
         self,
