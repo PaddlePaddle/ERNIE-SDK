@@ -9,7 +9,6 @@ from erniebot_agent.agents.schema import (
     DEFAULT_FINISH_STEP,
     AgentResponse,
     AgentStep,
-    AgentStepWithFiles,
     EndStep,
     File,
     PluginStep,
@@ -404,9 +403,7 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
-            llm_resp = await self.run_llm(
-                messages=fake_chat_history
-            )
+            llm_resp = await self.run_llm(messages=fake_chat_history)
 
             # Get RAG results
             output_message = llm_resp.message
@@ -427,11 +424,11 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             )
             chat_history.append(next_step_input)
             # Knowledge Retrieval Tool
-            action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
+            # action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
             # next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
-            
+
             tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
             steps_taken.append(
                 ToolStep(
@@ -562,9 +559,7 @@ class FunctionalAgentWithQueryPlanning(FunctionAgent):
             content=self.rag_prompt.format(query=prompt, documents=retrieval_results[:3])
         )
         chat_history: List[Message] = [step_input]
-        llm_resp = await self.run_llm(
-            messages=chat_history
-        )
+        llm_resp = await self.run_llm(messages=chat_history)
 
         output_message = llm_resp.message
         chat_history.append(output_message)
