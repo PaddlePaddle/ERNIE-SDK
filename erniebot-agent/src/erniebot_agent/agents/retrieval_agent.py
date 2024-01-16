@@ -204,11 +204,15 @@ class SelfAskRetrievalAgent(Agent):
         self.knowledge_base = knowledge_base
         self.top_k = top_k
         self.threshold = threshold
-        self.query_transform = PromptTemplate(SELFASK_RAG_PROMPT, input_variables=["query", "documents","history"])
+        self.query_transform = PromptTemplate(
+            SELFASK_RAG_PROMPT, input_variables=["query", "documents", "history"]
+        )
         self.final_rag_prompt = PromptTemplate(
             FINAL_SELFASK_RAG_PROMPT, input_variables=["documents", "query"]
         )
-        self.evaluate_prompt = PromptTemplate(EVALUATE_PROMPT, input_variables=["query", "answer", "history"])
+        self.evaluate_prompt = PromptTemplate(
+            EVALUATE_PROMPT, input_variables=["query", "answer", "history"]
+        )
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
@@ -236,7 +240,9 @@ class SelfAskRetrievalAgent(Agent):
             for sub_query in queries:
                 documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
                 steps_input = HumanMessage(
-                    content=self.query_transform.format(query=sub_query, documents=documents["documents"], history=history)
+                    content=self.query_transform.format(
+                        query=sub_query, documents=documents["documents"], history=history
+                    )
                 )
                 llm_resp = await self.run_llm(messages=[steps_input])
                 output_message = llm_resp.message
@@ -245,15 +251,20 @@ class SelfAskRetrievalAgent(Agent):
                 history.append({"query": sub_query, "info": result})
 
             # SelfAsk check if the answer is acceptable
-            steps_input = HumanMessage(content=self.evaluate_prompt.format(query=query, answer='\n'.join(retrieval_results), history=history))
+            steps_input = HumanMessage(
+                content=self.evaluate_prompt.format(
+                    query=query, answer="\n".join(retrieval_results), history=history
+                )
+            )
             llm_resp = await self.run_llm(messages=[steps_input])
             output_message = llm_resp.message
             verify_results = self._parse_results(output_message.content)
-            
+
             # decide if to continue to do query decomposition or not
             steps_taken.append(
                 AgentStep(
-                    info={"query": queries, "name": f"sub query results {run_count}"}, result=retrieval_results
+                    info={"query": queries, "name": f"sub query results {run_count}"},
+                    result=retrieval_results,
                 )
             )
             run_count += 1
