@@ -193,14 +193,6 @@ class ResearchAgent(JsonUtil):
                     agent_name=self.name,
                     dir_path=self.dir_path,
                 )
-                report, path = await self.report_writing_tool(
-                    question=query,
-                    research_summary=research_summary,
-                    report_type=self.report_type,
-                    agent_role_prompt=self.role,
-                    agent_name=self.name + "no_outline",
-                    dir_path=self.dir_path,
-                )
                 break
             except Exception as e:
                 await self._callback_manager.on_tool_error(self, tool=self.report_writing_tool, error=e)
