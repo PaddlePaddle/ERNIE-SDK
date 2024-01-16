@@ -21,7 +21,6 @@ from inspect import isclass
 from typing import List, Optional, Type, get_args
 from uuid import uuid4
 
-import requests
 import responses
 from openapi_spec_validator.readers import read_from_filename
 from pydantic import Field
@@ -35,7 +34,7 @@ from erniebot_agent.tools.schema import (
     is_optional_type,
     json_type,
 )
-from erniebot_agent.tools.utils import parse_json_response, tool_response_contains_file
+from erniebot_agent.tools.utils import tool_response_contains_file
 from erniebot_agent.utils.common import create_enum_class
 
 
@@ -545,7 +544,6 @@ class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
     @responses.activate
     async def test_enum_v3(self):
         tool = self.toolkit.get_tool("enum_v3")
-
         responses.post(
             "http://example.com/enum_v3",
             json={"enum_field": {"enum_array": ["1", "2", "4"]}, "no_enum_field": "no_enum_value"},
