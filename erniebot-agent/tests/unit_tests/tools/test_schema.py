@@ -351,12 +351,12 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result["file"]), 2)
         file_0, file_1 = result["file"][0], result["file"][1]
 
-        file: File = file_manager.look_up_file_by_id(file_0)
+        file: File = await file_manager.look_up_file_by_id(file_0)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_0)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        file: File = file_manager.look_up_file_by_id(file_1)
+        file: File = await file_manager.look_up_file_by_id(file_1)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
@@ -377,7 +377,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         result = await tool()
         file_manager = GlobalFileManagerHandler().get()
 
-        file: File = file_manager.look_up_file_by_id(result["file"])
+        file: File = await file_manager.look_up_file_by_id(result["file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content)
         self.assertEqual(file_content, file_content_from_file_manager)
@@ -395,7 +395,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         result = await tool()
 
-        file: File = file_manager.look_up_file_by_id(result["file"]["file"])
+        file: File = await file_manager.look_up_file_by_id(result["file"]["file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content)
         self.assertEqual(file_content, file_content_from_file_manager)
@@ -414,12 +414,12 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_0, file_1 = result["file"][0]["file"], result["file"][1]["file"]
 
-        file: File = file_manager.look_up_file_by_id(file_0)
+        file: File = await file_manager.look_up_file_by_id(file_0)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_0)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        file: File = file_manager.look_up_file_by_id(file_1)
+        file: File = await file_manager.look_up_file_by_id(file_1)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
@@ -447,12 +447,12 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_0, file_1 = result["file"]["file"][0]["file"], result["file"]["file"][1]["file"]
 
-        file: File = file_manager.look_up_file_by_id(file_0)
+        file: File = await file_manager.look_up_file_by_id(file_0)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_0)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        file: File = file_manager.look_up_file_by_id(file_1)
+        file: File = await file_manager.look_up_file_by_id(file_1)
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
@@ -473,12 +473,12 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         result = await tool()
 
-        file: File = file_manager.look_up_file_by_id(result["first_file"])
+        file: File = await file_manager.look_up_file_by_id(result["first_file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_0)
         self.assertEqual(file_content, file_content_from_file_manager)
 
-        file: File = file_manager.look_up_file_by_id(result["second_file"])
+        file: File = await file_manager.look_up_file_by_id(result["second_file"])
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
