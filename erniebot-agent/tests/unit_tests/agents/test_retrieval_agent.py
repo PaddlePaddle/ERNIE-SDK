@@ -47,8 +47,6 @@ async def test_dag_retrieval_agent_run():
     )
     agent = DAGRetrievalAgent(
         knowledge_base=search_tool,
-        system="你是一个世界级的查询规划算法，能够将问题分解为依赖查询，这样答案就可以用来告知父问题。"
-        "不要直接回答问题，只需提供一个正确的计算图，其中包含好的具体问题和相关依赖关系。在调用函数之前，请一步一步地思考，以便更好地理解问题。",
         llm=llm,
         top_k=3,
         tools=[],
@@ -110,7 +108,6 @@ async def test_selfask_retrieval_agent_run():
 
     agent = SelfAskRetrievalAgent(
         knowledge_base=search_tool,
-        system="你是一个世界级的查询规划算法，能够将问题分解为子问题，在调用函数之前，请一步一步地思考，以便更好地理解问题。",
         llm=llm,
         top_k=3,
         tools=[],

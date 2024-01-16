@@ -19,5 +19,3 @@ class FakeMemory(object):
     def clear_chat_history(self):
         self._history.clear()
 
-    def set_system_message(self, message: SystemMessage):
-        pass
