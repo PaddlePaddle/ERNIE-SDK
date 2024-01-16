@@ -42,8 +42,7 @@ class BaizhongSearchTool(Tool):
     ) -> None:
         super().__init__()
         self.db = db
-        if name is not None:
-            self.name = name
+        self.name = name
         self.description = description
         self.few_shot_examples = []
         if input_type is not None:

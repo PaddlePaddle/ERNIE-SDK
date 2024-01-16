@@ -12,7 +12,7 @@ ZERO_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题,子�
 1.严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 问题：{{query}} 子问题："""
 
-FEW_SHOT_QUERT_DECOMPOSITION = """请把下面的问题分解成子问题,子问题的数量不超过5个，每个子问题必须足够简单。要求：
+FEW_SHOT_QUERY_DECOMPOSITION = """请把下面的问题分解成子问题,子问题的数量不超过5个，每个子问题必须足够简单。要求：
 严格按照【JSON格式】的形式输出：{"sub_query_1":"具体子问题1","sub_query_2":"具体子问题2"}
 示例:
 ##
@@ -71,7 +71,7 @@ class RetrievalAgent(Agent):
             raise Exception("Few shot retriever and context retriever shouldn't be used simutaneously")
         if few_shot_retriever:
             self.query_transform = PromptTemplate(
-                FEW_SHOT_QUERT_DECOMPOSITION, input_variables=["query", "documents"]
+                FEW_SHOT_QUERY_DECOMPOSITION, input_variables=["query", "documents"]
             )
         elif self.context_retriever:
             self.query_transform = PromptTemplate(
