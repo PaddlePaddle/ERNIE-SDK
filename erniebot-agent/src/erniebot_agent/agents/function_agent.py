@@ -22,10 +22,11 @@ from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.callback.callback_manager import CallbackManager
 from erniebot_agent.agents.callback.handlers.base import CallbackHandler
 from erniebot_agent.agents.schema import (
-    NO_ACTION_STEP,
+    DEFAULT_FINISH_STEP,
     AgentResponse,
     AgentStep,
-    NoActionStep,
+    EndInfo,
+    EndStep,
     PluginStep,
     ToolInfo,
     ToolResponse,
@@ -45,6 +46,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS: Final[int] = 5
+_logger = logging.getLogger(__name__)
 
 _logger = logging.getLogger(__name__)
 
@@ -106,9 +108,9 @@ class FunctionAgent(Agent):
                 beginning of each agent run.
 
         Raises:
-            ValueError: If `max_steps` is not positive.
-            RuntimeError: If tools are found in `first_tools` but not in
-                `tools`.
+            ValueError: if `max_steps` is non-positive.
+            RuntimeError: if tools in first_tools but not in tools list.
+
         """
         super().__init__(
             llm=llm,
@@ -161,7 +163,7 @@ class FunctionAgent(Agent):
 
         for tool in self._first_tools:
             curr_step, new_messages = await self._step(chat_history, selected_tool=tool)
-            if not isinstance(curr_step, NoActionStep):
+            if not isinstance(curr_step, EndStep):
                 chat_history.extend(new_messages)
                 steps_taken.append(curr_step)
                 num_steps_taken += 1
@@ -173,10 +175,18 @@ class FunctionAgent(Agent):
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
             chat_history.extend(new_messages)
-            if not isinstance(curr_step, NoActionStep):
+            if isinstance(curr_step, ToolStep):
                 steps_taken.append(curr_step)
-            if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                response = self._create_finished_response(chat_history, steps_taken)
+
+            elif isinstance(curr_step, PluginStep):
+                steps_taken.append(curr_step)
+                # 预留 调用了Plugin之后不结束的接口
+
+                # 此处为调用了Plugin之后直接结束的Plugin
+                curr_step = DEFAULT_FINISH_STEP
+
+            if isinstance(curr_step, EndStep):
+                response = self._create_finished_response(chat_history, steps_taken, curr_step)
                 self.memory.add_message(chat_history[0])
                 self.memory.add_message(chat_history[-1])
                 return response
@@ -230,19 +240,23 @@ class FunctionAgent(Agent):
                 new_messages,
             )
         else:
-            return NO_ACTION_STEP, new_messages
+            if output_message.clarify:
+                # `clarify` and [`function_call`, `plugin`(directly end)] will not appear at the same time
+                return EndStep(info=EndInfo(end_reason="CLARIFY"), result=None), new_messages
+            return DEFAULT_FINISH_STEP, new_messages
 
     def _create_finished_response(
         self,
         chat_history: List[Message],
         steps: List[AgentStep],
+        curr_step: EndStep,
     ) -> AgentResponse:
         last_message = chat_history[-1]
         return AgentResponse(
             text=last_message.content,
             chat_history=chat_history,
             steps=steps,
-            status="FINISHED",
+            status=curr_step.info["end_reason"],
         )
 
     def _create_stopped_response(
