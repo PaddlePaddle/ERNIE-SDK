@@ -21,7 +21,7 @@ class ImageGenerateTool(Tool):
 
     async def __call__(self, query: str) -> str:
         # output_dir = query
-        file_manager = await GlobalFileManagerHandler().get()
+        file_manager = GlobalFileManagerHandler().get()
         # self.file_manager.create_file_from_bytes()
         file = await file_manager.create_file_from_path("/Users/tanzhehao/Desktop/git.png")  # for mimic
         return {"output_image": file.id}
