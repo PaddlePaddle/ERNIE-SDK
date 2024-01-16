@@ -1,6 +1,3 @@
-from erniebot_agent.messages import SystemMessage
-
-
 class FakeMemory(object):
     def __init__(self):
         super().__init__()
@@ -15,9 +12,6 @@ class FakeMemory(object):
 
     def get_messages(self):
         return self._history[:]
-
-    def get_system_message(self):
-        return SystemMessage("System message")
 
     def clear_chat_history(self):
         self._history.clear()

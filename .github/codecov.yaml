@@ -1,0 +1,16 @@
+codecov:
+  notify:
+    require_ci_to_pass: yes
+
+coverage:
+  status:
+    project:
+      default:
+      # If overall project coverage < 75%, CI will fail.
+      target: 75%
+      informational: true
+    patch:
+      default:
+      # If lines adjusted coverage < 90%, CI will fail.
+      target: 90%
+      informational: true

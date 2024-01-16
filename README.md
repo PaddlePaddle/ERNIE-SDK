@@ -1,269 +1,127 @@
 <div align="center">
 
-<h1>ERNIE Bot SDK</h1>
+<h1>ERNIE SDK</h1>
 
-ERNIE Bot SDK提供便捷易用的接口，可以调用文心大模型的能力，包含文本创作、通用对话、语义向量、AI作图等。
+[开发文档](http://ernie-bot-agent.readthedocs.io/) | [智能体应用体验](https://aistudio.baidu.com/application/center?tag=agent)
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-Bot-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-Bot-SDK/releases)
+[![Version](https://img.shields.io/github/release/PaddlePaddle/ERNIE-SDK.svg)](https://github.com/PaddlePaddle/ERNIE-SDK/releases)
 ![Supported Python versions](https://img.shields.io/badge/python-3.8+-orange.svg)
 ![Supported OSs](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+[![Downloads](https://pepy.tech/badge/erniebot-agent)](https://pepy.tech/project/erniebot-agent)
+[![codecov](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK/branch/develop/graph/badge.svg)](https://codecov.io/gh/PaddlePaddle/ERNIE-SDK)
 
 </div>
 
-## 最新动态
+ERNIE SDK 仓库包含两个项目：ERNIE Bot Agent 和 ERNIE Bot。ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大模型智能体开发框架，结合了飞桨星河社区的丰富预置平台功能。ERNIE Bot 则为开发者提供便捷接口，轻松调用文心大模型的文本创作、通用对话、语义向量及AI作图等基础功能。
 
-* 支持文心一言ernie-bot-8k模型，输入token数量上限提升至7000。
-* 支持基于文心大模型4.0版本的文心一言ernie-bot-4，用于对话补全任务。
-* 增加`EBResponse.get_result`方法，支持从响应中取出关键信息。
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-SDK/assets/11987277/1fbcfbca-7695-4cca-9b4f-35a49d1d7c52)
 
-## 教程与文档
+## ERNIE Bot Agent
+
+### 特性
+
+- **编排能力**: ERNIE Bot Agent 基于文心大模型的 Function Calling 能力实现了多工具编排和自动调度功能，并且允许工具、插件、知识库等不同组件的混合编排。除了自动调度，我们未来还将支持更多的编排模式，例如手动编排、半自动编排，为开发者提供更大的灵活性。
+- **组件库**: ERNIE Bot Agent 为开发者提供了一个丰富的预置组件库：
+    - **预置工具**：只需一行代码，即可加载使用星河社区工具中心的30+预置工具。这些工具当前主要来自百度AI开发平台和飞桨特色PP系列模型。后续，我们会持续接入更多预置工具，也欢迎社区贡献。此外，工具模块也支持用户灵活自定义本地和远程工具。
+    - **知识库**：提供了开箱即用的基于文心百中的平台化知识库, 并允许开发者在二次开发的场景下使用[langchain](https://github.com/langchain-ai/langchain)、[llama_index](https://github.com/run-llama/llama_index)等主流开源库作为知识库。
+    - **文心一言插件**：未来将支持通过调用文心一言插件商城中的插件（开发中）
+- **低开发门槛**
+    - **零代码界面**：依托星河社区提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
+    - **简洁的代码**：10行代码就可以快速开发一个智能体应用。
+    - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
+
+### 安装
 
 <details>
-<summary>详情</summary>
+<summary>点击展开</summary>
 
-* **预备步骤**
-  * [安装](./docs/installation.md)
-  * [认证鉴权](./docs/authentication.md)
-  * [参数配置](./docs/configuration.md)
-  * [模型总览](./docs/models.md)
-* **使用指南**
-  * [对话补全（Chat Completion）](./docs/guides/chat_completion.md)
-  * [语义向量（Embedding）](./docs/guides/embedding.md)
-  * [文生图（Image Generation）](./docs/guides/image.md)
-  * [函数调用（Function Calling）](./docs/guides/function_calling.md)
-* **API文档**
-  * [ChatCompletion](./docs/api_reference/chat_completion.md)
-  * [Embedding](./docs/api_reference/embedding.md)
-  * [Image](./docs/api_reference/image.md)
+#### 源码安装
 
-</details>
-
-## 快速安装
-
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot SDK（要求Python >= 3.8)。
+执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
 
 ```shell
-pip install --upgrade erniebot
+git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
+cd ERNIE-SDK
+
+# 首先安装Ernie Bot
+pip install ./erniebot
+
+# 然后安装ERNIE Bot Agent
+pip install ./erniebot-agent            # 安装核心模块
+# pip install './erniebot-agent/.[all]'   # 也可以加上[all]一次性安装所有模块，包括gradio等依赖库
 ```
 
-## 快速使用
+#### 快速安装
 
-使用ERNIE Bot SDK之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](./docs/authentication.md)。
+执行如下命令，快速安装最新版本 ERNIE Bot Agent（要求Python >= 3.8)。
 
-### Python接口
+```shell
+# 安装核心模块
+pip install --upgrade erniebot-agent
+
+# 安装所有模块
+pip install --upgrade erniebot-agent[all]
+```
+</details>
+
+### 快速体验
+
+<details>
+<summary>点击展开</summary>
+
+下面的`quick_start.py`示例展示了如何使用 ERNIE Bot Agent 快速构建智能体应用。
 
 ```python
-import erniebot
+import asyncio
 
-# List supported models
-models = erniebot.Model.list()
+from erniebot_agent.agents import FunctionAgent
+from erniebot_agent.chat_models import ERNIEBot
+from erniebot_agent.tools import RemoteToolkit
 
-print(models)
-# ernie-bot             文心一言模型（ernie-bot）
-# ernie-bot-turbo       文心一言模型（ernie-bot-turbo）
-# ernie-bot-4           文心一言模型（ernie-bot-4）
-# ernie-bot-8k          文心一言模型（ernie-bot-8k）
-# ernie-text-embedding  文心百中语义模型
-# ernie-vilg-v2         文心一格模型
+async def main():
+    llm = ERNIEBot(model="ernie-3.5")  # 初始化大语言模型
+    tts_tool = RemoteToolkit.from_aistudio("texttospeech").get_tools()  # 获取语音合成工具
+    agent = FunctionAgent(llm=llm, tools=tts_tool)  # 创建智能体，集成语言模型与工具
 
-# Set authentication params
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
+    # 与智能体进行通用对话
+    result = await agent.run("你好，请自我介绍一下")
+    print(result.text)
+    # 模型返回类似如下结果：
+    # 你好，我叫文心一言，是百度研发的知识增强大语言模型，能够与人对话互动，回答问题，协助创作，高效便捷地帮助人们获取信息、知识和灵感。
 
-# Create a chat completion
-response = erniebot.ChatCompletion.create(model="ernie-bot", messages=[{"role": "user", "content": "你好，请介绍下你自己"}])
+    # 请求智能体根据输入文本，自动调用语音合成工具
+    result = await agent.run("把上一轮的自我介绍转成语音")
+    print(result.text)
+    # 模型返回类似如下结果：
+    # 根据你的请求，我已经将自我介绍转换为语音文件，文件名为file-local-c70878b4-a3f6-11ee-95d0-506b4b225bd6。
+    # 你可以使用任何支持播放音频文件的设备或软件来播放这个文件。如果你需要进一步操作或有其他问题，请随时告诉我。
 
-print(response.get_result())
+    # 将智能体输出的音频文件写入test.wav, 可以尝试播放
+    audio_file = result.steps[-1].output_files[0]
+    await audio_file.write_contents_to("./test.wav")
+
+asyncio.run(main())
 ```
 
-### 命令行接口（CLI）
-
-```bash
-# List supported models
-erniebot api model.list
-
-# Set authentication params for chat_completion.create
-export EB_API_TYPE="aistudio"
-export EB_ACCESS_TOKEN="<access-token-for-aistudio>"
-
-# Create a chat completion (using ernie-bot, ernie-bot-turbo, etc.)
-erniebot api chat_completion.create --model ernie-bot --message user "请介绍下你自己"
-
-# Set authentication params for image.create
-export EB_API_TYPE="yinian"
-export EB_ACCESS_TOKEN="<access-token-for-yinian>"
-
-# Generate images via ERNIE-ViLG
-erniebot api image.create --model ernie-vilg-v2 --prompt "画一只驴肉火烧" --height 1024 --width 1024 --image-num 1
+运行上述代码，大家首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后执行以下命令:
+```shell
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export EB_AGENT_LOGGING_LEVEL=info
+python quick_start.py
 ```
+</details>
 
-## 典型示例
+### 详细教程
 
-### 对话补全（Chat Completion）
+教程[链接](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
 
-ERNIE Bot SDK提供具备对话补全能力的ernie-bot、ernie-bot-turbo、ernie-bot-4、ernie-bot-8k等文心一言系列模型。
+## ERNIE Bot
 
-不同模型在效果、速度等方面各有千秋，大家可以根据实际场景的需求选择合适的模型。
+ERNIE Bot 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
 
-以下是调用ernie-bot模型进行多轮对话的示例：
-
-```python
-import erniebot
-
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
-
-response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
-    messages=[{
-        "role": "user",
-        "content": "请问你是谁？"
-    }, {
-        "role": "assistant",
-        "content":
-        "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。"
-    }, {
-        "role": "user",
-        "content": "我在深圳，周末可以去哪里玩？"
-    }])
-
-print(response.get_result())
-```
-
-### 语义向量（Embedding）
-
-ERNIE Bot SDK提供用于生成文本的向量表示的ernie-text-embedding模型。
-
-该模型基于文心大模型，使用海量数据训练得到，为[文心百中](https://wenxin.baidu.com/baizhong/index/)系统提供关键能力。该模型可以将输入文本转为384维浮点数表示的向量。这些向量具备精准的语义表达能力，可用于度量文本之间的语义相似度。
-
-大家可以使用以下代码生成句子的向量表示：
-
-```python
-import erniebot
-
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
-
-response = erniebot.Embedding.create(
-    model="ernie-text-embedding",
-    input=[
-        "我是百度公司开发的人工智能语言模型，我的中文名是文心一言，英文名是ERNIE-Bot，可以协助您完成范围广泛的任务并提供有关各种主题的信息，比如回答问题，提供定义和解释及建议。如果您有任何问题，请随时向我提问。",
-        "2018年深圳市各区GDP"
-        ])
-
-print(response.get_result())
-```
-
-大家可以登陆[文心百中体验中心](https://wenxin.baidu.com/baizhong/knowledgesearch)，体验更多大模型语义搜索的能力。
-
-### 文生图（Image Generation）
-
-ERNIE Bot SDK提供具备文生图能力的ernie-vilg-v2大模型。
-
-该模型具备丰富的风格与强大的中文理解能力，支持生成多种尺寸的图片。
-
-```python
-import erniebot
-
-erniebot.api_type = "yinian"
-erniebot.access_token = "<access-token-for-yinian>"
-
-response = erniebot.Image.create(
-    model="ernie-vilg-v2",
-    prompt="雨后的桃花，8k，辛烷值渲染",
-    width=512,
-    height=512
-)
-
-print(response.get_result())
-```
-
-<img width="512" src="https://github.com/PaddlePaddle/ERNIE-Bot-SDK/assets/1371212/73911c97-ef42-4803-8dc6-d385486c128c" />
-
-我们推荐两个撰写文生图提示词的文档，大家可以组合使用，创作出更加精美的图片。
-
-* [AI作画-基础版使用指南](https://ai.baidu.com/ai-doc/NLP/qlakgh129)
-* [AI作画-高级版使用指南](https://ai.baidu.com/ai-doc/NLP/4libyluzs)
-
-大家也可登陆[文心一格](https://yige.baidu.com/)平台，体验更多AI艺术与创意辅助的能力。
-
-### 函数调用（Function Calling）
-
-ERNIE Bot SDK提供函数调用功能，即由大模型根据对话上下文确定何时以及如何调用函数。
-
-借由函数调用，用户可以从大模型获取结构化数据，进而利用编程手段将大模型与已有的内外部API结合以构建应用。
-
-以下是调用ernie-bot模型进行函数调用的示例：
-
-```python
-import erniebot
-
-erniebot.api_type = "aistudio"
-erniebot.access_token = "<access-token-for-aistudio>"
-
-response = erniebot.ChatCompletion.create(
-    model="ernie-bot",
-    messages=[{
-        "role": "user",
-        "content": "深圳市今天气温多少摄氏度？",
-    }, ],
-    functions = [
-        {
-            "name": "get_current_temperature",
-            "description": "获取指定城市的气温",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "城市名称",
-                    },
-                    "unit": {
-                        "type": "string",
-                        "enum": [
-                            "摄氏度",
-                            "华氏度",
-                        ],
-                    },
-                },
-                "required": [
-                    "location",
-                    "unit",
-                ],
-            },
-            "responses": {
-                "type": "object",
-                "properties": {
-                    "temperature": {
-                        "type": "integer",
-                        "description": "城市气温",
-                    },
-                    "unit": {
-                        "type": "string",
-                        "enum": [
-                            "摄氏度",
-                            "华氏度",
-                        ],
-                    },
-                },
-            },
-        },
-    ],
-    stream=False)
-print(response.get_result())
-```
-
-## Gradio Demos
-
-为了让用户更全面、更直观地了解ERNIE Bot SDK的各项功能，我们基于Gradio开发了一系列带有web用户界面的演示应用。请参阅[说明文档](./examples/README.md)，尝试对话补全、语义向量、文生图、函数调用等可交互例子。
-
-<img width="1296" src="https://user-images.githubusercontent.com/19339784/264367116-600c34b9-0103-4fb7-bbe5-6d71ddc6af09.gif" />
-
-## Acknowledgement
-
-我们借鉴了[OpenAI Python Library](https://github.com/openai/openai-python)的部分API设计，在此对OpenAI Python Library作者及开源社区表示感谢。
+更多详细的使用指南，请参阅[ERNIE Bot](./erniebot/README.md)。
 
 ## License
 
-ERNIE Bot SDK遵循Apache-2.0开源协议。
+ERNIE Bot Agent 和 ERNIE Bot 遵循Apache-2.0开源协议。

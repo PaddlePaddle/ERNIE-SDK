@@ -1,6 +1,11 @@
-pre-commit
-pytest
-jinja2
-pytest-asyncio
 fastapi
+pytest == 7.4.2
+pytest-asyncio
+pytest-cov
 uvicorn
+pymupdf
+beautifulsoup4
+types-beautifulsoup4
+lxml
+langchain-community
+arxiv

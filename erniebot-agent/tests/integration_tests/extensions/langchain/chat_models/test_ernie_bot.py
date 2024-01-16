@@ -3,7 +3,6 @@
 from typing import List
 
 import pytest
-from erniebot_agent.extensions.langchain.chat_models import ErnieBotChat
 from langchain.schema import ChatGeneration, LLMResult
 from langchain.schema.messages import (
     AIMessage,
@@ -11,6 +10,8 @@ from langchain.schema.messages import (
     FunctionMessage,
     HumanMessage,
 )
+
+from erniebot_agent.extensions.langchain.chat_models import ErnieBotChat
 
 
 def test_erniebot_call() -> None:
@@ -70,7 +71,7 @@ async def test_erniebot_astream() -> None:
 
 def test_erniebot_params() -> None:
     """Test setting parameters."""
-    chat = ErnieBotChat(model="ernie-bot-turbo", temperature=0.7)
+    chat = ErnieBotChat(model="ernie-turbo", temperature=0.7)
     message = HumanMessage(content="Hello")
     response = chat([message])
     assert isinstance(response, BaseMessage)
