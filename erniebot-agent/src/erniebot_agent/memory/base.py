@@ -103,10 +103,7 @@ class Memory:
 
     def get_messages(self) -> List[Message]:
         """Get all the messages in memory."""
-        if self.msg_manager.system_message is not None:
-            return [self.msg_manager.system_message] + self.msg_manager.retrieve_messages()
-        else:
-            return self.msg_manager.retrieve_messages()
+        return self.msg_manager.retrieve_messages()
 
     def clear_chat_history(self):
         """Reset the memory."""
