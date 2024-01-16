@@ -172,15 +172,6 @@ EVALUATE_PROMPT = """
 否则输出： {"info":"","accept": true}
 """
 
-
-# FINAL_SELFASK_RAG_PROMPT = """
-# 检索结果:
-# {% for doc in documents %}
-#     第{{loop.index}}个子query: {{doc['query']}}, 搜索结果：{{doc['info']}}
-# {% endfor %}
-# 检索语句: {{query}}
-# 请根据以上子query的搜索结果提供的信息回答检索语句的问题."""
-
 FINAL_SELFASK_RAG_PROMPT = """
 检索结果:
 {% for doc in documents %}
