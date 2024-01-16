@@ -19,29 +19,11 @@ ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，�
 
 ## 教程与文档
 
-<details>
-<summary>详情</summary>
-
-* **预备步骤**
-  * [安装](../docs/sdk/installation.md)
-  * [认证鉴权](../docs/sdk/authentication.md)
-  * [参数配置](../docs/sdk/configuration.md)
-  * [模型总览](../docs/sdk/models.md)
-* **使用指南**
-  * [对话补全（Chat Completion）](../docs/sdk/guides/chat_completion.md)
-  * [语义向量（Embedding）](../docs/sdk/guides/embedding.md)
-  * [文生图（Image Generation）](../docs/sdk/guides/image.md)
-  * [函数调用（Function Calling）](../docs/sdk/guides/function_calling.md)
-* **API文档**
-  * [ChatCompletion](../docs/sdk/api_reference/chat_completion.md)
-  * [Embedding](../docs/sdk/api_reference/embedding.md)
-  * [Image](../docs/sdk/api_reference/image.md)
-
-</details>
+请阅读[ERNIE Bot文档](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/sdk/)。
 
 ## 快速安装
 
-执行如下命令，快速安装Python语言的最新版本ERNIE Bot（要求Python >= 3.8)。
+执行如下命令，快速安装最新版本的ERNIE Bot（要求Python >= 3.8)。
 
 ```shell
 pip install --upgrade erniebot
@@ -49,7 +31,7 @@ pip install --upgrade erniebot
 
 ## 快速使用
 
-使用ERNIE Bot之前，请首先申请并设置鉴权参数。具体请参考[认证鉴权](../docs/sdk/authentication.md)。
+使用ERNIE Bot之前，请首先申请用户凭证并设置鉴权参数。
 
 ### Python接口
 
