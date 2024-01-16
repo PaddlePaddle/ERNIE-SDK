@@ -319,7 +319,7 @@ async def parse_response(
             file_purpose="assistants_output",
             file_metadata=file_metadata,
         )
-        return {"file": local_file}
+        return {"file": local_file.id}
 
     raise RemoteToolError(
         "Can not parse file from response: the type of data from response is not json, "

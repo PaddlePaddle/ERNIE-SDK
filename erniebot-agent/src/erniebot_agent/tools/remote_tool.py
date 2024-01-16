@@ -130,9 +130,15 @@ class RemoteTool(BaseTool):
                 "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。"
             )
 
-        # TODO(wj-Mcat): open the tool-response valdiation with pydantic model
-        # if self.tool_view.returns is not None:
-        #     tool_response = dict(self.tool_view.returns(**tool_response))
+        if self.tool_view.returns is not None:
+            try:
+                tool_response = self.tool_view.returns(**tool_response).model_dump(mode="json")
+            except Exception as e:
+                _logger.warning(
+                    "Unable to validate the 'tool_response' against the schema defined in the YAML file. "
+                    f"The specific error encountered is: '<{e}>'. "
+                    "As a result, the original response from the tool will be used.",
+                )
         return tool_response
 
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:
@@ -141,7 +147,8 @@ class RemoteTool(BaseTool):
         return await self.__post_process__(tool_response)
 
     async def send_request(self, tool_arguments: Dict[str, Any]) -> dict:
-        url = self.server_url + self.tool_view.uri + "?version=" + self.version
+        url = "/".join([self.server_url.strip("/"), self.tool_view.uri.strip("/")])
+        url += "?version=" + self.version
 
         headers = deepcopy(self.headers)
         headers["Content-Type"] = self.tool_view.parameters_content_type
@@ -169,6 +176,7 @@ class RemoteTool(BaseTool):
             raise RemoteToolError(
                 f"Unsupported content type: {self.tool_view.parameters_content_type}", stage="Executing"
             )
+
         if self.tool_view.method == "get":
             response = requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":

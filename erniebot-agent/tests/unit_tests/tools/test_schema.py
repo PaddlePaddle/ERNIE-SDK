@@ -506,3 +506,76 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
+
+
+class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapis/enum.yaml")
+
+    @responses.activate
+    async def test_enum_v1(self):
+        tool = self.toolkit.get_tool("enum_v1")
+
+        responses.post(
+            "http://example.com/enum_v1",
+            json={"enum_field": "2", "no_enum_field": "no_enum_value"},
+        )
+        result = await tool()
+        self.assertEqual(result["enum_field"], "2")
+        self.assertEqual(result["no_enum_field"], "no_enum_value")
+
+    @responses.activate
+    async def test_enum_v1_with_wrong_dtype(self):
+        tool = self.toolkit.get_tool("enum_v1")
+
+        responses.post(
+            "http://example.com/enum_v1_dtype",
+            json={"enum_field": 2, "no_enum_field": "no_enum_value"},
+        )
+
+        tool.tool_view.uri = "enum_v1_dtype"
+        with self.assertLogs("erniebot_agent.tools.remote_tool", level="INFO") as cm:
+            result = await tool()
+
+        logs = [item for item in cm.output if "Unable to validate the 'tool_response'" in item]
+
+        # test raise warning log msg
+        self.assertEqual(len(logs), 1)
+        warning_log_msg = (
+            "Unable to validate the 'tool_response' against the schema defined "
+            "in the YAML file. The specific error encountered is: '<1 validation error for "
+        )
+        self.assertIn(warning_log_msg, logs[0])
+
+        self.assertEqual(result["enum_field"], 2)
+        self.assertEqual(result["no_enum_field"], "no_enum_value")
+
+    @responses.activate
+    async def test_enum_v2(self):
+        tool = self.toolkit.get_tool("enum_v2")
+
+        responses.post(
+            "http://example.com/enum_v2",
+            json={"enum_field": ["1", "2", "4"], "no_enum_field": "no_enum_value"},
+        )
+
+        tool.tool_view.uri = "enum_v2"
+        result = await tool()
+
+        self.assertEqual(result["enum_field"], ["1", "2", "4"])
+        self.assertEqual(result["no_enum_field"], "no_enum_value")
+
+    @responses.activate
+    async def test_enum_v3(self):
+        tool = self.toolkit.get_tool("enum_v3")
+
+        responses.post(
+            "http://example.com/enum_v3",
+            json={"enum_field": {"enum_array": ["1", "2", "4"]}, "no_enum_field": "no_enum_value"},
+        )
+
+        tool.tool_view.uri = "enum_v3"
+        result = await tool()
+
+        self.assertEqual(result["enum_field"]["enum_array"], ["1", "2", "4"])
+        self.assertEqual(result["no_enum_field"], "no_enum_value")
