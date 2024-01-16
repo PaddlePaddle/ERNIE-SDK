@@ -6,10 +6,11 @@ from pydantic import Field
 
 from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.agents.schema import (
+    DEFAULT_FINISH_STEP,
     AgentResponse,
     AgentStep,
+    EndStep,
     File,
-    NoActionStep,
     PluginStep,
     ToolAction,
     ToolInfo,
@@ -148,7 +149,9 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 await self._callback_manager.on_tool_error(agent=self, tool=self.search_tool, error=e)
                 raise
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            response = self._create_finished_response(chat_history, steps_taken)
+            response = self._create_finished_response(
+                chat_history, steps_taken, curr_step=DEFAULT_FINISH_STEP
+            )
             self.memory.add_message(chat_history[0])
             self.memory.add_message(chat_history[-1])
             return response
@@ -249,10 +252,18 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             while num_steps_taken < self.max_steps:
                 curr_step, new_messages = await self._step(chat_history)
                 chat_history.extend(new_messages)
-                if not isinstance(curr_step, NoActionStep):
+                if isinstance(curr_step, ToolStep):
                     steps_taken.append(curr_step)
-                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+
+                elif isinstance(curr_step, PluginStep):
+                    steps_taken.append(curr_step)
+                    # 预留 调用了Plugin之后不结束的接口
+
+                    # 此处为调用了Plugin之后直接结束的Plugin
+                    curr_step = DEFAULT_FINISH_STEP
+
+                if isinstance(curr_step, EndStep):
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response
@@ -351,10 +362,18 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             while num_steps_taken < self.max_steps:
                 curr_step, new_messages = await self._step(chat_history)
                 chat_history.extend(new_messages)
-                if not isinstance(curr_step, NoActionStep):
+                if isinstance(curr_step, ToolStep):
                     steps_taken.append(curr_step)
-                if isinstance(curr_step, (NoActionStep, PluginStep)):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken)
+
+                elif isinstance(curr_step, PluginStep):
+                    steps_taken.append(curr_step)
+                    # 预留 调用了Plugin之后不结束的接口
+
+                    # 此处为调用了Plugin之后直接结束的Plugin
+                    curr_step = DEFAULT_FINISH_STEP
+
+                if isinstance(curr_step, EndStep):  # plugin with action
+                    response = self._create_finished_response(chat_history, steps_taken, curr_step=curr_step)
                     self.memory.add_message(chat_history[0])
                     self.memory.add_message(chat_history[-1])
                     return response

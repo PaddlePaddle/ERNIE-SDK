@@ -1,0 +1,6 @@
+gradio
+jsonlines
+langchain
+scikit-learn
+markdown
+WeasyPrint==52.5

@@ -102,11 +102,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         else:
             self._callback_manager = CallbackManager(callbacks)
         self._file_manager = file_manager or get_default_file_manager()
-        if plugins is not None:
-            raise ValueError("Currently, plugins are not supported.")
         self._plugins = plugins
-        if plugins is not None:
-            raise NotImplementedError("The use of plugins is not supported yet.")
         self._init_file_needs_url()
         self._is_running = False
 
@@ -256,7 +252,7 @@ class Agent(GradioMixin, BaseAgent[BaseERNIEBot]):
         input_files = await file_manager.sniff_and_extract_files_from_obj(parsed_tool_args)
         tool_ret = await tool(**parsed_tool_args)
         if isinstance(tool_ret, dict):
-            output_files = await file_manager.sniff_and_extract_files_from_obj(tool_ret.values())
+            output_files = await file_manager.sniff_and_extract_files_from_obj(tool_ret)
         else:
             output_files = []
         tool_ret_json = json.dumps(tool_ret, ensure_ascii=False)

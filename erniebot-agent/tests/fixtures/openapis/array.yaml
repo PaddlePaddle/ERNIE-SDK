@@ -1,0 +1,97 @@
+openapi: 3.0.1
+info:
+    title: title
+    description: description
+    version: "v1"
+servers:
+    - url: http://127.0.0.1:8081
+paths:
+    /array_int_v1:
+        get:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/array_init_v1"
+    /array_int_v2:
+        get:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/array_init_v2"
+    # /array_int_v3:
+    #     get:
+    #         responses:
+    #             "200":
+    #                 description: 列表展示完成
+    #                 content:
+    #                     application/json:
+    #                         schema:
+    #                             $ref: "#/components/schemas/array_init_v3"
+    /array_int_v4:
+        get:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/array_init_v4"
+components:
+    schemas:
+        # {array_init: [1, 2, 3]}
+        array_init_v1:
+            type: object
+            properties:
+                array_init:
+                    type: array
+                    items:
+                        type: string
+                    description: "array_init_v1"
+        # {array_init: {array_init: [1, 2, 3, ...]}}
+        array_init_v2:
+            type: object
+            properties:
+                array_init:
+                    type: object
+                    description: array_init_v2
+                    properties:
+                        array_init:
+                            type: string
+                            description: string
+        # 二维数组：比较复杂，需要讨论是否要支持这种数据类型
+        # {array_init: [[1, 2, 3], [4, 5, 6]]}}
+        # array_init_v3:
+        #     type: object
+        #     properties:
+        #         array_init:
+        #             type: array
+        #             description: 单词本单词列表
+        #             items:
+        #                 type: array
+        #                 description: 单词本单词列表
+        #                 items:
+        #                     type: string
+        #                     description: int
+        # {array_init: [{a: 0, b: "0"}, {a: 0, b: "0"}]}}
+        array_init_v4:
+            type: object
+            properties:
+                array_init:
+                    type: array
+                    description: 单词本单词列表
+                    items:
+                        type: object
+                        description: 单词本单词列表
+                        properties:
+                            a:
+                                type: string
+                                description: int-value
+                            b:
+                                type: number
+                                description: int-value
