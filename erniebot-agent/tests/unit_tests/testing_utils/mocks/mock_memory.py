@@ -1,4 +1,3 @@
-from erniebot_agent.memory.messages import SystemMessage
 
 
 class FakeMemory(object):
@@ -18,4 +17,3 @@ class FakeMemory(object):
 
     def clear_chat_history(self):
         self._history.clear()
-
