@@ -32,7 +32,7 @@ query_graph:
 """
 
 
-RAG_PROMPT = """
+SUB_RAG_PROMPT = """
 先验信息:
 {% for doc in pre_context %}
     {{doc}}
@@ -66,7 +66,7 @@ class DAGRetrievalAgent(Agent):
         self.threshold = threshold
         self.query_transform = PromptTemplate(GRAPH_PROMPT, input_variables=["query"])
         self.sub_rag_prompt = PromptTemplate(
-            RAG_PROMPT, input_variables=["documents", "query", "pre_context"]
+            SUB_RAG_PROMPT, input_variables=["documents", "query", "pre_context"]
         )
         self.final_rag_prompt = PromptTemplate(FINAL_RAG_PROMPT, input_variables=["documents", "query"])
 
@@ -140,7 +140,6 @@ class DAGRetrievalAgent(Agent):
         )
 
     def _parse_results(self, results):
-        print(results)
         left_index = results.find("{")
         right_index = results.rfind("}")
         return json.loads(results[left_index : right_index + 1])
