@@ -207,6 +207,7 @@ class SelfAskRetrievalAgent(Agent):
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
         steps_taken: List[AgentStep] = []
+        # Do self ask
         history = await self.execute(prompt, steps_taken)
         # Final answer generation
         step_input = HumanMessage(content=self.final_rag_prompt.format(query=prompt, documents=history))
@@ -224,9 +225,9 @@ class SelfAskRetrievalAgent(Agent):
     async def execute(self, query: str, steps_taken: List[AgentStep]):
         history : List[Dict]= []
         queries = [query]
-        run_count = 0
+        loop_count = 0
         while True:
-            # pre answer generation
+            # Pre answer generation
             retrieval_results = []
             for sub_query in queries:
                 documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
@@ -251,15 +252,15 @@ class SelfAskRetrievalAgent(Agent):
             output_message = llm_resp.message
             verify_results = self._parse_results(output_message.content)
 
-            # decide if to continue to do query decomposition or not
+            # Decide if to continue to do query decomposition or not
             steps_taken.append(
                 AgentStep(
-                    info={"query": queries, "name": f"sub query results {run_count}"},
+                    info={"query": queries, "name": f"sub query results {loop_count}"},
                     result=retrieval_results,
                 )
             )
-            run_count += 1
-            if verify_results["accept"] or run_count >= MAX_RETRY:
+            loop_count += 1
+            if verify_results["accept"] or loop_count >= MAX_RETRY:
                 break
             else:
                 queries = verify_results["sub query"]
