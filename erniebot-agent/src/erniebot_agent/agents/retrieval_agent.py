@@ -44,8 +44,7 @@ RAG_PROMPT = """
 检索语句: {{query}}
 请根据以上检索结果回答检索语句的问题，如果不能回答，则回复{no_answer}"""
 
-FINAL_RAG_PROMPT = """
-检索结果:
+FINAL_RAG_PROMPT = """检索结果:
 {% for doc in documents %}
     第{{loop.index}}个子query: {{doc['query']}}, 搜索结果：{{doc['response']}}
 {% endfor %}
@@ -101,7 +100,7 @@ class DAGRetrievalAgent(Agent):
             sub_query = item["question"]
             idx = item["id"]
             dependencies = item["dependencies"]
-            # sub query search
+            # Sub query search
             documents = await self.knowledge_base(sub_query, top_k=self.top_k, filters=None)
             # SubQuery Answer generation
             cur_contexts = []
@@ -172,8 +171,7 @@ EVALUATE_PROMPT = """
 否则输出： {"info":"","accept": true}
 """
 
-FINAL_SELFASK_RAG_PROMPT = """
-检索结果:
+FINAL_SELFASK_RAG_PROMPT = """检索结果:
 {% for doc in documents %}
     {{doc['info']}}
 {% endfor %}
