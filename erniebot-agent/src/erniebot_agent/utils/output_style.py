@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from erniebot_agent.memory.messages import Message
 from erniebot_agent.utils.json import to_pretty_json
@@ -36,7 +36,7 @@ class ColoredContent:
 
     def __init__(
         self,
-        text: Union[str, Message, List[Message]],
+        text: Union[str, Message],
         role: Optional[str] = None,
         color: Optional[str] = None,
     ):
@@ -78,16 +78,9 @@ class ColoredContent:
         else:
             return _COLORS[color] + str(text) + _COLORS["RESET"]
 
-    def _colorize_msg(self, message: Union[Message, List[Message]], role_color: dict) -> str:
+    def _colorize_msg(self, message: Message, role_color: dict) -> str:
         max_length = self.max_length if self.max_length else 150
-        res = ""
-        if isinstance(message, list):
-            for msg in message:
-                res += self._colorize_msg_by_role(msg, role_color, max_length)
-                res += "\n"
-        else:
-            res = self._colorize_msg_by_role(message, role_color, max_length)
-        return res
+        return self._colorize_msg_by_role(message, role_color, max_length)
 
     def _colorize_msg_by_role(self, msg: Message, role_color: dict, max_length: int):
         res = ""
