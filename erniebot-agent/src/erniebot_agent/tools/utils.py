@@ -208,6 +208,89 @@ async def create_file_from_data(
     )
 
 
+async def get_content_by_file_id(
+    file_id: str, format: str, mime_type: str, file_manager: FileManager
+) -> bytes:
+    file_id = file_id.replace("<file>", "").replace("</file>", "")
+    file = file_manager.look_up_file_by_id(file_id)
+    byte_str = await file.read_contents()
+    return byte_str
+
+
+@no_type_check
+async def parse_json_request(
+    view: Type[ToolParameterView], json_dict, file_manager: FileManager
+) -> Dict[str, Any]:
+    result = {}
+    for field_name, model_field in view.model_fields.items():
+        list_type = get_typing_list_type(model_field.annotation)
+
+        if list_type is None and model_field.json_schema_extra is not None:
+            if not isinstance(model_field.json_schema_extra, dict):
+                raise RemoteToolError(
+                    f"`json_schema_extra` field must be dict type, but got "
+                    f"<{type(model_field.json_schema_extra)}> in model_field<{field_name}>. "
+                    "Please check the format of yaml in current tool."
+                )
+
+            if model_field.annotation == str and "x-ebagent-file-mime-type" in model_field.json_schema_extra:
+                format = model_field.json_schema_extra.get("format", None)
+                mime_type = model_field.json_schema_extra.get("x-ebagent-file-mime-type", None)
+
+                if format is not None and mime_type is not None:
+                    file_content = await get_content_by_file_id(
+                        json_dict[field_name], format=format, mime_type=mime_type, file_manager=file_manager
+                    )
+                    result[field_name] = file_content
+            elif issubclass(model_field.annotation, ToolParameterView):
+                files = await parse_json_request(
+                    model_field.annotation,
+                    json_dict[field_name],
+                    file_manager=file_manager,
+                )
+                if len(files) > 0:
+                    result[field_name] = files
+
+        else:
+            array_json_schema = model_field.json_schema_extra.get("array_items_schema", None)
+            sub_class = get_args(model_field.annotation)[0]
+            if (
+                list_type == "string"
+                and array_json_schema is not None
+                and array_json_schema.get("x-ebagent-file-mime-type", None)
+            ):
+                format = array_json_schema["format"]
+                mime_type = array_json_schema["x-ebagent-file-mime-type"]
+                files = []
+                for file_id in json_dict[field_name]:
+                    file_content = await get_content_by_file_id(
+                        file_id,
+                        format=format,
+                        mime_type=mime_type,
+                        file_manager=file_manager,
+                    )
+                    files.append(file_content)
+
+                result[field_name] = files
+
+            elif list_type == "object":
+                sub_file_result = []
+                for file_dict in json_dict[field_name]:
+                    sub_file = await parse_json_request(sub_class, file_dict, file_manager)
+                    if len(sub_file) > 0:
+                        sub_file_result.append(sub_file)
+
+                if len(sub_file_result) > 0:
+                    result[field_name] = sub_file_result
+        if field_name in result:
+            json_dict.pop(field_name, None)
+        elif field_name not in result and field_name in json_dict:
+            result[field_name] = json_dict.pop(field_name)
+
+    result.update(json_dict)
+    return result
+
+
 @no_type_check
 async def parse_json_response(
     view: Type[ToolParameterView], json_dict, file_manager: FileManager, file_metadata: Dict[str, str]

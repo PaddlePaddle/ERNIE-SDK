@@ -347,12 +347,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         )
 
         file_manager = GlobalFileManagerHandler().get()
-
-        tool_response = requests.post("http://example.com/file_v1")
-
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
+        result = await tool()
 
         self.assertEqual(len(result["file"]), 2)
         file_0, file_1 = result["file"][0], result["file"][1]
@@ -380,12 +375,8 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
             json={"file": file_content, "level_0": {"level_1": {"level_2": "level_2"}}},
         )
 
+        result = await tool()
         file_manager = GlobalFileManagerHandler().get()
-
-        tool_response = requests.post("http://example.com/file_v2")
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
 
         file: File = file_manager.look_up_file_by_id(result["file"])
         file_content_from_file_manager = await file.read_contents()
@@ -403,10 +394,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_manager = GlobalFileManagerHandler().get()
 
-        tool_response = requests.post("http://example.com/file_v3")
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
+        result = await tool()
 
         file: File = file_manager.look_up_file_by_id(result["file"]["file"])
         file_content_from_file_manager = await file.read_contents()
@@ -423,11 +411,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         )
 
         file_manager = GlobalFileManagerHandler().get()
-
-        tool_response = requests.post("http://example.com/file_v4")
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
+        result = await tool()
 
         file_0, file_1 = result["file"][0]["file"], result["file"][1]["file"]
 
@@ -460,10 +444,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_manager = GlobalFileManagerHandler().get()
 
-        tool_response = requests.post("http://example.com/file_v5")
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
+        result = await tool()
 
         file_0, file_1 = result["file"]["file"][0]["file"], result["file"]["file"][1]["file"]
 
@@ -491,11 +472,7 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
 
         file_manager = GlobalFileManagerHandler().get()
 
-        tool_response = requests.post("http://example.com/file_v6")
-
-        result = await parse_json_response(
-            tool.tool_view.returns, tool_response.json(), file_manager=file_manager, file_metadata={}
-        )
+        result = await tool()
 
         file: File = file_manager.look_up_file_by_id(result["first_file"])
         file_content_from_file_manager = await file.read_contents()

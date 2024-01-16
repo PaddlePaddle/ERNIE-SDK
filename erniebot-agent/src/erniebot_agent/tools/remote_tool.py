@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import dataclasses
 import logging
 from copy import deepcopy
@@ -18,6 +17,7 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.schema import RemoteToolView
 from erniebot_agent.tools.utils import (
     get_file_info_from_param_view,
+    parse_json_request,
     parse_response,
     tool_response_contains_file,
 )
@@ -69,51 +69,12 @@ class RemoteTool(BaseTool):
         return self.tool_view.name
 
     async def __pre_process__(self, tool_arguments: Dict[str, Any]) -> dict:
-        async def fileid_to_byte(file_id, file_manager):
-            file = file_manager.look_up_file_by_id(file_id)
-            byte_str = await file.read_contents()
-            return byte_str
-
-        async def convert_to_file_data(file_data: str, format: str):
-            value = file_data.replace("<file>", "").replace("</file>", "")
-            byte_value = await fileid_to_byte(value, file_manager)
-            if format == "byte":
-                byte_value = base64.b64encode(byte_value).decode()
-            return byte_value
-
         file_manager = self._get_file_manager()
 
-        # 1. replace fileid with byte string
-        parameter_file_info = get_file_info_from_param_view(self.tool_view.parameters)
-        for key in tool_arguments.keys():
-            if self.tool_view.parameters:
-                if key not in self.tool_view.parameters.model_fields:
-                    keys = list(self.tool_view.parameters.model_fields.keys())
-                    raise RemoteToolError(
-                        f"`{self.tool_name}` received unexpected arguments `{key}`. "
-                        f"The avaiable arguments are {keys}",
-                        stage="Input parsing",
-                    )
-            if key not in parameter_file_info:
-                continue
-            if self.tool_view.parameters is None:
-                break
-
-            argument_value = tool_arguments[key]
-            if isinstance(argument_value, list):
-                for index in range(len(argument_value)):
-                    argument_value[index] = await convert_to_file_data(
-                        argument_value[index], parameter_file_info[key]["format"]
-                    )
-            else:
-                argument_value = await convert_to_file_data(
-                    argument_value, parameter_file_info[key]["format"]
-                )
-
-            tool_arguments[key] = argument_value
-
-        # 2. call tool get response
         if self.tool_view.parameters is not None:
+            tool_arguments = await parse_json_request(
+                self.tool_view.parameters, tool_arguments, file_manager
+            )
             tool_arguments = self.tool_view.parameters(**tool_arguments).model_dump(mode="json")
 
         return tool_arguments

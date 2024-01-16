@@ -455,6 +455,32 @@ class FileManager(Closeable, Noncopyable):
                 files.append(file)
         return files
 
+    def sniff_and_extract_files_from_dict(self, dict_data: Dict[str, Any]) -> List[File]:
+        files = []
+
+        def try_get_file(string_value):
+            if not protocol.is_file_id(string_value):
+                return
+            try:
+                file = self.look_up_file_by_id(string_value)
+                files.append(file)
+            except FileError as e:
+                raise FileError(f"An unregistered file with ID {repr(string_value)} was found.") from e
+
+        for key, value in dict_data.items():
+            if isinstance(value, str):
+                try_get_file(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, str):
+                        try_get_file(item)
+                    elif isinstance(item, dict):
+                        files.extend(self.sniff_and_extract_files_from_dict(item))
+            elif isinstance(value, dict):
+                files.extend(self.sniff_and_extract_files_from_dict(value))
+
+        return files
+
     def sniff_and_extract_files_from_text(self, text: str) -> List[File]:
         file_ids = protocol.extract_file_ids(text)
         files: List[File] = []
