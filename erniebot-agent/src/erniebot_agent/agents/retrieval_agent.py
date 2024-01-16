@@ -223,7 +223,7 @@ class SelfAskRetrievalAgent(Agent):
         return response
 
     async def execute(self, query: str, steps_taken: List[AgentStep]):
-        history : List[Dict]= []
+        history: List[Dict] = []
         queries = [query]
         loop_count = 0
         while True:
