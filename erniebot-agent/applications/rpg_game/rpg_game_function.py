@@ -11,7 +11,7 @@ from erniebot_agent.agents import FunctionAgent
 from erniebot_agent.agents.base import BaseAgent
 from erniebot_agent.chat_models.erniebot import ERNIEBot
 from erniebot_agent.memory import SlidingWindowMemory
-from erniebot_agent.memory.messages import AIMessage, SystemMessage
+from erniebot_agent.memory.messages import AIMessage
 from erniebot_agent.utils.common import get_file_type
 from erniebot_agent.utils.html_format import IMAGE_HTML
 
@@ -182,9 +182,7 @@ class GameAgent(FunctionAgent):
 def creates_story_tool():
     memory = SlidingWindowMemory(max_round=2)
     llm = ERNIEBot(model=args.model, api_type="aistudio")
-    agent = FunctionAgent(
-        llm=llm, tools=[], system_message=SystemMessage(INSTRUCTION.format(SCRIPT=args.game)), memory=memory
-    )
+    agent = FunctionAgent(llm=llm, tools=[], system=INSTRUCTION.format(SCRIPT=args.game), memory=memory)
     tool = ChatStoryTool(agent, game=args.game)
     return tool
 
@@ -203,7 +201,8 @@ def main():
         llm=llm,
         tools=[story_tool, img_tool],
         memory=memory,
-        system_message=SystemMessage(SYSTEM_MESSAGE.format(SCRIPT=args.game)),
+        system=SYSTEM_MESSAGE.format(SCRIPT=args.game),
+        first_tools=[story_tool, img_tool],
     )
     agent.launch_gradio_demo()
 
