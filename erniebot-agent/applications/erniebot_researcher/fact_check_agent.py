@@ -87,7 +87,9 @@ class FactCheckerAgent(JsonUtil):
 
     async def check_claim(self, question: str, answer: str, claim: str):
         """
-        Verify a claim based on questions and answers, and correct facts if the claim is incorrect.
+        Use a large language model to conduct a conversation, verify a fact,
+        and suggest corrections if the fact is incorrect
+
         :param question: represents a fact-checking question
         :param answer: represents a fact-checking answer
         :param claim: indicates a fact that need to be verified
