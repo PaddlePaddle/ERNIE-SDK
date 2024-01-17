@@ -439,29 +439,8 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
                 )
             )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-
-            num_steps_taken = 0
-            while num_steps_taken < self.max_steps:
-                curr_step, new_messages = await self._step(chat_history)
-                chat_history.extend(new_messages)
-                if isinstance(curr_step, ToolStep):
-                    steps_taken.append(curr_step)
-
-                elif isinstance(curr_step, PluginStep):
-                    steps_taken.append(curr_step)
-                    # 预留 调用了Plugin之后不结束的接口
-
-                    # 此处为调用了Plugin之后直接结束的Plugin
-                    curr_step = DEFAULT_FINISH_STEP
-
-                if isinstance(curr_step, EndStep):  # plugin with action
-                    response = self._create_finished_response(chat_history, steps_taken, curr_step=curr_step)
-                    self.memory.add_message(chat_history[0])
-                    self.memory.add_message(chat_history[-1])
-                    return response
-                num_steps_taken += 1
-            response = self._create_stopped_response(chat_history, steps_taken)
-            return response
+            rewrite_prompt = "背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
+            return  super()._run(rewrite_prompt, files)
         else:
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
