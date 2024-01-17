@@ -440,7 +440,7 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             rewrite_prompt = "背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
-            return  super()._run(rewrite_prompt, files)
+            return super()._run(rewrite_prompt, files)
         else:
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
