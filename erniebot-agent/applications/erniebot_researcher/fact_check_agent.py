@@ -48,8 +48,17 @@ class FactCheckerAgent(JsonUtil):
         retriever_db: Any,
         system_message: Optional[SystemMessage] = None,
         callbacks=None,
-        config=None,
     ):
+        """
+        Initialize a fact_checker agent.
+
+        args:
+            name: The name of the agent.
+            llm: An LLM for the agent to use.
+            retriever_db: A database for the agent to use.
+            system_message: A message to be displayed when the agent starts.
+            callbacks: A callback handler for the agent.
+        """
         self.name = name
         self.llm = llm
         self.retriever_db = retriever_db
@@ -72,6 +81,14 @@ class FactCheckerAgent(JsonUtil):
             self._callback_manager = callbacks
 
     async def run(self, report: str):
+        """
+        The main logic of running the agent.
+
+        Args:
+            report: Entered report text.
+        Returns:
+            The results of the agent's operation.
+        """
         await self._callback_manager.on_run_start(
             agent=self, agent_name=self.name, prompt=self.system_message
         )
@@ -215,5 +232,13 @@ class FactCheckerAgent(JsonUtil):
         return "\n\n".join(text)
 
     async def _run(self, report: str):
+        """
+        The main logic of running the agent.
+
+        Args:
+            report: Entered report text.
+        Returns:
+            Processed report text.
+        """
         report = await self.report_fact(report)
         return report
