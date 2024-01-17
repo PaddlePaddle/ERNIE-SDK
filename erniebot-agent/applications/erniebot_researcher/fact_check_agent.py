@@ -18,7 +18,7 @@ PLAN_VERIFICATIONS_PROMPT = """
 你需要按照列表输出,并且需要输出段落中的事实和验证问题即可。
 [{"fact":<段落中的事实>,"question":<验证问题，通过结合查询和事实生成>},{"fact":<段落中的事实>,"question":<验证问题，通过结合查询和事实生成>},...]
 """
-ANWSER_PROMPT = """"你不具备任何知识，你只能根据外部知识回答问题。
+ANWSER_PROMPT = """"你需要根据外部知识回答问题。
 如果给出的外部知识不能回答给出的问题，请你直接输出"无法回答"，不需要回答过的内容。
 给出问题:\n{{question}}\n外部知识:{{content}}\n回答:"""
 CHECK_CLAIM_PROMPT = """"请你根据给出的问题以及回答，你不需要作任何推理来，只需要判断给出的事实中数字描述是否正确。
@@ -75,6 +75,9 @@ class FactCheckerAgent(JsonUtil):
         return agent_resp
 
     async def generate_anwser(self, question: str, context: str):
+        """
+        Generate answers to questions based on background knowledge
+        """
         messages: List[Message] = [
             HumanMessage(content=self.prompt_anwser.format(question=question, content=context))
         ]
@@ -83,6 +86,12 @@ class FactCheckerAgent(JsonUtil):
         return result
 
     async def check_claim(self, question: str, answer: str, claim: str):
+        """
+        Verify a claim based on questions and answers, and correct facts if the claim is incorrect.
+        :param question: represents a fact-checking question
+        :param answer: represents a fact-checking answer
+        :param claim: indicates a fact that need to be verified
+        """
         messages: List[Message] = [
             HumanMessage(
                 content=self.prompt_check_claim.format(question=question, answer=answer, claim=claim)
@@ -94,6 +103,10 @@ class FactCheckerAgent(JsonUtil):
         return result
 
     async def verifications(self, facts_problems: List[dict]):
+        """
+        Use external knowledge to answer facts to answer questions,
+        and use the answers to questions to determine whether the facts are correct
+        """
         for item in facts_problems:
             question = item["question"]
             claim = item["fact"]
@@ -108,9 +121,16 @@ class FactCheckerAgent(JsonUtil):
                 item["modify"] = result["modify"]
             else:
                 item["modify"] = claim
+        self._callback_manager._agent_info(msg=item["modify"], subject="事实验证的结果", state="End")
         return facts_problems
 
     async def generate_final_response(self, content: str, verifications: List[dict]):
+        """
+        If the original factual questions pass fact verification,
+        the original content will be returned directly.
+        Otherwise, the original content will be corrected based
+        on the results of factual verification.
+        """
         if all([item["is_correct"] for item in verifications]):
             return content
         else:
@@ -125,6 +145,15 @@ class FactCheckerAgent(JsonUtil):
             return result
 
     async def report_fact(self, report: str):
+        """
+        Filter out sentences containing numbers in text.
+        Extract facts from the filtered sentences.
+        Extract validation questions and verify each extracted fact.
+        Example:
+        "Mexican-American War
+        was the armed conflict between the United States and Mexico from 1846 to 1848," then one possibility
+        A validation question to check these dates could be When did the Mexican-American War begin and end?
+        """
         report_list = report.split("\n\n")
         text = []
         for item in report_list:

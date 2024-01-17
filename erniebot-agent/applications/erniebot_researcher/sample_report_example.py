@@ -5,6 +5,7 @@ import os
 import time
 
 from editor_actor_agent import EditorActorAgent
+from fact_check_agent import FactCheckerAgent
 from langchain.embeddings.openai import OpenAIEmbeddings
 from polish_agent import PolishAgent
 from ranking_agent import RankingAgent
@@ -160,6 +161,11 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         dir_path=target_path,
         report_type=args.report_type,
     )
+    checker_actor = FactCheckerAgent(
+        name="fact_check",
+        llm=llm,
+        retriever_db=retriever_sets["full_text"]
+    )
     ranker_actor = RankingAgent(
         llm=llm,
         llm_long=llm_long,
@@ -171,6 +177,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         "editor_actor": editor_actor,
         "reviser_actor": reviser_actor,
         "ranker_actor": ranker_actor,
+        "checker_actor": checker_actor,
         "polish_actor": polish_actor,
     }
 
