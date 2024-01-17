@@ -1,26 +1,26 @@
-from typing import Any, List, Optional, Sequence, Tuple
+import json
+from typing import List, Optional, Sequence
 
-from erniebot_agent.agents import FunctionalAgent
-from erniebot_agent.agents.schema import AgentAction, AgentFile, File, AgentResponse, AgentStep
+from erniebot_agent.agents.agent import Agent
+from erniebot_agent.agents.schema import AgentResponse, AgentStep, File
 from erniebot_agent.memory.messages import HumanMessage, Message
 from erniebot_agent.tools.base import BaseTool
 
-class PromptAgent(FunctionalAgent):
 
+class PromptAgent(Agent):
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
-        actions_taken: List[AgentAction] = []
-
         chat_history: List[Message] = []
-
-        next_step_input = HumanMessage(content=prompt)
-        curr_step_output = await self._step(
-            next_step_input, chat_history, actions_taken
+        steps_taken: List[AgentStep] = []
+        run_input = await HumanMessage.create_with_files(
+            prompt, files or [], include_file_urls=self.file_needs_url
         )
-        return curr_step_output
+        chat_history.append(run_input)
+        msg = await self._step(chat_history)
+        text = json.dumps({"msg": msg}, ensure_ascii=False)
+        response = self._create_stopped_response(chat_history, steps_taken, message=text)
+        return response
 
-    async def _step(
-        self, chat_history: List[Message], selected_tool: Optional[BaseTool] = None
-    ) -> Tuple[AgentStep, List[Message]]:
+    async def _step(self, chat_history: List[Message], selected_tool: Optional[BaseTool] = None) -> bool:
         new_messages: List[Message] = []
         input_messages = self.memory.get_messages() + chat_history
         if selected_tool is not None:
@@ -39,3 +39,16 @@ class PromptAgent(FunctionalAgent):
             return True
         else:
             return False
+
+    def _create_stopped_response(
+        self,
+        chat_history: List[Message],
+        steps: List[AgentStep],
+        message: str,
+    ) -> AgentResponse:
+        return AgentResponse(
+            text=message,
+            chat_history=chat_history,
+            steps=steps,
+            status="STOPPED",
+        )
