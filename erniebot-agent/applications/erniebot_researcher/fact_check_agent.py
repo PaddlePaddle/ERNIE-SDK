@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional
 
 from tools.utils import JsonUtil, ReportCallbackHandler
 
@@ -66,7 +66,7 @@ class FactCheckerAgent(JsonUtil):
         else:
             self._callback_manager = callbacks
 
-    async def run(self, report: Union[str, dict]):
+    async def run(self, report: str):
         await self._callback_manager.on_run_start(
             agent=self, agent_name=self.name, prompt=self.system_message
         )
@@ -145,8 +145,6 @@ class FactCheckerAgent(JsonUtil):
                     text.append(item)
         return "\n\n".join(text)
 
-    async def _run(self, report: Union[str, Dict[str, str]]):
-        if isinstance(report, dict):
-            report = report["report"]
+    async def _run(self, report: str):
         report = await self.report_fact(report)
         return report
