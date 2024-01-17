@@ -77,6 +77,11 @@ class FactCheckerAgent(JsonUtil):
     async def generate_anwser(self, question: str, context: str):
         """
         Generate answers to questions based on background knowledge
+
+        :params question: Indicates a question to be answered.
+        :params context: Represents background knowledge relevant to the problem.
+
+        :return: Generated answers to questions.
         """
         messages: List[Message] = [
             HumanMessage(content=self.prompt_anwser.format(question=question, content=context))
@@ -93,6 +98,9 @@ class FactCheckerAgent(JsonUtil):
         :param question: represents a fact-checking question
         :param answer: represents a fact-checking answer
         :param claim: indicates a fact that need to be verified
+
+        :return: A dictionary containing verification results,
+        including whether the facts are correct and suggestions for correction.
         """
         messages: List[Message] = [
             HumanMessage(
@@ -110,6 +118,9 @@ class FactCheckerAgent(JsonUtil):
         relevant facts. As it processes each question and fact pair, it obtains the context
         relevant to the question, generates an answer to the question, checks whether the fact
         is correct, and records the verification results.
+
+        :param facts_problems: A list of dictionaries containing questions and related facts.
+        :return: Updated dictionary list of verified questions and facts.
         """
         for item in facts_problems:
             question = item["question"]
@@ -134,6 +145,11 @@ class FactCheckerAgent(JsonUtil):
         the original content will be returned directly.
         Otherwise, the original content will be corrected based
         on the results of factual verification.
+
+        :param content: Original text content.
+        :param verifications: List of dictionaries containing fact verification results.
+
+        :return: The final generated reply content.
         """
         if all([item["is_correct"] for item in verifications]):
             return content
@@ -157,6 +173,9 @@ class FactCheckerAgent(JsonUtil):
         "Mexican-American War
         was the armed conflict between the United States and Mexico from 1846 to 1848," then one possibility
         A validation question to check these dates could be When did the Mexican-American War begin and end?
+
+        :param report: The original text content.
+        :return: The final generated reply content.
         """
         report_list = report.split("\n\n")
         text = []
