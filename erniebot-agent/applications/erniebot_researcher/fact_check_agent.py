@@ -10,26 +10,31 @@ from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
 PLAN_VERIFICATIONS_PROMPT = """
-为了验证给出内容中数字性表述是否正确，你需要生成一系列验证问题，以测试原始基线响应中的事实主张。
-例如，如果长格式响应的一部分包含“墨西哥-美国战争
-是 1846 年至 1848 年美国和墨西哥之间的武装冲突”，那么一种可能
-检查这些日期的验证问题可以是 墨西哥-美国战争何时开始以及结束?
-给出内容：{{base_context}}
-你需要按照列表输出,并且需要输出段落中的事实和验证问题即可。
-[{"fact":<段落中的事实>,"question":<验证问题，通过结合查询和事实生成>},{"fact":<段落中的事实>,"question":<验证问题，通过结合查询和事实生成>},...]
+为了验证给出的内容中数字性表述的准确性，您需要创建一系列验证问题，
+用于测试原始基线响应中的事实主张。例如，如果长格式响应的一部分包含
+“墨西哥-美国战争是 1846 年至 1848 年美国和墨西哥之间的武装冲突”，
+那么一种可能的验证问题可以是：“墨西哥-美国战争何时开始以及结束？”
+给定内容：{{base_context}}
+您需要按照列表输出，输出段落中的事实和相应的验证问题。
+[{"fact": <段落中的事实>, "question": <验证问题，通过结合查询和事实生成>},
+{"fact": <段落中的事实>, "question": <验证问题，通过结合查询和事实生成>}, ...]
 """
-ANWSER_PROMPT = """"你需要根据外部知识回答问题。
-如果给出的外部知识不能回答给出的问题，请你直接输出"无法回答"，不需要回答过的内容。
-给出问题:\n{{question}}\n外部知识:{{content}}\n回答:"""
-CHECK_CLAIM_PROMPT = """"请你根据给出的问题以及回答，你不需要作任何推理来，只需要判断给出的事实中数字描述是否正确。
-如果你认为给出的事实中数字描述不正确，请根据给出的问题和回答，删除事实中数字描述对事实进行修正。
-你的输出为json格式{"is_correct":<事实是否正确>,"modify":<对不正确的事实进行修正>}
-给出问题:{{question}}\n回答:{{answer}}\n事实:{{claim}}"""
-FINAL_RESPONSE_PROMPT = """你需要根据给出的背景知识要改写原始内容。必须保证改写内容中的数字来自于背景知识。
-你必须要修正原始内容中的数字，并且保证改写后的内容中数字与背景知识中的数字一致。
-原始内容：{{origin_content}}
-背景知识：{{context}}
-改进内容：
+ANWSER_PROMPT = """
+根据外部知识回答问题。如果给出的外部知识不能解答提出的问题，
+请直接输出"无法回答"，无需提供答案。给定问题:\n{{question}}\n
+外部知识:{{content}}\n回答:
+"""
+CHECK_CLAIM_PROMPT = """
+根据给定的问题和回答，判断事实中数字描述是否正确。如果认为事实中的数字描述不正确，
+请根据问题和回答提供修正。您的输出应为 JSON 格式：
+{"is_correct": <事实是否正确>, "modify": <对不正确的事实进行修正>}
+给定问题: {{question}}\n回答: {{answer}}\n事实: {{claim}}
+"""
+
+FINAL_RESPONSE_PROMPT = """
+根据提供的背景知识，对原始内容进行改写。确保改写后的内容中的数字与背景知识中的数字一致。
+您必须修正原始内容中的数字。原始内容：{{origin_content}}\n背景知识：{{context}}
+改写内容：
 """
 
 
@@ -78,10 +83,12 @@ class FactCheckerAgent(JsonUtil):
         """
         Generate answers to questions based on background knowledge
 
-        :params question: Indicates a question to be answered.
-        :params context: Represents background knowledge relevant to the problem.
+        Args:
+            question: Indicates a question to be answered.
+            context: Represents background knowledge relevant to the problem.
 
-        :return: Generated answers to questions.
+        Returns:
+            Generated answers to questions.
         """
         messages: List[Message] = [
             HumanMessage(content=self.prompt_anwser.format(question=question, content=context))
@@ -95,11 +102,13 @@ class FactCheckerAgent(JsonUtil):
         Use a large language model to conduct a conversation, verify a fact,
         and suggest corrections if the fact is incorrect
 
-        :param question: represents a fact-checking question
-        :param answer: represents a fact-checking answer
-        :param claim: indicates a fact that need to be verified
+        Args:
+            question: represents a fact-checking question
+            answer: represents a fact-checking answer
+            claim: indicates a fact that need to be verified
 
-        :return: A dictionary containing verification results,
+        Returns:
+            A dictionary containing verification results,
         including whether the facts are correct and suggestions for correction.
         """
         messages: List[Message] = [
@@ -119,8 +128,11 @@ class FactCheckerAgent(JsonUtil):
         relevant to the question, generates an answer to the question, checks whether the fact
         is correct, and records the verification results.
 
-        :param facts_problems: A list of dictionaries containing questions and related facts.
-        :return: Updated dictionary list of verified questions and facts.
+        Args:
+            facts_problems: A list of dictionaries containing questions and related facts.
+
+        Returns:
+            Updated dictionary list of verified questions and facts.
         """
         for item in facts_problems:
             question = item["question"]
@@ -146,10 +158,12 @@ class FactCheckerAgent(JsonUtil):
         Otherwise, the original content will be corrected based
         on the results of factual verification.
 
-        :param content: Original text content.
-        :param verifications: List of dictionaries containing fact verification results.
+        Args:
+            content: Original text content.
+            verifications: List of dictionaries containing fact verification results.
 
-        :return: The final generated reply content.
+        Returns:
+            The final generated reply content.
         """
         if all([item["is_correct"] for item in verifications]):
             return content
@@ -174,8 +188,11 @@ class FactCheckerAgent(JsonUtil):
         was the armed conflict between the United States and Mexico from 1846 to 1848," then one possibility
         A validation question to check these dates could be When did the Mexican-American War begin and end?
 
-        :param report: The original text content.
-        :return: The final generated reply content.
+        Args:
+            report: The original text content.
+
+        Returns:
+            The final generated reply content.
         """
         report_list = report.split("\n\n")
         text = []
