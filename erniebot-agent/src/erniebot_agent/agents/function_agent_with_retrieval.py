@@ -365,7 +365,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
             )
-            return await super().run(prompt, files)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
@@ -466,7 +466,7 @@ class ContextAugmentedFunctionalAgent(FunctionAgent):
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
-            return await super()._run(prompt)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
