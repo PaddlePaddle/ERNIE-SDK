@@ -104,8 +104,10 @@ class FactCheckerAgent(JsonUtil):
 
     async def verifications(self, facts_problems: List[dict]):
         """
-        Use external knowledge to answer facts to answer questions,
-        and use the answers to questions to determine whether the facts are correct
+        Answer questions using external knowledge and then use the answers to the questions to verify
+        relevant facts. As it processes each question and fact pair, it obtains the context
+        relevant to the question, generates an answer to the question, checks whether the fact
+        is correct, and records the verification results.
         """
         for item in facts_problems:
             question = item["question"]

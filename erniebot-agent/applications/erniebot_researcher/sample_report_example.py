@@ -161,11 +161,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long):
         dir_path=target_path,
         report_type=args.report_type,
     )
-    checker_actor = FactCheckerAgent(
-        name="fact_check",
-        llm=llm,
-        retriever_db=retriever_sets["full_text"]
-    )
+    checker_actor = FactCheckerAgent(name="fact_check", llm=llm, retriever_db=retriever_sets["full_text"])
     ranker_actor = RankingAgent(
         llm=llm,
         llm_long=llm_long,
