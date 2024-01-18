@@ -2,16 +2,18 @@
 date: 2024-01-18
 categories:
     - agent
-    - new-version
+    - v0.5
 ---
 
 # ERNIE-Bot-Agent V0.5
 
 ## 介绍
 
-我们很高兴地宣布，ERNIE-Bot-Agent 的新版本已经正式发布！此次更新汇聚了我们团队数月的辛勤努力，致力于为用户带来更加智能、高效和稳定的体验。
+我们很高兴地宣布，ERNIE-Bot-Agent V0.5 新版本已经正式发布！此次更新汇聚了我们团队数月的辛勤努力，致力于为用户带来更加智能、高效和稳定的体验。
 
-ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大模型智能体开发框架，结合了飞桨星河社区的丰富预置平台功能。 同时 ERNIE Bot 则为开发者提供便捷接口，轻松调用文心大模型的文本创作、通用对话、语义向量及AI作图等基础功能。
+ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大模型智能体开发框架，结合了飞桨星河社区的丰富预置平台功能。 同时 ERNIE Bot 则为开发者提供便捷接口，轻松调用文心大模型的文本创作、通用对话、语义向量及AI作图等基础功能，功能全景图如下所示：
+
+![eb_sdk_agent_structure](https://github.com/PaddlePaddle/ERNIE-SDK/assets/11987277/1fbcfbca-7695-4cca-9b4f-35a49d1d7c52)
 
 ## 特色功能
 
@@ -24,6 +26,8 @@ ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大�
     - **零代码界面**：依托星河社区提供了零代码界面的智能体构建工具，通过简单的点击配置即可开发AI原生应用。
     - **简洁的代码**：10行代码就可以快速开发一个智能体应用。
     - **预置资源与平台支持**：大量的预置工具、平台级别的知识库，以及后续将推出的平台级别的记忆机制，都旨在加速开发过程。
+
+
 
 ## 示例应用展示
 
@@ -39,7 +43,7 @@ ERNIE Bot Agent 是百度飞桨推出的基于文心大模型编排能力的大�
 
 ### 源码安装
 
-执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8)。
+执行如下命令，使用源码安装 ERNIE Bot Agent（要求Python >= 3.8）。
 
 ```shell
 git clone https://github.com/PaddlePaddle/ERNIE-SDK.git
@@ -109,9 +113,6 @@ python quick_start.py
 
 想要知道更多关于如何使用 ERNIE Bot Agent 的详细信息，请访问[官方文档](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/)。
 
-## Agent 应用示例
-
-
 ## 未来展望
 
 ERNIE Bot 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷易用的接口，使其能够轻松调用文心大模型的强大功能，涵盖了文本创作、通用对话、语义向量以及AI作图等多个基础功能。
@@ -124,6 +125,4 @@ ERNIE Bot 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷�
 
 我们将继续致力于 ERNIE-Bot-Agent 的研发和改进，不断满足用户的新需求和新挑战。请大家保持关注，未来还有更多精彩功能等你们来探索！
 
-让我们一起迎接 Agent 新时代的到来，共同创造更加美好的未来！欢迎大家在使用中提供宝贵的意见和建议，让我们共同推动开源社区的发展！
-
-请根据您的项目实际情况，对以上模板进行相应的修改和完善，确保发布内容准确、清晰地传达给目标受众。
+让我们一起迎接 Agent 新时代的到来，共同创造更加美好的未来！欢迎大家在使用中提供宝贵的意见和建议，让我们共同推动开源社区的发展！有任何技术性的问题可在 [ERNIE-Bot-Agent issue 区](https://github.com/PaddlePaddle/ERNIE-SDK/issues) 提问讨论。
