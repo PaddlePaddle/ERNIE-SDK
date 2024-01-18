@@ -116,6 +116,9 @@ def python_type_from_json_type(json_type_dict: dict) -> Type[object]:
         return List[float]
     if json_type_value == "object":
         return List[ToolParameterView]
+    elif json_type_value == "array":
+        sub_type = python_type_from_json_type(json_type_dict["items"])
+        return List[sub_type]  # type: ignore
 
     raise ValueError(f"unsupported data type: {json_type_value}")
 

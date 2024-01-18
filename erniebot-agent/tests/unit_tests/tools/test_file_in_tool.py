@@ -75,14 +75,12 @@ components:
 
         getFileResponse:
             type: object
-            required: [response_file]
+            required: [file]
             properties:
-                response_file:
+                file:
                     type: string
                     format: byte
                     description: 单词本单词列表
-            x-erniebot-agent-file:
-                - response_file
 """
 
 
@@ -164,12 +162,13 @@ class TestToolWithFile(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(tool.tool_name, "TestRemoteTool/v1/getFile")
             input_file = await self.file_manager.create_file_from_path(self.file_path)
             result = await tool(file=input_file.id)
-            self.assertIn("response_file", result)
-            file_id = result["response_file"]
+            self.assertIn("file", result)
+            file_id = result["file"]
 
             file = self.file_manager.look_up_file_by_id(file_id=file_id)
             content = await file.read_contents()
             self.assertEqual(content.decode("utf-8"), self.content)
+            self.assertIn("prompt", result)
 
 
 class TestPlainJsonFileParser(unittest.IsolatedAsyncioTestCase):

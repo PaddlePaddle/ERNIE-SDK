@@ -1,0 +1,84 @@
+openapi: 3.0.1
+info:
+    title: title
+    description: description
+    version: "v1"
+servers:
+    - url: http://example.com/
+paths:
+    /enum_v1:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/enum_v1"
+    /enum_v2:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/enum_v2"
+    /enum_v3:
+        post:
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/enum_v3"
+components:
+    schemas:
+        # {enum_field: "0"}
+        enum_v1:
+            type: object
+            properties:
+                enum_field:
+                    type: string
+                    description: enum_field
+                    enum: ["0", "1", "2"]
+                    default: "1"
+            
+                no_enum_field:
+                    type: string
+                    description: no_enum_field
+        # {enum_field: ["0", "1", "2"]} 
+        enum_v2:
+            type: object
+            properties:
+                enum_field:
+                    type: array
+                    description: array enum
+                    items:
+                        type: string
+                        description: enum_field
+                        enum: ["0", "1", "2"]
+                        default: "1"
+                no_enum_field:
+                    type: string
+                    description: no_enum_field
+        # {enum_field: {"enum_array": ["0", "1", "2"]}}
+        enum_v3:
+            type: object
+            properties:
+                enum_field:
+                    type: object
+                    description: enum array
+                    properties:
+                        enum_array:
+                            type: array
+                            description: array enum
+                            items:
+                                type: string
+                                description: enum_field
+                                enum: ["0", "1", "2"]
+                                default: "1"
+                no_enum_field:
+                    type: string
+                    description: no_enum_field
