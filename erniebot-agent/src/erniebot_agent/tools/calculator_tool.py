@@ -24,9 +24,9 @@ class CalculatorTool(Tool):
     ouptut_type: Type[ToolParameterView] = CalculatorToolOutputView
 
     async def __call__(self, math_formula: str) -> Dict[str, float]:
-        # In this eval-based implementation, non-mathematical Python expressions
-        # are not rejected. Should we do regex checks to ensure that the input
-        # is a mathematical expression?
+        # XXX: In this eval-based implementation, non-mathematical Python
+        # expressions are not rejected. Should we do regex checks to ensure that
+        # the input is a mathematical expression?
         try:
             code = compile(math_formula, "<string>", "eval")
         except (SyntaxError, ValueError) as e:
