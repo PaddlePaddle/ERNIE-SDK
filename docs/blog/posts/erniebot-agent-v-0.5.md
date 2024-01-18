@@ -125,4 +125,5 @@ ERNIE Bot 作为 ERNIE Bot Agent 的底层依赖，为开发者提供了便捷�
 
 我们将继续致力于 ERNIE-Bot-Agent 的研发和改进，不断满足用户的新需求和新挑战。请大家保持关注，未来还有更多精彩功能等你们来探索！
 
-让我们一起迎接 Agent 新时代的到来，共同创造更加美好的未来！欢迎大家在使用中提供宝贵的意见和建议，让我们共同推动开源社区的发展！有任何技术性的问题可在 [ERNIE-Bot-Agent issue 区](https://github.com/PaddlePaddle/ERNIE-SDK/issues) 提问讨论。
+让我们一起迎接 Agent 新时代的到来，共同创造更加美好的未来！欢迎大家在使用中提供宝贵的意见和建议，让我们共同推动开源社区的发展！有任何技术性的问题可在 [ERNIE-Bot-Agent issue 区](https://github.com/PaddlePaddle/ERNIE-SDK/issues)或[多工具智能编排功能讨论区](https://aistudio.baidu.com/community/channel/1638)提问讨论以及。
+
