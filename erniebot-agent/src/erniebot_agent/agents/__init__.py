@@ -15,9 +15,9 @@
 from erniebot_agent.agents.agent import Agent
 from erniebot_agent.agents.function_agent import FunctionAgent
 from erniebot_agent.agents.function_agent_with_retrieval import (
-    ContextAugmentedFunctionalAgent,
+    ContextAugmentedFunctionAgent,
     FunctionAgentWithRetrieval,
     FunctionAgentWithRetrievalScoreTool,
     FunctionAgentWithRetrievalTool,
-    FunctionalAgentWithQueryPlanning,
+    FunctionAgentWithQueryPlanning,
 )

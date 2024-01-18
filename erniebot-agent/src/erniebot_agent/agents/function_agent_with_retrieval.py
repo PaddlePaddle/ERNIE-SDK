@@ -363,7 +363,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
             return response
         else:
             _logger.info(
-                f"Irrelevant retrieval results. Fallbacking to FunctionalAgent for the query: {prompt}"
+                f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
             return await super()._run(prompt, files)
 
@@ -378,7 +378,7 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         return results
 
 
-class ContextAugmentedFunctionalAgent(FunctionAgent):
+class ContextAugmentedFunctionAgent(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.knowledge_base = knowledge_base
@@ -471,7 +471,7 @@ OPENAI_RAG_PROMPT = """检索结果:
 请根据以上检索结果回答检索语句的问题"""
 
 
-class FunctionalAgentWithQueryPlanning(FunctionAgent):
+class FunctionAgentWithQueryPlanning(FunctionAgent):
     def __init__(self, knowledge_base, top_k: int = 2, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
         self.top_k = top_k
@@ -557,10 +557,10 @@ class FunctionalAgentWithQueryPlanning(FunctionAgent):
         left_index = results.find("{")
         right_index = results.rfind("}")
         if left_index == -1 or right_index == -1:
-            # if invalid json, use Functional Agent
+            # if invalid json, use Function Agent
             return {"is_relevant": False}
         try:
             return json.loads(results[left_index : right_index + 1])
         except Exception:
-            # if invalid json, use Functional Agent
+            # if invalid json, use Function Agent
             return {"is_relevant": False}
