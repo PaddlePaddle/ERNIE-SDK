@@ -32,8 +32,8 @@ class LangChainRetrievalTool(Tool):
     def __init__(
         self,
         db,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
+        name: str = "This is a tool",
+        description: str = "This is the tool for search",
         threshold: float = 0.0,
         input_type=None,
         output_type=None,

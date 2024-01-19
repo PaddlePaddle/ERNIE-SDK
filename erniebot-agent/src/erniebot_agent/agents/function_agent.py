@@ -125,7 +125,7 @@ class FunctionAgent(Agent):
             self._first_tools = []
 
     async def _run(
-        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: Optional[AgentStep] = []
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
     ) -> AgentResponse:
         chat_history: List[Message] = []
 

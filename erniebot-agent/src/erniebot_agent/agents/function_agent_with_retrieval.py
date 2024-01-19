@@ -95,7 +95,9 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -109,7 +111,6 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = []
                 chat_history.append(step_input)
-                steps_taken: List[AgentStep] = []
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
@@ -197,12 +198,13 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
             chat_history: List[Message] = []
-            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -309,12 +311,13 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
             chat_history: List[Message] = []
-            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -393,13 +396,14 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.query_rewrite = PromptTemplate(REWRITE_PROMPT, input_variables=["query"])
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         # Rewrite queries for retrieval
         results = await self._query_rewrite(prompt)
         if len(results) > 0:
             # RAG
             chat_history: List[Message] = []
-            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
