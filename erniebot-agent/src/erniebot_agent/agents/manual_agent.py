@@ -13,7 +13,22 @@
 # limitations under the License.
 
 import logging
-from typing import Any, Iterable, List, Optional, TypedDict, Union, final
+from typing import (
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+    final,
+    get_args,
+    get_origin,
+)
+
+from pydantic import BaseModel, ValidationError, field_validator
 
 from erniebot_agent.agents import Agent
 from erniebot_agent.agents.schema import AgentResponse, AgentStep, ToolInfo, ToolStep
@@ -38,7 +53,11 @@ class Edge:
         self.condition = condition
 
 
-class Task(object):
+IT = TypeVar("IT", contravariant=True)
+OT = TypeVar("OT", covariant=True)
+
+
+class Task(Generic[IT, OT]):
     def __init__(self, des):
         self.result_for_condition = None
         self.result = None
@@ -46,12 +65,30 @@ class Task(object):
         self.next_tasks = []
         self.end_reason = None
 
+    @classmethod
+    def get_input_type(cls) -> Type[IT]:  # type: ignore
+        task_bases = [
+            base
+            for base in cls.__orig_bases__  # type: ignore
+            if get_origin(base) is not None and issubclass(get_origin(base), Task)
+        ]
+        if len(task_bases) == 0:
+            for super_class in cls.__mro__[1:]:
+                if issubclass(super_class, Task):
+                    return super_class.get_input_type()
+            # return super().get_input_type() # type: ignore
+        elif len(task_bases) == 1:
+            return get_args(task_bases[0])[0]
+        else:
+            raise RuntimeError(f"Task {cls.__name__} has more than one `Task` superclass.")
+
     def add_next_task(self, task, condition=None) -> None:
         edge = Edge(task, condition)
         self.next_tasks.append(edge)
 
     @final
     async def execute(self, inp, **kwargs) -> ParseDict:
+        self._pre_check(inp)
         result_dict = await self._execute(inp, **kwargs)
         self._check_output(result_dict)
         return result_dict
@@ -66,6 +103,22 @@ class Task(object):
 
     async def _execute(self, inp, **kwargs) -> ParseDict:
         raise NotImplementedError("Subclasses must implement the `_execute` method")
+
+    def _pre_check(self, inp):
+        class Schema(BaseModel):
+            inp: self.get_input_type()
+
+            @field_validator("inp")
+            def val_inp(cls, v):
+                return v
+
+            class Config:
+                arbitrary_types_allowed = True
+
+        try:
+            Schema(**inp)
+        except ValidationError as e:
+            raise TypeError("The input argument `inp` is not valid" f"\n{e}")
 
 
 class ManualAgent(Agent):
@@ -123,9 +176,7 @@ class ManualAgent(Agent):
         )
 
 
-class AgentTask(Task):
-    # input_type: Type = Union[FunctionMessage, HumanMessage]
-
+class AgentTask(Task[Union[FunctionMessage, HumanMessage], AIMessage]):
     def __init__(self, des, agent: ManualAgent, selected_tool: Optional[BaseTool] = None):
         super().__init__(des)
         self.agent = agent
