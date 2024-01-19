@@ -75,6 +75,20 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/file_v7_output"
+    /file_v8:
+        post:
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/file_v8"
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema: {}
 components:
     schemas:
         # {file: ["base64", "base64-string"]}
@@ -189,3 +203,17 @@ components:
                     description: string
                     format: byte
                     x-ebagent-file-mime-type: image/png
+        file_v8:
+            type: object
+            required: [file]
+            properties:
+                file:
+                    type: array
+                    items:
+                        type: string
+                        format: byte
+                    description: 单词本单词列表
+                not_file_field:
+                    type: string
+                    description: not_file_field
+                    default: "222"
