@@ -483,6 +483,27 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
 
+    @responses.activate
+    async def test_file_v7(self):
+        tool = self.toolkit.get_tool("file_v7")
+
+        file_manager = GlobalFileManagerHandler().get()
+        file_content = str(uuid4())
+
+        file_content_base64 = base64.b64encode(file_content.encode())
+        file = await file_manager.create_file_from_bytes(file_content_base64, filename="a.png")
+
+        responses.post(
+            "http://example.com/file_v7", json={"second_file": file_content_base64.decode()}
+        )
+
+        result = await tool(first_file=file.id)
+
+        file: File = file_manager.look_up_file_by_id(result["second_file"])
+        file_content_from_file_manager = await file.read_contents()
+        file_content = base64.b64decode(file_content_base64)
+        self.assertEqual(file_content, file_content_from_file_manager)
+
 
 class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:

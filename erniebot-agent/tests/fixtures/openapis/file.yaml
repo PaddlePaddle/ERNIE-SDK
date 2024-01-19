@@ -60,6 +60,21 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/file_v6"
+    /file_v7:
+        post:
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/file_v7_input"
+            responses:
+                "200":
+                    description: 列表展示完成
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/file_v7_output"
 components:
     schemas:
         # {file: ["base64", "base64-string"]}
@@ -143,7 +158,6 @@ components:
                                     not_file_field: 
                                         type: string
                                         description: not-file-content
-
         # {first_file: "base64-string", second_file: "base64-string"}
         file_v6:
             type: object
@@ -153,6 +167,23 @@ components:
                     description: string
                     format: byte
                     x-ebagent-file-mime-type: image/png
+                second_file:
+                    type: string
+                    description: string
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
+        # {first_file: "base64-string", second_file: "base64-string"}
+        file_v7_input:
+            type: object
+            properties:
+                first_file:
+                    type: string
+                    description: string
+                    format: byte
+                    x-ebagent-file-mime-type: image/png
+        file_v7_output:
+            type: object
+            properties:
                 second_file:
                     type: string
                     description: string
