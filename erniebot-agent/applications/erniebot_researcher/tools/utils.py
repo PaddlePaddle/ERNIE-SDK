@@ -6,7 +6,7 @@ import urllib.parse
 from typing import Any, Dict, List, Union
 
 import jsonlines
-import markdown  # type: ignore
+import markdown  # type: ignore[import-untyped]
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFDirectoryLoader
 from langchain.output_parsers.json import parse_json_markdown
