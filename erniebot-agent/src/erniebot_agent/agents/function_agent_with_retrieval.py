@@ -378,6 +378,10 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         return results
 
 
+REWRITE_PROMPT = """请对下面的问题进行子问题提取，用于检索相关的信息帮助回答原问题，要求：
+1.严格按照【JSON格式】的形式输出：{'sub query1':'具体子问题1','sub_query2':'具体子问题2'}
+原问题：{{query}} 提取的子问题："""
+
 class ContextAugmentedFunctionAgent(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
@@ -386,10 +390,12 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
         self.threshold = threshold
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
+        self.query_rewrite = PromptTemplate(REWRITE_PROMPT, input_variables=["query"])
 
     async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
-        results = await self._maybe_retrieval(prompt)
-        if len(results["documents"]) > 0:
+        # Rewrite queries for retrieval
+        results = await self._query_rewrite(prompt)
+        if len(results) > 0:
             # RAG
             chat_history: List[Message] = []
             steps_taken: List[AgentStep] = []
@@ -398,38 +404,23 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
+            # Generate Answer
             step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results["documents"])
+                content=self.rag_prompt.format(query=prompt, documents=results)
             )
             fake_chat_history: List[Message] = []
             fake_chat_history.append(step_input)
             llm_resp = await self.run_llm(messages=fake_chat_history)
-
-            # Get RAG results
             output_message = llm_resp.message
 
-            outputs = []
-            for item in results["documents"]:
-                outputs.append(
-                    {
-                        "id": item["id"],
-                        "title": item["title"],
-                        "document": item["content_se"],
-                    }
-                )
-
-            # 会有无限循环调用工具的问题
+            # Context Augmented query
+            rewrite_prompt = f"背景信息为：{output_message.content} \n 给定背景信息，而不是先验知识，选择相应的工具回答或者根据背景信息直接回答问题：{prompt}"
             next_step_input = HumanMessage(
-                content=f"背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
+                content=rewrite_prompt
             )
             chat_history.append(next_step_input)
-            # Knowledge Retrieval Tool
-            # action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
-            tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            # next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
-
-            tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
+            tool_resp = ToolResponse(json=json.dumps(results, ensure_ascii=False), input_files=[], output_files=[])
             steps_taken.append(
                 ToolStep(
                     info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
@@ -439,7 +430,7 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
                 )
             )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            rewrite_prompt = "背景信息为：{output_message.content} \n 要求：选择相应的工具回答或者根据背景信息直接回答：{prompt}"
+            
             return await super()._run(rewrite_prompt, files)
         else:
             _logger.info(
@@ -447,120 +438,29 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
             )
             return await super()._run(prompt, files)
 
+    async def _query_rewrite(self, prompt):
+        # Rewrite queries for retrieval
+        step_input = HumanMessage(content=self.query_rewrite.format(query=prompt))
+        fake_chat_history: List[Message] = []
+        fake_chat_history.append(step_input)
+        llm_resp = await self.run_llm(messages=fake_chat_history, functions=None)
+        output_message = llm_resp.message
+        queries = self._parse_results(output_message.content)
+        results = []
+        for sub_query in list(queries.values()):
+            sub_results = await self._maybe_retrieval(sub_query)
+            results.extend(sub_results)
+        return results
+
     async def _maybe_retrieval(
         self,
         step_input,
     ):
-        documents = self.knowledge_base.search(step_input, top_k=self.top_k, filters=None)
-        documents = [item for item in documents if item["score"] > self.threshold]
-        results = {}
-        results["documents"] = documents
-        return results
-
-
-QUERY_DECOMPOSITION = """请把下面的问题分解成子问题，每个子问题必须足够简单，要求：
-1.严格按照【JSON格式】的形式输出：{'子问题1':'具体子问题1','子问题2':'具体子问题2'}
-问题：{{prompt}} 子问题："""
-
-
-OPENAI_RAG_PROMPT = """检索结果:
-{% for doc in documents %}
-    第{{loop.index}}个段落: {{doc['document']}}
-{% endfor %}
-检索语句: {{query}}
-请根据以上检索结果回答检索语句的问题"""
-
-
-class FunctionAgentWithQueryPlanning(FunctionAgent):
-    def __init__(self, knowledge_base, top_k: int = 2, threshold: float = 0.1, **kwargs):
-        super().__init__(**kwargs)
-        self.top_k = top_k
-        self.threshold = threshold
-        self.query_transform = PromptTemplate(QUERY_DECOMPOSITION, input_variables=["prompt"])
-        self.knowledge_base = knowledge_base
-        self.rag_prompt = PromptTemplate(OPENAI_RAG_PROMPT, input_variables=["documents", "query"])
-
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
-        chat_history: List[Message] = []
-        steps_taken: List[AgentStep] = []
-
-        # 会有无限循环调用工具的问题
-        # next_step_input = HumanMessage(
-        #     content=f"请选择合适的工具来回答：{prompt}，如果需要的话，可以对把问题分解成子问题，然后每个子问题选择合适的工具回答。"
-        # )
-        run_input = await HumanMessage.create_with_files(
-            prompt, files or [], include_file_urls=self.file_needs_url
-        )
-        chat_history.append(run_input)
-        num_steps_taken = 0
-        while num_steps_taken < self.max_steps:
-            curr_step, new_messages = await self._step(chat_history)
-            chat_history.extend(new_messages)
-            if isinstance(curr_step, ToolStep):
-                steps_taken.append(curr_step)
-
-            elif isinstance(curr_step, PluginStep):
-                steps_taken.append(curr_step)
-                # 预留 调用了Plugin之后不结束的接口
-
-                # 此处为调用了Plugin之后直接结束的Plugin
-                curr_step = DEFAULT_FINISH_STEP
-
-            if isinstance(curr_step, EndStep):
-                response = self._create_finished_response(chat_history, steps_taken, curr_step)
-                self.memory.add_message(chat_history[0])
-                self.memory.add_message(chat_history[-1])
-                return response
-            num_steps_taken += 1
-        # TODO(wugaosheng): Add manual planning and execute
-        return await self.plan_and_execute(prompt, steps_taken, curr_step)
-
-    async def plan_and_execute(self, prompt, steps_taken: List[AgentStep], curr_step: AgentStep):
-        step_input = HumanMessage(content=self.query_transform.format(prompt=prompt))
-        fake_chat_history: List[Message] = [step_input]
-        llm_resp = await self.run_llm(
-            messages=fake_chat_history,
-        )
-        output_message = llm_resp.message
-
-        json_results = self._parse_results(output_message.content)
-        sub_queries = json_results.values()
-        retrieval_results = []
-        duplicates = set()
-        for query in sub_queries:
-            documents = await self.knowledge_base(query, top_k=self.top_k, filters=None)
-            docs = [item for item in documents["documents"]]
-            for doc in docs:
-                if doc["document"] not in duplicates:
-                    duplicates.add(doc["document"])
-                    retrieval_results.append(doc)
-        step_input = HumanMessage(
-            content=self.rag_prompt.format(query=prompt, documents=retrieval_results[:3])
-        )
-        chat_history: List[Message] = [step_input]
-        llm_resp = await self.run_llm(messages=chat_history)
-
-        output_message = llm_resp.message
-        chat_history.append(output_message)
-        last_message = chat_history[-1]
-        response = AgentResponse(
-            text=last_message.content,
-            chat_history=chat_history,
-            steps=steps_taken,
-            status="FINISHED",
-        )
-        self.memory.add_message(chat_history[0])
-        self.memory.add_message(chat_history[-1])
-        return response
+        documents = await self.knowledge_base(step_input, top_k=self.top_k, filters=None)
+        documents = [item for item in documents['documents'] if item["score"] > self.threshold]
+        return documents
 
     def _parse_results(self, results):
         left_index = results.find("{")
         right_index = results.rfind("}")
-        if left_index == -1 or right_index == -1:
-            # if invalid json, use Function Agent
-            return {"is_relevant": False}
-        try:
-            return json.loads(results[left_index : right_index + 1])
-        except Exception:
-            # if invalid json, use Function Agent
-            return {"is_relevant": False}
+        return json.loads(results[left_index : right_index + 1])
