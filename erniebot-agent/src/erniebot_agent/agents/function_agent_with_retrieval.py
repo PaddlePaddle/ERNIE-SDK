@@ -503,4 +503,3 @@ class FunctionAgentWithMultiRetrievalTools(FunctionAgent):
         left_index = results.find("{")
         right_index = results.rfind("}")
         return json.loads(results[left_index : right_index + 1])
-     
