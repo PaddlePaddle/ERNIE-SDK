@@ -56,7 +56,7 @@ def no_input_no_output_tool():
 
 
 @pytest.mark.asyncio
-async def test_function_agent_with_retrieval_retrieval_score_tool_callbacks(identity_tool):
+async def test_function_agent_with_retrieval_context_augmented_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
     knowledge_base_name = "test"
     access_token = "your access token"
@@ -106,7 +106,7 @@ async def test_function_agent_with_retrieval_retrieval_score_tool_callbacks(iden
 
 
 @pytest.mark.asyncio
-async def test_function_agent_with_retrieval_retrieval_score_tool_run_retrieval(identity_tool):
+async def test_function_agent_with_retrieval_context_augmented_run_retrieval(identity_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
@@ -143,8 +143,7 @@ async def test_function_agent_with_retrieval_retrieval_score_tool_run_retrieval(
     )
     # AIMessage
     assert response.chat_history[1].content == "Text response"
-
-    assert len(response.steps) == 1
+    assert len(response.steps) == 2
     assert response.steps[0].info == {
         "tool_name": "KnowledgeBaseTool",
         "tool_args": '{"query": "Hello, world!"}',
