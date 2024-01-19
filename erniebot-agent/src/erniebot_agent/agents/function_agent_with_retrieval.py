@@ -502,11 +502,5 @@ class FunctionAgentWithMultiRetrievalTools(FunctionAgent):
     def _parse_results(self, results):
         left_index = results.find("{")
         right_index = results.rfind("}")
-        if left_index == -1 or right_index == -1:
-            # if invalid json, use Function Agent
-            return {"is_relevant": False}
-        try:
-            return json.loads(results[left_index : right_index + 1])
-        except Exception:
-            # if invalid json, use Function Agent
-            return {"is_relevant": False}
+        return json.loads(results[left_index : right_index + 1])
+     
