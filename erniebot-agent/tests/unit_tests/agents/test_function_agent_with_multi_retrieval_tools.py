@@ -112,7 +112,7 @@ async def test_function_agent_with_multi_retrieval_tools_run_retrieval_tools(ide
 
 
 @pytest.mark.asyncio
-async def test_function_agent_max_steps(identity_tool):
+async def test_function_agent_with_multi_retrieval_tools_max_steps(identity_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
