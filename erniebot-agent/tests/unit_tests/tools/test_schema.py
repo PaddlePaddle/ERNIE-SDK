@@ -510,12 +510,12 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_manager = GlobalFileManagerHandler().get()
 
         file_ids, file_contents = [], []
-        for _ in range(4):
-            file_content = str(uuid4())
-            file_content_base64 = base64.b64encode(file_content.encode())
-            file_contents.append(file_content.encode())
+        for _ in range(1):
+            file_content = str(uuid4()).encode()
+            file_content_base64 = base64.b64encode(file_content)
+            file_contents.append(file_content_base64.decode())
 
-            file = await file_manager.create_file_from_bytes(file_content_base64, filename="a.png")
+            file = await file_manager.create_file_from_bytes(file_content, filename="a.png")
             file_ids.append(file.id)
 
         responses.post(

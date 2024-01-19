@@ -210,13 +210,14 @@ async def create_file_from_data(
 
 async def get_content_by_file_id(
     file_id: str, format: str, file_manager: FileManager
-) -> bytes:
+) -> str:
     file_id = file_id.replace("<file>", "").replace("</file>", "")
     file = file_manager.look_up_file_by_id(file_id)
     byte_str = await file.read_contents()
     if format == "byte":
-        byte_str = base64.b64decode(byte_str)
-    return byte_str
+        byte_str = base64.b64encode(byte_str)
+
+    return byte_str.decode()
 
 
 def is_file_config(json_schema_extra: dict) -> bool:
