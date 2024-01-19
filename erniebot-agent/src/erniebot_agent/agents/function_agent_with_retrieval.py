@@ -382,6 +382,7 @@ REWRITE_PROMPT = """请对下面的问题进行子问题提取，用于检索相
 1.严格按照【JSON格式】的形式输出：{'sub query1':'具体子问题1','sub_query2':'具体子问题2'}
 原问题：{{query}} 提取的子问题："""
 
+
 class ContextAugmentedFunctionAgent(FunctionAgent):
     def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
         super().__init__(**kwargs)
@@ -405,22 +406,21 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
             # Generate Answer
-            step_input = HumanMessage(
-                content=self.rag_prompt.format(query=prompt, documents=results)
-            )
-            fake_chat_history: List[Message] = []
-            fake_chat_history.append(step_input)
+            step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=results))
+            fake_chat_history: List[Message] = [step_input]
             llm_resp = await self.run_llm(messages=fake_chat_history)
             output_message = llm_resp.message
 
             # Context Augmented query
-            rewrite_prompt = f"背景信息为：{output_message.content} \n 给定背景信息，而不是先验知识，选择相应的工具回答或者根据背景信息直接回答问题：{prompt}"
-            next_step_input = HumanMessage(
-                content=rewrite_prompt
+            rewrite_prompt = (
+                f"背景信息为：{output_message.content} \n 给定背景信息，而不是先验知识，选择相应的工具回答或者根据背景信息直接回答问题：{prompt}"
             )
+            next_step_input = HumanMessage(content=rewrite_prompt)
             chat_history.append(next_step_input)
-            # return response
-            tool_resp = ToolResponse(json=json.dumps(results, ensure_ascii=False), input_files=[], output_files=[])
+            # Return response
+            tool_resp = ToolResponse(
+                json=json.dumps(results, ensure_ascii=False), input_files=[], output_files=[]
+            )
             steps_taken.append(
                 ToolStep(
                     info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
@@ -430,7 +430,7 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
                 )
             )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
-            
+            # Execute next step
             return await super()._run(rewrite_prompt, files)
         else:
             _logger.info(
@@ -441,8 +441,7 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
     async def _query_rewrite(self, prompt):
         # Rewrite queries for retrieval
         step_input = HumanMessage(content=self.query_rewrite.format(query=prompt))
-        fake_chat_history: List[Message] = []
-        fake_chat_history.append(step_input)
+        fake_chat_history: List[Message] = [step_input]
         llm_resp = await self.run_llm(messages=fake_chat_history, functions=None)
         output_message = llm_resp.message
         queries = self._parse_results(output_message.content)
@@ -457,7 +456,7 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
         step_input,
     ):
         documents = await self.knowledge_base(step_input, top_k=self.top_k, filters=None)
-        documents = [item for item in documents['documents'] if item["score"] > self.threshold]
+        documents = [item for item in documents["documents"] if item["score"] > self.threshold]
         return documents
 
     def _parse_results(self, results):

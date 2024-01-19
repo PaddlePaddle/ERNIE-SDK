@@ -121,22 +121,6 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieva
     assert response.text == "Text response"
     # HumanMessage
     assert response.chat_history[0].content == "问题：Hello, world!，要求：请在第一步执行检索的操作,并且检索只允许调用一次"
-    # # AIMessage
-    # assert response.chat_history[1].function_call == {
-    #     "name": "KnowledgeBaseTool",
-    #     "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
-    #     "arguments": '{"query": "Hello, world!"}',
-    # }
-
-    # # FunctionMessag
-    # assert response.chat_history[2].name == "KnowledgeBaseTool"
-    # assert (
-    #     response.chat_history[2].content
-    #     == '{"documents": [{"id": "495735246643269", "title": "城市管理执法办法.pdf", '
-    #     '"document": "住房和城乡建设部规章城市管理执法办法"}, {"id": "495735246643270", '
-    #     '"title": "城市管理执法办法.pdf", "document": "城市管理执法主管部门应当定期开展执法人员的培训和考核。"}]}'
-    # )
-
     # AIMessage
     assert response.chat_history[1].content == "Text response"
 

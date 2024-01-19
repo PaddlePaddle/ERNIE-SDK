@@ -19,5 +19,4 @@ from erniebot_agent.agents.function_agent_with_retrieval import (
     FunctionAgentWithRetrieval,
     FunctionAgentWithRetrievalScoreTool,
     FunctionAgentWithRetrievalTool,
-    FunctionAgentWithQueryPlanning,
 )

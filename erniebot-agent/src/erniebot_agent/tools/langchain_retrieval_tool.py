@@ -59,7 +59,7 @@ class LangChainRetrievalTool(Tool):
         docs = []
         for doc, score in documents:
             if score > self.threshold:
-                new_doc = {"content": doc.page_content,'score':score}
+                new_doc = {"content": doc.page_content, "score": score}
                 if self.return_meta_data:
                     new_doc["meta"] = doc.metadata
                 if "source" in doc.metadata:
