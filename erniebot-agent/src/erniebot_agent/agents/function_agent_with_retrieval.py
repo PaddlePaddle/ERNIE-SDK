@@ -95,7 +95,9 @@ class FunctionAgentWithRetrieval(FunctionAgent):
         self.search_tool = KnowledgeBaseTool()
         self.token_limit = token_limit
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG branch
@@ -109,7 +111,6 @@ class FunctionAgentWithRetrieval(FunctionAgent):
                 step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=docs))
                 chat_history: List[Message] = []
                 chat_history.append(step_input)
-                steps_taken: List[AgentStep] = []
 
                 tool_ret_json = json.dumps(results, ensure_ascii=False)
                 tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
@@ -197,12 +198,13 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if results["is_relevant"] is True:
             # RAG
             chat_history: List[Message] = []
-            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
@@ -274,7 +276,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
-            return await super()._run(prompt)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
@@ -309,18 +311,19 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
         self.search_tool = KnowledgeBaseTool()
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
         results = await self._maybe_retrieval(prompt)
         if len(results["documents"]) > 0:
             # RAG
             chat_history: List[Message] = []
-            steps_taken: List[AgentStep] = []
 
             tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.search_tool, input_args=tool_args
             )
-            chat_history.append(HumanMessage(content=prompt))
+
             outputs = []
             for item in results["documents"]:
                 outputs.append(
@@ -331,33 +334,14 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
                     }
                 )
 
-            chat_history.append(
-                AIMessage(
-                    content="",
-                    function_call={
-                        "name": "KnowledgeBaseTool",
-                        "thoughts": "这是一个检索的需求，我需要在KnowledgeBaseTool知识库中检索出与输入的query相关的段落，并返回给用户。",
-                        "arguments": tool_args,
-                    },
-                )
-            )
-
-            # Knowledge Retrieval Tool
-            action = ToolAction(tool_name=self.search_tool.tool_name, tool_args=tool_args)
             # return response
             tool_ret_json = json.dumps({"documents": outputs}, ensure_ascii=False)
-            next_step_input = FunctionMessage(name=action.tool_name, content=tool_ret_json)
+            # Direct Prompt
+            next_step_input = HumanMessage(content=f"问题：{prompt}，要求：请在第一步执行检索的操作,并且检索只允许调用一次")
             chat_history.append(next_step_input)
             tool_resp = ToolResponse(json=tool_ret_json, input_files=[], output_files=[])
-            steps_taken.append(
-                ToolStep(
-                    info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
-                    result=tool_resp.json,
-                    input_files=tool_resp.input_files,
-                    output_files=tool_resp.output_files,
-                )
-            )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
+
             num_steps_taken = 0
             while num_steps_taken < self.max_steps:
                 curr_step, new_messages = await self._step(chat_history)
@@ -379,24 +363,12 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
                     return response
                 num_steps_taken += 1
             response = self._create_stopped_response(chat_history, steps_taken)
-            # while num_steps_taken < self.max_steps:
-            #     curr_step_output = await self._step(
-            #         next_step_input, chat_history, actions_taken, files_involved
-            #     )
-            #     if curr_step_output is None:
-            #         response = self._create_finished_response(chat_history, actions_taken, files_involved)
-            #         self.memory.add_message(chat_history[0])
-            #         self.memory.add_message(chat_history[-1])
-            #         return response
-            #     num_steps_taken += 1
-            # # response = self._create_stopped_response(chat_history, actions_taken, files_involved)
-            # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
-            return await super()._run(prompt)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
@@ -407,3 +379,95 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
         results = {}
         results["documents"] = documents
         return results
+
+
+REWRITE_PROMPT = """请对下面的问题进行子问题提取，用于检索相关的信息帮助回答原问题，要求：
+1.严格按照【JSON格式】的形式输出：{'sub query1':'具体子问题1','sub_query2':'具体子问题2'}
+原问题：{{query}} 提取的子问题："""
+
+
+class ContextAugmentedFunctionAgent(FunctionAgent):
+    def __init__(self, knowledge_base: BaizhongSearch, top_k: int = 3, threshold: float = 0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.knowledge_base = knowledge_base
+        self.top_k = top_k
+        self.threshold = threshold
+        self.rag_prompt = PromptTemplate(RAG_PROMPT, input_variables=["documents", "query"])
+        self.search_tool = KnowledgeBaseTool()
+        self.query_rewrite = PromptTemplate(REWRITE_PROMPT, input_variables=["query"])
+
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: List[AgentStep] = []
+    ) -> AgentResponse:
+        # Rewrite queries for retrieval
+        results = await self._query_rewrite(prompt)
+        if len(results) > 0:
+            # RAG
+            chat_history: List[Message] = []
+
+            tool_args = json.dumps({"query": prompt}, ensure_ascii=False)
+            await self._callback_manager.on_tool_start(
+                agent=self, tool=self.search_tool, input_args=tool_args
+            )
+            # Generate Answer
+            step_input = HumanMessage(content=self.rag_prompt.format(query=prompt, documents=results))
+            fake_chat_history: List[Message] = [step_input]
+            llm_resp = await self.run_llm(messages=fake_chat_history)
+            output_message = llm_resp.message
+
+            # Context Augmented query
+            rewrite_prompt = (
+                f"背景信息为：{output_message.content} \n 给定背景信息，而不是先验知识，选择相应的工具回答或者根据背景信息直接回答问题：{prompt}"
+            )
+            next_step_input = HumanMessage(content=rewrite_prompt)
+            chat_history.append(next_step_input)
+            # Return response
+            tool_resp = ToolResponse(
+                json=json.dumps(results, ensure_ascii=False), input_files=[], output_files=[]
+            )
+            steps_taken.append(
+                ToolStep(
+                    info=ToolInfo(tool_name=self.search_tool.tool_name, tool_args=tool_args),
+                    result=tool_resp.json,
+                    input_files=tool_resp.input_files,
+                    output_files=tool_resp.output_files,
+                )
+            )
+            await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
+            # Execute next step
+            return await super()._run(rewrite_prompt, files, steps_taken)
+        else:
+            _logger.info(
+                f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
+            )
+            return await super()._run(prompt, files)
+
+    async def _query_rewrite(self, prompt):
+        # Rewrite queries for retrieval
+        step_input = HumanMessage(content=self.query_rewrite.format(query=prompt))
+        fake_chat_history: List[Message] = [step_input]
+        llm_resp = await self.run_llm(messages=fake_chat_history, functions=None)
+        output_message = llm_resp.message
+        queries = self._parse_results(output_message.content)
+        duplicates = set()
+        results = []
+        for sub_query in list(queries.values()):
+            sub_results = await self._maybe_retrieval(sub_query)
+            for doc in sub_results:
+                if doc["content"] not in duplicates:
+                    duplicates.add(doc["content"])
+                    results.append(doc)
+        return results
+
+    async def _maybe_retrieval(
+        self,
+        step_input,
+    ):
+        documents = await self.knowledge_base(step_input, top_k=self.top_k, filters=None)
+        documents = [item for item in documents["documents"] if item["score"] > self.threshold]
+        return documents
+
+    def _parse_results(self, results):
+        left_index = results.find("{")
+        right_index = results.rfind("}")
+        return json.loads(results[left_index : right_index + 1])
