@@ -208,9 +208,7 @@ async def create_file_from_data(
     )
 
 
-async def get_content_by_file_id(
-    file_id: str, format: str, file_manager: FileManager
-) -> str:
+async def get_content_by_file_id(file_id: str, format: str, file_manager: FileManager) -> str:
     file_id = file_id.replace("<file>", "").replace("</file>", "")
     file = file_manager.look_up_file_by_id(file_id)
     byte_str = await file.read_contents()
