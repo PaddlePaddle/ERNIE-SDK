@@ -56,7 +56,7 @@ def no_input_no_output_tool():
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(identity_tool):
+async def test_function_agent_with_retrieval_retrieval_score_tool_callbacks(identity_tool):
     callback_handler = CountingCallbackHandler()
     knowledge_base_name = "test"
     access_token = "your access token"
@@ -106,7 +106,7 @@ async def test_functional_agent_with_retrieval_retrieval_score_tool_callbacks(id
 
 
 @pytest.mark.asyncio
-async def test_functional_agent_with_retrieval_retrieval_score_tool_run_retrieval(identity_tool):
+async def test_function_agent_with_retrieval_retrieval_score_tool_run_retrieval(identity_tool):
     knowledge_base_name = "test"
     access_token = "your access token"
     knowledge_base_id = 111
