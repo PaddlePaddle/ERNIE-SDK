@@ -431,7 +431,7 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
             )
             await self._callback_manager.on_tool_end(agent=self, tool=self.search_tool, response=tool_resp)
             # Execute next step
-            return await super()._run(rewrite_prompt, files)
+            return await super()._run(rewrite_prompt, files, steps_taken)
         else:
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
@@ -445,10 +445,14 @@ class ContextAugmentedFunctionAgent(FunctionAgent):
         llm_resp = await self.run_llm(messages=fake_chat_history, functions=None)
         output_message = llm_resp.message
         queries = self._parse_results(output_message.content)
+        duplicates = set()
         results = []
         for sub_query in list(queries.values()):
             sub_results = await self._maybe_retrieval(sub_query)
-            results.extend(sub_results)
+            for doc in sub_results:
+                if doc["content"] not in duplicates:
+                    duplicates.add(doc["content"])
+                    results.append(doc)
         return results
 
     async def _maybe_retrieval(

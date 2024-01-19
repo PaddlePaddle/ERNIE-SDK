@@ -124,9 +124,10 @@ class FunctionAgent(Agent):
         else:
             self._first_tools = []
 
-    async def _run(self, prompt: str, files: Optional[Sequence[File]] = None) -> AgentResponse:
+    async def _run(
+        self, prompt: str, files: Optional[Sequence[File]] = None, steps_taken: Optional[AgentStep] = []
+    ) -> AgentResponse:
         chat_history: List[Message] = []
-        steps_taken: List[AgentStep] = []
 
         run_input = await HumanMessage.create_with_files(
             prompt, files or [], include_file_urls=self.file_needs_url
