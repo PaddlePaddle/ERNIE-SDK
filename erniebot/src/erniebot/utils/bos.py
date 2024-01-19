@@ -26,9 +26,15 @@ def upload_file_to_bos(
     access_key_id: Optional[str] = None,
     secret_access_key: Optional[str] = None,
 ) -> str:
-    from baidubce.auth.bce_credentials import BceCredentials  # type: ignore
-    from baidubce.bce_client_configuration import BceClientConfiguration  # type: ignore
-    from baidubce.services.bos.bos_client import BosClient  # type: ignore
+    from baidubce.auth.bce_credentials import (  # type: ignore[import-untyped]
+        BceCredentials,
+    )
+    from baidubce.bce_client_configuration import (  # type: ignore[import-untyped]
+        BceClientConfiguration,
+    )
+    from baidubce.services.bos.bos_client import (  # type: ignore[import-untyped]
+        BosClient,
+    )
 
     b_config = BceClientConfiguration(
         credentials=BceCredentials(access_key_id, secret_access_key), endpoint=bos_host
