@@ -33,7 +33,7 @@ class BaizhongSearchTool(Tool):
     def __init__(
         self,
         db,
-        name: str = "This is a tool",
+        name: Optional[str] = None,
         description: str = "This is the tool for search",
         threshold: float = 0.0,
         input_type=None,
