@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 from pydantic.fields import FieldInfo
 
 from erniebot_agent.utils.common import create_enum_class
-from erniebot_agent.utils.exceptions import RemoteToolError
+from erniebot_agent.utils.exceptions import RemoteToolError, ToolError
 
 INVALID_FIELD_NAME = "__invalid_field_name__"
 
@@ -116,6 +116,9 @@ def python_type_from_json_type(json_type_dict: dict) -> Type[object]:
         return List[float]
     if json_type_value == "object":
         return List[ToolParameterView]
+    elif json_type_value == "array":
+        sub_type = python_type_from_json_type(json_type_dict["items"])
+        return List[sub_type]  # type: ignore
 
     raise ValueError(f"unsupported data type: {json_type_value}")
 
@@ -240,8 +243,11 @@ class ToolParameterView(BaseModel):
         fields = {}
         for field_name, field_dict in schema.get("properties", {}).items():
             # skip loading invalid field to improve compatibility
-            if "type" not in field_dict or "description" not in field_dict:
-                continue
+            if "type" not in field_dict:
+                raise ToolError(f"`type` field not found in `{field_name}` property", stage="Loading")
+
+            if "description" not in field_dict:
+                raise ToolError(f"`description` field not found in `{field_name}` property", stage="Loading")
 
             if field_name.startswith("__"):
                 continue
@@ -460,7 +466,7 @@ class RemoteToolView:
                 returns_description = list(path_info["responses"].values())[0].get("description", None)
 
         return RemoteToolView(
-            name=path_info["operationId"],
+            name=path_info.get("operationId", uri.strip("/").replace("/", "-")),
             parameters=parameters,
             version=version,
             parameters_description=parameters_description,

@@ -9,3 +9,4 @@ types-beautifulsoup4
 lxml
 langchain-community
 arxiv
+responses

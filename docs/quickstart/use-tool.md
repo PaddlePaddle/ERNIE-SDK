@@ -55,4 +55,4 @@ asyncio.run(main())
 toolkit = RemoteToolkit.from_url("http://127.0.0.1:8000")
 ```
 
-自定义RemoteTool请参考 [自定义工具](../modules/tools/create-remote-tool.md) 文档。
+自定义RemoteTool请参考 [自定义远程工具教程](../cookbooks/agent/remote_tool.ipynb) 文档。

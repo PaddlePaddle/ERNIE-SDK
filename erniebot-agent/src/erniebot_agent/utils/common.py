@@ -67,3 +67,18 @@ def get_file_type(file_name: str) -> str:
         return guess_type.split("/")[0]
     else:
         raise ValueError(f"Invalid file name: {file_name}")
+
+
+def import_module(module_name: str, error_message: str):
+    """import external module with import error message
+
+    Args:
+        module_name (str): the name of module
+    """
+    from importlib import import_module as _import_module
+
+    try:
+        module = _import_module(module_name)
+        return module
+    except ImportError:
+        raise ImportError(error_message)
