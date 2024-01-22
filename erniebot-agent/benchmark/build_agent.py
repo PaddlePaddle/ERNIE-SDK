@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict
 
-os.environ["EB_AGENT_ACCESS_TOKEN"] = "4ce50e3378f418d271c480c8ddfa818537071dbe"
+os.environ["EB_AGENT_ACCESS_TOKEN"] = ""
 os.environ["EB_AGENT_LOGGING_LEVEL"] = "info"
 
 from benchmark.schema import AgentArgs

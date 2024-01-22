@@ -28,4 +28,4 @@ def relative_import(module_name, submodule_name):
 
 if __name__ == "__main__":
     # 使用示例
-    recursively_search_yaml("/ssd2/tangshiyu/Code/ERNIE-Bot-SDK/erniebot-agent/benchmark/tasks")
+    recursively_search_yaml("./benchmark/tasks")
