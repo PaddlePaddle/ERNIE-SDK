@@ -66,7 +66,7 @@ class Task(Generic[IT, OT]):
         self.end_reason = None
 
     @classmethod
-    def get_input_type(cls) -> Type[IT]:  # type: ignore
+    def get_input_type(cls) -> Type[IT]:
         task_bases = [
             base
             for base in cls.__orig_bases__  # type: ignore
@@ -77,6 +77,7 @@ class Task(Generic[IT, OT]):
                 if issubclass(super_class, Task):
                     return super_class.get_input_type()
             # return super().get_input_type() # type: ignore
+            raise RuntimeError(f"Task {cls.__name__} has no `Task` superclass.")
         elif len(task_bases) == 1:
             return get_args(task_bases[0])[0]
         else:
@@ -104,9 +105,10 @@ class Task(Generic[IT, OT]):
     async def _execute(self, inp, **kwargs) -> ParseDict:
         raise NotImplementedError("Subclasses must implement the `_execute` method")
 
-    def _pre_check(self, inp):
+    def _pre_check(self, inp) -> None:
+
         class Schema(BaseModel):
-            inp: self.get_input_type()
+            inp: Type = self.get_input_type() # type: ignore
 
             @field_validator("inp")
             def val_inp(cls, v):
@@ -116,7 +118,7 @@ class Task(Generic[IT, OT]):
                 arbitrary_types_allowed = True
 
         try:
-            Schema(**inp)
+            Schema.model_validate(inp)
         except ValidationError as e:
             raise TypeError("The input argument `inp` is not valid" f"\n{e}")
 
