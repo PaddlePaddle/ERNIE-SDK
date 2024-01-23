@@ -225,6 +225,19 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
         )
         index.storage_context.persist(persist_dir=index_name)
         return index
+    elif origin_data:
+        nodes = [TextNode(text=item.page_content, metadata=item.metadata) for item in origin_data]
+        text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
+        index = VectorStoreIndex(
+            nodes,
+            storage_context=storage_context,
+            show_progress=True,
+            service_context=service_context,
+        )
+        index.storage_context.persist(persist_dir=index_name)
+        return index
 
 
 def get_retriver_by_type(frame_type):
