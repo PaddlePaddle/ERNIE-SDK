@@ -249,7 +249,7 @@ class ERNIEBot(BaseERNIEBot):
                         "use `json_object` instead. "
                     )
                 else:
-                # It will not raise error in request
+                    # It will not raise error in request
                     _logger.warning(
                         f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
                         "use default value: `text`. "
