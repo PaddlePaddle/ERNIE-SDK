@@ -246,9 +246,6 @@ class ToolParameterView(BaseModel):
             if "type" not in field_dict:
                 raise ToolError(f"`type` field not found in `{field_name}` property", stage="Loading")
 
-            if "description" not in field_dict:
-                raise ToolError(f"`description` field not found in `{field_name}` property", stage="Loading")
-
             if field_name.startswith("__"):
                 continue
 
