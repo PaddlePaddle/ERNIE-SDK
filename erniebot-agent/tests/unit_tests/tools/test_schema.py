@@ -554,3 +554,26 @@ class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result["enum_field"]["enum_array"], ["1", "2", "4"])
         self.assertEqual(result["no_enum_field"], "no_enum_value")
+
+
+class TestFixedValueSchema(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        self.toolkit = RemoteToolkit.from_openapi_file("./tests/fixtures/openapis/fixed_value.yaml")
+
+    @responses.activate
+    async def test_value_v1(self):
+        tool = self.toolkit.get_tool("value_v1")
+
+        responses.post("http://example.com/value_v1", json={"field": "2"})
+        result = await tool()
+
+        self.assertEqual(result["field"], "12345")
+
+    @responses.activate
+    async def test_value_v2(self):
+        tool = self.toolkit.get_tool("value_v2")
+
+        responses.post("http://example.com/value_v2", json={"field": "2"})
+        result = await tool()
+
+        self.assertEqual(result["field"], "12345")
