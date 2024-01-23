@@ -72,7 +72,7 @@ parser.add_argument(
     help="['openai_embedding','baizhong','ernie_embedding']",
 )
 parser.add_argument(
-    "--use_frame",
+    "--framework",
     type=str,
     default="langchain",
     choices=["langchain", "llama_index"],
@@ -86,16 +86,16 @@ access_token = os.environ.get("EB_AGENT_ACCESS_TOKEN", None)
 def get_retrievers(build_index_function, retrieval_tool):
     if args.embedding_type == "openai_embedding":
         embeddings = AzureOpenAIEmbeddings(azure_deployment="text-embedding-ada")
-        paper_db = build_index_function(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index_function(faiss_name=args.index_name_abstract, embeddings=embeddings)
+        fulltext_db = build_index_function(index_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(index_name=args.index_name_abstract, embeddings=embeddings)
         abstract_search = retrieval_tool(abstract_db, embeddings=embeddings)
-        retriever_search = retrieval_tool(paper_db, embeddings=embeddings)
+        retriever_search = retrieval_tool(fulltext_db, embeddings=embeddings)
     elif args.embedding_type == "ernie_embedding":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
-        paper_db = build_index_function(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index_function(faiss_name=args.index_name_abstract, embeddings=embeddings)
+        fulltext_db = build_index_function(index_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(index_name=args.index_name_abstract, embeddings=embeddings)
         abstract_search = retrieval_tool(abstract_db, embeddings=embeddings)
-        retriever_search = retrieval_tool(paper_db, embeddings=embeddings)
+        retriever_search = retrieval_tool(fulltext_db, embeddings=embeddings)
     elif args.embedding_type == "baizhong":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
         retriever_search = BaizhongSearch(
@@ -189,7 +189,7 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, build_index_function, r
 def main(query):
     llm_long = ERNIEBot(model="ernie-longtext")
     llm = ERNIEBot(model="ernie-4.0")
-    build_index_function, retrieval_tool = get_retriver_by_type(args.use_frame)
+    build_index_function, retrieval_tool = get_retriver_by_type(args.framework)
     retriever_sets = get_retrievers(build_index_function, retrieval_tool)
     tool_sets = get_tools(llm, llm_long)
     agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long, build_index_function, retrieval_tool)

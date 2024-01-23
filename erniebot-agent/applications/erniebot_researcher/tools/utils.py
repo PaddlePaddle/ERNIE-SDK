@@ -146,17 +146,17 @@ def write_to_json(filename: str, list_data: list, mode="w") -> None:
             file.write(item)
 
 
-def add_citation(paragraphs, faiss_name, embeddings, build_index, FaissSearch):
-    if os.path.exists(faiss_name):
-        shutil.rmtree(faiss_name)
+def add_citation(paragraphs, index_name, embeddings, build_index, SearchTool):
+    if os.path.exists(index_name):
+        shutil.rmtree(index_name)
     list_data = []
     for item in paragraphs:
         example = Document(page_content=item["summary"], metadata={"url": item["url"], "name": item["name"]})
         list_data.append(example)
     faiss_db = build_index(
-        faiss_name=faiss_name, use_data=True, embeddings=embeddings, origin_data=list_data
+        index_name=index_name, use_data=True, embeddings=embeddings, origin_data=list_data
     )
-    faiss_search = FaissSearch(db=faiss_db)
+    faiss_search = SearchTool(db=faiss_db)
     return faiss_search
 
 

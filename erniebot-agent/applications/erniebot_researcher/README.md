@@ -63,24 +63,33 @@ pip install -r requirements.txt
 ```
 wget https://paddlenlp.bj.bcebos.com/pipelines/fonts/SimSun.ttf
 ```
+
 > 第四步：创建索引
+
+下载实例数据
+
+```
+wget https://paddlenlp.bj.bcebos.com/pipelines/erniebot_researcher_example.tar.gz
+tar xvf erniebot_researcher_example.tar.gz
+```
+
 首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后设置环境变量:
+
 ```
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
-export AZURE_OPENAI_API_KEY=<openai-api-token>
-export OPENAI_API_KEY=<openai-api-token>
-export AZURE_OPENAI_ENDPOINT=<openai-endpoint>
-export OPENAI_API_VERSION=<openai-api-version>
 ```
 
 如果用户有url链接，你可以传入存储url链接的txt或者json文件。
-在txt中，每一行存储文件的路径和对应的url链接，例如'https://zhuanlan.zhihu.com/p/659457816 data/Ai_Agent的起源.md'
-在json文件中，字典的每一个键是文件的路径，值是url链接
+在txt中，每一行存储文件的路径和对应的url链接，例如:
+'https://zhuanlan.zhihu.com/p/659457816 erniebot_researcher_example/Ai_Agent的起源.md'
+
+在json文件中，字典的每一个键是文件的路径，值是url链接,例如:
+{"erniebot_researcher_example/Ai_Agent的起源.md":"https://zhuanlan.zhihu.com/p/659457816",...}
 如果用户不传入url文件，则默认文件的路径为其url链接
 
-用户可以自己传入文件摘要的存储路径。其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，"page_content"存储文件的摘要，"url"是文件的url链接，"name"是文章的名字。
-
+用户可以自己传入文件摘要的存储路径。其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，"page_content"存储文件的摘要，"url"是文件的url链接，"name"是文章的名字。例如:
+[{"page_content":"文章摘要","url":"https://zhuanlan.zhihu.com/p/659457816","name":Ai_Agent的起源},...]
 ```
 python ./tools/preprocessing.py \
 --index_name_full_text <the index name of your full text> \

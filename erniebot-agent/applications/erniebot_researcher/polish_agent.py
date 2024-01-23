@@ -159,7 +159,7 @@ class PolishAgent(JsonUtil):
                 agent_name=self.name,
                 report_type=self.report_type,
                 dir_path=self.dir_path,
-                citation_faiss_research=citation_search,
+                citation_research=citation_search,
             )
         path = write_md_to_pdf(self.report_type, self.dir_path, final_report)
         await self._callback_manager.on_tool_end(

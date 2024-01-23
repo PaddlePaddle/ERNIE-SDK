@@ -6,3 +6,4 @@ markdown
 WeasyPrint==52.5
 openai
 langchain_openai
+zhon
