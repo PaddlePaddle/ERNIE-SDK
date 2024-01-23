@@ -223,7 +223,7 @@ def generate_report(query, history=[]):
     agent_sets = get_agents(
         retriever_sets, tool_sets, llm, llm_long, dir_path, target_path, build_index_function, retrieval_tool
     )
-    team_actor = ResearchTeam(**agent_sets, use_reflection=True)
+    team_actor = ResearchTeam(**agent_sets, use_reflection=False)
     report, path = asyncio.run(team_actor.run(query, args.iterations))
     return report, path
 
