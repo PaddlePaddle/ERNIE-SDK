@@ -153,9 +153,7 @@ def add_citation(paragraphs, index_name, embeddings, build_index, SearchTool):
     for item in paragraphs:
         example = Document(page_content=item["summary"], metadata={"url": item["url"], "name": item["name"]})
         list_data.append(example)
-    faiss_db = build_index(
-        index_name=index_name, use_data=True, embeddings=embeddings, origin_data=list_data
-    )
+    faiss_db = build_index(index_name=index_name, embeddings=embeddings, origin_data=list_data)
     faiss_search = SearchTool(db=faiss_db)
     return faiss_search
 
