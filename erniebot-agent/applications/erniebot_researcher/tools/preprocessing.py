@@ -14,7 +14,7 @@ from llama_index import (
     SimpleDirectoryReader,
     StorageContext,
     VectorStoreIndex,
-    load_index_from_storage
+    load_index_from_storage,
 )
 from llama_index.node_parser import SentenceSplitter
 from llama_index.vector_stores.faiss import FaissVectorStore
