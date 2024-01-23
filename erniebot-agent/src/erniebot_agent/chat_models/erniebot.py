@@ -242,6 +242,12 @@ class ERNIEBot(BaseERNIEBot):
 
         if "response_format" in cfg_dict:
             if cfg_dict["response_format"] not in ("json_object", "text"):
+                if "json" in cfg_dict["response_format"]:
+                    cfg_dict["response_format"] = "json_object"
+                    _logger.warning(
+                        f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
+                        "use `json_object` instead. "
+                    )
                 # It will not raise error in request
                 _logger.warning(
                     f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
