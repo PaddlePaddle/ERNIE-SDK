@@ -6,7 +6,7 @@ import os
 import gradio as gr
 from editor_actor_agent import EditorActorAgent
 from fact_check_agent import FactCheckerAgent
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 from polish_agent import PolishAgent
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
@@ -14,12 +14,13 @@ from research_team import ResearchTeam
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
+from tools.preprocessing import get_retriver_by_type
 from tools.ranking_tool import TextRankingTool
 from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, ReportCallbackHandler, build_index, setup_logging
+from tools.utils import ReportCallbackHandler, setup_logging
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
@@ -69,8 +70,16 @@ parser.add_argument(
 parser.add_argument(
     "--embedding_type",
     type=str,
+    choices=["openai_embedding", "ernie_embedding", "baizhong"],
     default="openai_embedding",
     help="['openai_embedding','baizhong','ernie_embedding']",
+)
+parser.add_argument(
+    "--use_frame",
+    type=str,
+    default="langchain",
+    choices=["langchain", "llama_index"],
+    help="['langchain','llama_index']",
 )
 parser.add_argument("--save_path", type=str, default="./output/erniebot", help="The report save path")
 parser.add_argument("--server_name", type=str, default="0.0.0.0", help="the host of server")
@@ -88,19 +97,19 @@ def get_logs(path=args.log_path):
     return content
 
 
-def get_retrievers():
+def get_retrievers(build_index_function, retrieval_tool):
     if args.embedding_type == "openai_embedding":
-        embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
-        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
-        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
-        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+        embeddings = AzureOpenAIEmbeddings(azure_deployment="text-embedding-ada")
+        paper_db = build_index_function(faiss_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(faiss_name=args.index_name_abstract, embeddings=embeddings)
+        abstract_search = retrieval_tool(abstract_db)
+        retriever_search = retrieval_tool(paper_db)
     elif args.embedding_type == "ernie_embedding":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
-        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
-        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
-        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+        paper_db = build_index_function(faiss_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(faiss_name=args.index_name_abstract, embeddings=embeddings)
+        abstract_search = retrieval_tool(abstract_db)
+        retriever_search = retrieval_tool(paper_db)
     elif args.embedding_type == "baizhong":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
         retriever_search = BaizhongSearch(
@@ -136,7 +145,9 @@ def get_tools(llm, llm_long):
     }
 
 
-def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
+def get_agents(
+    retriever_sets, tool_sets, llm, llm_long, dir_path, target_path, build_index_function, retrieval_tool
+):
     research_actor = []
     for i in range(args.num_research_agent):
         agents_name = "agent_" + str(i)
@@ -185,6 +196,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
         report_type=args.report_type,
         citation_tool=tool_sets["semantic_citation"],
         callbacks=ReportCallbackHandler(logger=logger),
+        build_index_function=build_index_function,
+        search_tool=retrieval_tool,
     )
     return {
         "research_actor": research_actor,
@@ -203,9 +216,13 @@ def generate_report(query, history=[]):
     os.makedirs(target_path, exist_ok=True)
     llm = ERNIEBot(model="ernie-4.0")
     llm_long = ERNIEBot(model="ernie-longtext")
-    retriever_sets = get_retrievers()
+    build_index_function, retrieval_tool = get_retriver_by_type(args.use_frame)
+
+    retriever_sets = get_retrievers(build_index_function, retrieval_tool)
     tool_sets = get_tools(llm, llm_long)
-    agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path)
+    agent_sets = get_agents(
+        retriever_sets, tool_sets, llm, llm_long, dir_path, target_path, build_index_function, retrieval_tool
+    )
     team_actor = ResearchTeam(**agent_sets, use_reflection=True)
     report, path = asyncio.run(team_actor.run(query, args.iterations))
     return report, path

@@ -154,8 +154,8 @@ class FactCheckerAgent(JsonUtil):
         for item in facts_problems:
             question = item["question"]
             claim = item["fact"]
-            context = self.retriever_db.search(question)
-            context = [i["content"] for i in context]
+            context = await self.retriever_db(question)
+            context = [i["content"] for i in context["documents"]]
             item["evidence"] = context
             anwser = await self.generate_anwser(question, context)
             item["anwser"] = anwser

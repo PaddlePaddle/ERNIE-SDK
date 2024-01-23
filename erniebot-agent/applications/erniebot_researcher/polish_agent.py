@@ -38,6 +38,8 @@ class PolishAgent(JsonUtil):
         citation_index_name: str,
         dir_path: str,
         report_type: str,
+        build_index_function: Any,
+        search_tool: Any,
         system_message: Optional[SystemMessage] = None,
         callbacks=None,
     ):
@@ -58,6 +60,8 @@ class PolishAgent(JsonUtil):
         self.prompt_template_polish = PromptTemplate(
             template=self.template_polish, input_variables=["content"]
         )
+        self.build_index_function = build_index_function
+        self.search_tool = search_tool
         if callbacks is None:
             self._callback_manager = ReportCallbackHandler()
         else:
@@ -143,7 +147,13 @@ class PolishAgent(JsonUtil):
         final_report = await self.polish_paragraph(report, abstract, key)
         await self._callback_manager.on_tool_start(self, tool=self.citation_tool, input_args=final_report)
         if summarize is not None:
-            citation_search = add_citation(summarize, self.citation_index_name, self.embeddings)
+            citation_search = add_citation(
+                summarize,
+                self.citation_index_name,
+                self.embeddings,
+                self.build_index_function,
+                self.search_tool,
+            )
             final_report, path = await self.citation_tool(
                 report=final_report,
                 agent_name=self.name,
