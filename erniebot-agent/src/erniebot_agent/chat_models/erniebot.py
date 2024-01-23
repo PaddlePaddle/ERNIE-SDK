@@ -248,12 +248,13 @@ class ERNIEBot(BaseERNIEBot):
                         f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
                         "use `json_object` instead. "
                     )
+                else:
                 # It will not raise error in request
-                _logger.warning(
-                    f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
-                    "use default value: `text`. "
-                    "You can only choose `json_object` or `text`. "
-                )
+                    _logger.warning(
+                        f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
+                        "use default value: `text`. "
+                        "You can only choose `json_object` or `text`. "
+                    )
 
         return cfg_dict
 
