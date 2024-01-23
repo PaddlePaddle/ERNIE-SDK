@@ -227,6 +227,23 @@ class ERNIEBot(BaseERNIEBot):
             # rm blank dict
             if not cfg_dict["tool_choice"]:
                 cfg_dict.pop("tool_choice")
+
+        if "response_format" in cfg_dict:
+            if cfg_dict["response_format"] not in ("json_object", "text"):
+                if "json" in cfg_dict["response_format"]:
+                    cfg_dict["response_format"] = "json_object"
+                    _logger.warning(
+                        f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
+                        "use `json_object` instead. "
+                    )
+                else:
+                    # It will not raise error in request
+                    _logger.warning(
+                        f"`response_format` has invalid value:`{cfg_dict['response_format']}`,  "
+                        "use default value: `text`. "
+                        "You can only choose `json_object` or `text`. "
+                    )
+
         return cfg_dict
 
     def _maybe_validate_qianfan_auth(self) -> None:
