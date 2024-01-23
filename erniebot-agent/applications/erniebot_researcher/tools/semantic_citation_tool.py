@@ -58,10 +58,9 @@ class SemanticCitationTool(Tool):
                     sentence += "。"
             for item in query_result["documents"]:
                 source = item["meta"]["url"]
-                breakpoint()
                 if item["score"] >= self.theta_min and item["score"] <= self.theta_max:
                     if source not in self.recoder_cite_list:
-                        self.recoder_cite_title.append(item["name"])
+                        self.recoder_cite_title.append(item["meta"]["name"])
                         self.recoder_cite_list.append(source)
                         self.recoder_cite_dict[source] = 1
                         index = len(self.recoder_cite_list)

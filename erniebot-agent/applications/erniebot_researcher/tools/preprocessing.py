@@ -14,7 +14,9 @@ from llama_index import (
     SimpleDirectoryReader,
     StorageContext,
     VectorStoreIndex,
+    load_index_from_storage
 )
+from llama_index.node_parser import SentenceSplitter
 from llama_index.vector_stores.faiss import FaissVectorStore
 
 from erniebot_agent.memory import HumanMessage, Message
@@ -90,7 +92,6 @@ class GenerateAbstract:
             url = url_dict.get(item.metadata["source"], item.metadata["source"])
             if url_dict and item.metadata["source"] in url_dict:
                 item.metadata["source"] = url_dict[item.metadata["source"]]
-
             summary_list.append({"page_content": summary, "url": url, "name": item.metadata["source"]})
         self.write_json(summary_list)
         return self.path
@@ -179,21 +180,22 @@ def build_index_llama(
     if os.path.exists(faiss_name):
         vector_store = FaissVectorStore.from_persist_dir(persist_dir=faiss_name)
         storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=faiss_name)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings)
+        index = load_index_from_storage(storage_context=storage_context, service_context=service_context)
+        return index
+    if not abstract and not use_data:
+        documents = SimpleDirectoryReader(path).load_data()
+        text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
+        index = VectorStoreIndex.from_documents(
+            documents,
+            storage_context=storage_context,
+            show_progress=True,
+            service_context=service_context,
+        )
+        index.storage_context.persist(persist_dir=faiss_name)
         return storage_context
-    from llama_index.node_parser import SentenceSplitter
-
-    documents = SimpleDirectoryReader(path).load_data()
-    text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
-    index = VectorStoreIndex.from_documents(
-        documents,
-        storage_context=storage_context,
-        show_progress=True,
-        service_context=service_context,
-    )
-    index.storage_context.persist(persist_dir=faiss_name)
-    return storage_context
 
 
 def get_retriver_by_type(frame_type):
