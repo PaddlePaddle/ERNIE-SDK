@@ -7,7 +7,6 @@ import jsonlines
 from langchain.docstore.document import Document
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
-from llama_index.schema import TextNode
 from langchain_community.document_loaders import DirectoryLoader
 from llama_index import (
     ServiceContext,
@@ -17,6 +16,7 @@ from llama_index import (
     load_index_from_storage,
 )
 from llama_index.node_parser import SentenceSplitter
+from llama_index.schema import TextNode
 from llama_index.vector_stores.faiss import FaissVectorStore
 
 from erniebot_agent.memory import HumanMessage, Message
