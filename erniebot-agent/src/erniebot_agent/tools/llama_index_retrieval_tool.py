@@ -42,13 +42,5 @@ class LlamaIndexRetrievalTool(Tool):
         self.threshold = threshold
 
     async def __call__(self, query: str, top_k: int = 3, filters: Optional[Dict[str, Any]] = None):
-        retriever = self.db.as_retriever(similarity_top_k=top_k)
-        nodes = retriever.retrieve(query)
-        docs = []
-        for doc in nodes:
-            if doc.score > self.threshold:
-                new_doc = {"content": doc.node.text, "score": doc.score}
-                if self.return_meta_data:
-                    new_doc["meta"] = doc.metadata
-                docs.append(new_doc)
-        return {"documents": docs}
+        # TODO: Adapt to llamaindex
+        pass

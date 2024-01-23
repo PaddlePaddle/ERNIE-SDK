@@ -2,22 +2,13 @@ import json
 import os
 from typing import Any, List
 
-import faiss
 import jsonlines
 from langchain.docstore.document import Document
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
 from langchain_community.document_loaders import DirectoryLoader
-from llama_index import (
-    ServiceContext,
-    SimpleDirectoryReader,
-    StorageContext,
-    VectorStoreIndex,
-    load_index_from_storage,
-)
-from llama_index.node_parser import SentenceSplitter
+from llama_index import SimpleDirectoryReader
 from llama_index.schema import TextNode
-from llama_index.vector_stores.faiss import FaissVectorStore
 
 from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
@@ -185,6 +176,7 @@ def build_index_langchain(
 
 def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract=False, origin_data=None):
     # TODO: Adapt to llamaindex
+    pass
 
 
 def get_retriver_by_type(frame_type):
