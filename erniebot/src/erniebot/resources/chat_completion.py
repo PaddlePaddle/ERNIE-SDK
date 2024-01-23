@@ -115,6 +115,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = ...,
         _config_: Optional[ConfigDictType] = ...,
     ) -> "ChatCompletionResponse":
         ...
@@ -141,6 +142,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = ...,
         _config_: Optional[ConfigDictType] = ...,
     ) -> Iterator["ChatCompletionResponse"]:
         ...
@@ -167,6 +169,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = ...,
         _config_: Optional[ConfigDictType] = ...,
     ) -> Union["ChatCompletionResponse", Iterator["ChatCompletionResponse"]]:
         ...
@@ -192,6 +195,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
+        response_format: Optional[Literal["json_object", "text"]] = None,
         _config_: Optional[ConfigDictType] = None,
     ) -> Union["ChatCompletionResponse", Iterator["ChatCompletionResponse"]]:
         """Creates a model response for the given conversation.
@@ -238,6 +242,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             user_id=user_id,
             tool_choice=tool_choice,
             stream=stream,
+            response_format=response_format,
         )
         kwargs["validate_functions"] = validate_functions
         if extra_params is not None:
@@ -271,6 +276,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = None,
         _config_: Optional[ConfigDictType] = ...,
     ) -> EBResponse:
         ...
@@ -297,6 +303,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = None,
         _config_: Optional[ConfigDictType] = ...,
     ) -> AsyncIterator["ChatCompletionResponse"]:
         ...
@@ -323,6 +330,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = ...,
         headers: Optional[HeadersType] = ...,
         request_timeout: Optional[float] = ...,
+        response_format: Optional[Literal["json_object", "text"]] = None,
         _config_: Optional[ConfigDictType] = ...,
     ) -> Union["ChatCompletionResponse", AsyncIterator["ChatCompletionResponse"]]:
         ...
@@ -348,6 +356,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         extra_params: Optional[dict] = None,
         headers: Optional[HeadersType] = None,
         request_timeout: Optional[float] = None,
+        response_format: Optional[Literal["json_object", "text"]] = None,
         _config_: Optional[ConfigDictType] = None,
     ) -> Union["ChatCompletionResponse", AsyncIterator["ChatCompletionResponse"]]:
         """Creates a model response for the given conversation.
@@ -394,6 +403,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             user_id=user_id,
             tool_choice=tool_choice,
             stream=stream,
+            response_format=response_format,
         )
         kwargs["validate_functions"] = validate_functions
         if extra_params is not None:
@@ -438,6 +448,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             "extra_params",
             "headers",
             "request_timeout",
+            "response_format",
         }
 
         invalid_keys = kwargs.keys() - valid_keys
@@ -500,6 +511,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
             _set_val_if_key_exists(kwargs, params, "user_id")
         _set_val_if_key_exists(kwargs, params, "tool_choice")
         _set_val_if_key_exists(kwargs, params, "stream")
+        _set_val_if_key_exists(kwargs, params, "response_format")
         if "extra_params" in kwargs:
             params.update(kwargs["extra_params"])
 

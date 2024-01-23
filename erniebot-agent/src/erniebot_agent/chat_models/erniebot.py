@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -42,6 +43,9 @@ from erniebot_agent.memory.messages import (
 from erniebot_agent.utils import config_from_environ as C
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
+
+
+_logger = logging.getLogger(__name__)
 
 
 class BaseERNIEBot(ChatModel):
@@ -215,7 +219,15 @@ class ERNIEBot(BaseERNIEBot):
         if functions is not None:
             cfg_dict["functions"] = functions
 
-        name_list = ["top_p", "temperature", "penalty_score", "system", "plugins", "tool_choice"]
+        name_list = [
+            "top_p",
+            "temperature",
+            "penalty_score",
+            "system",
+            "plugins",
+            "tool_choice",
+            "response_format",
+        ]
         for name in name_list:
             if name in kwargs:
                 cfg_dict[name] = kwargs[name]
