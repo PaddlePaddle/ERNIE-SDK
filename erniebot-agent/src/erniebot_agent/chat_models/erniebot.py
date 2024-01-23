@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 from typing import (
     Any,
     AsyncIterator,
@@ -40,6 +41,8 @@ from erniebot_agent.memory.messages import (
     SystemMessage,
 )
 from erniebot_agent.utils import config_from_environ as C
+
+_logger = logging.getLogger(__name__)
 
 _T = TypeVar("_T", AIMessage, AIMessageChunk)
 
@@ -255,6 +258,7 @@ class ERNIEBot(BaseERNIEBot):
     ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionResponse]]:
         # TODO: Improve this when erniebot typing issue is fixed.
         # Note: If plugins is not None, erniebot will not use Baidu_search.
+        _logger.debug(f"ERNIEBot Request: {cfg_dict}")
         if "plugins" in cfg_dict:
             response = await erniebot.ChatCompletionWithPlugins.acreate(
                 messages=cfg_dict["messages"],
@@ -274,7 +278,7 @@ class ERNIEBot(BaseERNIEBot):
                 },
                 **cfg_dict,
             )
-
+        _logger.debug(f"ERNIEBot Response: {response}")
         return response
 
 

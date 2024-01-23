@@ -46,7 +46,6 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS: Final[int] = 5
-_logger = logging.getLogger(__name__)
 
 _logger = logging.getLogger(__name__)
 
