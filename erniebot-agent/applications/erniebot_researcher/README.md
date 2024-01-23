@@ -80,12 +80,10 @@ export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
 ```
 
-如果用户有url链接，你可以传入存储url链接的txt或者json文件。
+如果用户有url链接，你可以传入存储url链接的txt。
 在txt中，每一行存储文件的路径和对应的url链接，例如:
 'https://zhuanlan.zhihu.com/p/659457816 erniebot_researcher_example/Ai_Agent的起源.md'
 
-在json文件中，字典的每一个键是文件的路径，值是url链接,例如:
-{"erniebot_researcher_example/Ai_Agent的起源.md":"https://zhuanlan.zhihu.com/p/659457816",...}
 如果用户不传入url文件，则默认文件的路径为其url链接
 
 用户可以自己传入文件摘要的存储路径。其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，"page_content"存储文件的摘要，"url"是文件的url链接，"name"是文章的名字。例如:

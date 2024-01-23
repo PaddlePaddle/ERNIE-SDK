@@ -257,7 +257,7 @@ def parse_arguments():
         choices=["openai_embedding", "baizhong", "ernie_embedding"],
         help="['openai_embedding','baizhong','ernie_embedding']",
     )
-    parser.add_argument("--url_path", type=str, default="", help="json file path to store url link")
+    parser.add_argument("--url_path", type=str, default="", help="txt file path to store url link")
     parser.add_argument(
         "--framework",
         type=str,
