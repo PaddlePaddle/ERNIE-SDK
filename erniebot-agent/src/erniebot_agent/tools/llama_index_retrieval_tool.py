@@ -27,7 +27,6 @@ class LlamaIndexRetrievalTool(Tool):
     def __init__(
         self,
         db,
-        embed_model: Optional[str] = None,
         threshold: float = 0.0,
         input_type=None,
         output_type=None,
@@ -35,7 +34,6 @@ class LlamaIndexRetrievalTool(Tool):
     ) -> None:
         super().__init__()
         self.db = db
-        self.embed_model = embed_model
         self.return_meta_data = return_meta_data
         if input_type is not None:
             self.input_type = input_type
