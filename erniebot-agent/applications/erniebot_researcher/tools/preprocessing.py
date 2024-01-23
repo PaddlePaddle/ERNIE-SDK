@@ -60,12 +60,7 @@ class GenerateAbstract:
         docs = self.split_documents(docs)
         summaries = []
         for doc in docs:
-            import time
-
-            time1 = time.time()
             summary = await self.generate_abstract(doc.page_content)
-            time2 = time.time()
-            print(time2 - time1)
             summaries.append(summary)
         summary = "\n".join(summaries)
         if len(summaries) > 1:
