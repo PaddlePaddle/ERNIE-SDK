@@ -1,17 +1,19 @@
 import pytest
-from llama_index import Document
+from llama_index.schema import NodeWithScore, TextNode
 
 from erniebot_agent.tools.llama_index_retrieval_tool import LlamaIndexRetrievalTool
 
 
+class FakeRetrieval:
+    def retrieve(self, query: str):
+        doc = NodeWithScore(node=TextNode(text="电动汽车的品牌有哪些？各有什么特点？"), score=0.5)
+        retrieval_results = [doc]
+        return retrieval_results
+
+
 class FakeSearch:
     def as_retriever(self, similarity_top_k: int = 10, **kwargs):
-        def retrieve(query: str):
-            doc = (Document(text="电动汽车的品牌有哪些？各有什么特点？"), 0.5)
-            retrieval_results = [doc]
-            return retrieval_results
-
-        return retrieve
+        return FakeRetrieval()
 
 
 @pytest.fixture(scope="module")
