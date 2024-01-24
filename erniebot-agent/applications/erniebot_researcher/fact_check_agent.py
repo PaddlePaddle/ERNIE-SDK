@@ -9,6 +9,7 @@ from erniebot_agent.memory import HumanMessage, Message, SystemMessage
 from erniebot_agent.prompt import PromptTemplate
 
 logger = logging.getLogger(__name__)
+MAX_RETRY = 10
 PLAN_VERIFICATIONS_PROMPT = """
 为了验证给出的内容中数字性表述的准确性，您需要创建一系列验证问题，
 用于测试原始基线响应中的事实主张。例如，如果长格式响应的一部分包含
@@ -154,8 +155,8 @@ class FactCheckerAgent(JsonUtil):
         for item in facts_problems:
             question = item["question"]
             claim = item["fact"]
-            context = self.retriever_db.search(question)
-            context = [i["content"] for i in context]
+            context = await self.retriever_db(question)
+            context = [i["content"] for i in context["documents"]]
             item["evidence"] = context
             anwser = await self.generate_anwser(question, context)
             item["anwser"] = anwser
@@ -222,11 +223,24 @@ class FactCheckerAgent(JsonUtil):
                     messages: List[Message] = [
                         HumanMessage(content=self.prompt_plan_verifications.format(base_context=item))
                     ]
-                    responese = await self.llm.chat(messages)
-                    result: List[dict] = self.parse_json(responese.content)
-                    fact_check_result: List[dict] = await self.verifications(result)
-                    new_item: str = await self.generate_final_response(item, fact_check_result)
-                    text.append(new_item)
+                    retry_count = 0
+                    while True:
+                        try:
+                            responese = await self.llm.chat(messages)
+                            result: List[dict] = self.parse_json(responese.content)
+                            fact_check_result: List[dict] = await self.verifications(result)
+                            new_item: str = await self.generate_final_response(item, fact_check_result)
+                            text.append(new_item)
+                            break
+                        except Exception as e:
+                            retry_count += 1
+                            logger.error(e)
+                            if retry_count > MAX_RETRY:
+                                raise Exception(
+                                    f"Failed to edit research for {report} after {MAX_RETRY} times."
+                                )
+                            continue
+
                 else:
                     text.append(item)
         return "\n\n".join(text)

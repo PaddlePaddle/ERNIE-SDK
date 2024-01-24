@@ -64,9 +64,41 @@ pip install -r requirements.txt
 wget https://paddlenlp.bj.bcebos.com/pipelines/fonts/SimSun.ttf
 ```
 
-> 第四步：运行
+> 第四步：创建索引
+
+下载实例数据
+
+```
+wget https://paddlenlp.bj.bcebos.com/pipelines/erniebot_researcher_example.tar.gz
+tar xvf erniebot_researcher_example.tar.gz
+```
 
 首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后设置环境变量:
+
+```
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
+```
+
+如果用户有url链接，你可以传入存储url链接的txt。
+在txt中，每一行存储文件的路径和对应的url链接，例如:
+'https://zhuanlan.zhihu.com/p/659457816 erniebot_researcher_example/Ai_Agent的起源.md'
+
+如果用户不传入url文件，则默认文件的路径为其url链接
+
+用户可以自己传入文件摘要的存储路径。其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，"page_content"存储文件的摘要，"url"是文件的url链接，"name"是文章的名字。例如:
+[{"page_content":"文章摘要","url":"https://zhuanlan.zhihu.com/p/659457816","name":Ai_Agent的起源},...]
+```
+python ./tools/preprocessing.py \
+--index_name_full_text <the index name of your full text> \
+--index_name_abstract <the index name of your abstract text> \
+--path_full_text <the folder path of your full text> \
+--url_path <the path of your url text> \
+--path_abstract <the json path of your abstract text>
+```
+
+> 第五步：运行
+
 
 ```
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
@@ -78,23 +110,23 @@ Base版本示例运行：
 
 ```
 python sample_report_example.py --num_research_agent 2 \
-                                --index_name_full_text <your full text> \
-                                --index_name_abstract <your abstract text>
+                                --index_name_full_text <the index name of your full text> \
+                                --index_name_abstract <the index name of your abstract text>
 ```
 
 Base版本WebUI运行：
 
 ```
 python ui.py --num_research_agent 2 \
-             --index_name_full_text <your full text> \
-             --index_name_abstract <your abstract text>
+             --index_name_full_text <the index name of your full text> \
+             --index_name_abstract <the index name of your abstract text>
 ```
 
 高阶版本多智能体自动调度示例脚本运行：
 
 ```
-python sample_group_agent.py --index_name_full_text <your full text> \
-                             --index_name_abstract <your abstract text>
+python sample_group_agent.py --index_name_full_text <the index name of your full text> \
+                             --index_name_abstract <the index name of your abstract text>
 ```
 
 ## Reference

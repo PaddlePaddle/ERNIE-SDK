@@ -75,25 +75,21 @@ class ResearchAgent(JsonUtil):
 
     async def run_search_summary(self, query: str):
         responses = []
-        url_dict = {}
-        results = self.retriever_fulltext_db.search(query, top_k=3)
+        results = await self.retriever_fulltext_db(query, top_k=3)
         length_limit = 0
         await self._callback_manager.on_tool_start(agent=self, tool=self.summarize_tool, input_args=query)
-        for doc in results:
+        for doc in results["documents"]:
             res = await self.summarize_tool(doc["content"], query)
             # Add reference to avoid hallucination
-            data = {"summary": res, "url": doc["url"], "name": doc["title"]}
+            data = {"summary": res, "url": doc["meta"]["url"], "name": doc["meta"]["name"]}
             length_limit += len(res)
             if length_limit < SUMMARIZE_MAX_LENGTH:
                 responses.append(data)
-                key = doc["title"]
-                value = doc["url"]
-                url_dict[key] = value
             else:
                 logger.warning(f"summary size exceed {SUMMARIZE_MAX_LENGTH}")
                 break
         await self._callback_manager.on_tool_end(self, tool=self.summarize_tool, response=responses)
-        return responses, url_dict
+        return responses
 
     async def run(self, query: str):
         """
@@ -117,8 +113,8 @@ class ResearchAgent(JsonUtil):
 
         if self.use_context_planning:
             sub_queries = []
-            res = self.retriever_abstract_db.search(query, top_k=3)
-            context = [item["content"] for item in res]
+            res = await self.retriever_abstract_db(query, top_k=3)
+            context = [item["content"] for item in res["documents"]]
             context_content = ""
             await self._callback_manager.on_tool_start(
                 agent=self, tool=self.task_planning_tool, input_args=query
@@ -157,7 +153,7 @@ class ResearchAgent(JsonUtil):
         # Run Sub-Queries
         paragraphs_item = []
         for sub_query in sub_queries:
-            research_result, url_dict = await self.run_search_summary(sub_query)
+            research_result = await self.run_search_summary(sub_query)
             paragraphs_item.extend(research_result)
 
         paragraphs = []

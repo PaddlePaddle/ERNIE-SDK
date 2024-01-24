@@ -10,3 +10,4 @@ lxml
 langchain-community
 arxiv
 responses
+llama_index
