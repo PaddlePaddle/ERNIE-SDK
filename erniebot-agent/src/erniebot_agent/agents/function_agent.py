@@ -46,7 +46,6 @@ from erniebot_agent.tools.base import BaseTool
 from erniebot_agent.tools.tool_manager import ToolManager
 
 _MAX_STEPS: Final[int] = 5
-_logger = logging.getLogger(__name__)
 
 _logger = logging.getLogger(__name__)
 
@@ -159,7 +158,7 @@ class FunctionAgent(Agent):
                 prompt, files or [], include_file_urls=self.file_needs_url
             )
             chat_history.append(run_input)
-            self._take_snapshot(chat_history, steps_taken)
+        self._take_snapshot(chat_history, steps_taken)
 
         for tool in self._first_tools:
             curr_step, new_messages = await self._step(chat_history, selected_tool=tool)
