@@ -1,9 +1,10 @@
 import json
 import os
-from typing import Any, List
+from typing import Any, Callable, List
 
 import faiss
 import jsonlines
+import spacy
 from langchain.docstore.document import Document
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
@@ -29,6 +30,19 @@ ABSTRACTPROMPT = """
 总结需要有概括性，不允许输出与文章内容无关的信息，字数控制在500字以内
 总结为：
 """
+
+
+def split_by_sentence_tokenizer(
+    pipeline="zh_core_web_sm", max_length: int = 1_000_000
+) -> Callable[[str], List[str]]:
+    sentencizer = spacy.load(pipeline, exclude=["ner", "tagger"])
+    sentencizer.max_length = max_length
+
+    def split(text: str) -> List[str]:
+        sentences = (s.text for s in sentencizer(text).sents)
+        return [item for item in sentences]
+
+    return split
 
 
 class GenerateAbstract:
@@ -201,7 +215,9 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
         return index
     if not abstract and not origin_data:
         documents = preprocess(path, url_path=url_path, use_langchain=False)
-        text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+        )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
         index = VectorStoreIndex.from_documents(
@@ -214,7 +230,9 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
         return index
     elif abstract:
         nodes = get_abstract_data(path, use_langchain=False)
-        text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+        )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
         index = VectorStoreIndex(
@@ -227,7 +245,9 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
         return index
     elif origin_data:
         nodes = [TextNode(text=item.page_content, metadata=item.metadata) for item in origin_data]
-        text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+        )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
         index = VectorStoreIndex(
