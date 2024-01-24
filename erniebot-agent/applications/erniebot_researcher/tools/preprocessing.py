@@ -1,14 +1,24 @@
 import json
 import os
-from typing import Any, List
+from typing import Any, Callable, List
 
+import faiss
 import jsonlines
+import spacy
 from langchain.docstore.document import Document
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.vectorstores import FAISS
 from langchain_community.document_loaders import DirectoryLoader
-from llama_index import SimpleDirectoryReader
+from llama_index import (
+    ServiceContext,
+    SimpleDirectoryReader,
+    StorageContext,
+    VectorStoreIndex,
+    load_index_from_storage,
+)
+from llama_index.node_parser import SentenceSplitter
 from llama_index.schema import TextNode
+from llama_index.vector_stores.faiss import FaissVectorStore
 
 from erniebot_agent.memory import HumanMessage, Message
 from erniebot_agent.prompt import PromptTemplate
@@ -20,6 +30,19 @@ ABSTRACTPROMPT = """
 总结需要有概括性，不允许输出与文章内容无关的信息，字数控制在500字以内
 总结为：
 """
+
+
+def split_by_sentence_spacy(
+    pipeline="zh_core_web_sm", max_length: int = 1_000_000
+) -> Callable[[str], List[str]]:
+    sentencizer = spacy.load(pipeline, exclude=["ner", "tagger"])
+    sentencizer.max_length = max_length
+
+    def split(text: str) -> List[str]:
+        sentences = (s.text for s in sentencizer(text).sents)
+        return [item for item in sentences]
+
+    return split
 
 
 class GenerateAbstract:
@@ -175,8 +198,66 @@ def build_index_langchain(
 
 
 def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract=False, origin_data=None):
-    # TODO: Adapt to llamaindex
-    pass
+    if embeddings.model == "text-embedding-ada-002":
+        d = 1536
+    elif embeddings.model == "ernie-text-embedding":
+        d = 384
+    else:
+        raise ValueError(f"model {embeddings.model} not support")
+
+    faiss_index = faiss.IndexFlatIP(d)
+    vector_store = FaissVectorStore(faiss_index=faiss_index)
+    if os.path.exists(index_name):
+        vector_store = FaissVectorStore.from_persist_dir(persist_dir=index_name)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=index_name)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings)
+        index = load_index_from_storage(storage_context=storage_context, service_context=service_context)
+        return index
+    if not abstract and not origin_data:
+        documents = preprocess(path, url_path=url_path, use_langchain=False)
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
+        )
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
+        index = VectorStoreIndex.from_documents(
+            documents,
+            storage_context=storage_context,
+            show_progress=True,
+            service_context=service_context,
+        )
+        index.storage_context.persist(persist_dir=index_name)
+        return index
+    elif abstract:
+        nodes = get_abstract_data(path, use_langchain=False)
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
+        )
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
+        index = VectorStoreIndex(
+            nodes,
+            storage_context=storage_context,
+            show_progress=True,
+            service_context=service_context,
+        )
+        index.storage_context.persist(persist_dir=index_name)
+        return index
+    elif origin_data:
+        nodes = [TextNode(text=item.page_content, metadata=item.metadata) for item in origin_data]
+        text_splitter = SentenceSplitter(
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
+        )
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
+        index = VectorStoreIndex(
+            nodes,
+            storage_context=storage_context,
+            show_progress=True,
+            service_context=service_context,
+        )
+        index.storage_context.persist(persist_dir=index_name)
+        return index
 
 
 def get_retriver_by_type(frame_type):
