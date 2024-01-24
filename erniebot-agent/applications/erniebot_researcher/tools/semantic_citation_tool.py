@@ -41,26 +41,26 @@ class SemanticCitationTool(Tool):
         self.recoder_cite_list: List = []
         self.recoder_cite_title: List = []
 
-    def add_url_sentences(self, sententces: str, citation_faiss_research):
+    async def add_url_sentences(self, sententces: str, citation_research):
         sentence_splits = sententces.split("。")
         output_sent = []
         for sentence in sentence_splits:
             if not sentence:
                 continue
             try:
-                query_result = citation_faiss_research.search(query=sentence, top_k=3, filters=None)
+                query_result = await citation_research(query=sentence, top_k=3, filters=None)
             except Exception as e:
                 output_sent.append(sentence)
                 logger.error(f"Faiss search error: {e}")
                 continue
             if len(sentence.strip()) > 0:
-                if not self.is_punctuation(sentence[-1]):
+                if not self.is_punctuation(sentence[-1]) or sentence[-1] == "%":
                     sentence += "。"
-            for item in query_result:
-                source = item["url"]
+            for item in query_result["documents"]:
+                source = item["meta"]["url"]
                 if item["score"] >= self.theta_min and item["score"] <= self.theta_max:
                     if source not in self.recoder_cite_list:
-                        self.recoder_cite_title.append(item["title"])
+                        self.recoder_cite_title.append(item["meta"]["name"])
                         self.recoder_cite_list.append(source)
                         self.recoder_cite_dict[source] = 1
                         index = len(self.recoder_cite_list)
@@ -87,7 +87,7 @@ class SemanticCitationTool(Tool):
             output_sent.append(sentence)
         return output_sent
 
-    def add_url_report(self, report: str, citation_faiss_research):
+    async def add_url_report(self, report: str, citation_research):
         list_data = report.split("\n\n")
         output_text = []
         for chunk_text in list_data:
@@ -98,7 +98,7 @@ class SemanticCitationTool(Tool):
                 output_text.append(chunk_text)
                 continue
             else:
-                output_sent = self.add_url_sentences(chunk_text, citation_faiss_research)
+                output_sent = await self.add_url_sentences(chunk_text, citation_research)
                 chunk_text = "".join(output_sent)
                 output_text.append(chunk_text)
         report = "\n\n".join(output_text)
@@ -131,7 +131,7 @@ class SemanticCitationTool(Tool):
         agent_name: str,
         report_type: str,
         dir_path: str,
-        citation_faiss_research,
+        citation_research,
         citation_num: Optional[int] = None,
         theta_min: Optional[float] = None,
         theta_max: Optional[float] = None,
@@ -142,7 +142,7 @@ class SemanticCitationTool(Tool):
             self.theta_max = theta_max
         if citation_num:
             self.citation_num = citation_num
-        report = self.add_url_report(report, citation_faiss_research)
+        report = await self.add_url_report(report, citation_research)
         report = self.add_reference_report(report)
         path = write_md_to_pdf(agent_name + "__" + report_type, dir_path, report)
         return report, path

@@ -6,19 +6,19 @@ import time
 
 from editor_actor_agent import EditorActorAgent
 from group_agent import GroupChat, GroupChatManager
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 from polish_agent import PolishAgent
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
 from reviser_actor_agent import ReviserActorAgent
 from tools.intent_detection_tool import IntentDetectionTool
 from tools.outline_generation_tool import OutlineGenerationTool
+from tools.preprocessing import get_retriver_by_type
 from tools.ranking_tool import TextRankingTool
 from tools.report_writing_tool import ReportWritingTool
 from tools.semantic_citation_tool import SemanticCitationTool
 from tools.summarization_tool import TextSummarizationTool
 from tools.task_planning_tool import TaskPlanningTool
-from tools.utils import FaissSearch, build_index
 
 from erniebot_agent.chat_models import ERNIEBot
 from erniebot_agent.extensions.langchain.embeddings import ErnieEmbeddings
@@ -71,22 +71,29 @@ parser.add_argument(
     default="openai_embedding",
     help="['openai_embedding','baizhong','ernie_embedding']",
 )
+parser.add_argument(
+    "--framework",
+    type=str,
+    default="langchain",
+    choices=["langchain", "llama_index"],
+    help="['langchain','llama_index']",
+)
 args = parser.parse_args()
 
 
-def get_retrievers():
+def get_retrievers(build_index_function, retrieval_tool):
     if args.embedding_type == "openai_embedding":
-        embeddings = OpenAIEmbeddings(deployment="text-embedding-ada")
-        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
-        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
-        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+        embeddings = AzureOpenAIEmbeddings(azure_deployment="text-embedding-ada")
+        fulltext_db = build_index_function(index_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(index_name=args.index_name_abstract, embeddings=embeddings)
+        abstract_search = retrieval_tool(abstract_db, embeddings=embeddings)
+        retriever_search = retrieval_tool(fulltext_db, embeddings=embeddings)
     elif args.embedding_type == "ernie_embedding":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
-        paper_db = build_index(faiss_name=args.index_name_full_text, embeddings=embeddings)
-        abstract_db = build_index(faiss_name=args.index_name_abstract, embeddings=embeddings)
-        abstract_search = FaissSearch(abstract_db, embeddings=embeddings)
-        retriever_search = FaissSearch(paper_db, embeddings=embeddings)
+        fulltext_db = build_index_function(index_name=args.index_name_full_text, embeddings=embeddings)
+        abstract_db = build_index_function(index_name=args.index_name_abstract, embeddings=embeddings)
+        abstract_search = retrieval_tool(abstract_db, embeddings=embeddings)
+        retriever_search = retrieval_tool(fulltext_db, embeddings=embeddings)
     elif args.embedding_type == "baizhong":
         embeddings = ErnieEmbeddings(aistudio_access_token=access_token)
         retriever_search = BaizhongSearch(
@@ -102,7 +109,9 @@ def get_retrievers():
     return {"full_text": retriever_search, "abstract": abstract_search, "embeddings": embeddings}
 
 
-def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
+def get_agents(
+    retriever_sets, tool_sets, llm, llm_long, dir_path, target_path, build_index_function, retrieval_tool
+):
     research_actor = ResearchAgent(
         name="generate_report",
         system_message=SystemMessage("你是一个报告生成助手。你可以根据用户的指定内容生成一份报告手稿"),
@@ -134,6 +143,8 @@ def get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path):
         dir_path=target_path,
         report_type=args.report_type,
         citation_tool=tool_sets["semantic_citation"],
+        build_index_function=build_index_function,
+        search_tool=retrieval_tool,
     )
     return {
         "research_agents": research_actor,
@@ -171,10 +182,12 @@ def main(query):
     os.makedirs(target_path, exist_ok=True)
     llm_long = ERNIEBot(model="ernie-longtext")
     llm = ERNIEBot(model="ernie-4.0")
-
-    retriever_sets = get_retrievers()
+    build_index_function, retrieval_tool = get_retriver_by_type(args.framework)
+    retriever_sets = get_retrievers(build_index_function, retrieval_tool)
     tool_sets = get_tools(llm, llm_long)
-    agent_sets = get_agents(retriever_sets, tool_sets, llm, llm_long, dir_path, target_path)
+    agent_sets = get_agents(
+        retriever_sets, tool_sets, llm, llm_long, dir_path, target_path, build_index_function, retrieval_tool
+    )
     research_actor = agent_sets["research_agents"]
     report = asyncio.run(research_actor.run(query))
     report = {"report": report[0], "paragraphs": report[1]}
