@@ -32,7 +32,7 @@ ABSTRACTPROMPT = """
 """
 
 
-def split_by_sentence_tokenizer(
+def split_by_sentence_spacy(
     pipeline="zh_core_web_sm", max_length: int = 1_000_000
 ) -> Callable[[str], List[str]]:
     sentencizer = spacy.load(pipeline, exclude=["ner", "tagger"])
@@ -216,7 +216,7 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
     if not abstract and not origin_data:
         documents = preprocess(path, url_path=url_path, use_langchain=False)
         text_splitter = SentenceSplitter(
-            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
         )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
@@ -231,7 +231,7 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
     elif abstract:
         nodes = get_abstract_data(path, use_langchain=False)
         text_splitter = SentenceSplitter(
-            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
         )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
@@ -246,7 +246,7 @@ def build_index_llama(index_name, embeddings, path=None, url_path=None, abstract
     elif origin_data:
         nodes = [TextNode(text=item.page_content, metadata=item.metadata) for item in origin_data]
         text_splitter = SentenceSplitter(
-            chunking_tokenizer_fn=split_by_sentence_tokenizer(), chunk_size=1024, chunk_overlap=0
+            chunking_tokenizer_fn=split_by_sentence_spacy(), chunk_size=1024, chunk_overlap=0
         )
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         service_context = ServiceContext.from_defaults(embed_model=embeddings, text_splitter=text_splitter)
