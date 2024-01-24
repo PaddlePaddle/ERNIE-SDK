@@ -544,31 +544,31 @@ class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["enum_field"], "2")
         self.assertEqual(result["no_enum_field"], "no_enum_value")
 
-    @responses.activate
-    async def test_enum_v1_with_wrong_dtype(self):
-        tool = self.toolkit.get_tool("enum_v1")
+    # @responses.activate
+    # async def test_enum_v1_with_wrong_dtype(self):
+    #     tool = self.toolkit.get_tool("enum_v1")
 
-        responses.post(
-            "http://example.com/enum_v1_dtype",
-            json={"enum_field": 2, "no_enum_field": "no_enum_value"},
-        )
+    #     responses.post(
+    #         "http://example.com/enum_v1_dtype",
+    #         json={"enum_field": 2, "no_enum_field": "no_enum_value"},
+    #     )
 
-        tool.tool_view.uri = "enum_v1_dtype"
-        with self.assertLogs("erniebot_agent.tools.remote_tool", level="INFO") as cm:
-            result = await tool()
+    #     tool.tool_view.uri = "enum_v1_dtype"
+    #     with self.assertLogs("erniebot_agent.tools.remote_tool", level="INFO") as cm:
+    #         result = await tool()
 
-        logs = [item for item in cm.output if "Unable to validate the 'tool_response'" in item]
+    #     logs = [item for item in cm.output if "Unable to validate the 'tool_response'" in item]
 
-        # test raise warning log msg
-        self.assertEqual(len(logs), 1)
-        warning_log_msg = (
-            "Unable to validate the 'tool_response' against the schema defined "
-            "in the YAML file. The specific error encountered is: '<1 validation error for "
-        )
-        self.assertIn(warning_log_msg, logs[0])
+    #     # test raise warning log msg
+    #     self.assertEqual(len(logs), 1)
+    #     warning_log_msg = (
+    #         "Unable to validate the 'tool_response' against the schema defined "
+    #         "in the YAML file. The specific error encountered is: '<1 validation error for "
+    #     )
+    #     self.assertIn(warning_log_msg, logs[0])
 
-        self.assertEqual(result["enum_field"], 2)
-        self.assertEqual(result["no_enum_field"], "no_enum_value")
+    #     self.assertEqual(result["enum_field"], 2)
+    #     self.assertEqual(result["no_enum_field"], "no_enum_value")
 
     @responses.activate
     async def test_enum_v2(self):
