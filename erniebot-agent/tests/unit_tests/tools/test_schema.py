@@ -34,7 +34,7 @@ from erniebot_agent.tools.schema import (
     is_optional_type,
     json_type,
 )
-from erniebot_agent.tools.utils import tool_response_contains_file
+from erniebot_agent.tools.utils import parse_json_request, tool_response_contains_file
 from erniebot_agent.utils.common import create_enum_class
 
 
@@ -482,6 +482,50 @@ class TestFileSchema(unittest.IsolatedAsyncioTestCase):
         file_content_from_file_manager = await file.read_contents()
         file_content = base64.b64decode(file_content_1)
         self.assertEqual(file_content, file_content_from_file_manager)
+
+    @responses.activate
+    async def test_file_v7(self):
+        tool = self.toolkit.get_tool("file_v7")
+
+        file_manager = GlobalFileManagerHandler().get()
+        file_content = str(uuid4())
+
+        file_content_base64 = base64.b64encode(file_content.encode())
+        file = await file_manager.create_file_from_bytes(file_content_base64, filename="a.png")
+
+        responses.post("http://example.com/file_v7", json={"second_file": file_content_base64.decode()})
+
+        result = await tool(first_file=file.id)
+
+        file: File = file_manager.look_up_file_by_id(result["second_file"])
+        file_content_from_file_manager = await file.read_contents()
+        file_content = base64.b64decode(file_content_base64)
+        self.assertEqual(file_content, file_content_from_file_manager)
+
+    @responses.activate
+    async def test_file_v8(self):
+        tool = self.toolkit.get_tool("file_v8")
+        file_manager = GlobalFileManagerHandler().get()
+
+        file_ids, file_contents = [], []
+        for _ in range(1):
+            file_content = str(uuid4()).encode()
+            file_content_base64 = base64.b64encode(file_content)
+            file_contents.append(file_content_base64.decode())
+
+            file = await file_manager.create_file_from_bytes(file_content, filename="a.png")
+            file_ids.append(file.id)
+
+        responses.post("http://example.com/file_v8", json={})
+        self.assertIsNotNone(tool.tool_view.parameters)
+        tool_arguments = await parse_json_request(
+            tool.tool_view.parameters, {"file": file_ids}, file_manager=file_manager
+        )
+        for index, file_content in enumerate(tool_arguments["file"]):
+            self.assertEqual(file_contents[index], file_content)
+
+        result = await tool(file=file_ids)
+        self.assertEqual(len(result), 0)
 
 
 class TestEnumSchema(unittest.IsolatedAsyncioTestCase):
