@@ -94,7 +94,9 @@ class RemoteTool(BaseTool):
         # if self.tool_view.returns is not None:
         #     try:
         #         origin_tool_response = deepcopy(tool_response)
-        #         valid_tool_response = self.tool_view.returns(**origin_tool_response).model_dump(mode="json")
+        #         valid_tool_response = self.tool_view.returns(
+        #             **origin_tool_response
+        #         ).model_dump(mode="json")
         #         tool_response.update(valid_tool_response)
         #     except Exception as e:
         #         _logger.warning(
