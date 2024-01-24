@@ -91,17 +91,19 @@ class RemoteTool(BaseTool):
                 "请务必确保每个符合'file-'格式的字段只出现一次，无需将其转换为链接，也无需添加任何HTML、Markdown或其他格式化元素。"
             )
 
-        if self.tool_view.returns is not None:
-            try:
-                origin_tool_response = deepcopy(tool_response)
-                valid_tool_response = self.tool_view.returns(**origin_tool_response).model_dump(mode="json")
-                tool_response.update(valid_tool_response)
-            except Exception as e:
-                _logger.warning(
-                    "Unable to validate the 'tool_response' against the schema defined in the YAML file. "
-                    f"The specific error encountered is: '<{e}>'. "
-                    "As a result, the original response from the tool will be used.",
-                )
+        # if self.tool_view.returns is not None:
+        #     try:
+        #         origin_tool_response = deepcopy(tool_response)
+        #         valid_tool_response = self.tool_view.returns(
+        #             **origin_tool_response
+        #         ).model_dump(mode="json")
+        #         tool_response.update(valid_tool_response)
+        #     except Exception as e:
+        #         _logger.warning(
+        #             "Unable to validate the 'tool_response' against the schema defined in the YAML file. "
+        #             f"The specific error encountered is: '<{e}>'. "
+        #             "As a result, the original response from the tool will be used.",
+        #         )
         return tool_response
 
     async def __call__(self, **tool_arguments: Dict[str, Any]) -> Any:

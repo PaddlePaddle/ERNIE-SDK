@@ -1,0 +1,45 @@
+openapi: 3.0.1
+info:
+    title: title
+    description: description
+    version: "v1"
+servers:
+    - url: http://example.com
+paths:
+    /value_v1:
+        post:
+            responses:
+                "200":
+                    description: fixed-value
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/value_v1"
+    /value_v2:
+        post:
+            responses:
+                "200":
+                    description: fixed-value
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/value_v2"
+components:
+    schemas:
+        # {value: ["base64", "base64-string"]}
+        value_v1:
+            type: object
+            properties:
+                field:
+                    type: string
+                    description: value field
+                    x-ebagent-fixed-value: "12345"
+        # {value: ["base64", "base64-string"]}
+        value_v2:
+            type: object
+            properties:
+                field:
+                    type: string
+                    description: value field
+                    default: "1234"
+                    x-ebagent-fixed-value: "12345"

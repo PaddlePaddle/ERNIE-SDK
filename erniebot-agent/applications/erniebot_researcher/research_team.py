@@ -2,6 +2,7 @@ import asyncio
 from typing import List, Optional
 
 from editor_actor_agent import EditorActorAgent
+from fact_check_agent import FactCheckerAgent
 from polish_agent import PolishAgent
 from ranking_agent import RankingAgent
 from research_agent import ResearchAgent
@@ -16,6 +17,7 @@ class ResearchTeam:
         ranker_actor: RankingAgent,
         editor_actor: EditorActorAgent,
         reviser_actor: ReviserActorAgent,
+        checker_actor: FactCheckerAgent,
         polish_actor: Optional[PolishAgent] = None,
         user_agent: Optional[UserProxyAgent] = None,
         use_reflection: bool = False,
@@ -25,6 +27,7 @@ class ResearchTeam:
         self.revise_actor_instance = reviser_actor
         self.ranker_actor_instance = ranker_actor
         self.polish_actor_instance = polish_actor
+        self.checker_actor_instance = checker_actor
         self.user_agent = user_agent
         self.polish_actor = polish_actor
         self.use_reflection = use_reflection
@@ -77,9 +80,9 @@ class ResearchTeam:
                 immedia_report = list_reports[0]
 
             revised_report = immedia_report
-
+        checked_report = await self.checker_actor_instance.run(report=revised_report["report"])
         revised_report, path = await self.polish_actor_instance.run(
-            report=revised_report["report"],
+            report=checked_report,
             summarize=revised_report["paragraphs"],
         )
         return revised_report, path

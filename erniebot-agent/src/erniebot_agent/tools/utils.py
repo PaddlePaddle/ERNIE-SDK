@@ -208,13 +208,26 @@ async def create_file_from_data(
     )
 
 
-async def get_content_by_file_id(
-    file_id: str, format: str, mime_type: str, file_manager: FileManager
-) -> bytes:
+async def get_content_by_file_id(file_id: str, format: str, file_manager: FileManager) -> str:
     file_id = file_id.replace("<file>", "").replace("</file>", "")
     file = file_manager.look_up_file_by_id(file_id)
     byte_str = await file.read_contents()
-    return byte_str
+    if format == "byte":
+        byte_str = base64.b64encode(byte_str)
+
+    return byte_str.decode()
+
+
+def is_file_config(json_schema_extra: dict) -> bool:
+    """check wheter is file-config
+
+    Args:
+        json_schema_extra (dict): the config from yaml file
+
+    Returns:
+        bool: whether is file-config
+    """
+    return json_schema_extra.get("format", None) in ["byte", "binary"]
 
 
 @no_type_check
@@ -233,13 +246,12 @@ async def parse_json_request(
                     "Please check the format of yaml in current tool."
                 )
 
-            if model_field.annotation == str and "x-ebagent-file-mime-type" in model_field.json_schema_extra:
+            if model_field.annotation == str and is_file_config(model_field.json_schema_extra):
                 format = model_field.json_schema_extra.get("format", None)
-                mime_type = model_field.json_schema_extra.get("x-ebagent-file-mime-type", None)
 
-                if format is not None and mime_type is not None:
+                if format is not None:
                     file_content = await get_content_by_file_id(
-                        json_dict[field_name], format=format, mime_type=mime_type, file_manager=file_manager
+                        json_dict[field_name], format=format, file_manager=file_manager
                     )
                     result[field_name] = file_content
             elif issubclass(model_field.annotation, ToolParameterView):
@@ -254,19 +266,13 @@ async def parse_json_request(
         else:
             array_json_schema = model_field.json_schema_extra.get("array_items_schema", None)
             sub_class = get_args(model_field.annotation)[0]
-            if (
-                list_type == "string"
-                and array_json_schema is not None
-                and array_json_schema.get("x-ebagent-file-mime-type", None)
-            ):
+            if list_type == "string" and is_file_config(array_json_schema):
                 format = array_json_schema["format"]
-                mime_type = array_json_schema["x-ebagent-file-mime-type"]
                 files = []
                 for file_id in json_dict[field_name]:
                     file_content = await get_content_by_file_id(
                         file_id,
                         format=format,
-                        mime_type=mime_type,
                         file_manager=file_manager,
                     )
                     files.append(file_content)
@@ -282,11 +288,15 @@ async def parse_json_request(
 
                 if len(sub_file_result) > 0:
                     result[field_name] = sub_file_result
+
         if field_name in result:
             json_dict.pop(field_name, None)
         elif field_name not in result and field_name in json_dict:
             result[field_name] = json_dict.pop(field_name)
 
+        fixed_value = model_field.json_schema_extra.get("x-ebagent-fixed-value", None)
+        if fixed_value:
+            result[field_name] = fixed_value
     result.update(json_dict)
     return result
 
@@ -360,10 +370,15 @@ async def parse_json_response(
 
                 if len(sub_file_result) > 0:
                     result[field_name] = sub_file_result
+
         if field_name in result:
             json_dict.pop(field_name, None)
         elif field_name not in result and field_name in json_dict:
             result[field_name] = json_dict.pop(field_name)
+
+        fixed_value = model_field.json_schema_extra.get("x-ebagent-fixed-value", None)
+        if fixed_value:
+            result[field_name] = fixed_value
 
     result.update(json_dict)
     return result
