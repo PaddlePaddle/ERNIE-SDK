@@ -66,29 +66,52 @@ wget https://paddlenlp.bj.bcebos.com/pipelines/fonts/SimSun.ttf
 
 > 第四步：创建索引
 
-下载实例数据
+**数据准备**
+
+我们支持docx、pdf、txt等格式的文件，用户可以把这些文件放到同一个文件夹下，然后运行下面的命令创建索引，后续会根据这些文件写报告。
+
+为了方便测试，我们提供了样例数据。
+样例数据：
 
 ```
 wget https://paddlenlp.bj.bcebos.com/pipelines/erniebot_researcher_example.tar.gz
 tar xvf erniebot_researcher_example.tar.gz
 ```
 
+url数据：
+
+如果用户有文件对应的url链接，可以传入存储url链接的txt。在txt中，每一行存储url链接和对应文件的路径，例如:
+```
+https://zhuanlan.zhihu.com/p/659457816 erniebot_researcher_example/Ai_Agent的起源.md
+```
+如果用户不传入url文件，则默认文件的路径为其url链接
+
+摘要数据：
+
+用户可以利用path_abstract参数传入自己文件对应摘要的存储路径。
+其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，
+- `page_content` : `str`, 文件摘要。
+- `url` : `str`, 文件url链接。
+- `name` : `str`, 文件名字。
+
+例如:
+
+```
+[{"page_content":"文件摘要","url":"https://zhuanlan.zhihu.com/p/659457816","name":Ai_Agent的起源},
+...]
+```
+
+如果用户没有摘要路径，则无需改变path_abstract的默认值，我们会利用ernie-4.0来自动生成摘要，生成的摘要存储路径为abstract.json。
+
+**创建索引**
+
 首先需要在[AI Studio星河社区](https://aistudio.baidu.com/index)注册并登录账号，然后在AI Studio的[访问令牌页面](https://aistudio.baidu.com/index/accessToken)获取`Access Token`，最后设置环境变量:
+
+**有摘要有url链接**
 
 ```
 export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
 export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
-```
-
-如果用户有url链接，你可以传入存储url链接的txt。
-在txt中，每一行存储文件的路径和对应的url链接，例如:
-'https://zhuanlan.zhihu.com/p/659457816 erniebot_researcher_example/Ai_Agent的起源.md'
-
-如果用户不传入url文件，则默认文件的路径为其url链接
-
-用户可以自己传入文件摘要的存储路径。其中摘要需要用json文件存储。其中json文件内存储的是多个字典，每个字典有3组键值对，"page_content"存储文件的摘要，"url"是文件的url链接，"name"是文章的名字。例如:
-[{"page_content":"文章摘要","url":"https://zhuanlan.zhihu.com/p/659457816","name":Ai_Agent的起源},...]
-```
 python ./tools/preprocessing.py \
 --index_name_full_text <the index name of your full text> \
 --index_name_abstract <the index name of your abstract text> \
@@ -97,6 +120,16 @@ python ./tools/preprocessing.py \
 --path_abstract <the json path of your abstract text>
 ```
 
+**无摘要无url链接**
+
+```
+export EB_AGENT_ACCESS_TOKEN=<aistudio-access-token>
+export AISTUDIO_ACCESS_TOKEN=<aistudio-access-token>
+python ./tools/preprocessing.py \
+--index_name_full_text <the index name of your full text> \
+--index_name_abstract <the index name of your abstract text> \
+--path_full_text <the folder path of your full text>
+```
 > 第五步：运行
 
 

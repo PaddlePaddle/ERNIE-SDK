@@ -155,7 +155,6 @@ class ResearchAgent(JsonUtil):
         for sub_query in sub_queries:
             research_result = await self.run_search_summary(sub_query)
             paragraphs_item.extend(research_result)
-
         paragraphs = []
         for item in paragraphs_item:
             if item not in paragraphs:
