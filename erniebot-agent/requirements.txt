@@ -9,4 +9,3 @@ tqdm
 typing_extensions
 pydantic >= 2
 PyYAML
-llama_index
