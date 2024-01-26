@@ -75,7 +75,8 @@ class RemoteTool(BaseTool):
             tool_arguments = await parse_json_request(
                 self.tool_view.parameters, tool_arguments, file_manager
             )
-            tool_arguments = self.tool_view.parameters(**tool_arguments).model_dump(mode="json")
+            # disable: parameter validation
+            # tool_arguments = self.tool_view.parameters(**tool_arguments).model_dump(mode="json")
 
         return tool_arguments
 
