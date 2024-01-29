@@ -64,7 +64,7 @@ class SparseSearchAgent(JsonUtil):
         results = [inp for inp in retrieval_results]
         document_map = {doc["id"]: doc for result in results for doc in result}
         docs = []
-        for title, score in sorted_docs[:self.top_k_join]:
+        for title, score in sorted_docs[: self.top_k_join]:
             doc = document_map[title]
             doc["score"] = score
             docs.append(doc)
