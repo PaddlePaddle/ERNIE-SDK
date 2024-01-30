@@ -17,6 +17,7 @@ import logging
 from collections import deque
 from dataclasses import dataclass, replace
 from typing import (
+    Awaitable,
     Callable,
     Deque,
     Final,
@@ -92,7 +93,9 @@ class FunctionAgent(Agent):
         plugins: Optional[List[str]] = None,
         max_steps: Optional[int] = None,
         first_tools: Optional[Sequence[BaseTool]] = [],
-        first_tools_rejected_callback: Optional[Callable[[BaseTool, List[Message], AgentStep], None]] = None,
+        first_tools_rejected_callback: Optional[
+            Callable[[BaseTool, List[Message], AgentStep], Awaitable[None]]
+        ] = None,
     ) -> None:
         """Initialize a function agent.
 
@@ -183,7 +186,7 @@ class FunctionAgent(Agent):
                 # If tool choice not work, skip this round
                 _logger.warning(f"Selected tool [{tool.tool_name}] not work")
                 if self._first_tools_rejected_callback is not None:
-                    self._first_tools_rejected_callback(tool, new_messages, curr_step)
+                    await self._first_tools_rejected_callback(tool, new_messages, curr_step)
 
         while num_steps_taken < self.max_steps:
             curr_step, new_messages = await self._step(chat_history)
