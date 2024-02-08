@@ -21,4 +21,4 @@ STREAM_RESPONSE_PREFIX: Final[bytes] = b"data: "
 DEFAULT_REQUEST_TIMEOUT_SECS: Final[float] = 600
 
 POLLING_INTERVAL_SECS: Final[float] = 5
-POLLING_TIMEOUT_SECS: Final[float] = 20
+POLLING_TIMEOUT_SECS: Final[float] = 600
