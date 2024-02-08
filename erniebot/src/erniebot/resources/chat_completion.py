@@ -64,6 +64,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 "ernie-longtext": {
                     "model_id": "ernie_bot_8k",
                 },
+                "ernie-speed": {
+                    "model_id": "ernie_speed",
+                },
             },
         },
         APIType.AISTUDIO: {
@@ -478,8 +481,14 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # params
         params = {}
-        if model == "ernie-turbo":
-            for arg in ("functions", "stop", "disable_search", "enable_citation"):
+        if model in ("ernie-turbo", "ernie-speed"):
+            for arg in (
+                "functions",
+                "stop",
+                "disable_search",
+                "enable_citation",
+                "tool_choice",
+            ):
                 if arg in kwargs:
                     raise errors.InvalidArgumentError(f"`{arg}` is not supported by the {model} model.")
         params["messages"] = messages
