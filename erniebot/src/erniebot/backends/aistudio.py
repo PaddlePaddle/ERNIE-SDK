@@ -91,7 +91,7 @@ class AIStudioBackend(EBBackend):
 
     @classmethod
     def handle_response(cls, resp: EBResponse) -> EBResponse:
-        if resp["errorCode"] != 0:
+        if "errorCode" in resp and resp["errorCode"] != 0:
             ecode = resp["errorCode"]
             emsg = resp["errorMsg"]
             if ecode in (4, 17):
@@ -117,5 +117,6 @@ class AIStudioBackend(EBBackend):
                 "Key 'Authorization' already exists in `headers`: %r",
                 headers["Authorization"],
             )
-        headers["Authorization"] = f"token {self._access_token}"
+        # headers["Authorization"] = f"token {self._access_token}"
+        headers["Authorization"] = f"{self._access_token}"
         return headers
