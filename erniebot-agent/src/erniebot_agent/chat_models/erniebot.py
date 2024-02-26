@@ -327,7 +327,6 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             clarify=clarify,
         )
     else:
-        
         return output_type(
             content=response.result,
             function_call=None,
