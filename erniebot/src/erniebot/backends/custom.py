@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
 
 import erniebot.errors as errors
+import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import FilesType, HeadersType, ParamsType
@@ -31,6 +33,10 @@ class CustomBackend(EBBackend):
 
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
+        access_token = self._cfg.get("access_token", None)
+        if access_token is None:
+            access_token = os.environ.get("AISTUDIO_ACCESS_TOKEN", None)
+        self._access_token = access_token
 
     def request(
         self,
@@ -79,7 +85,8 @@ class CustomBackend(EBBackend):
             params=params,
             files=files,
         )
-
+        if self._access_token is not None:
+            headers = self._add_aistudio_fields_to_headers(headers)
         return await self._client.asend_request(
             method,
             url,
@@ -110,3 +117,12 @@ class CustomBackend(EBBackend):
                 raise errors.APIError(emsg, ecode=ecode)
         else:
             return resp
+
+    def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
+        if "Authorization" in headers:
+            logging.warning(
+                "Key 'Authorization' already exists in `headers`: %r",
+                headers["Authorization"],
+            )
+        headers["Authorization"] = f"{self._access_token}"
+        return headers
