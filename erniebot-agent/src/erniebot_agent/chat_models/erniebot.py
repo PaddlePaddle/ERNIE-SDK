@@ -328,20 +328,20 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
         )
     else:
         
-        # return output_type(
-        #     content=response.result,
-        #     function_call=None,
-        #     plugin_info=None,
-        #     search_info=None,
-        #     token_usage=response.usage,
-        #     clarify=clarify,
-        # )
-        
         return output_type(
-            content=response.rbody,
+            content=response.result,
             function_call=None,
             plugin_info=None,
             search_info=None,
-            token_usage=None,
+            token_usage=response.usage,
             clarify=clarify,
         )
+        
+        # return output_type(
+        #     content=response.rbody,
+        #     function_call=None,
+        #     plugin_info=None,
+        #     search_info=None,
+        #     token_usage=None,
+        #     clarify=clarify,
+        # )
