@@ -340,7 +340,7 @@ class QianfanLegacyBackend(_BCELegacyBackend):
             else:
                 raise errors.APIError(emsg, ecode=ecode)
         else:
-            return EBResponse(resp.rcode, resp.result, resp.rheaders)
+            return resp
 
 
 class YinianBackend(_BCELegacyBackend):
