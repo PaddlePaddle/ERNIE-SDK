@@ -314,7 +314,7 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             search_info=search_info,
             token_usage=response.usage,
         )
-    else:
+    else:    
         return output_type(
             content=response.result,
             function_call=None,

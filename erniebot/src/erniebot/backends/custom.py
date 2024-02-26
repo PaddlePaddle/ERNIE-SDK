@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import Any, AsyncIterator, ClassVar, Dict, Iterator, Optional, Union
 
 import erniebot.errors as errors
+import erniebot.utils.logging as logging
 from erniebot.api_types import APIType
 from erniebot.response import EBResponse
 from erniebot.types import FilesType, HeadersType, ParamsType
@@ -31,6 +33,12 @@ class CustomBackend(EBBackend):
 
     def __init__(self, config_dict: Dict[str, Any]) -> None:
         super().__init__(config_dict=config_dict)
+        access_token = self._cfg.get("access_token", None)
+        if access_token is None:
+            access_token = os.environ.get("AISTUDIO_ACCESS_TOKEN", None)
+            if access_token is None:
+                raise RuntimeError("No access token is configured.")
+        self._access_token = access_token
 
     def request(
         self,
@@ -80,6 +88,7 @@ class CustomBackend(EBBackend):
             files=files,
         )
 
+        headers = self._add_aistudio_fields_to_headers(headers)
         return await self._client.asend_request(
             method,
             url,
@@ -90,23 +99,18 @@ class CustomBackend(EBBackend):
             request_timeout=request_timeout,
         )
 
-    def handle_response(self, resp: EBResponse) -> EBResponse:
-        if "error_code" in resp and "error_msg" in resp:
-            ecode = resp["error_code"]
-            emsg = resp["error_msg"]
-            if ecode == 17:
-                raise errors.RequestLimitError(emsg, ecode=ecode)
-            elif ecode == 18:
-                raise errors.RateLimitError(emsg, ecode=ecode)
-            elif ecode == 110:
-                raise errors.InvalidTokenError(emsg, ecode=ecode)
-            elif ecode == 111:
-                raise errors.TokenExpiredError(emsg, ecode=ecode)
-            elif ecode in (336002, 336003, 336006, 336007, 336102):
-                raise errors.BadRequestError(emsg, ecode=ecode)
-            elif ecode == 336100:
-                raise errors.TryAgain(emsg, ecode=ecode)
-            else:
-                raise errors.APIError(emsg, ecode=ecode)
-        else:
-            return resp
+
+    @classmethod
+    def handle_response(cls, resp: EBResponse) -> EBResponse:
+        return QianfanLegacyBackend.handle_response(resp)
+
+    def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
+        if "Authorization" in headers:
+            logging.warning(
+                "Key 'Authorization' already exists in `headers`: %r",
+                headers["Authorization"],
+            )
+        # headers["Authorization"] = f"token {self._access_token}"
+        headers["Authorization"] = f"{self._access_token}"
+        return headers
+

@@ -340,7 +340,7 @@ class QianfanLegacyBackend(_BCELegacyBackend):
             else:
                 raise errors.APIError(emsg, ecode=ecode)
         else:
-            return resp
+            return EBResponse(resp.rcode, resp.result, resp.rheaders)
 
 
 class YinianBackend(_BCELegacyBackend):
@@ -351,7 +351,6 @@ class YinianBackend(_BCELegacyBackend):
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
             emsg = resp["error_msg"]
-            print(ecode)
             if ecode in (4, 17):
                 raise errors.RequestLimitError(emsg, ecode=ecode)
             elif ecode in (13, 15, 18):
