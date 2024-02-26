@@ -98,6 +98,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 "ernie-longtext": {
                     "model_id": "ernie_bot_8k",
                 },
+                "ernie-speed": {
+                    "model_id": "ernie_speed",
+                },
             },
         },
     }
