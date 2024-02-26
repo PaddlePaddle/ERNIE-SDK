@@ -80,7 +80,6 @@ class AIStudioBackend(EBBackend):
             params=params,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
-
         return await self._client.asend_request(
             method,
             url,
