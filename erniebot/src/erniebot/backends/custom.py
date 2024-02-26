@@ -34,8 +34,6 @@ class CustomBackend(EBBackend):
         access_token = self._cfg.get("access_token", None)
         if access_token is None:
             access_token = os.environ.get("AISTUDIO_ACCESS_TOKEN", None)
-            if access_token is None:
-                raise RuntimeError("No access token is configured.")
         self._access_token = access_token
 
     def request(
@@ -79,7 +77,8 @@ class CustomBackend(EBBackend):
             supplied_headers=headers,
             params=params,
         )
-        headers = self._add_aistudio_fields_to_headers(headers)
+        if self._access_token is not None:
+            headers = self._add_aistudio_fields_to_headers(headers)
         return await self._client.asend_request(
             method,
             url,
