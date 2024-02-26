@@ -116,7 +116,6 @@ class AIStudioBackend(EBBackend):
             request_timeout=request_timeout,
         )
 
-
     def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
         if "Authorization" in headers:
             logging.warning(

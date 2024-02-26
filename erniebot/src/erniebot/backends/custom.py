@@ -97,7 +97,6 @@ class CustomBackend(EBBackend):
             request_timeout=request_timeout,
         )
 
-
     def handle_response(self, resp: EBResponse) -> EBResponse:
         if "error_code" in resp and "error_msg" in resp:
             ecode = resp["error_code"]
@@ -127,4 +126,3 @@ class CustomBackend(EBBackend):
             )
         headers["Authorization"] = f"{self._access_token}"
         return headers
-
