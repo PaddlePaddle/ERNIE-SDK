@@ -80,6 +80,7 @@ class AIStudioBackend(EBBackend):
             params=params,
         )
         headers = self._add_aistudio_fields_to_headers(headers)
+
         return await self._client.asend_request(
             method,
             url,
@@ -117,6 +118,5 @@ class AIStudioBackend(EBBackend):
                 "Key 'Authorization' already exists in `headers`: %r",
                 headers["Authorization"],
             )
-        # headers["Authorization"] = f"token {self._access_token}"
-        headers["Authorization"] = f"{self._access_token}"
+        headers["Authorization"] = f"token {self._access_token}"
         return headers
