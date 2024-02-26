@@ -98,9 +98,26 @@ class CustomBackend(EBBackend):
         )
 
 
-    @classmethod
-    def handle_response(cls, resp: EBResponse) -> EBResponse:
-        return QianfanLegacyBackend.handle_response(resp)
+    def handle_response(self, resp: EBResponse) -> EBResponse:
+        if "error_code" in resp and "error_msg" in resp:
+            ecode = resp["error_code"]
+            emsg = resp["error_msg"]
+            if ecode == 17:
+                raise errors.RequestLimitError(emsg, ecode=ecode)
+            elif ecode == 18:
+                raise errors.RateLimitError(emsg, ecode=ecode)
+            elif ecode == 110:
+                raise errors.InvalidTokenError(emsg, ecode=ecode)
+            elif ecode == 111:
+                raise errors.TokenExpiredError(emsg, ecode=ecode)
+            elif ecode in (336002, 336003, 336006, 336007, 336102):
+                raise errors.BadRequestError(emsg, ecode=ecode)
+            elif ecode == 336100:
+                raise errors.TryAgain(emsg, ecode=ecode)
+            else:
+                raise errors.APIError(emsg, ecode=ecode)
+        else:
+            return resp
 
     def _add_aistudio_fields_to_headers(self, headers: HeadersType) -> HeadersType:
         if "Authorization" in headers:

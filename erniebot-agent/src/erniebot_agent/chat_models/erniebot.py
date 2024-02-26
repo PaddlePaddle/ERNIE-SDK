@@ -321,5 +321,4 @@ def convert_response_to_output(response: ChatCompletionResponse, output_type: Ty
             plugin_info=None,
             search_info=None,
             token_usage=response.usage,
-            clarify=clarify,
         )
