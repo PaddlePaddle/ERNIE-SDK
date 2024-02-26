@@ -92,6 +92,15 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 "ernie-3.5": {
                     "model_id": "completions",
                 },
+                "ernie-4.0": {
+                    "model_id": "completions_pro",
+                },
+                "ernie-longtext": {
+                    "model_id": "ernie_bot_8k",
+                },
+                "ernie-speed": {
+                    "model_id": "ernie_speed",
+                },
             },
         },
     }
@@ -514,7 +523,7 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
 
         # headers
         headers: HeadersType = {}
-        if self.api_type is APIType.AISTUDIO:
+        if self.api_type is APIType.AISTUDIO or self.api_type is APIType.CUSTOM:
             headers["Content-Type"] = "application/json"
         if "headers" in kwargs:
             headers.update(kwargs["headers"])

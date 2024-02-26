@@ -1,5 +1,5 @@
 import pytest
-from llama_index.schema import NodeWithScore, TextNode
+from llama_index.core.schema import NodeWithScore, TextNode
 
 from erniebot_agent.tools.llama_index_retrieval_tool import LlamaIndexRetrievalTool
 
