@@ -91,7 +91,7 @@ class AIStudioBackend(EBBackend):
 
     @classmethod
     def handle_response(cls, resp: EBResponse) -> EBResponse:
-        if "errorCode" in resp and resp["errorCode"] != 0:
+        if resp["errorCode"] != 0:
             ecode = resp["errorCode"]
             emsg = resp["errorMsg"]
             if ecode in (4, 17):
