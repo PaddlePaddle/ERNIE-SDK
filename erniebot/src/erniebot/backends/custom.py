@@ -99,6 +99,5 @@ class CustomBackend(EBBackend):
                 "Key 'Authorization' already exists in `headers`: %r",
                 headers["Authorization"],
             )
-        # headers["Authorization"] = f"token {self._access_token}"
         headers["Authorization"] = f"{self._access_token}"
         return headers

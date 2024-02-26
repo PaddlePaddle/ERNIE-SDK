@@ -409,7 +409,6 @@ class EBClient(object):
             )
 
         logging.debug("Decoded response body: %r", decoded_rbody)
-        breakpoint()
         response = EBResponse(rcode=rcode, rbody=decoded_rbody, rheaders=dict(rheaders))
         if rcode != http.HTTPStatus.OK:
             raise errors.HTTPRequestError(
