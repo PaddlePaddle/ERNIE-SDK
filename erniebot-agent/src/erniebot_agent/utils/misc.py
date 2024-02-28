@@ -14,7 +14,7 @@
 
 
 class SingletonMeta(type):
-    _insts = {}  # type: ignore
+    _insts: dict = {}
 
     def __call__(cls, *args, **kwargs):
         # XXX: We note that the instance created in this way can be actually

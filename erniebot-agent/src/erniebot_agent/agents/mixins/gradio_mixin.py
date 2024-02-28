@@ -30,7 +30,7 @@ class GradioMixin:
         # be constructed outside an event loop, which is probably not sensible.
         # TODO: Unified optional dependencies management
         try:
-            import gradio as gr  # type: ignore
+            import gradio as gr  # type: ignore[import-untyped]
         except ImportError:
             raise ImportError(
                 "Could not import gradio, which is required for `launch_gradio_demo()`."

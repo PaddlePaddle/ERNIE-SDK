@@ -24,7 +24,21 @@ class CalculatorTool(Tool):
     ouptut_type: Type[ToolParameterView] = CalculatorToolOutputView
 
     async def __call__(self, math_formula: str) -> Dict[str, float]:
-        return {"formula_result": eval(math_formula)}
+        # XXX: In this eval-based implementation, non-mathematical Python
+        # expressions are not rejected. Should we do regex checks to ensure that
+        # the input is a mathematical expression?
+        try:
+            code = compile(math_formula, "<string>", "eval")
+        except (SyntaxError, ValueError) as e:
+            raise ValueError("Invalid input expression") from e
+        try:
+            result = eval(code, {"__builtins__": {}}, {})
+        except NameError as e:
+            names_not_allowed = code.co_names
+            raise ValueError(f"Names {names_not_allowed} are not allowed in the expression.") from e
+        if not isinstance(result, (float, int)):
+            raise ValueError("The evaluation result of the expression is not a number.")
+        return {"formula_result": result}
 
     @property
     def examples(self) -> List[Message]:
