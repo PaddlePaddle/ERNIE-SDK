@@ -274,7 +274,7 @@ class FunctionAgentWithRetrievalTool(FunctionAgent):
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
-            return await super()._run(prompt)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
@@ -379,24 +379,12 @@ class FunctionAgentWithRetrievalScoreTool(FunctionAgent):
                     return response
                 num_steps_taken += 1
             response = self._create_stopped_response(chat_history, steps_taken)
-            # while num_steps_taken < self.max_steps:
-            #     curr_step_output = await self._step(
-            #         next_step_input, chat_history, actions_taken, files_involved
-            #     )
-            #     if curr_step_output is None:
-            #         response = self._create_finished_response(chat_history, actions_taken, files_involved)
-            #         self.memory.add_message(chat_history[0])
-            #         self.memory.add_message(chat_history[-1])
-            #         return response
-            #     num_steps_taken += 1
-            # # response = self._create_stopped_response(chat_history, actions_taken, files_involved)
-            # self._create_stopped_response(chat_history, steps_taken)
             return response
         else:
             _logger.info(
                 f"Irrelevant retrieval results. Fallbacking to FunctionAgent for the query: {prompt}"
             )
-            return await super()._run(prompt)
+            return await super()._run(prompt, files)
 
     async def _maybe_retrieval(
         self,
