@@ -141,7 +141,7 @@ from erniebot_agent.file import GlobalFileManagerHandler
 async def demo_function():
     file_manager = GlobalFileManagerHandler().get()
     # 通过fileid搜索文件
-    file = file_manager.look_up_file_by_id(file_id='your_file_id')
+    file = await file_manager.look_up_file_by_id(file_id='your_file_id')
     # 读取file内容(bytes)
     file_content = await file.read_contents()
     # 写出到指定位置，your_willing_path需要具体到文件名

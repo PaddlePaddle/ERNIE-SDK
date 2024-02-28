@@ -204,10 +204,10 @@ class FunctionAgent(Agent):
                 PluginStep(
                     info=output_message.plugin_info,
                     result=output_message.content,
-                    input_files=file_manager.sniff_and_extract_files_from_text(
-                        chat_history[-1].content
+                    input_files=await file_manager.sniff_and_extract_files_from_text(
+                        input_messages[-1].content
                     ),  # TODO: make sure this is correct.
-                    output_files=file_manager.sniff_and_extract_files_from_text(output_message.content),
+                    output_files=[],
                 ),
                 new_messages,
             )

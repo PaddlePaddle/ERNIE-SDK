@@ -32,7 +32,7 @@ class TextRepeaterTool(Tool):
             input_file_id = input_file_id.split("<split>")[0]
 
         file_manager = GlobalFileManagerHandler().get()
-        input_file = file_manager.look_up_file_by_id(input_file_id)
+        input_file = await file_manager.look_up_file_by_id(input_file_id)
         if input_file is None:
             raise RuntimeError("File not found")
         # text = (await input_file.read_contents())[:10]
