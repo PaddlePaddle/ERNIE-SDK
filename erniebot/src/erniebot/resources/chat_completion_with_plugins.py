@@ -46,13 +46,13 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
     )
     _API_INFO_DICT: ClassVar[Dict[APIType, Dict[str, Any]]] = {
         APIType.QIANFAN: {
-            "path": "/erniebot/plugin",
+            "path": "/erniebot/plugins",
         },
         APIType.CUSTOM: {
             "path": "/erniebot/plugins_v3",
         },
         APIType.AISTUDIO: {
-            "path": "/erniebot/plugin",
+            "path": "/erniebot/plugins",
         },
     }
 
