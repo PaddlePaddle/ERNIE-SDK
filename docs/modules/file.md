@@ -149,6 +149,7 @@ async def demo_function():
 ```
 5. 配置 `GlobalFileManagerHandler`从而在Agent中直接获取相关文件，详见[Agent](https://ernie-bot-agent.readthedocs.io/zh-cn/latest/modules/agents/#22-function-agent)中的**使用function agent调用输入、输出中包含文件的tool**部分。
 
+<<<<<<< HEAD
 ```python
 from erniebot_agent.file import GlobalFileManagerHandler
 
@@ -159,3 +160,12 @@ async def demo_function():
     # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件
     files = response.steps[-1].output_files
 ```
+=======
+   async def demo_function():
+       await GlobalFileManagerHandler().configure(save_dir='your_path') # 需要在事件循环最开始配置
+       ... # 此处省略agent创建过程
+       response = await agent.async_run('请帮我画一张北京市的图')
+       # 您可以通过AgentResponse.steps[-1]获取agent的最后一个步骤，然后最后一步的输出文件；或者在save_dir中找到所有文件
+       files = response.steps[-1].output_files
+    ```
+>>>>>>> origin/app
