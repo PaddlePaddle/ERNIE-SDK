@@ -50,6 +50,9 @@ class ChatCompletionWithPlugins(EBResource, CreatableWithStreaming):
         APIType.CUSTOM: {
             "path": "/erniebot/plugins_v3",
         },
+        APIType.AISTUDIO: {
+            "path": "/erniebot/plugins",
+        },
     }
 
     @overload
