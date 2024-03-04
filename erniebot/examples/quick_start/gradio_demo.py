@@ -553,7 +553,7 @@ def create_rag_tab():
             return embedding / np.linalg.norm(embedding, axis=1).reshape(-1, 1)
 
     def find_related_doc(
-        query: str, origin_chunk: List[str], index_ip: faiss.swigfaiss.IndexFlatIP, top_k: int = 5
+        query: str, origin_chunk: List[str], index_ip: faiss.IndexFlatIP, top_k: int = 5
     ) -> tuple[str, List[int]]:
         """
         Fin top_k similar documents.
