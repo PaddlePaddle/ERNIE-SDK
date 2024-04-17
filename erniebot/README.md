@@ -252,4 +252,4 @@ print(response.get_result())
 
 ## Community Contribution
 
-感谢@chenwanqq为我们贡献了Rust版本的[erniebot-rs](https://github.com/chenwanqq/erniebot-rs)
+- 感谢@chenwanqq贡献的Rust版本的[erniebot-rs](https://github.com/chenwanqq/erniebot-rs)
