@@ -249,3 +249,7 @@ print(response.get_result())
 ## Acknowledgement
 
 我们借鉴了[OpenAI Python Library](https://github.com/openai/openai-python)的部分API设计，在此对OpenAI Python Library作者及开源社区表示感谢。
+
+## Community Contribution
+
+感谢@chenwanqq为我们贡献了Rust版本的[erniebot-rs](https://github.com/chenwanqq/erniebot-rs)
