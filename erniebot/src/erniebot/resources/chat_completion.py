@@ -483,7 +483,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
         if model_name in ("ernie-speed", "ernie-speed-128k", "ernie-char-8k", "ernie-tiny-8k", "ernie-lite"):
             for arg in ("functions", "disable_search", "enable_citation", "tool_choice", "response_format"):
                 if arg in kwargs:
-                    raise errors.InvalidArgumentError(f"`{arg}` is not supported by the `{model_name}` model.")
+                    raise errors.InvalidArgumentError(
+                        f"`{arg}` is not supported by the `{model_name}` model."
+                    )
 
     def _prepare_create(self, kwargs: Dict[str, Any]) -> RequestWithStream:
         def _update_model_name(given_name: str, old_name_to_new_name: Dict[str, str]) -> str:
