@@ -39,6 +39,18 @@ def create_chat_completion(model):
     print(response.get_result())
 
 
+def create_chat_completion_json_mode(model):
+    response = erniebot.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "user", "content": "文心一言是哪个公司开发的？"},
+        ],
+        stream=False,
+        response_format="json_object",
+    )
+    print(response.get_result())
+
+
 def create_chat_completion_stream(model):
     response = erniebot.ChatCompletion.create(
         model=model,
@@ -67,6 +79,10 @@ if __name__ == "__main__":
 
     erniebot.api_type = "qianfan"
 
-    create_chat_completion(model="ernie-turbo")
+    # create_chat_completion(model="ernie-turbo")
+    erniebot.ak = "gU71lRqGc8wmNHPZkqP9vToK"
+    erniebot.sk = "l4P9sGVjonxhA8F3WQWZDrWx21G4GKQT"
 
-    create_chat_completion_stream(model="ernie-turbo")
+
+    # create_chat_completion_stream(model="ernie-turbo")
+    create_chat_completion_json_mode(model="ernie-lite")
