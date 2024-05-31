@@ -79,10 +79,6 @@ if __name__ == "__main__":
 
     erniebot.api_type = "qianfan"
 
-    # create_chat_completion(model="ernie-turbo")
-    erniebot.ak = "gU71lRqGc8wmNHPZkqP9vToK"
-    erniebot.sk = "l4P9sGVjonxhA8F3WQWZDrWx21G4GKQT"
-
-
-    # create_chat_completion_stream(model="ernie-turbo")
+    create_chat_completion(model="ernie-turbo")
+    create_chat_completion_stream(model="ernie-turbo")
     create_chat_completion_json_mode(model="ernie-lite")
