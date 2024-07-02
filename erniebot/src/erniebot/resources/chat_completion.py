@@ -73,6 +73,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 "ernie-lite-8k-0308": {
                     "model_id": "ernie-lite-8k",
                 },
+                "ernie-4.0-turbo-8k": {
+                    "model_id": "ernie-4.0-turbo-8k",
+                },
                 "ernie-4.0": {
                     "model_id": "completions_pro",
                 },
@@ -107,6 +110,9 @@ class ChatCompletion(EBResource, CreatableWithStreaming):
                 },
                 "ernie-lite": {
                     "model_id": "eb-instant",
+                },
+                "ernie-4.0-turbo-8k": {
+                    "model_id": "ernie-4.0-turbo-8k",
                 },
                 "ernie-4.0": {
                     "model_id": "completions_pro",
