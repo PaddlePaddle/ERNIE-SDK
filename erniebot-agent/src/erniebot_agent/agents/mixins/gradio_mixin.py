@@ -139,7 +139,7 @@ class GradioMixin:
                 history = history + [((single_file.name,), None)]
             size = len(file)
 
-            output_lis = file_manager.list_registered_files()
+            output_lis = await file_manager.list_files()
             item = ""
             for i in range(len(output_lis) - size):
                 item += f'<li>{str(output_lis[i]).strip("<>")}</li>'
