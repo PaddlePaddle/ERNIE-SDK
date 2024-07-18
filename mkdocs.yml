@@ -53,7 +53,8 @@ nav:
       - sdk/api_reference/embedding.md
       - sdk/api_reference/image.md
   - Blog:
-    - blog/index.md
+    - ERNIEBot Researcher:
+      - blog/erniebot_researcher_example.md
 
 
 copyright: Copyright &copy; 2023 - Now PaddlePaddle Community
