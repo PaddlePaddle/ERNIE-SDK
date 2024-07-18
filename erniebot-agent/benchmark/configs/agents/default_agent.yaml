@@ -1,0 +1,20 @@
+agent:
+    name: 'FunctionAgent'
+    kwargs: {}
+
+model:
+    name: 'ERNIEBot'
+    kwargs: 
+        model: 'ernie-3.5'
+
+memory:
+    name: 'WholeMemory'
+    kwargs: {}
+
+tools: []
+
+root_path:
+    agent: 'erniebot_agent.agents'
+    memory: 'erniebot_agent.memory'
+    tools: 'erniebot_agent.tools'
+    model: 'erniebot_agent.chat_models'
