@@ -1,7 +1,44 @@
+[build-system]
+requires = ["setuptools >= 61.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "erniebot-agent"
+description = "Python library for the ERNIE Bot Agent"
+classifiers = ["Programming Language :: Python"]
+requires-python = ">=3.8"
+dynamic = ["version", "dependencies"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.optional-dependencies]
+gradio = ["gradio >= 3.48"]
+all = [
+    "erniebot_agent[gradio]",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = [
+    "erniebot_agent",
+    "erniebot_agent.*",
+]
+namespaces = true
+
+[tool.setuptools.dynamic]
+version = {attr = "erniebot_agent.version.VERSION"}
+dependencies = {file = ["requirements.txt"]}
+
 [tool.isort]
-profile = 'black'
-src_paths = ['src', 'tests']
+profile = "black"
+src_paths = ["src", "tests"]
 
 [tool.black]
 line-length = 109
-target_version = ['py38', 'py39', 'py310']
+target_version = ["py38", "py39", "py310"]
