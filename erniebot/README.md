@@ -15,7 +15,7 @@ ERNIE Bot提供便捷易用的接口，可以调用文心大模型的能力，�
 
 * 支持文心一言ernie-bot-8k模型，输入token数量上限提升至7000。
 * 支持基于文心大模型4.0版本的文心一言ernie-bot-4，用于对话补全任务。
-* 增加`EBResponse.get_result`方法，支持从响应中取出关键信息。
+* 增加 `EBResponse.get_result`方法，支持从响应中取出关键信息。
 
 ## 教程与文档
 
