@@ -5,9 +5,9 @@ import typing
 from copy import deepcopy
 from typing import Any, Dict, Optional, Type, no_type_check
 
+from httpx._models import Response
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
-from requests import Response
 
 from erniebot_agent.file import File, FileManager
 from erniebot_agent.file.protocol import (

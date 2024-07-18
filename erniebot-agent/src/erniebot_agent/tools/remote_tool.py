@@ -6,7 +6,7 @@ import os
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Type
 
-import requests
+import httpx
 
 from erniebot_agent.file import (
     FileManager,
@@ -113,6 +113,9 @@ class RemoteTool(BaseTool):
         return await self.__post_process__(tool_response)
 
     async def send_request(self, tool_arguments: Dict[str, Any]) -> dict:
+        # async http request
+        requests = httpx.AsyncClient(timeout=None)
+
         url = "/".join([self.server_url.strip("/"), self.tool_view.uri.strip("/")])
         url += "?version=" + self.version
 
@@ -147,13 +150,13 @@ class RemoteTool(BaseTool):
             )
 
         if self.tool_view.method == "get":
-            response = requests.get(url, **requests_inputs)  # type: ignore
+            response = await requests.get(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "post":
-            response = requests.post(url, **requests_inputs)  # type: ignore
+            response = await requests.post(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "put":
-            response = requests.put(url, **requests_inputs)  # type: ignore
+            response = await requests.put(url, **requests_inputs)  # type: ignore
         elif self.tool_view.method == "delete":
-            response = requests.delete(url, **requests_inputs)  # type: ignore
+            response = await requests.delete(url, **requests_inputs)  # type: ignore
         else:
             raise RemoteToolError(f"method<{self.tool_view.method}> is invalid", stage="Executing")
 
